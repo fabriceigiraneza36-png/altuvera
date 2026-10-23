@@ -191,7 +191,7 @@ const isDismissalError = (msg = "") => {
 
 const formatAuthError = (error, fallback = "Something went wrong. Please try again.") => {
   const raw = typeof error === "string" ? error : error?.response?.data?.message || error?.data?.message || error?.message || "";
-  const message = String(raw).replace(/\\s+/g, " ").trim();
+  const message = String(raw).replace(/\s+/g, " ").trim();
   if (!message) return fallback;
   const lower = message.toLowerCase();
   if (/failed to fetch|networkerror|network request failed|load failed|offline|internet connection/.test(lower)) return "We couldn't reach Altuvera. Check your internet connection and try again.";
@@ -201,7 +201,7 @@ const formatAuthError = (error, fallback = "Something went wrong. Please try aga
   if (/invalid email|email.*invalid/.test(lower)) return "Check the email address and enter it in the format name@example.com.";
   if (/expired|invalid.*(otp|verification|security) code|incorrect.*(otp|verification|security) code/.test(lower)) return "That verification code is invalid or expired. Check the code or request a new one.";
   if (/not found|invalid credentials|unauthorized|authentication failed|incorrect.*(name|email)|user does not exist/.test(lower)) return "We couldn't verify those details. Check your email and full name, then try again.";
-  if (message.length > 240 || /<\\/?[a-z][^>]*>|\\bat\\s+[^\\s]+\\s*\\(/i.test(message)) return fallback;
+  if (message.length > 240 || /<\/?[a-z][^>]*>|\bat\s+[^\s]+\s*\(/i.test(message)) return fallback;
   return message;
 };
 
@@ -547,13 +547,14 @@ const SelectField = ({
 );
 
 const SocialButtons = ({
-  mode, googleLoading, githubLoading, loading, isOnline, onGoogle, onGithub,
+  mode, googleLoaded, googleLoading, githubLoading, loading, isOnline, onGoogle, onGithub,
 }) => (
   <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3" role="group" aria-label="Continue with a social account">
     <button
       type="button" onClick={() => onGoogle(mode)}
       disabled={googleLoading || githubLoading || loading || !isOnline}
       aria-busy={googleLoading}
+      title={!googleLoaded ? "Google sign-in may still be initializing; email sign-in remains available." : "Continue with Google"}
       aria-label={googleLoading ? "Connecting to Google" : "Continue with Google"}
       className="flex items-center justify-center gap-2.5 min-h-12 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-semibold hover:bg-emerald-50 hover:border-emerald-200 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-all duration-200"
     >
@@ -1137,7 +1138,7 @@ export default function AuthModal() {
       await verifyCode(activeEmail, val);
       setCodeState("success"); stopExpiryCountdown();
     } catch (err) {
-      setCodeState("error"); setError(err?.message || "Verification failed.");
+      setCodeState("error"); setError(formatAuthError(err, "Verification failed."));
       setTimeout(() => { setCodeState(""); setCode(emptyCode()); codeRefs.current[0]?.focus(); }, 700);
     } finally { setLoading(false); }
   }, [activeEmail, codeExpired, verifyCode, stopExpiryCountdown]);
@@ -1251,7 +1252,7 @@ export default function AuthModal() {
       setResendTimer(60); setCode(emptyCode()); setCodeState("");
       setSuccess(`New code sent to ${activeEmail}. Valid for 15 min.`);
       codeRefs.current[0]?.focus();
-    } catch (err) { setError(err?.message || "Unable to resend."); }
+    } catch (err) { setError(formatAuthError(err, "Unable to resend.")); }
     finally { setLoading(false); }
   }, [activeEmail, isOnline, loading, resendCode, resendTimer, startExpiryCountdown]);
 
@@ -1720,7 +1721,7 @@ export default function AuthModal() {
                   </div>
 
                   {/* Stepper */}
-                  <div className="flex items-center justify-center mb-5 px-2">
+                  <div className="flex items-center justify-center mb-5 px-2" role="progressbar" aria-label="Account setup progress" aria-valuemin={1} aria-valuemax={4} aria-valuenow={signUpStep}>
                     {STEP_LABELS.map((label, i) => {
                       const n      = i + 1;
                       const done   = signUpStep > n;
@@ -2157,7 +2158,7 @@ export default function AuthModal() {
                   <form className="space-y-4" onSubmit={async (e) => {
                     e.preventDefault(); setLoading(true); setError("");
                     try { await verifyLoginFactor(factorMethod, factorCode); setFactorCode(""); }
-                    catch (err) { setError(err?.message || "Verification failed."); }
+                    catch (err) { setError(formatAuthError(err, "Verification failed.")); }
                     finally { setLoading(false); }
                   }}>
                     {pendingFactorMethods.includes("passkey") && (
