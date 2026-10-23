@@ -4118,3 +4118,60 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .d-final-cta__media img, .d-final-cta__actions .d-btn { transition: none; }
 }
+
+
+/* Mobile-only tuning for the destination gallery photo card below the hero.
+   Desktop styling and layout intentionally remain unchanged. */
+@media (max-width: 640px) {
+  .d-about__aside {
+    width: min(41%, 220px);
+    margin: 0 0 12px 12px;
+  }
+  .d-about-photo-panel {
+    border-radius: 12px;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(2, 44, 34, .12);
+  }
+  .d-about-photo-panel__caption {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    overflow-wrap: anywhere;
+  }
+  .d-about-photo-panel__caption span {
+    font-size: clamp(7px, 1.9vw, 9px);
+    line-height: 1.25;
+    letter-spacing: .055em;
+    margin-bottom: 3px;
+  }
+  .d-about-photo-panel__caption strong {
+    font-size: clamp(10px, 3vw, 13px);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    text-wrap: pretty;
+  }
+}
+@media (max-width: 380px) {
+  .d-about__aside {
+    width: 39%;
+    margin-left: 9px;
+    margin-bottom: 10px;
+  }
+  .d-about-photo-panel {
+    border-radius: 10px;
+  }
+  .d-about-photo-panel__caption {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+  }
+  .d-about-photo-panel__caption span {
+    font-size: 7px;
+    letter-spacing: .035em;
+  }
+  .d-about-photo-panel__caption strong {
+    font-size: 10px;
+    line-height: 1.15;
+  }
+}
