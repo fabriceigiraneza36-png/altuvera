@@ -885,6 +885,7 @@ function NewConvModal({ onClose, onCreated }) {
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
               {inquiryType === "destination" ? "Destination" : activeInquiry.referenceLabel} <span className="text-slate-300 normal-case font-normal">(optional)</span>
             </label>
+            {inquiryType === "destination" ? <div className="relative">
             <div className="relative">
               <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
               <input value={destinationName}
@@ -916,8 +917,12 @@ function NewConvModal({ onClose, onCreated }) {
                   ))}
                 </div>
               )}
-            </div>
-            <p className="mt-1.5 text-[11px] text-slate-400">Searches destinations currently available in Altuvera. Choose a suggestion to attach it to your message.</p>
+  
+            </div> : <div>
+              <input value={relatedReference} onChange={e => setRelatedReference(e.target.value)} placeholder={activeInquiry.referenceHint} aria-label={activeInquiry.referenceLabel}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
+              {inquiryType === "booking" && <p className="mt-1.5 text-[11px] text-slate-400">Include your booking reference when available. Never include passwords or payment card details.</p>}
+            </div>}
           </div>
 
           <div>
