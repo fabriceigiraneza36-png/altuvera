@@ -253,6 +253,12 @@ export function useConversations() {
       // open that conversation without waiting for the 15-second poll.
       if (msg.senderType === "admin" && String(msg.conversationId) !== String(activeIdRef.current)) {
         fetchConversations();
+        notifyMessage(
+          "New message from Altuvera",
+          msg.body?.slice(0, 160) || "You received a new message.",
+          `altuvera-conversation-${msg.conversationId}`,
+          `/messages?conversationId=${encodeURIComponent(msg.conversationId)}`,
+        );
       }
       setMessages((prev) => {
         if (prev.some((m) => String(m.id) === String(msg.id))) return prev;
@@ -344,7 +350,7 @@ export function useConversations() {
         notifyMessage(
           payload?.groupName || "Altuvera group message",
           msg.body?.slice(0, 160) || "You received a new group message.",
-          `altuvera-group-${payload?.groupId || cid}`,
+          `altuvera-conversation-${cid}`,
           `/messages?conversationId=${encodeURIComponent(cid)}`,
         );
       }
