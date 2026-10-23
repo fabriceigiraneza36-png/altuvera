@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
+import { FaWhatsapp } from "react-icons/fa";
 
 // ============================================================
 // TYPOGRAPHY
@@ -94,17 +95,12 @@ const getIconUrl = (name, size = 24, color = "#000") => {
   return `https://api.iconify.design/${icon}.svg?color=%23${hex}&width=${size}&height=${size}`;
 };
 
-const Icon = ({ name, size = 24, color = "#000", style = {} }) => (
-  <img
-    src={getIconUrl(name, size, color)}
-    alt=""
-    width={size}
-    height={size}
-    style={{ display: "block", flexShrink: 0, ...style }}
-    loading="lazy"
-    draggable={false}
-  />
-);
+const Icon = ({ name, size = 24, color = "#000", style = {} }) =>
+  name === "WhatsApp" ? (
+    <FaWhatsapp aria-hidden="true" size={size} color={color} style={{ display: "block", flexShrink: 0, ...style }} />
+  ) : (
+    <img src={getIconUrl(name, size, color)} alt="" width={size} height={size} style={{ display: "block", flexShrink: 0, ...style }} loading="lazy" draggable={false} />
+  );
 
 // ============================================================
 // CONFETTI
