@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, BellRing, Check, MessageCircle, Send, X } from "lucide-react";
+import { ArrowUpRight, BellRing, Check, MessageCircle, Send, X, CalendarDays, Pencil, CheckCircle2, ClipboardList, AlertTriangle, Siren, Settings } from "lucide-react";
 import { useNotifications } from "../../hooks/useNotifications";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
@@ -13,16 +13,16 @@ const getToken = () => {
 };
 
 const TYPE_META = {
-  booking_created: ["📅", "#059669"],
-  booking_updated: ["✏️", "#0ea5e9"],
-  booking_confirmed: ["✅", "#16a34a"],
-  checklist_request: ["📋", "#059669"],
-  checklist_ready: ["✅", "#16a34a"],
-  warning: ["⚠️", "#d97706"],
-  alert: ["🚨", "#dc2626"],
-  system: ["⚙️", "#64748b"],
-  message_received: ["💬", "#059669"],
-  general: ["💬", "#059669"],
+  booking_created: [CalendarDays, "#059669"],
+  booking_updated: [Pencil, "#0ea5e9"],
+  booking_confirmed: [CheckCircle2, "#16a34a"],
+  checklist_request: [ClipboardList, "#059669"],
+  checklist_ready: [CheckCircle2, "#16a34a"],
+  warning: [AlertTriangle, "#d97706"],
+  alert: [Siren, "#dc2626"],
+  system: [Settings, "#64748b"],
+  message_received: [MessageCircle, "#059669"],
+  general: [MessageCircle, "#059669"],
 };
 
 const conversationIdOf = (notification) =>
@@ -79,6 +79,7 @@ export default function GlobalUserNotifications() {
     () => TYPE_META[visible?.type] || TYPE_META.general,
     [visible],
   );
+  const MetaIcon = meta[0];
   const conversationId = conversationIdOf(visible);
   const isChatNotification = Boolean(conversationId) &&
     (visible?.category === "message" || visible?.type === "message_received" || Boolean(visible?.metadata?.messageId));
@@ -184,7 +185,7 @@ export default function GlobalUserNotifications() {
               width: 42, height: 42, borderRadius: 14, background: `${meta[1]}15`,
               display: "grid", placeItems: "center", flexShrink: 0, position: "relative",
             }}>
-              <span style={{ fontSize: 20 }}>{meta[0]}</span>
+              <MetaIcon size={20} aria-hidden="true" strokeWidth={2.2} />
               <span style={{ position: "absolute", right: -2, top: -2, width: 9, height: 9, borderRadius: 99, background: "#10b981", border: "2px solid white" }}/>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
