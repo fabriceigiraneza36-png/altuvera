@@ -968,6 +968,7 @@ export default function AuthModal() {
   ═══════════════════════════════════════════════════════════ */
   const handleForgotUsernameSendCode = useCallback(async (e) => {
     e.preventDefault();
+    if (!isOnline) { setError("You appear to be offline. Reconnect before requesting a recovery code."); return; }
     setForgotEmailTouched(true);
     if (!forgotEmailOk) { setError("Please enter a valid email address."); return; }
     try {
@@ -988,7 +989,7 @@ export default function AuthModal() {
     } finally {
       setLoading(false);
     }
-  }, [forgotEmailOk, forgotEmail, startForgotExpiryCountdown]);
+  }, [forgotEmailOk, forgotEmail, isOnline, startForgotExpiryCountdown]);
 
   /* ═══════════════════════════════════════════════════════════
      FORGOT USERNAME — Step 2: Verify code & auto-login
@@ -996,6 +997,7 @@ export default function AuthModal() {
         to localStorage + reloading — state updates immediately
   ═══════════════════════════════════════════════════════════ */
   const doForgotUsernameVerify = useCallback(async (val) => {
+    if (!isOnline) { setError("You appear to be offline. Reconnect before verifying your code."); return; }
     if (!forgotEmail.trim())  { setError("Missing email. Please restart."); return; }
     if (val.length !== 6)     { setError("Enter the full 6-digit code."); return; }
     if (forgotCodeExpired)    { setError("Code expired. Request a new one."); return; }
@@ -1054,7 +1056,7 @@ export default function AuthModal() {
       setLoading(false);
     }
   }, [
-    forgotEmail, forgotCodeExpired, stopForgotExpiryCountdown,
+    forgotEmail, forgotCodeExpired, isOnline, stopForgotExpiryCountdown,
     form.keepSignedIn, saveAuth, resetForgotUsername, closeModal, beginFactorChallenge,
   ]);
 
@@ -1100,6 +1102,7 @@ export default function AuthModal() {
 
   const handleForgotResend = useCallback(async () => {
     if (!forgotEmail.trim() || forgotResendTimer > 0 || loading) return;
+    if (!isOnline) { setError("You appear to be offline. Reconnect before requesting another code."); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
       const res  = await fetch(`${API_BASE}/users/forgot-username/send-code`, {
@@ -1120,7 +1123,7 @@ export default function AuthModal() {
     } finally {
       setLoading(false);
     }
-  }, [forgotEmail, forgotResendTimer, loading, startForgotExpiryCountdown]);
+  }, [forgotEmail, forgotResendTimer, isOnline, loading, startForgotExpiryCountdown]);
 
   /* ═══════════════════════════════════════════════════════════
      VERIFY (main OTP flow)
@@ -1240,6 +1243,7 @@ export default function AuthModal() {
 
   const handleResend = useCallback(async () => {
     if (!activeEmail || resendTimer > 0 || loading) return;
+    if (!isOnline) { setError("You appear to be offline. Reconnect before requesting another code."); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
       await resendCode(activeEmail);
@@ -1249,7 +1253,7 @@ export default function AuthModal() {
       codeRefs.current[0]?.focus();
     } catch (err) { setError(err?.message || "Unable to resend."); }
     finally { setLoading(false); }
-  }, [activeEmail, loading, resendCode, resendTimer, startExpiryCountdown]);
+  }, [activeEmail, isOnline, loading, resendCode, resendTimer, startExpiryCountdown]);
 
   const handleBackFromVerify = useCallback(() => {
     stopExpiryCountdown(); setCode(emptyCode()); setError(""); setSuccess("");
@@ -2086,16 +2090,19 @@ export default function AuthModal() {
                         <span className="text-sm text-gray-600">Keep me signed in</span>
                       </label>
 
-                      <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border group transition-all ${
-                        agreeTerms ? "border-emerald-200 bg-emerald-50/50" : "border-gray-200 bg-gray-50"
+                      <label className={`am-auth-terms flex items-start gap-3 cursor-pointer p-4 rounded-xl border group transition-all ${
+                        agreeTerms ? "border-emerald-200 bg-emerald-50/50" : termsTouched ? "border-red-200 bg-red-50/60" : "border-gray-200 bg-gray-50"
                       }`}>
                         <div className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                           agreeTerms ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
                         }`}>
                           {agreeTerms && <HiCheck className="w-3 h-3 text-white" />}
                         </div>
-                        <input type="checkbox" checked={agreeTerms}
-                          onChange={(e) => setAgreeTerms(e.target.checked)} required className="sr-only" />
+                        <input ref={termsInputRef} id="reg-terms" type="checkbox" checked={agreeTerms}
+                          onChange={(e) => { setAgreeTerms(e.target.checked); setTermsTouched(true); if (e.target.checked) setError(""); }}
+                          aria-invalid={termsTouched && !agreeTerms}
+                          aria-describedby={termsTouched && !agreeTerms ? "reg-terms-error" : undefined}
+                          required className="sr-only" />
                         <span className="text-sm text-gray-600 leading-relaxed">
                           I agree to the{" "}
                           <a href="/terms" target="_blank" rel="noopener noreferrer"
@@ -2103,6 +2110,11 @@ export default function AuthModal() {
                           {" "}and{" "}
                           <a href="/privacy" target="_blank" rel="noopener noreferrer"
                             className="text-emerald-600 font-medium underline underline-offset-2 hover:text-emerald-700">Privacy Policy</a>
+                          {termsTouched && !agreeTerms && (
+                            <span id="reg-terms-error" role="alert" className="am-auth-field-error block mt-2">
+                              Please accept the Terms and Privacy Policy before creating your account.
+                            </span>
+                          )}
                         </span>
                       </label>
 
