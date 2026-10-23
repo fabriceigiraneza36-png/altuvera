@@ -43,7 +43,7 @@ const teamAPI = {
   async _fetch(endpoint, options = {}, retries = 2) {
     const url = `${API_BASE}${endpoint}`;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), 45000);
     try {
       const res = await fetch(url, {
         ...options,
@@ -62,10 +62,9 @@ const teamAPI = {
       clearTimeout(timeout);
       if (
         retries > 0 &&
-        err.name !== "AbortError" &&
         !/status \d+/.test(err.message)
       ) {
-        await new Promise((r) => setTimeout(r, 800));
+        await new Promise((r) => setTimeout(r, 1000 * (3 - retries)));
         return this._fetch(endpoint, options, retries - 1);
       }
       throw err;
@@ -219,6 +218,7 @@ const STYLES = `
 .tm-wrap{max-width:1200px;margin:0 auto;position:relative;z-index:1}
 
 .tm-head{text-align:center;margin-bottom:32px}
+.tm-root.tm-no-heading{padding-top:clamp(28px,4vw,48px)}
 .tm-eyebrow{
   display:inline-flex;align-items:center;gap:6px;
   padding:5px 14px;border-radius:999px;
@@ -568,6 +568,9 @@ const STYLES = `
   .tm-grid{grid-template-columns:repeat(2,1fr);gap:20px}
 }
 @media(max-width:640px){
+  .tm-root{padding:24px 14px 40px}
+  .tm-root.tm-no-heading{padding-top:18px}
+  .tm-head{margin-bottom:18px}
   .tm-grid{grid-template-columns:1fr;gap:18px}
   .tm-cta-row{flex-direction:column;align-items:stretch;max-width:280px;margin:0 auto}
   .tm-filters{gap:6px}
@@ -875,7 +878,7 @@ function Filters({ departments, active, onFilter, counts }) {
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════════════════ */
 
-const TeamContent = () => {
+const TeamContent = ({ showHeading = true }) => {
   const [members, setMembers] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [depts, setDepts] = useState([]);
@@ -969,20 +972,22 @@ const TeamContent = () => {
   }, [load]);
 
   return (
-    <section className="tm-root">
+    <section className={`tm-root${showHeading ? "" : " tm-no-heading"}`}>
       <div className="tm-wrap">
-        <AnimatedSection animation="fadeInUp">
-          <div className="tm-head">
-            <h2 className="tm-h2">
-              Meet Our <em>Team</em>
-            </h2>
-            <p className="tm-sub">
-              Dedicated professionals delivering seamless and authentic
-              East African travel experiences with passion, expertise,
-              and unwavering commitment.
-            </p>
-          </div>
-        </AnimatedSection>
+        {showHeading && (
+          <AnimatedSection animation="fadeInUp">
+            <div className="tm-head">
+              <h2 className="tm-h2">
+                Meet Our <em>Team</em>
+              </h2>
+              <p className="tm-sub">
+                Dedicated professionals delivering seamless and authentic
+                East African travel experiences with passion, expertise,
+                and unwavering commitment.
+              </p>
+            </div>
+          </AnimatedSection>
+        )}
 
         {depts.length > 0 && !loading && !error && (
           <AnimatedSection animation="fadeInUp">
