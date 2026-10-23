@@ -1,23 +1,11 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";\nimport { CheckCircle2, Info, CircleAlert, X } from "lucide-react";
 
 const ToastContext = createContext(null);
 
 const TOAST_TYPES = {
-  success: {
-    background: "linear-gradient(135deg, #dcfce7, #bbf7d0)",
-    border: "1px solid rgba(22, 163, 74, 0.18)",
-    color: "#14532d",
-  },
-  error: {
-    background: "linear-gradient(135deg, #fee2e2, #fecaca)",
-    border: "1px solid rgba(220, 38, 38, 0.18)",
-    color: "#991b1b",
-  },
-  info: {
-    background: "linear-gradient(135deg, #e0f2fe, #bae6fd)",
-    border: "1px solid rgba(3, 105, 161, 0.18)",
-    color: "#0c4a6e",
-  },
+  success: { color: "#065f46", Icon: CheckCircle2 },
+  error: { color: "#111827", Icon: CircleAlert },
+  info: { color: "#111827", Icon: Info },
 };
 
 const makeToast = ({ type = "info", title, message, duration = 4000 }) => ({
@@ -75,11 +63,11 @@ export function ToastProvider({ children }) {
           flexDirection: "column",
           gap: 12,
           pointerEvents: "none",
-          maxWidth: 360,
+          maxWidth: 360,\n          width: "calc(100vw - 24px)",
         }}
       >
         {toasts.map((toast) => {
-          const theme = TOAST_TYPES[toast.type] || TOAST_TYPES.info;
+          const theme = TOAST_TYPES[toast.type] || TOAST_TYPES.info;\n          const ToastIcon = theme.Icon;
           return (
             <div
               key={toast.id}
@@ -122,7 +110,7 @@ export function ToastProvider({ children }) {
                 background: theme.background,
                 border: theme.border,
                 color: theme.color,
-                minWidth: 260,
+                minWidth: 0,\n                width: "100%",\n                maxWidth: 360,
                 overflow: "hidden",
                 touchAction: "pan-y",
                 transform: "translate3d(" + (swipePositions[toast.id]?.x || 0) + "px,0,0)",
@@ -153,7 +141,7 @@ export function ToastProvider({ children }) {
                   style={{
                     border: "none",
                     background: "transparent",
-                    color: theme.color,
+                    color: "#111827",
                     cursor: "pointer",
                     fontSize: 16,
                     lineHeight: 1,
@@ -161,7 +149,7 @@ export function ToastProvider({ children }) {
                   }}
                   aria-label="Dismiss notification"
                 >
-                  ×
+                  <X size={15} />
                 </button>
               </div>
             </div>
