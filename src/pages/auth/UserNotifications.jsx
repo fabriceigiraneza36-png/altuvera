@@ -372,7 +372,7 @@
                               </button>
                             )}
                             <button onClick={() => deleteOne(n.id)} style={btnStyle('#ef4444')}>
-                              🗑️ Dismiss
+                              Dismiss
                             </button>
                           </div>
                         </div>
