@@ -914,7 +914,7 @@ export default function DestinationDetail() {
                   <Calendar size={17} /> Plan This Journey
                 </button>
 
-                <button className="d-btn d-btn--glass d-btn--lg" onClick={() => navigate("/contact")}>
+                <button className="d-btn d-btn--glass d-btn--lg" onClick={() => navigate("/contact?destination=" + encodeURIComponent(String(destination.slug || destination.id || destination._id || target)) + "&destinationName=" + encodeURIComponent(displayText(destination.name, "Destination")))}>
                   <Mail size={17} /> Talk to Altuvera
                 </button>
               </div>
