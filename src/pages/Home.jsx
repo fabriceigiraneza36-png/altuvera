@@ -462,6 +462,13 @@ const HOME_STYLES = `
   .intro-dest-side-arrow { width: 1.5rem; height: 1.5rem; }
 }
 
+/* Clickable destination tiles: gentle bounce feedback and accessible focus */
+.east-africa-destination-link{cursor:pointer;transform:translateY(0) scale(1);transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s ease;box-shadow:0 4px 14px rgba(15,23,42,.08);}
+.east-africa-destination-link:hover{transform:translateY(-5px) scale(1.015);box-shadow:0 14px 28px rgba(15,23,42,.18);}
+.east-africa-destination-link:active{transform:translateY(-1px) scale(.975);}
+.east-africa-destination-link:focus-visible{outline:3px solid #10b981;outline-offset:3px;}
+@media(prefers-reduced-motion:reduce){.east-africa-destination-link{transition:none;}.east-africa-destination-link:hover,.east-africa-destination-link:active{transform:none;}}
+
 /* ── Scroll row ── */
 .mixed-scroll-row{display:flex;gap:1.25rem;overflow-x:auto;padding-bottom:1rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .mixed-scroll-row::-webkit-scrollbar{display:none;}
@@ -1498,7 +1505,7 @@ const featureBlocks = useMemo(() => [
               const imgSrc = getFirstImage(dest);
               
               return (
-                <div key={dest.slug || dest.id || idx} style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
+                <Link key={dest.slug || dest.id || idx} to={`/destinations/${encodeURIComponent(dest.slug || dest.id)}`} className="east-africa-destination-link" aria-label={`View details for ${dest.name || "destination"}`} style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px', display: 'block', textDecoration: 'none', color: 'inherit' }}>
                   {imgSrc ? (
                     <img
                       src={imgSrc}
@@ -1548,7 +1555,7 @@ const featureBlocks = useMemo(() => [
                   }}>
                     {dest.name || 'East Africa Destination'}
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
