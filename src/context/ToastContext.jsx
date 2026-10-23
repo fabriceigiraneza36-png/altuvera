@@ -70,7 +70,7 @@ export function ToastProvider({ children }) {
       >
         {toasts.map((toast) => {
           const theme = TOAST_TYPES[toast.type] || TOAST_TYPES.info;
-          const ToastIcon = theme.Icon;\n          const ToastIcon = theme.Icon;
+          const ToastIcon = theme.Icon;
           return (
             <div
               key={toast.id}
@@ -114,7 +114,9 @@ export function ToastProvider({ children }) {
                 border: "1px solid #dbe7e0",
                 borderLeft: `4px solid ${theme.color}`,
                 color: "#111827",
-                minWidth: 0,\n                width: "100%",\n                maxWidth: 360,
+                minWidth: 0,
+                width: "100%",
+                maxWidth: 360,
                 overflow: "hidden",
                 touchAction: "pan-y",
                 transform: "translate3d(" + (swipePositions[toast.id]?.x || 0) + "px,0,0)",
