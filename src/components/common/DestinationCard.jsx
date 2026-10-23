@@ -20,6 +20,8 @@ import {
 } from "react-icons/fi";
 import { useWishlist } from "../../hooks/useWishlist";
 import { API_URL } from "../../utils/apiBase";
+import { useDestinationLikes } from "../../hooks/useDestinationLikes";
+import { useUserAuth } from "../../context/UserAuthContext";
 
 /* ─────────────────────────────────────────────────────────────
    CONSTANTS
@@ -947,6 +949,10 @@ const DestinationCard = memo(function DestinationCard({
 
   const [heartAnim, setHeartAnim] = useState(false);
   const [copied,    setCopied]    = useState(false);
+  const { isAuthenticated = false, openModal } = useUserAuth() || {};
+  const likeId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
+  const { likes: destinationLikes, loading: likesLoading, toggleLike } = useDestinationLikes(likeId, "destination");
+  const [likeBusy, setLikeBusy] = useState(false);
 
   useEffect(() => { injectStyles(); }, []);
 
@@ -1114,6 +1120,18 @@ const blurb =
     [goDetail],
   );
 
+  const handleDestinationLike = useCallback(async (e) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      if (typeof openModal === "function") openModal("login");
+      return;
+    }
+    if (!likeId || likeBusy) return;
+    setLikeBusy(true);
+    try { await toggleLike(likeId); } catch (error) { console.error("Could not update destination like:", error); }
+    finally { setLikeBusy(false); }
+  }, [isAuthenticated, openModal, likeId, likeBusy, toggleLike]);
+
   const handleWishlist = useCallback(
     (e) => {
       e.stopPropagation();
@@ -1129,7 +1147,29 @@ const blurb =
   const handleShare = useCallback(
     async (e) => {
       e.stopPropagation();
-      const url = `${window.location.origin}/destinations/${destId}`;
+      const url = `${window.location.origin}/destinations/${destId}
+.dc-like-action { position: relative; }
+.dc-public-like-btn { overflow: visible; }
+.dc-public-like-btn:disabled { opacity: .65; cursor: wait; }
+.dc-like-count {
+  position: absolute;
+  left: -5px;
+  bottom: -5px;
+  min-width: 18px;
+  height: 17px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(15,23,42,.12);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+`;
       try {
         if (navigator.share) {
           await navigator.share({ title: name, url });
@@ -1217,6 +1257,20 @@ const blurb =
                 }}
               />
             </button>
+
+            <div className="dc-like-action">
+              <button
+                onClick={handleDestinationLike}
+                aria-label={destinationLikes.isLiked ? `Unlike ${name}` : `Like ${name}`}
+                aria-pressed={destinationLikes.isLiked}
+                disabled={likeBusy || likesLoading}
+                className={`dc-action-btn dc-public-like-btn${destinationLikes.isLiked ? " dc-action-btn--liked" : ""}`}
+                title={destinationLikes.isLiked ? "Unlike destination" : "Like destination"}
+              >
+                <FiHeart size={15} aria-hidden="true" style={{ fill: destinationLikes.isLiked ? "#ef4444" : "none", color: destinationLikes.isLiked ? "#ef4444" : "#64748b" }} />
+                <span className="dc-like-count">{Number(destinationLikes.total || 0).toLocaleString()}</span>
+              </button>
+            </div>
 
             <div style={{ position: "relative" }}>
               <button
