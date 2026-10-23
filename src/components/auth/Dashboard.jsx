@@ -12,6 +12,8 @@ import { useUserAuth }      from "../../context/UserAuthContext";
 import { useNotifications } from "../../hooks/useNotifications";
 import DashboardLayout      from "../../components/auth/DashboardLayout";
 import DashboardDiscoveryCarousel from "./DashboardDiscoveryCarousel";
+import { useDestinations } from "../../hooks/useDestinations";
+import { useWishlist } from "../../hooks/useWishlist";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -1076,6 +1078,12 @@ function SkeletonCard() {
 export default function UserDashboard() {
   const { user, authFetch }            = useUserAuth();
   const { notifications, unreadCount } = useNotifications();
+  const { destinations: allDestinations = [], loading: destinationsLoading } = useDestinations({ limit: 100 });
+  const { wishlistIds = new Set() } = useWishlist();
+  const favoriteDestinations = useMemo(() => allDestinations.filter((destination) => {
+    const keys = [destination?.id, destination?._id, destination?.slug, destination?.destinationId, destination?.destination_id].filter((value) => value != null).map(String);
+    return keys.some((key) => wishlistIds.has(key));
+  }), [allDestinations, wishlistIds]);
 
   const [bookings,  setBookings]  = useState([]);
   const [loadingB,  setLoadingB]  = useState(true);
@@ -1343,6 +1351,19 @@ export default function UserDashboard() {
               ))}
             </div>
           </div>
+
+          <section className="db-favorites" aria-labelledby="db-favorites-title">
+            <style>{`.db-favorites{min-width:0;border:1px solid #dcefe4;border-radius:22px;padding:clamp(15px,2.5vw,24px);background:linear-gradient(135deg,#f7fdf9,#fff);box-shadow:0 8px 26px rgba(5,80,50,.045)}.db-favorites__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.db-favorites__title{display:flex;align-items:center;gap:9px;margin:0;color:#123c2c;font-size:clamp(1rem,2vw,1.2rem);font-weight:900;letter-spacing:-.025em}.db-favorites__title-icon{display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:12px;background:#ffe4e6;color:#e11d48}.db-favorites__track{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 2px 9px;scrollbar-width:thin;scrollbar-color:#a7f3d0 transparent;-webkit-overflow-scrolling:touch}.db-favorites__link{display:inline-flex;align-items:center;gap:9px;flex:0 0 auto;max-width:min(78vw,300px);min-height:46px;padding:10px 15px;border:1px solid #d7eade;border-radius:999px;background:#fff;color:#14532d;text-decoration:none;font-size:13px;font-weight:800;scroll-snap-align:start;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}.db-favorites__link span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.db-favorites__link:hover{transform:translateY(-2px);border-color:#86cba4;box-shadow:0 8px 18px rgba(5,150,105,.1)}.db-favorites__link:focus-visible{outline:3px solid #34d399;outline-offset:3px}.db-favorites__empty{margin:0;padding:12px 14px;border:1px dashed #c7e5d2;border-radius:14px;color:#5b7466;background:rgba(255,255,255,.8);font-size:13px;line-height:1.6}.db-favorites__empty a{color:#047857;font-weight:800;text-decoration:none}@media(max-width:480px){.db-favorites{border-radius:17px;padding:14px}.db-favorites__head{align-items:flex-start}.db-favorites__title{font-size:1rem}.db-favorites__link{min-height:43px;padding:9px 12px;font-size:12px}}@media(prefers-reduced-motion:reduce){.db-favorites__link{transition:none}}`}</style>
+            <div className="db-favorites__head">
+              <h2 id="db-favorites-title" className="db-favorites__title"><span className="db-favorites__title-icon"><Heart size={18} fill="currentColor" /></span> Your favorite destinations</h2>
+              <Link to="/wishlist" style={{display:"inline-flex",alignItems:"center",gap:5,color:"#047857",fontSize:12,fontWeight:800,textDecoration:"none",whiteSpace:"nowrap"}}>View all <ArrowRight size={14}/></Link>
+            </div>
+            {destinationsLoading ? <p className="db-favorites__empty" role="status">Loading your saved places…</p> : favoriteDestinations.length ? (
+              <div className="db-favorites__track" aria-label="Your favorite destinations carousel">
+                {favoriteDestinations.map((destination) => <Link key={destination.id || destination._id || destination.slug} className="db-favorites__link" to={"/destinations/" + encodeURIComponent(destination.slug || destination.id || destination._id)}><Heart size={15} fill="currentColor" aria-hidden="true"/><span>{destination.name || destination.title || "Explore destination"}</span><ArrowRight size={14} aria-hidden="true"/></Link>)}
+              </div>
+            ) : <p className="db-favorites__empty">Your favorite places will appear here. <Link to="/destinations">Explore destinations</Link> and save the ones you love.</p>}
+          </section>
 
           {/* ── Swipeable destinations, packages and travel stories ─────── */}
           <DashboardDiscoveryCarousel />
