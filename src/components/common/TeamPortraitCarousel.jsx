@@ -122,7 +122,7 @@ export default function TeamPortraitCarousel() {
           <div className="about-team-strip-track" ref={trackRef} aria-label="Team members, select a portrait to view the full team">
             {loading && Array.from({length:6},(_,i)=><div key={i} className="about-team-skeleton" aria-hidden="true"/>)}
             {repeated.map((member,index)=>(
-              <a className={`about-team-person${openingMember===member.id ? " is-opening" : ""}`} href="/team" key={`${member.id}-${index}`} aria-label={`Meet ${member.name}, ${member.role}. Open team page`} onClick={(event)=>{event.preventDefault();if(openingMember!==null)return;setOpeningMember(member.id);openingTimer.current=window.setTimeout(()=>navigate('/team'),320);}}>
+              <a className={openingMember === member.id ? "about-team-person is-opening" : "about-team-person"} href="/team" key={String(member.id) + "-" + index} aria-label={"Meet " + member.name + ", " + member.role + ". Open team page"} onClick={(event)=>{event.preventDefault();if(openingMember!==null)return;setOpeningMember(member.id);openingTimer.current=window.setTimeout(()=>navigate('/team'),320);}}>
                 <span className="about-team-portrait-shell"><span className="about-team-portrait">
                   {member.image ? <img src={member.image} alt={member.name} loading="lazy" onError={(event)=>{event.currentTarget.style.display='none';}}/> : member.name.trim().split(/\\s+/).slice(0,2).map((part)=>part[0]).join('').toUpperCase()}
                 </span></span>
