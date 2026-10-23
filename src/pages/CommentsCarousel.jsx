@@ -55,9 +55,10 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
       const gallery = document.querySelector("#dd-attraction-gallery");
       const galleryBottom = gallery ? gallery.getBoundingClientRect().bottom + currentY : Infinity;
       const pastGallery = currentY >= galleryBottom - 24;
+      const crossedGalleryEnd = direction > 2 && pastGallery && lastScrollY.current < galleryBottom - 24;
       setFabVisible((wasVisible) => {
         if (alreadyCommented || modalOpen || !pastGallery) return false;
-        if (direction > 2) return false;
+        if (direction > 2) return crossedGalleryEnd;
         if (direction < -2) return true;
         return wasVisible;
       });
