@@ -907,9 +907,7 @@ export default function DestinationDetail() {
                 <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${encodeURIComponent(destination.slug || target)}`)}>
                   <Calendar size={17} /> Plan This Journey
                 </button>
-                <button type="button" className="d-btn d-btn--glass d-btn--lg d-save-destination" onClick={toggleSaved} aria-pressed={saved}>
-                  <Heart size={17} fill={saved ? "currentColor" : "none"} /> {saved ? "Saved to favorites" : "Save Destination"}
-                </button>
+
                 <button className="d-btn d-btn--glass d-btn--lg" onClick={() => navigate("/contact")}>
                   <Mail size={17} /> Talk to Altuvera
                 </button>
