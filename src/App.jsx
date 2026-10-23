@@ -322,6 +322,11 @@ const protectedRoutes = [
     meta: { title: "Account Security", noindex: true },
   },
   {
+    path: "/account/activity",
+    component: React.lazy(() => import("./pages/auth/AccountActivity")),
+    meta: { title: "Account Activity", noindex: true },
+  },
+  {
     path: "/notifications",
     component: UserNotifications,
     meta: { title: "Notifications", noindex: true },
