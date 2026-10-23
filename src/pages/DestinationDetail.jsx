@@ -22,11 +22,13 @@ import {
   ArrowDown,
   Share2,
   Heart,
+  BookmarkCheck,
 } from "lucide-react";
 import { useDestination } from "../hooks/useDestinations";
 import "./DestinationDetail.css";
 import AltuveraLoader from "../components/common/AltuveraLoader";
 import CommentsCarousel from "./CommentsCarousel";
+import { useWishlist } from "../context/WishlistContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.altuverasafaris.com";
 
@@ -218,6 +220,9 @@ export default function DestinationDetail() {
   const target = slug || destinationSlug || destinationId || id;
 
   const { destination, loading, error } = useDestination(target);
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const wishlistId = destination?.slug || destination?._id || destination?.id || target;
+  const isFavourite = Boolean(destination && isWishlisted(String(wishlistId)));
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [lightboxControlsVisible, setLightboxControlsVisible] = useState(true);
   const [lightboxZoom, setLightboxZoom] = useState(1);
@@ -610,8 +615,9 @@ export default function DestinationDetail() {
                   <button className="d-btn d-btn--emerald" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
                     <Ic n="calendar" size={15} /> Reserve Your Spot
                   </button>
-                  <button className="d-btn d-btn--outline" onClick={() => navigate("/contact")}>
-                    <Ic n="mail" size={15} /> Send Enquiry
+                  <button type="button" className={`d-btn d-btn--outline d-favourite-toggle${isFavourite ? " d-favourite-toggle--active" : ""}`} onClick={() => toggleWishlist(String(wishlistId))} aria-pressed={isFavourite} aria-label={isFavourite ? `Remove ${destination.name} from favourites` : `Add ${destination.name} to favourites`}>
+                    {isFavourite ? <BookmarkCheck size={16} aria-hidden="true" /> : <Heart size={16} aria-hidden="true" />}
+                    {isFavourite ? "Saved to Favourites" : "Add to Favourites"}
                   </button>
                 </div>
               </Reveal>
