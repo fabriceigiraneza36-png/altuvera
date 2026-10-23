@@ -414,25 +414,9 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
       <div className="am-auth-slideshow__shade am-auth-slideshow__shade--side" aria-hidden="true" />
 
       <div className="am-auth-slideshow__content">
-        <div className="am-auth-slideshow__brand">
-          <div className="am-auth-slideshow__logo">
-            <img
-              src={getBrandLogoUrl()}
-              alt={BRAND_LOGO_ALT}
-              loading="eager"
-              onError={(event) => { event.currentTarget.style.visibility = "hidden"; }}
-            />
-          </div>
-          <div>
-            <h3>Altuvera</h3>
-            <p>Premium African Adventures</p>
-          </div>
-        </div>
-
-        <div className="am-auth-slideshow__caption">
-          <p>{slide.caption}</p>
-          <h4 key={current}>{slide.subtitle}</h4>
-        </div>
+        <p className="am-auth-slideshow__single-phrase" key={current}>
+          {slide.subtitle || slide.caption || "Discover Africa"}
+        </p>
       </div>
     </div>
   );
