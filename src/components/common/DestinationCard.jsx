@@ -24,6 +24,11 @@ import { API_URL } from "../../utils/apiBase";
 import { useDestinationLikes } from "../../hooks/useDestinationLikes";
 import { useUserAuth } from "../../context/UserAuthContext";
 
+/* Favourite marker for destinations saved in the user's wishlist. */
+const FAVOURITE_MARKER_STYLES = `
+.dc-favourite-marker{position:absolute;top:12px;right:56px;z-index:7;display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;color:#be123c;background:rgba(255,255,255,.96);border:1px solid rgba(251,113,133,.3);box-shadow:0 5px 18px rgba(15,23,42,.16);font-size:10px;line-height:1;font-weight:800;pointer-events:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+@media(max-width:480px){.dc-favourite-marker{top:9px;right:52px;padding:6px 7px;font-size:9px;gap:4px}}
+`;
 /* ─────────────────────────────────────────────────────────────
    CONSTANTS
 ───────────────────────────────────────────────────────────── */
@@ -1191,6 +1196,7 @@ const blurb =
       }}
       aria-label={`View details for ${name}`}
     >
+      <style>{FAVOURITE_MARKER_STYLES}</style>
       {/* ════ IMAGE SECTION ════ */}
       <div className="dc-img-wrap">
         <div className="dc-img-frame">
@@ -1205,6 +1211,7 @@ const blurb =
           )}
 
           <div className="dc-img-overlay" aria-hidden="true" />
+          {isLiked && <span className="dc-favourite-marker" title="Saved to favourites" aria-label="Saved to favourites"><FiHeart size={12} fill="currentColor" aria-hidden="true" /><span>Favourite</span></span>}
           <button type="button" className={`dc-live-like-label${destinationLikes.isLiked ? " dc-live-like-label--liked" : ""}`} onClick={handleDestinationLike} disabled={likeBusy || likesLoading} aria-label={destinationLikes.isLiked ? `Unlike ${name}` : `Like ${name}`} aria-pressed={destinationLikes.isLiked} title={destinationLikeError || (destinationLikes.isLiked ? "Unlike destination" : "Like destination")}>
             <FiThumbsUp size={17} aria-hidden="true" />
             <span className="dc-live-like-count">{Number(destinationLikes.total || 0).toLocaleString()}</span>
