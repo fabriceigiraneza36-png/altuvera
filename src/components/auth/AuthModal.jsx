@@ -212,7 +212,15 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
   const [gallery, setGallery] = useState(GALLERY);
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const updateVisibility = () => setIsPageVisible(!document.hidden);
+    document.addEventListener("visibilitychange", updateVisibility);
+    updateVisibility();
+    return () => document.removeEventListener("visibilitychange", updateVisibility);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return undefined;
@@ -229,6 +237,7 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
 
     const normalizeImage = (value, depth = 0) => {
       if (!value || depth > 4) return "";
@@ -307,7 +316,7 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
       return value ? value.trim() : "Discover unforgettable African experiences";
     };
 
-    fetch(String(API_BASE || "").replace(/\/+$/, "") + "/destinations")
+    fetch(String(API_BASE || "").replace(/\/+$/, "") + "/destinations", { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error("Destinations unavailable");
         return response.json();
@@ -333,7 +342,7 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
         // Keep the built-in Africa imagery available if the destinations API is offline.
       });
 
-    return () => { cancelled = true; };
+    return () => { cancelled = true; controller.abort(); };
   }, []);
 
   const advance = useCallback(
@@ -342,10 +351,10 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
   );
 
   useEffect(() => {
-    if (isPaused || reducedMotion || gallery.length < 2) return undefined;
+    if (isPaused || !isPageVisible || reducedMotion || gallery.length < 2) return undefined;
     const timer = setInterval(advance, intervalMs);
     return () => clearInterval(timer);
-  }, [advance, gallery.length, intervalMs, isPaused, reducedMotion]);
+  }, [advance, gallery.length, intervalMs, isPaused, isPageVisible, reducedMotion]);
 
   useEffect(() => {
     const next = gallery[(current + 1) % gallery.length];
@@ -790,8 +799,15 @@ export default function AuthModal() {
      EFFECTS
   ═══════════════════════════════════════════════════════════ */
   useEffect(() => {
-    document.body.style.overflow = isModalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!isModalOpen) return undefined;
+    const previouslyFocused = document.activeElement;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+      if (previouslyFocused && previouslyFocused.isConnected && typeof previouslyFocused.focus === "function") {
+        previouslyFocused.focus({ preventScroll: true });
+      }
+    };
   }, [isModalOpen]);
 
   useEffect(() => {
@@ -848,10 +864,11 @@ export default function AuthModal() {
     setError(""); setSuccess("");
     setCode(emptyCode()); setResendTimer(0);
     setAuthMethod("email"); setCodeState("");
-    setEmailTouched(false); setNameTouched(false);
+    setEmailTouched(false); setNameTouched(false); setTermsTouched(false);
     if (isRegister && !hasGooglePending) setSignUpStep(1);
     setForm((p) => ({ ...p, keepSignedIn: persistSession }));
-    setTimeout(() => firstInputRef.current?.focus(), 350);
+    const focusTimer = window.setTimeout(() => firstInputRef.current?.focus(), 350);
+    return () => window.clearTimeout(focusTimer);
   }, [isLogin, isModalOpen, isRegister, persistSession, hasGooglePending,
     stopExpiryCountdown, resetForgotUsername]);
 
@@ -1130,6 +1147,7 @@ export default function AuthModal() {
      VERIFY (main OTP flow)
   ═══════════════════════════════════════════════════════════ */
   const doVerify = useCallback(async (val) => {
+    if (!isOnline) { setError("You appear to be offline. Reconnect before verifying your code."); return; }
     if (!activeEmail) { setError("Missing email. Please restart."); return; }
     if (val.length !== 6) { setError("Enter the full 6-digit code."); return; }
     if (codeExpired)      { setError("Code expired. Request a new one."); return; }
@@ -1141,7 +1159,7 @@ export default function AuthModal() {
       setCodeState("error"); setError(formatAuthError(err, "Verification failed."));
       setTimeout(() => { setCodeState(""); setCode(emptyCode()); codeRefs.current[0]?.focus(); }, 700);
     } finally { setLoading(false); }
-  }, [activeEmail, codeExpired, verifyCode, stopExpiryCountdown]);
+  }, [activeEmail, codeExpired, isOnline, verifyCode, stopExpiryCountdown]);
 
   useEffect(() => {
     const val = code.join("");
@@ -2156,22 +2174,24 @@ export default function AuthModal() {
                     <p className="mt-2 text-sm text-gray-600">Email verified. Complete your additional security check to sign in.</p>
                   </div>
                   <form className="space-y-4" onSubmit={async (e) => {
-                    e.preventDefault(); setLoading(true); setError("");
+                    e.preventDefault();
+                    if (!isOnline) { setError("You appear to be offline. Reconnect before verifying your sign-in."); return; }
+                    setLoading(true); setError("");
                     try { await verifyLoginFactor(factorMethod, factorCode); setFactorCode(""); }
                     catch (err) { setError(formatAuthError(err, "Verification failed.")); }
                     finally { setLoading(false); }
                   }}>
                     {pendingFactorMethods.includes("passkey") && (
-                    <button type="button" disabled={loading} onClick={async()=>{setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(formatAuthError(err, "Passkey verification failed. Try another verification method."));}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
+                    <button type="button" disabled={loading || !isOnline} onClick={async()=>{if(!isOnline){setError("You appear to be offline. Reconnect before using a passkey.");return;}setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(formatAuthError(err, "Passkey verification failed. Try another verification method."));}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
                     )}
                     <div className="flex gap-2">
                       {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Authenticator app</button> )}
                       {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Recovery code</button> )}
                     </div>
                     <label htmlFor="login-factor-code" className="block text-sm font-medium">{factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}</label>
-                    <input id="login-factor-code" value={factorCode} onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg tracking-widest" placeholder={factorMethod === "totp" ? "000000" : "00000"} />
-                    {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-                    <button type="submit" disabled={loading || factorCode.length !== (factorMethod === "totp" ? 6 : 5)} className="w-full rounded-xl bg-emerald-700 p-3 font-semibold text-white disabled:opacity-50">{loading ? "Verifying…" : "Verify and sign in"}</button>
+                    <input id="login-factor-code" value={factorCode} onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg tracking-widest" placeholder={factorMethod === "totp" ? "000000" : "00000"} aria-invalid={Boolean(error)} aria-describedby={error ? "factor-code-error" : undefined} disabled={loading || !isOnline} />
+                    {error && <p id="factor-code-error" role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+                    <button type="submit" disabled={loading || !isOnline || factorCode.length !== (factorMethod === "totp" ? 6 : 5)} className="w-full rounded-xl bg-emerald-700 p-3 font-semibold text-white disabled:opacity-50">{loading ? "Verifying…" : "Verify and sign in"}</button>
                     <p className="text-xs text-gray-500">If you lose access to both methods, request account recovery after signing in on another trusted session or contact support.</p>
                   </form>
                 </div>
