@@ -113,7 +113,7 @@ export default function GlobalUserNotifications() {
       return;
     }
     const type = String(item.type || item.category || "").toLowerCase();
-    if (type.includes("booking") && (type.includes("confirm") || /confirm/i.test(item.title || ""))) {
+    if ((type.includes("booking") || /booking/i.test(item.title || "")) && (type.includes("confirm") || /confirm/i.test(item.title || ""))) {
       navigate("/my-bookings");
       return;
     }
@@ -176,7 +176,7 @@ export default function GlobalUserNotifications() {
   const bodyFirstLine = isMessageType ? String(fullBody).split(/\r?\n/)[0] : String(fullBody);
   const body = bodyFirstLine.length > 116 ? bodyFirstLine.slice(0, 113).trimEnd() + "…" : bodyFirstLine;
   const typeText = String(visible.type || visible.category || "").toLowerCase();
-  const isBookingConfirmed = typeText.includes("booking") && (typeText.includes("confirm") || /confirm/i.test(title));
+  const isBookingConfirmed = (typeText.includes("booking") || /booking/i.test(title)) && (typeText.includes("confirm") || /confirm/i.test(title));
   const destinationImage = visible.destination_image || visible.destinationImage || visible.image_url || visible.imageUrl || visible.metadata?.destinationImage || visible.metadata?.destination_image || visible.metadata?.imageUrl || visible.metadata?.image_url || visible.metadata?.destination?.image || "";
   const actionLabel = conversationId ? "Open conversation" : isBookingConfirmed ? "View my bookings" : (typeText.includes("login") || /signed in|logged in|login activity/i.test(title)) ? "View account activity" : visible.action_label || "View details";
   const holdStart = () => {
