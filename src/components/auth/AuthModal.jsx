@@ -651,6 +651,7 @@ export default function AuthModal() {
   const firstInputRef     = useRef(null);
   const nameInputRef      = useRef(null);
   const termsInputRef     = useRef(null);
+  const connectionWasOnline = useRef(typeof navigator === "undefined" || navigator.onLine !== false);
   const forgotEmailRef    = useRef(null);
   const expiryTimerRef    = useRef(null);
   const forgotExpiryTimerRef = useRef(null);
@@ -811,7 +812,15 @@ export default function AuthModal() {
   }, [isModalOpen]);
 
   useEffect(() => {
-    const updateConnection = () => setIsOnline(typeof navigator === "undefined" || navigator.onLine !== false);
+    const updateConnection = () => {
+      const online = typeof navigator === "undefined" || navigator.onLine !== false;
+      if (online && !connectionWasOnline.current) {
+        setError((current) => typeof current === "string" && /offline|internet connection|could not reach altuvera|couldn\u0027t reach altuvera/i.test(current) ? "" : current);
+        setSuccess("Connection restored. You can continue.");
+      }
+      connectionWasOnline.current = online;
+      setIsOnline(online);
+    };
     window.addEventListener("online", updateConnection);
     window.addEventListener("offline", updateConnection);
     updateConnection();
@@ -988,7 +997,7 @@ export default function AuthModal() {
     e.preventDefault();
     if (!isOnline) { setError("You appear to be offline. Reconnect before requesting a recovery code."); return; }
     setForgotEmailTouched(true);
-    if (!forgotEmailOk) { setError("Please enter a valid email address."); return; }
+    if (!forgotEmailOk) { setError("Please enter a valid email address."); forgotEmailRef.current?.focus(); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
       const res  = await fetch(`${API_BASE}/users/forgot-username/send-code`, {
@@ -1017,7 +1026,7 @@ export default function AuthModal() {
   const doForgotUsernameVerify = useCallback(async (val) => {
     if (!isOnline) { setError("You appear to be offline. Reconnect before verifying your code."); return; }
     if (!forgotEmail.trim())  { setError("Missing email. Please restart."); return; }
-    if (val.length !== 6)     { setError("Enter the full 6-digit code."); return; }
+    if (val.length !== 6)     { setError("Enter the full 6-digit code."); forgotCodeRefs.current[0]?.focus(); return; }
     if (forgotCodeExpired)    { setError("Code expired. Request a new one."); return; }
 
     try {
@@ -1149,7 +1158,7 @@ export default function AuthModal() {
   const doVerify = useCallback(async (val) => {
     if (!isOnline) { setError("You appear to be offline. Reconnect before verifying your code."); return; }
     if (!activeEmail) { setError("Missing email. Please restart."); return; }
-    if (val.length !== 6) { setError("Enter the full 6-digit code."); return; }
+    if (val.length !== 6) { setError("Enter the full 6-digit code."); codeRefs.current[0]?.focus(); return; }
     if (codeExpired)      { setError("Code expired. Request a new one."); return; }
     try {
       setLoading(true); setCodeState("verifying"); setError("");
@@ -1666,7 +1675,7 @@ export default function AuthModal() {
                       </div>
                     </div>
 
-                    <label className="flex items-center gap-3 cursor-pointer group">
+                    <label className="am-keep-signed flex items-center gap-3 cursor-pointer group">
                       <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                         form.keepSignedIn ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
                       }`}>
