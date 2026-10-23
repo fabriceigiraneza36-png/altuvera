@@ -1148,7 +1148,7 @@ export default function AuthModal() {
       >
         {/* Modal */}
         <div
-          className="am-modalIn relative w-full max-w-[1040px] bg-white rounded-none sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
+          className="am-modal am-modalIn relative w-full max-w-[1040px] bg-white rounded-none sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
           style={{
             maxHeight: "100dvh", height: "100dvh",
             ...(window.innerWidth >= 640 ? { height: "auto", maxHeight: "92vh" } : {}),
