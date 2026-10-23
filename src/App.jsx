@@ -975,10 +975,10 @@ useEffect(injectAppStyles, []);
          onClick={onClose}
        >
          <div className="flex-shrink-0">
-           {type === "info" && <i className="fas fa-info-circle" />}
-           {type === "success" && <i className="fas fa-check-circle" />}
-           {type === "warning" && <i className="fas fa-exclamation-triangle" />}
-           {type === "error" && <i className="fas fa-times-circle" />}
+           {type === "info" && <Info size={17} />}
+           {type === "success" && <CheckCircle2 size={17} />}
+           {type === "warning" && <TriangleAlert size={17} />}
+           {type === "error" && <CircleX size={17} />}
          </div>
          <span className="min-w-0 break-words leading-5 line-clamp-3">{String(message || "").split(/\r?\n/)[0]}</span>
        </div>
