@@ -336,7 +336,14 @@ const Contact = () => {
         || (requestedName && itemName.toLowerCase() === requestedName.toLowerCase());
     });
     const selected = match || { id: requestedSlug, slug: requestedSlug, name: requestedName || requestedSlug.replace(/[-_]+/g, " ") };
-    setSelectedDestinations((current) => current.some((item) => String(item.slug || item.id || item._id) === String(selected.slug || selected.id || selected._id)) ? current : [selected, ...current]);
+    setSelectedDestinations((current) => {
+      const existingIndex = current.findIndex((item) => {
+        const keys = [item.slug, item.id, item._id, item.name, item.title].filter(Boolean).map(String);
+        return keys.includes(requestedSlug) || (requestedName && keys.some((key) => key.toLowerCase() === requestedName.toLowerCase()));
+      });
+      if (existingIndex < 0) return [selected, ...current];
+      return current.map((item, index) => index === existingIndex ? selected : item);
+    });
     setDestinationInquiry(true);
     setForm((current) => ({ ...current, subject: current.subject || "Destination Inquiry — " + (selected.name || selected.title || requestedName || requestedSlug) }));
   }, [location.search, availableDestinations]);
