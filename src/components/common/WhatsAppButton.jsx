@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { FaWhatsapp, FaPhoneAlt, FaRegCommentDots, FaTimes, FaPaperPlane, FaUser, FaShieldAlt, FaExternalLinkAlt, FaChevronRight, FaChevronLeft, FaCheck, FaClock, FaRocket, FaRegComment, FaRegComments } from "react-icons/fa";
+import { FaWhatsapp, FaPhoneAlt, FaRegCommentDots, FaTimes, FaPaperPlane, FaUser, FaShieldAlt, FaExternalLinkAlt, FaChevronRight, FaChevronLeft, FaCheck, FaClock, FaRocket, FaRegComment, FaRegComments, FaPlane, FaSuitcase, FaClipboardList, FaHandshake, FaMoneyBillWave } from "react-icons/fa";
 
 // ============================================================
 // TYPOGRAPHY
@@ -31,38 +31,38 @@ const PRESET_MESSAGES = [
   {
     id: 1,
     label: "General Inquiry",
-    emoji: "💬",
+    icon: FaRegCommentDots,
     message:
       "Hello! I'm interested in learning more about your travel services.",
   },
   {
     id: 2,
     label: "Book a Trip",
-    emoji: "✈️",
+    icon: FaPlane,
     message: "Hi! I would like to book a trip. Can you help me?",
   },
   {
     id: 3,
     label: "Tour Packages",
-    emoji: "🎒",
+    icon: FaSuitcase,
     message: "Hello! I'm interested in your tour packages.",
   },
   {
     id: 4,
     label: "Custom Itinerary",
-    emoji: "📋",
+    icon: FaClipboardList,
     message: "Hi! I need help creating a custom travel itinerary.",
   },
   {
     id: 5,
     label: "Get Support",
-    emoji: "🤝",
+    icon: FaHandshake,
     message: "Hello! I need assistance with my booking.",
   },
   {
     id: 6,
     label: "Price Quote",
-    emoji: "💰",
+    icon: FaMoneyBillWave,
     message: "Hi! Can I get a price quote for your services?",
   },
 ];
@@ -1194,7 +1194,7 @@ const WhatsAppButton = () => {
                                 }}
                                 whileTap={{ scale: 0.97 }}
                               >
-                                <span style={S.presetEmoji}>{p.emoji}</span>
+                                <span style={{ ...S.presetEmoji, display: "grid", placeItems: "center" }}><p.icon aria-hidden="true" size={18} /></span>
                                 <span style={S.presetLabel(active)}>
                                   {p.label}
                                 </span>
