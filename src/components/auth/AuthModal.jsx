@@ -2225,7 +2225,7 @@ export default function AuthModal() {
                     )}
                     <div className="flex flex-wrap gap-2">
                       {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");setError("");}} className="rounded-xl border px-3 py-2 text-sm"><HiShieldCheck className="mr-1 inline h-4 w-4" />Authenticator app</button> )}
-                      {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");setError("");}} className="rounded-xl border px-3 py-2 text-sm"><HiKey className="mr-1 inline h-4 w-4" />Recovery code</button> )}
+                      {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");setError("");}} className="rounded-xl border px-3 py-2 text-sm"><HiShieldCheck className="mr-1 inline h-4 w-4" />Recovery code</button> )}
                       <button type="button" onClick={() => { setFactorCode(""); setError(""); setShowAuthMethods(false); setModalView("login"); }} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">Skip passkey / back to sign in</button>
                     </div>
                     <label htmlFor="login-factor-code" className="block text-sm font-medium">{factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}</label>
