@@ -723,13 +723,15 @@ const WhatsAppButton = () => {
     const handleScroll = () => {
       const cur = window.scrollY;
       const delta = cur - lastScrollY.current;
-      if (delta > 15 && cur > 100) setIsVisible(false);
+      const dashboardPath = /^\/(dashboard|profile|my-bookings|wishlist|notifications|reviews|settings|account(?:\/|$))/i.test(location.pathname);
+      if (dashboardPath && delta > 2 && cur > 80) setIsVisible(true);
+      else if (delta > 15 && cur > 100) setIsVisible(false);
       else if (delta < -15 || cur < 100) setIsVisible(true);
       lastScrollY.current = cur;
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [location.pathname]);
 
   // ── Lock body scroll ──
   useEffect(() => {
