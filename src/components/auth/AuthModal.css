@@ -1748,3 +1748,57 @@
   .am-verify-hero-icon, .am-verify-inline-error { animation: none !important; }
   .am-verify-utility-btn { transition: none !important; }
 }
+
+
+/* Modern responsive auth refinement: one clean focus treatment, no double outlines. */
+.am-modal input:focus,
+.am-modal-mobile input:focus,
+.am-modal textarea:focus,
+.am-modal-mobile textarea:focus,
+.am-modal select:focus,
+.am-modal-mobile select:focus,
+.am-modal input:focus-visible,
+.am-modal-mobile input:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, .24) !important;
+  border-color: #059669 !important;
+}
+.am-modal input,
+.am-modal-mobile input,
+.am-modal textarea,
+.am-modal-mobile textarea,
+.am-modal select,
+.am-modal-mobile select {
+  min-width: 0;
+  max-width: 100%;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+.am-modal,
+.am-modal-mobile { box-sizing: border-box; }
+.am-modal *,
+.am-modal-mobile * { box-sizing: border-box; }
+@media (max-width: 639px) {
+  .am-backdrop { padding: 0 !important; align-items: stretch; }
+  .am-modal-mobile {
+    inset: 0;
+    bottom: auto;
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .am-modal-mobile .am-mobile-header { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .am-modal-mobile input,
+  .am-modal-mobile select,
+  .am-modal-mobile textarea,
+  .am-modal-mobile button { font-size: max(16px, 1rem); }
+}
+@media (min-width: 640px) and (max-height: 760px) {
+  .am-modal { max-height: 96dvh; overflow-y: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-modal, .am-modal-mobile, .am-modal * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
