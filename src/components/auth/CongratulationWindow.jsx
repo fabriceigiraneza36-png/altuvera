@@ -289,7 +289,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
   const cfg       = CONTENT[type] || CONTENT.login;
   const firstName = (user?.fullName || user?.name || "").split(" ")[0] || null;
   const avatarUrl = user?.avatar || user?.profilePicture || user?.profileImage || user?.avatarUrl || user?.picture || "";
-  const avatarInitials = (user?.fullName || user?.name || user?.email || "A").trim().split(/\\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const avatarInitials = (user?.fullName || user?.name || user?.email || "A").trim().split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 
   /* ── Confetti ── */
   useEffect(() => {
