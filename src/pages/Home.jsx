@@ -469,8 +469,9 @@ const HOME_STYLES = `
 .east-africa-destination-link:active{transform:scale(.98);}
 .east-africa-destination-link:focus-visible{outline:3px solid #10b981;outline-offset:3px;}
 .east-africa-slide-frame{position:relative;width:100%;height:clamp(190px,22vw,270px);overflow:hidden;background:#e2e8f0;isolation:isolate;}
-.east-africa-slide-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transform:scale(1.035);backface-visibility:hidden;will-change:transform,opacity,filter;transition:opacity 1.35s cubic-bezier(.22,.61,.36,1),visibility 1.35s step-end;visibility:hidden;}
-.east-africa-slide-image.is-active{opacity:1;visibility:visible;animation-duration:1.8s;animation-fill-mode:both;animation-timing-function:cubic-bezier(.16,1,.3,1);}
+.east-africa-slide-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;visibility:visible;transform:scale(1.035);backface-visibility:hidden;will-change:transform,opacity,filter;transition:opacity 1.25s cubic-bezier(.45,0,.2,1),transform 2.4s cubic-bezier(.16,1,.3,1),filter 1.25s ease;}
+/* Keep both layers paintable during the transition: incoming opacity rises while outgoing opacity falls. */
+.east-africa-slide-image.is-active{opacity:1;animation-duration:2.4s;animation-fill-mode:both;animation-timing-function:cubic-bezier(.16,1,.3,1);}
 .east-africa-slide-image.is-active.east-africa-slide-motion-0{animation-name:eaSlideKenBurns;}
 .east-africa-slide-image.is-active.east-africa-slide-motion-1{animation-name:eaSlideFromRight;}
 .east-africa-slide-image.is-active.east-africa-slide-motion-2{animation-name:eaSlideFromLeft;}
@@ -481,12 +482,13 @@ const HOME_STYLES = `
 .east-africa-slide-name{position:absolute;z-index:3;left:0;right:0;bottom:0;padding:14px 15px;color:#fff;font-size:clamp(.9rem,1.1vw,1rem);font-weight:750;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,.4);overflow-wrap:anywhere;}
 .east-africa-slide-placeholder{position:absolute;inset:0;background:linear-gradient(135deg,#dcece2,#8db7a0 55%,#255c40);}
 /* Every incoming image has its own soft fade plus a restrained motion signature. */
-@keyframes eaSlideKenBurns{0%{opacity:0;transform:scale(1.1);filter:saturate(.88) blur(2px)}35%{opacity:.72}100%{opacity:1;transform:scale(1);filter:saturate(1.04) blur(0)}}
-@keyframes eaSlideFromRight{0%{opacity:0;transform:translate3d(3.5%,0,0) scale(1.035);filter:blur(2px)}32%{opacity:.72}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
-@keyframes eaSlideFromLeft{0%{opacity:0;transform:translate3d(-3.5%,0,0) scale(1.035);filter:blur(2px)}32%{opacity:.72}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
-@keyframes eaSlideRise{0%{opacity:0;transform:translate3d(0,2.8%,0) scale(1.025);filter:blur(2px)}36%{opacity:.75}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
-@keyframes eaSlideSoftZoom{0%{opacity:0;transform:scale(1.12);clip-path:inset(3%);filter:blur(1.5px)}38%{opacity:.76}100%{opacity:1;transform:scale(1);clip-path:inset(0);filter:blur(0)}}
-@keyframes eaSlideDrift{0%{opacity:0;transform:scale(1.06) translate3d(0,-1.5%,0);filter:blur(2px)}34%{opacity:.74}100%{opacity:1;transform:scale(1) translate3d(0,0,0);filter:blur(0)}}
+/* Motion keyframes intentionally never animate opacity; CSS transitions crossfade both image layers together. */
+@keyframes eaSlideKenBurns{0%{transform:scale(1.1);filter:saturate(.94)}100%{transform:scale(1);filter:saturate(1.03)}}
+@keyframes eaSlideFromRight{0%{transform:translate3d(2.4%,0,0) scale(1.045);filter:blur(.8px)}100%{transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+@keyframes eaSlideFromLeft{0%{transform:translate3d(-2.4%,0,0) scale(1.045);filter:blur(.8px)}100%{transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+@keyframes eaSlideRise{0%{transform:translate3d(0,1.8%,0) scale(1.035);filter:blur(.6px)}100%{transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+@keyframes eaSlideSoftZoom{0%{transform:scale(1.08);clip-path:inset(1.5%)}100%{transform:scale(1);clip-path:inset(0)}}
+@keyframes eaSlideDrift{0%{transform:scale(1.045) translate3d(0,-1%,0);filter:blur(.7px)}100%{transform:scale(1) translate3d(0,0,0);filter:blur(0)}}
 @media(max-width:600px){.east-africa-gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}.east-africa-slide-frame{height:clamp(170px,54vw,230px)}.east-africa-slide-name{padding:10px;font-size:.84rem}}
 @media(prefers-reduced-motion:reduce){.east-africa-destination-link{transition:none}.east-africa-destination-link:hover,.east-africa-destination-link:active{transform:none}.east-africa-slide-image.is-active{animation:none}}
 
