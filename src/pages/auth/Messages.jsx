@@ -729,7 +729,18 @@ const MsgBubble = React.memo(function MsgBubble({
 ══════════════════════════════════════════════════════════════════════════ */
 
 function NewConvModal({ onClose, onCreated }) {
-  const [subject,  setSubject]  = useState("");
+  const [subject, setSubject] = useState("");
+  const [inquiryType, setInquiryType] = useState("general");
+  const [relatedReference, setRelatedReference] = useState("");
+  const inquiryConfig = {
+    general: { label: "General question", subject: "General enquiry", referenceLabel: "Related details", referenceHint: "Optional details", placeholder: "Tell us how we can help…" },
+    booking: { label: "Booking", subject: "Booking enquiry", referenceLabel: "Booking reference", referenceHint: "Booking number or reference", placeholder: "Ask about your booking, dates, status, guests, or changes…" },
+    destination: { label: "Destination", subject: "Destination enquiry", referenceLabel: "Destination", referenceHint: "Destination name", placeholder: "Ask about activities, seasons, permits, or destination details…" },
+    package: { label: "Safari package", subject: "Safari package enquiry", referenceLabel: "Package name or reference", referenceHint: "Package name or reference", placeholder: "Ask about itinerary, price, availability, or inclusions…" },
+    country: { label: "Country", subject: "Country travel enquiry", referenceLabel: "Country", referenceHint: "Country name", placeholder: "Ask about entry requirements, travel logistics, or local experiences…" },
+    post: { label: "Post or article", subject: "Post enquiry", referenceLabel: "Post title or link", referenceHint: "Post title or URL", placeholder: "Ask about a post, its recommendations, or a place mentioned…" },
+  };
+  const activeInquiry = inquiryConfig[inquiryType] || inquiryConfig.general;
   const [destinationName, setDestinationName] = useState("");
   const [destinationOptions, setDestinationOptions] = useState([]);
   const [selectedDestination, setSelectedDestination] = useState(null);
@@ -789,13 +800,13 @@ function NewConvModal({ onClose, onCreated }) {
       const res  = await authFetch(`${API_BASE}/messages/conversations`, {
         method:"POST",
         body: JSON.stringify({
-          subject: subject.trim() || (validDestination ? `Question about ${validDestination.name}` : "General Enquiry"),
+          subject: subject.trim() || (validDestination ? `Question about ${validDestination.name}` : activeInquiry.subject),
           body: body.trim(),
           firstMessage: body.trim(),
-          destinationName: validDestination?.name || null,
+          destinationName: (inquiryType === "destination" ? (validDestination?.name || relatedReference.trim()) : validDestination?.name) || null,
           destinationId: validDestination?.id || null,
-          metadata: validDestination ? { destinationName: validDestination.name, destinationId: validDestination.id } : {},
-          kind: "general",
+          metadata: { inquiryType, inquiryLabel: activeInquiry.label, relatedReference: relatedReference.trim() || null, ...(validDestination ? { destinationName: validDestination.name, destinationId: validDestination.id } : {}) },
+          kind: inquiryType,
         }),
       });
       const data = await res.json();
@@ -826,7 +837,7 @@ function NewConvModal({ onClose, onCreated }) {
             </div>
             <div>
               <h3 className="font-bold text-slate-800 text-sm">New Message</h3>
-              <p className="text-[10px] text-slate-400">Write to Altuvera support</p>
+              <p className="text-[10px] text-slate-400">Choose what your message is about</p>
             </div>
           </div>
           <button onClick={onClose} aria-label="Close"
@@ -847,11 +858,24 @@ function NewConvModal({ onClose, onCreated }) {
           </div>
 
           <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Inquiry type</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {Object.entries(inquiryConfig).map(([value, config]) => (
+                <button key={value} type="button" onClick={() => { setInquiryType(value); setSubject(current => !current || Object.values(inquiryConfig).some(item => item.subject === current) ? config.subject : current); setRelatedReference(""); }} aria-pressed={inquiryType === value}
+                  className={"rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition " + (inquiryType === value ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-100" : "border-slate-200 bg-white text-slate-600 hover:border-emerald-300")}>
+                  {config.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-slate-500">Choose a category so the support team can handle your inquiry in the right context.</p>
+          </div>
+
+          <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
               Subject <span className="text-slate-300 normal-case font-normal">(optional)</span>
             </label>
             <input value={subject} onChange={e=>setSubject(e.target.value)}
-              placeholder="e.g. Question about my safari booking"
+              placeholder={activeInquiry.subject}
               className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl outline-none
                          focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
                          transition placeholder:text-slate-400" />
@@ -859,7 +883,7 @@ function NewConvModal({ onClose, onCreated }) {
 
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-              Destination <span className="text-slate-300 normal-case font-normal">(optional)</span>
+              {inquiryType === "destination" ? "Destination" : activeInquiry.referenceLabel} <span className="text-slate-300 normal-case font-normal">(optional)</span>
             </label>
             <div className="relative">
               <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
@@ -924,7 +948,7 @@ function NewConvModal({ onClose, onCreated }) {
               Message <span className="text-red-400">*</span>
             </label>
             <textarea ref={taRef} value={body} onChange={e=>setBody(e.target.value)}
-              rows={5} placeholder="Hi! I'd like to ask about…"
+              rows={5} placeholder={activeInquiry.placeholder}
               className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl outline-none
                          focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
                          transition resize-none placeholder:text-slate-400" />
