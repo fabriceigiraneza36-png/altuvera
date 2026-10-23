@@ -25,7 +25,7 @@ export default function AltuveraLoader({ title = "Discovering your next journey"
       <style>{styles}</style>
       <div className="altuvera-loading__content">
         <div className={`altuvera-loading__logo-wrap${bareLogo ? " altuvera-loading__logo-wrap--bare" : ""}`}>
-          <img className={`altuvera-loading__logo${bareLogo ? " altuvera-loading__logo--bare" : ""}`} src="/logo.png" alt="Altuvera Safaris" />
+          <img className={`altuvera-loading__logo${bareLogo ? " altuvera-loading__logo--bare" : ""}`} src="/altuvera.png" alt="Altuvera Safaris" />
         </div>
         <p className="altuvera-loading__eyebrow">Altuvera Safaris</p>
         <h2 className="altuvera-loading__title">{title}</h2>
