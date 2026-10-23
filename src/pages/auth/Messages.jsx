@@ -503,8 +503,9 @@ function ScrollToBottomBtn({ visible, onClick, composerVisible = true }) {
   return (
     <button onClick={onClick} aria-label="Scroll to bottom"
       style={{
-        position:"absolute", bottom: composerVisible ? 144 : 18, right:16, zIndex:10,
+        position:"absolute", bottom: composerVisible ? 184 : 18, right:16, zIndex:10,
         transition:"opacity .25s, transform .25s",
+        maxWidth:"calc(100% - 32px)",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(12px)",
         pointerEvents: visible ? "auto" : "none",
