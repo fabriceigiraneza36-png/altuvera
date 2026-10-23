@@ -793,7 +793,9 @@ const WhatsAppButton = () => {
 
   const canSend = selectedPreset || customMessage.trim();
   const isMessagesRoute = /(^|\/)messages(\/|$)/i.test(location.pathname);
-  const showFAB = isVisible && !isModalOpen && !isMessagesRoute;
+  const isUserPortalRoute = /^\/(dashboard|profile|my-bookings|wishlist|notifications|messages|reviews|settings|account(?:\/|$))/i.test(location.pathname);
+  // The dashboard's hamburger takes over the floating shortcut's position.
+  const showFAB = isVisible && !isModalOpen && !isMessagesRoute && !isUserPortalRoute;
 
   const focusStyle = (e) => {
     e.target.style.borderColor = "#25D366";
