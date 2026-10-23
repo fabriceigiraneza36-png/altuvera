@@ -53,7 +53,7 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
       return true;
     });
   }, [comments]);
-  const loopComments = useMemo(() => visibleComments.length > 0 ? [...visibleComments, ...visibleComments] : [], [visibleComments]);
+  const loopComments = visibleComments;
   const currentUserId = user?.id || user?._id || user?.userId || user?.uid;
 
   useEffect(() => {
