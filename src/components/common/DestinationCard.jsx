@@ -1048,7 +1048,7 @@ const {
    const cleanDescription = cleanText(description);
 
   /* ── derived values ── */
-  const destId = slug || id;
+  const destId = slug || id || destination?._id;
   const isLiked = isWishlisted(destId);
 
   const toDisplayText = (value) => {
