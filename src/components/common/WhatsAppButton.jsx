@@ -174,10 +174,11 @@ const fireConfetti = () => {
 // ============================================================
 const S = {
   // Floating button area
-  floatingWrap: (isMobile) => ({
+  floatingWrap: (isMobile, isUserPortalRoute = false) => ({
     position: "fixed",
     bottom: isMobile ? 18 : 28,
-    left: isMobile ? 18 : 28,
+    left: isUserPortalRoute ? "auto" : (isMobile ? 18 : 28),
+    right: isUserPortalRoute ? (isMobile ? 18 : 28) : "auto",
     zIndex: 999999,
     display: "flex",
     alignItems: "center",
@@ -795,7 +796,7 @@ const WhatsAppButton = () => {
   const isMessagesRoute = /(^|\/)messages(\/|$)/i.test(location.pathname);
   const isUserPortalRoute = /^\/(dashboard|profile|my-bookings|wishlist|notifications|messages|reviews|settings|account(?:\/|$))/i.test(location.pathname);
   // The dashboard's hamburger takes over the floating shortcut's position.
-  const showFAB = isVisible && !isModalOpen && !isMessagesRoute && !isUserPortalRoute;
+  const showFAB = isVisible && !isModalOpen && !isMessagesRoute;
 
   const focusStyle = (e) => {
     e.target.style.borderColor = "#25D366";
@@ -809,8 +810,8 @@ const WhatsAppButton = () => {
     e.target.style.backgroundColor = "#fafffe";
   };
 
-  // Never mount the floating WhatsApp widget or its modal anywhere in the signed-in user portal.
-  if (isUserPortalRoute) return null;
+  // Keep WhatsApp available in the user portal, away from the bottom-left dashboard menu.
+  if (isMessagesRoute) return null;
 
   // ============================================================
   // RENDER
@@ -821,7 +822,7 @@ const WhatsAppButton = () => {
       <AnimatePresence>
         {showFAB && (
           <motion.div
-            style={S.floatingWrap(isMobile)}
+            style={S.floatingWrap(isMobile, isUserPortalRoute)}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
