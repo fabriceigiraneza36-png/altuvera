@@ -35,7 +35,7 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const visibleComments = useMemo(() => comments.filter((comment) => comment && comment.content), [comments]);
-  const loopComments = useMemo(() => visibleComments.length > 1 ? [...visibleComments, ...visibleComments] : visibleComments, [visibleComments]);
+  const loopComments = useMemo(() => visibleComments.length > 0 ? [...visibleComments, ...visibleComments] : [], [visibleComments]);
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
@@ -102,7 +102,7 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
     <>
       {visibleComments.length > 0 && (
         <section className="dc-comments-marquee" aria-label="Destination comments">
-          <div className={`dc-comments-marquee__track${visibleComments.length === 1 ? " dc-comments-marquee__track--single" : ""}`}>
+          <div className="dc-comments-marquee__track">
             {loopComments.map((comment, index) => (
               <div className="dc-comments-marquee__item" key={`${comment.id || comment.createdAt || "comment"}-${index}`}>
                 <CommentCard comment={comment} />
