@@ -25,7 +25,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
     { name: "Overview",       path: "/dashboard",      icon: <FiHome size={18} />        },
     { name: "My Profile",     path: "/profile",        icon: <FiUser size={18} />        },
     { name: "Bookings",       path: "/my-bookings",    icon: <FiCalendar size={18} />    },
-    { name: "Wishlist",       path: "/wishlist",       icon: <FiHeart size={18} />       },
+    { name: "Favourites",    path: "/wishlist",       icon: <FiHeart size={18} />       },
     { name: "Notifications",  path: "/notifications",  icon: <FiBell size={18} />        },
     { name: "Messages",       path: "/messages",       icon: <FiMessageSquare size={18} /> },
 
