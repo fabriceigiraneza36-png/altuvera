@@ -4299,3 +4299,11 @@ html { scroll-behavior: smooth; }
     transition: none !important;
   }
 }
+
+/* Destination favourite toggle */
+.d-favourite-toggle{gap:8px;transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease}
+.d-favourite-toggle:hover{transform:translateY(-1px)}
+.d-favourite-toggle--active{color:#be123c!important;border-color:rgba(190,18,60,.3)!important;background:#fff1f2!important}
+.d-favourite-toggle--active svg{fill:currentColor}
+.d-favourite-toggle:focus-visible{outline:3px solid #6ee7b7;outline-offset:3px}
+@media(max-width:560px){.d-about__book-row .d-favourite-toggle{width:100%;justify-content:center;min-height:46px}}
