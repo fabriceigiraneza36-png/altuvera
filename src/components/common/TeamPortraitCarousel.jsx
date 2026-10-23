@@ -26,6 +26,8 @@ const extractMembers = (payload) => {
 export default function TeamPortraitCarousel() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openingMember, setOpeningMember] = useState(null);
+  const openingTimer = useRef(null);
   const trackRef = useRef(null);
   const navigate = useNavigate();
 
@@ -39,7 +41,7 @@ export default function TeamPortraitCarousel() {
       .then((payload) => setMembers(extractMembers(payload)))
       .catch((error) => { if (error.name !== 'AbortError') setMembers([]); })
       .finally(() => setLoading(false));
-    return () => controller.abort();
+    return () => { controller.abort(); if (openingTimer.current) window.clearTimeout(openingTimer.current); };
   }, []);
 
   const repeated = useMemo(() => members.length > 1 ? [...members, ...members, ...members] : members, [members]);
@@ -94,16 +96,19 @@ export default function TeamPortraitCarousel() {
         .about-team-strip-track{display:flex;align-items:flex-start;gap:clamp(12px,2vw,22px);width:max-content;overflow-x:auto;scrollbar-width:none;padding:5px 8px 8px;overscroll-behavior-x:contain;touch-action:pan-x}
         .about-team-strip-track::-webkit-scrollbar{display:none}
         .about-team-person{display:flex;flex:0 0 auto;width:clamp(58px,6vw,76px);flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:#064e3b;outline-offset:4px}
-        .about-team-portrait-shell{width:clamp(58px,6vw,76px);height:clamp(58px,6vw,76px);padding:3px;border-radius:50%;background:conic-gradient(from var(--team-angle,0deg),#059669,#a7f3d0,#34d399,#047857,#bbf7d0,#059669);animation:aboutTeamHue 5.5s linear infinite;box-shadow:0 3px 12px #065f461c;transition:transform .25s ease,box-shadow .25s ease}
+        .about-team-portrait-shell{position:relative;isolation:isolate;overflow:hidden;width:clamp(58px,6vw,76px);height:clamp(58px,6vw,76px);padding:3px;border-radius:50%;background:#059669;box-shadow:0 3px 12px #065f461c;transition:transform .28s cubic-bezier(.2,.8,.25,1.25),box-shadow .25s ease;flex:0 0 auto}
+        .about-team-portrait-shell::before{content:'';position:absolute;z-index:-1;inset:-70%;border-radius:50%;background:conic-gradient(from 0deg,#059669 0deg,#a7f3d0 55deg,#34d399 115deg,#047857 180deg,#bbf7d0 245deg,#10b981 305deg,#059669 360deg);animation:aboutTeamBorderSpin 2.4s linear infinite;transform-origin:center center}
         .about-team-person:hover .about-team-portrait-shell,.about-team-person:focus-visible .about-team-portrait-shell{transform:translateY(-3px) scale(1.06);box-shadow:0 8px 20px #065f4633}
-        .about-team-portrait{width:100%;height:100%;border:2px solid #fff;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#d1fae5,#ecfdf5);display:grid;place-items:center;color:#047857;font-weight:800;font-size:19px}
+        .about-team-person.is-opening .about-team-portrait-shell{animation:aboutTeamPortraitBounce .32s cubic-bezier(.34,1.56,.64,1) both;box-shadow:0 10px 24px #05966955}
+        .about-team-portrait{position:relative;z-index:1;width:100%;height:100%;border:2px solid #fff;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#d1fae5,#ecfdf5);display:grid;place-items:center;color:#047857;font-weight:800;font-size:19px;box-sizing:border-box}
         .about-team-portrait img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 30%;border-radius:50%}
         .about-team-name{max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:700;text-align:center;line-height:1.2}
         .about-team-skeleton{width:clamp(58px,6vw,76px);height:clamp(58px,6vw,76px);flex:0 0 auto;border-radius:50%;background:linear-gradient(100deg,#e7f7ee,#fff,#d1fae5);background-size:200% 100%;animation:aboutTeamShimmer 1.3s ease infinite}
-        @keyframes aboutTeamHue{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+        @keyframes aboutTeamBorderSpin{to{transform:rotate(360deg)}}
+        @keyframes aboutTeamPortraitBounce{0%{transform:scale(1)}35%{transform:scale(1.18)}65%{transform:scale(.94)}100%{transform:scale(1.04)}}
         @keyframes aboutTeamShimmer{to{background-position:-200% 0}}
         @media(max-width:620px){.about-team-strip{padding:14px 12px 16px}.about-team-strip-inner{display:block}.about-team-strip-copy{max-width:none;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 2px 9px}.about-team-strip-eyebrow{display:none}.about-team-strip-title{font-size:16px}.about-team-strip-link{margin:0;white-space:nowrap}.about-team-strip-track{gap:13px;padding:4px 4px 7px}.about-team-person{width:58px}.about-team-portrait-shell{width:58px;height:58px}.about-team-name{font-size:9px;max-width:60px}}
-        @media(prefers-reduced-motion:reduce){.about-team-portrait-shell,.about-team-skeleton{animation:none}.about-team-strip-track{scroll-behavior:auto}}
+        @media(prefers-reduced-motion:reduce){.about-team-portrait-shell::before,.about-team-person.is-opening .about-team-portrait-shell,.about-team-skeleton{animation:none}.about-team-strip-track{scroll-behavior:auto}}
       `}</style>
       <div className="about-team-strip-inner">
         <div className="about-team-strip-copy">
@@ -117,7 +122,7 @@ export default function TeamPortraitCarousel() {
           <div className="about-team-strip-track" ref={trackRef} aria-label="Team members, select a portrait to view the full team">
             {loading && Array.from({length:6},(_,i)=><div key={i} className="about-team-skeleton" aria-hidden="true"/>)}
             {repeated.map((member,index)=>(
-              <a className="about-team-person" href="/team" key={`${member.id}-${index}`} aria-label={`Meet ${member.name}, ${member.role}. Open team page`} onClick={(event)=>{event.preventDefault();navigate('/team');}}>
+              <a className={`about-team-person${openingMember===member.id ? " is-opening" : ""}`} href="/team" key={`${member.id}-${index}` aria-label={`Meet ${member.name}, ${member.role}. Open team page`} onClick={(event)=>{event.preventDefault();if(openingMember!==null)return;setOpeningMember(member.id);openingTimer.current=window.setTimeout(()=>navigate('/team'),320);}}>
                 <span className="about-team-portrait-shell"><span className="about-team-portrait">
                   {member.image ? <img src={member.image} alt={member.name} loading="lazy" onError={(event)=>{event.currentTarget.style.display='none';}}/> : member.name.trim().split(/\\s+/).slice(0,2).map((part)=>part[0]).join('').toUpperCase()}
                 </span></span>
