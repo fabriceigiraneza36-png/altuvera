@@ -652,8 +652,12 @@ const CSS = `
 .dc-public-like-btn:disabled { opacity: .65; cursor: wait; }
 .dc-public-like-btn--liked { background: rgba(220,252,231,.97); color: #064e3b; box-shadow: 0 3px 12px rgba(6,78,59,.2); }
 .dc-like-count { position: absolute; left: -5px; bottom: -5px; min-width: 18px; height: 17px; padding: 0 4px; display: grid; place-items: center; border-radius: 999px; background: #fff; color: #064e3b; border: 1px solid #bbf7d0; box-shadow: 0 1px 4px rgba(15,23,42,.12); font-size: 9px; font-weight: 800; line-height: 1; }
-.dc-live-like-label { position: absolute; left: 12px; bottom: 12px; z-index: 4; display: inline-flex; align-items: center; gap: 6px; max-width: calc(100% - 96px); padding: 6px 10px; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; color: #fff; background: rgba(6,78,59,.78); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 11px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-.dc-live-like-label svg { flex: 0 0 auto; }
+.dc-live-like-label { position: absolute; left: 12px; bottom: 12px; z-index: 7; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 36px; min-height: 44px; padding: 5px 7px; border: 1px solid rgba(255,255,255,.28); border-radius: 12px; color: #fff; background: rgba(15,23,42,.58); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer; font: inherit; transition: color .2s, background .2s, transform .2s; }
+.dc-live-like-label:hover { transform: translateY(-2px); background: rgba(255,255,255,.95); color: #064e3b; }
+.dc-live-like-label--liked { background: rgba(220,252,231,.96); color: #064e3b; }
+.dc-live-like-label:disabled { opacity: .65; cursor: wait; }
+.dc-live-like-count { font-size: 10px; line-height: 1; font-weight: 800; color: inherit; }
+.dc-like-error { position: absolute; left: 56px; bottom: 16px; z-index: 8; max-width: calc(100% - 76px); padding: 6px 9px; border-radius: 8px; background: #7f1d1d; color: #fff; font-size: 11px; line-height: 1.3; box-shadow: 0 2px 10px #0003; }
 
 @media (prefers-reduced-motion: reduce) {
   .dc-card, .dc-track, .dc-img, .dc-btn-book,
@@ -960,7 +964,7 @@ const DestinationCard = memo(function DestinationCard({
   const [copied,    setCopied]    = useState(false);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
   const likeId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
-  const { likes: destinationLikes, loading: likesLoading, toggleLike } = useDestinationLikes(likeId, "destination");
+  const { likes: destinationLikes, loading: likesLoading, error: destinationLikeError, toggleLike } = useDestinationLikes(likeId, "destination");
   const [likeBusy, setLikeBusy] = useState(false);
 
   useEffect(() => { injectStyles(); }, []);
@@ -1201,10 +1205,11 @@ const blurb =
           )}
 
           <div className="dc-img-overlay" aria-hidden="true" />
-          <div className="dc-live-like-label" aria-live="polite">
-            <FiThumbsUp size={13} aria-hidden="true" />
-            <span>{Number(destinationLikes.total || 0).toLocaleString()} {Number(destinationLikes.total || 0) === 1 ? "like" : "likes"}</span>
-          </div>
+          <button type="button" className={`dc-live-like-label${destinationLikes.isLiked ? " dc-live-like-label--liked" : ""}`} onClick={handleDestinationLike} disabled={likeBusy || likesLoading} aria-label={destinationLikes.isLiked ? `Unlike ${name}` : `Like ${name}`} aria-pressed={destinationLikes.isLiked} title={destinationLikeError || (destinationLikes.isLiked ? "Unlike destination" : "Like destination")}>
+            <FiThumbsUp size={17} aria-hidden="true" />
+            <span className="dc-live-like-count">{Number(destinationLikes.total || 0).toLocaleString()}</span>
+          </button>
+          {destinationLikeError && <span className="dc-like-error" role="alert">{destinationLikeError}</span>}
 
           {(activeBadges.length > 0 || isEcoFriendly) && (
             <div className="dc-badges">
@@ -1248,20 +1253,6 @@ const blurb =
                 }}
               />
             </button>
-
-            <div className="dc-like-action">
-              <button
-                onClick={handleDestinationLike}
-                aria-label={destinationLikes.isLiked ? `Unlike ${name}` : `Like ${name}`}
-                aria-pressed={destinationLikes.isLiked}
-                disabled={likeBusy || likesLoading}
-                className={`dc-action-btn dc-public-like-btn${destinationLikes.isLiked ? " dc-public-like-btn--liked" : ""}`}
-                title={destinationLikes.isLiked ? "Unlike destination" : "Like destination"}
-              >
-                <FiThumbsUp size={16} aria-hidden="true" style={{ fill: destinationLikes.isLiked ? "#064e3b" : "none", color: destinationLikes.isLiked ? "#064e3b" : "#64748b", transition: "color .2s ease, fill .2s ease" }} />
-                <span className="dc-like-count">{Number(destinationLikes.total || 0).toLocaleString()}</span>
-              </button>
-            </div>
 
             <div style={{ position: "relative" }}>
               <button
