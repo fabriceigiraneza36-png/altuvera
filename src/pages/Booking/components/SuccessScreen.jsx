@@ -9,7 +9,6 @@ import {
   HiOutlineClipboardCopy,
   HiCheck,
   HiArrowRight,
-  HiOutlineSparkles,
 } from "react-icons/hi";
 
 const WA = "250785751391";
@@ -44,7 +43,7 @@ export default function SuccessScreen({ displayName, bookingRef, email, category
               <HiCheckCircle className="h-11 w-11 sm:h-12 sm:w-12" aria-hidden="true" />
             </div>
             <p className="relative mx-auto inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-emerald-50 sm:text-xs">
-              <HiOutlineSparkles className="h-4 w-4" aria-hidden="true" />
+              <HiCheckCircle className="h-4 w-4" aria-hidden="true" />
               Booking request received
             </p>
             <h1 className="relative mx-auto mt-4 max-w-2xl text-2xl font-black leading-tight tracking-tight sm:text-4xl lg:text-[2.65rem]">
