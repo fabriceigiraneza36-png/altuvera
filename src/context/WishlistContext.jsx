@@ -72,13 +72,16 @@ export function WishlistProvider({ children }) {
   }, [storageKey]);
 
   useEffect(() => {
+    loadedRef.current = false;
+    loadingRef.current = false;
+    setWishlistIds(new Set());
+    setLoaded(false);
     if (!isAuthenticated) {
-      reset();
+      setLoading(false);
       return;
     }
-
     loadWishlist();
-  }, [isAuthenticated, loadWishlist, reset, storageKey]);
+  }, [isAuthenticated, loadWishlist, storageKey]);
 
   const toggleWishlist = useCallback(
     (destinationId) => {
