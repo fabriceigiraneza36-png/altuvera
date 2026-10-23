@@ -37,9 +37,11 @@ const S = {
     pointerEvents:  "auto",
     width:          "100%",
     maxWidth:       460,
+    maxHeight:      "min(88dvh, 760px)",
     background:     "#ffffff",
-    borderRadius:   24,
-    overflow:       "hidden",
+    borderRadius:   22,
+    overflowX:      "hidden",
+    overflowY:      "auto",
     boxShadow:      "0 24px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.04)",
     fontFamily:     "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
@@ -47,7 +49,7 @@ const S = {
   /* Top gradient strip */
   topStrip: {
     background:     "linear-gradient(135deg, #064e3b 0%, #065f46 50%, #059669 100%)",
-    padding:        "32px 28px 28px",
+    padding:        "24px 24px 20px",
     position:       "relative",
     overflow:       "hidden",
     textAlign:      "center",
@@ -72,17 +74,11 @@ const S = {
     background:   "rgba(255,255,255,0.04)",
     pointerEvents: "none",
   },
-  iconRing: {
-    width:          80,
-    height:         80,
-    borderRadius:   "50%",
-    background:     "rgba(255,255,255,0.15)",
-    border:         "2px solid rgba(255,255,255,0.3)",
-    display:        "flex",
-    alignItems:     "center",
-    justifyContent: "center",
-    margin:         "0 auto 16px",
-    backdropFilter: "blur(8px)",
+  profileRing: {
+    width: 76, height: 76, borderRadius: "50%", background: "rgba(255,255,255,0.14)",
+    border: "2px solid rgba(255,255,255,0.58)", display: "flex", alignItems: "center",
+    justifyContent: "center", margin: "0 auto 12px", overflow: "hidden", position: "relative",
+    zIndex: 1, boxShadow: "0 0 0 7px rgba(255,255,255,0.06), 0 10px 28px rgba(0,0,0,.18)",
   },
   stripTitle: {
     fontSize:    "1.45rem",
@@ -122,7 +118,7 @@ const S = {
   },
 
   /* Body */
-  body: { padding: "24px 28px 28px" },
+  body: { padding: "16px 22px 20px" },
 
   greeting: {
     textAlign:    "center",
@@ -145,8 +141,8 @@ const S = {
   tipsWrap: {
     display:        "flex",
     flexDirection:  "column",
-    gap:            10,
-    marginBottom:   24,
+    gap:            8,
+    marginBottom:   14,
   },
   tipItem: {
     display:     "flex",
@@ -181,7 +177,7 @@ const S = {
     alignItems:     "center",
     justifyContent: "center",
     gap:            8,
-    padding:        "14px 24px",
+    padding:        "11px 20px",
     borderRadius:   14,
     border:         "none",
     background:     "linear-gradient(135deg, #059669, #047857)",
@@ -207,23 +203,26 @@ const S = {
     background: active ? "#059669" : "#e2e8f0", transition: "all 0.3s",
   }),
   quickLinks: {
-    display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 8, marginTop: 14,
+    display: "flex", gap: 9, marginTop: 12, padding: "2px 2px 8px",
+    overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory",
+    WebkitOverflowScrolling: "touch", scrollbarWidth: "thin",
   },
   quickLink: {
     display: "flex", alignItems: "center", gap: 8, minWidth: 0,
     padding: "10px 11px", borderRadius: 12, border: "1px solid #dbece4",
     background: "#fbfefc", color: "#166534", textDecoration: "none",
     fontSize: "0.78rem", fontWeight: 750, transition: "all .18s ease",
+    flex: "0 0 auto", minWidth: 138, scrollSnapAlign: "start",
   },
 };
 
 const KEYFRAMES = `
-  @keyframes cgRing {
-    0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
-    60%  { transform: scale(1.1) rotate(10deg); }
-    100% { transform: scale(1) rotate(0deg);    opacity: 1; }
-  }
+  @keyframes cgProfileReveal { 0% { transform: translateY(10px) scale(.82); opacity: 0; } 65% { transform: translateY(-3px) scale(1.04); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+  .cg-profile-photo { width:100%; height:100%; object-fit:cover; display:block; opacity:.94; }
+  .cg-quick-links::-webkit-scrollbar { height:4px; }
+  .cg-quick-links::-webkit-scrollbar-thumb { background:#c7e5d4; border-radius:99px; }
+  @media (max-width: 520px) { .cg-modal { max-height:min(90dvh,720px)!important; border-radius:20px!important; } .cg-top { padding:22px 18px 18px!important; } .cg-body { padding:14px 16px 16px!important; } .cg-profile { width:68px!important;height:68px!important; } .cg-tips { gap:7px!important;margin-bottom:10px!important; } .cg-tip { padding:8px 10px!important; } .cg-cta { margin-bottom:10px!important; } }
+  @media (prefers-reduced-motion: reduce) { .cg-profile { animation:none!important; } }
 `;
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -285,8 +284,9 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
   }, [isVisible, type]);
 
   const cfg       = CONTENT[type] || CONTENT.login;
-  const { Icon }  = cfg;
   const firstName = (user?.fullName || user?.name || "").split(" ")[0] || null;
+  const avatarUrl = user?.avatar || user?.profilePicture || user?.profileImage || user?.avatarUrl || user?.picture || "";
+  const avatarInitials = (user?.fullName || user?.name || user?.email || "A").trim().split(/\\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 
   /* ── Confetti ── */
   useEffect(() => {
@@ -356,14 +356,15 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
             {/* Wrapper */}
             <div style={S.wrapper}>
               <motion.div
+                className="cg-modal"
                 style={S.modal}
-                initial={{ opacity: 0, scale: 0.82, y: 40 }}
-                animate={{ opacity: 1, scale: 1,    y: 0  }}
-                exit={{    opacity: 0, scale: 0.88,  y: 20 }}
+                initial={{ opacity: 0, scale: 0.88, y: 22 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 12 }}
                 transition={{ type: "spring", stiffness: 280, damping: 24 }}
               >
                 {/* ── Top strip ─────────────────────────────────────── */}
-                <div style={S.topStrip}>
+                <div className="cg-top" style={S.topStrip}>
                   <div style={S.stripBubble1} />
                   <div style={S.stripBubble2} />
 
@@ -378,14 +379,12 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                     <X size={16} />
                   </button>
 
-                  {/* Animated icon ring */}
-                  <motion.div
-                    style={S.iconRing}
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0    }}
-                    transition={{ type: "spring", stiffness: 200, delay: 0.15 }}
-                  >
-                    <Icon size={36} color="#ffffff" />
+                  {/* Full-circle profile photo over the animated dark-green header */}
+                  <motion.div className="cg-profile" style={S.profileRing}
+                    initial={{ scale: 0.78, opacity: 0, y: 8 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.12 }}>
+                    {avatarUrl ? <img className="cg-profile-photo" src={avatarUrl} alt={`${user?.fullName || user?.name || "Your"} profile`} /> : <span aria-label="Profile initials" style={{ color:"#fff", fontWeight:900, fontSize:25, letterSpacing:"-.04em" }}>{avatarInitials}</span>}
                   </motion.div>
 
                   <motion.h2
@@ -408,7 +407,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                 </div>
 
                 {/* ── Body ──────────────────────────────────────────── */}
-                <div style={S.body}>
+                <div className="cg-body" style={S.body}>
 
                   {type === "signup" && showSecurityPrompt ? (
                     <div style={{ textAlign: "center", padding: "8px 0 12px" }}>
@@ -444,10 +443,11 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                   )}
 
                   {/* Tips */}
-                  <div style={S.tipsWrap}>
+                  <div className="cg-tips" style={S.tipsWrap}>
                     {cfg.tips.map(({ icon: TipIcon, text }, idx) => (
                       <motion.div
                         key={text}
+                        className="cg-tip"
                         style={S.tipItem}
                         initial={{ opacity: 0, x: -16 }}
                         animate={{ opacity: 1, x: 0   }}
@@ -467,7 +467,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                     </p>
                   )}
 
-                  <nav aria-label="Quick links" style={S.quickLinks}>
+                  <nav aria-label="Quick links" className="cg-quick-links" style={S.quickLinks}>
                     {(cfg.quickLinks || []).map(({ icon: LinkIcon, label, href }) => (
                       <a key={href} href={href} style={S.quickLink}
                         onMouseEnter={(e) => { e.currentTarget.style.background = "#ecfdf5"; e.currentTarget.style.borderColor = "#86efac"; }}
@@ -480,6 +480,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
 
                   {/* CTA */}
                   <motion.button
+                    className="cg-cta"
                     style={S.cta}
                     onClick={handleCta}
                     initial={{ opacity: 0, y: 14 }}
