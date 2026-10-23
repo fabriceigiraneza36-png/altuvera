@@ -5,6 +5,7 @@ import {
   FiMapPin,
   FiClock,
   FiHeart,
+  FiThumbsUp,
   FiShare2,
   FiArrowRight,
   FiAward,
@@ -646,6 +647,14 @@ const CSS = `
   .dc-action-btn { width: 32px; height: 32px; }
   .dc-stats     { gap: 6px; }
 }
+.dc-like-action { position: relative; }
+.dc-public-like-btn { overflow: visible; }
+.dc-public-like-btn:disabled { opacity: .65; cursor: wait; }
+.dc-public-like-btn--liked { background: rgba(220,252,231,.97); color: #064e3b; box-shadow: 0 3px 12px rgba(6,78,59,.2); }
+.dc-like-count { position: absolute; left: -5px; bottom: -5px; min-width: 18px; height: 17px; padding: 0 4px; display: grid; place-items: center; border-radius: 999px; background: #fff; color: #064e3b; border: 1px solid #bbf7d0; box-shadow: 0 1px 4px rgba(15,23,42,.12); font-size: 9px; font-weight: 800; line-height: 1; }
+.dc-live-like-label { position: absolute; left: 12px; bottom: 12px; z-index: 4; display: inline-flex; align-items: center; gap: 6px; max-width: calc(100% - 96px); padding: 6px 10px; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; color: #fff; background: rgba(6,78,59,.78); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 11px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.dc-live-like-label svg { flex: 0 0 auto; }
+
 @media (prefers-reduced-motion: reduce) {
   .dc-card, .dc-track, .dc-img, .dc-btn-book,
   .dc-btn-learn, .dc-action-btn, .dc-nav-btn {
@@ -1147,29 +1156,7 @@ const blurb =
   const handleShare = useCallback(
     async (e) => {
       e.stopPropagation();
-      const url = `${window.location.origin}/destinations/${destId}
-.dc-like-action { position: relative; }
-.dc-public-like-btn { overflow: visible; }
-.dc-public-like-btn:disabled { opacity: .65; cursor: wait; }
-.dc-like-count {
-  position: absolute;
-  left: -5px;
-  bottom: -5px;
-  min-width: 18px;
-  height: 17px;
-  padding: 0 4px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: #fff;
-  color: #334155;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 4px rgba(15,23,42,.12);
-  font-size: 9px;
-  font-weight: 800;
-  line-height: 1;
-}
-`;
+      const url = `${window.location.origin}/destinations/${destId}`;
       try {
         if (navigator.share) {
           await navigator.share({ title: name, url });
@@ -1214,6 +1201,10 @@ const blurb =
           )}
 
           <div className="dc-img-overlay" aria-hidden="true" />
+          <div className="dc-live-like-label" aria-live="polite">
+            <FiThumbsUp size={13} aria-hidden="true" />
+            <span>{Number(destinationLikes.total || 0).toLocaleString()} {Number(destinationLikes.total || 0) === 1 ? "like" : "likes"}</span>
+          </div>
 
           {(activeBadges.length > 0 || isEcoFriendly) && (
             <div className="dc-badges">
@@ -1264,10 +1255,10 @@ const blurb =
                 aria-label={destinationLikes.isLiked ? `Unlike ${name}` : `Like ${name}`}
                 aria-pressed={destinationLikes.isLiked}
                 disabled={likeBusy || likesLoading}
-                className={`dc-action-btn dc-public-like-btn${destinationLikes.isLiked ? " dc-action-btn--liked" : ""}`}
+                className={`dc-action-btn dc-public-like-btn${destinationLikes.isLiked ? " dc-public-like-btn--liked" : ""}`}
                 title={destinationLikes.isLiked ? "Unlike destination" : "Like destination"}
               >
-                <FiHeart size={15} aria-hidden="true" style={{ fill: destinationLikes.isLiked ? "#ef4444" : "none", color: destinationLikes.isLiked ? "#ef4444" : "#64748b" }} />
+                <FiThumbsUp size={16} aria-hidden="true" style={{ fill: destinationLikes.isLiked ? "#064e3b" : "none", color: destinationLikes.isLiked ? "#064e3b" : "#64748b", transition: "color .2s ease, fill .2s ease" }} />
                 <span className="dc-like-count">{Number(destinationLikes.total || 0).toLocaleString()}</span>
               </button>
             </div>
