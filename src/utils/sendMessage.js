@@ -187,20 +187,26 @@ export const sendContactForm = async (formData) => {
   if (!message)                   throw new Error("Message is required.");
   if (message.length < 10)        throw new Error("Message must be at least 10 characters.");
 
-  const subject =
-    formData.subject ||
-    formData.topic   ||
-    (formData.destinationName
-      ? `Booking Inquiry — ${formData.destinationName}`
-      : null) ||
-    "General Inquiry";
+  const selectedDestinations = Array.isArray(formData.destinations) ? formData.destinations : [];
+  const destinationNames = Array.isArray(formData.destinationNames) && formData.destinationNames.length
+    ? formData.destinationNames
+    : selectedDestinations.map((destination) => destination?.name).filter(Boolean);
+  const destinationIds = selectedDestinations.map((destination) => destination?.id || destination?._id || destination?.slug).filter(Boolean);
+  const destinationSubject = destinationNames.length
+    ? "Destination Inquiry — " + destinationNames.join(", ")
+    : (formData.destinationName ? "Destination Inquiry — " + formData.destinationName : "");
+  const subject = (formData.destinationInquiry && destinationSubject) || formData.subject || formData.topic || destinationSubject || "General Inquiry";
+  const contextualMessage = destinationNames.length ? "Destinations of interest: " + destinationNames.join(", ") + "\n\n" + message : message;
 
   const payload = {
     name,
     full_name:           name,
     email,
-    message,
+    message: contextualMessage,
     subject,
+    destination_names: destinationNames,
+    destination_ids: destinationIds,
+    destination_inquiry: Boolean(formData.destinationInquiry),
     phone:               resolvePhone(formData)             || undefined,
     trip_type:           formData.trip_type  ||
                          formData.tripType   || undefined,
