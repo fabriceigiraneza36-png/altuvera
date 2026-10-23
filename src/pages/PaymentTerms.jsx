@@ -56,7 +56,7 @@ import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput"
    ADMIN CONFIGURATION
    ═══════════════════════════════════════════════════════ */
 const ADMIN = {
-  name: "IGIRANEZA Fabrice",
+  name: "Admin",
   phone1: "+250 792352409",
   phone2: "+250 792352409",
   whatsapp: "+250785751391",
@@ -1447,7 +1447,7 @@ const MultiStepContactModal = ({ isOpen, onClose, contextMessage }) => {
       bg: "linear-gradient(135deg, #B45309 0%, #D97706 50%, #F59E0B 100%)",
       icon: <FiEye size={28} />,
       title: "Review & Confirm",
-      subtitle: "Double-check your details before we connect you with Fabrice",
+      subtitle: "Double-check your details before we connect you with Admin",
     },
     5: {
       bg: "linear-gradient(135deg, #128C7E 0%, #25D366 100%)",
@@ -2633,34 +2633,34 @@ const PaymentTerms = () => {
       {
         icon: FiCheckCircle,
         title: "Booking Confirmation",
-        text: "Your safari is confirmed once we agree on all details via WhatsApp with our booking manager, IGIRANEZA Fabrice. A 30% deposit secures your experience.",
+        text: "Your safari is confirmed once we agree on all details via WhatsApp with our booking manager, Admin. A 30% deposit secures your experience.",
         details:
-          "After your WhatsApp consultation with Fabrice, you'll receive a personalized itinerary and invoice. Your deposit secures gorilla permits, accommodations, and guide services.",
+          "After your WhatsApp consultation with Admin, you'll receive a personalized itinerary and invoice. Your deposit secures gorilla permits, accommodations, and guide services.",
         color: "#059669",
         bgColor: "#ECFDF5",
       },
       {
         icon: FiClock,
         title: "Balance Payment",
-        text: "The remaining 70% is due 30 days before travel. For bookings within 30 days, full payment is discussed directly with Fabrice.",
+        text: "The remaining 70% is due 30 days before travel. For bookings within 30 days, full payment is discussed directly with Admin.",
         details:
-          "We send a reminder 45 days before departure. Payment timelines are flexible — just discuss with Fabrice on WhatsApp.",
+          "We send a reminder 45 days before departure. Payment timelines are flexible — just discuss with Admin on WhatsApp.",
         color: "#F59E0B",
         bgColor: "#FFFBEB",
       },
       {
         icon: FiShield,
         title: "Secure & Personal",
-        text: "Every transaction is handled personally by IGIRANEZA Fabrice. No automated charges — you control when and how you pay.",
+        text: "Every transaction is handled personally by Admin. No automated charges — you control when and how you pay.",
         details:
-          "Your payment details are never stored on our website. All financial discussions happen securely via WhatsApp or email directly with Fabrice.",
+          "Your payment details are never stored on our website. All financial discussions happen securely via WhatsApp or email directly with Admin.",
         color: "#3B82F6",
         bgColor: "#EFF6FF",
       },
       {
         icon: FiPercent,
         title: "Group Discounts",
-        text: "Groups of 4+ enjoy special rates. Contact Fabrice for a custom quote tailored to your group size.",
+        text: "Groups of 4+ enjoy special rates. Contact Admin for a custom quote tailored to your group size.",
         details:
           "4–6: 5% off | 7–10: 10% off | 11+: 15% off + complimentary guide. Discussed during your WhatsApp consultation.",
         color: "#8B5CF6",
@@ -2669,7 +2669,7 @@ const PaymentTerms = () => {
       {
         icon: FiHeart,
         title: "Flexible Rescheduling",
-        text: "Reschedule once free with 45+ days' notice — just message Fabrice on WhatsApp.",
+        text: "Reschedule once free with 45+ days' notice — just message Admin on WhatsApp.",
         details:
           "Changes within 45–30 days: 10% admin fee. Within 30 days: standard cancellation applies. We always find the best solution.",
         color: "#EC4899",
@@ -2678,7 +2678,7 @@ const PaymentTerms = () => {
       {
         icon: FiAward,
         title: "Price Guarantee",
-        text: "The price Fabrice quotes is the price you pay. No hidden fees, no surprise charges — ever.",
+        text: "The price Admin quotes is the price you pay. No hidden fees, no surprise charges — ever.",
         details:
           "Includes park fees, permits, accommodation, transport, meals as specified, and guide. Excludes flights, visas, insurance, tips.",
         color: "#059669",
@@ -2693,7 +2693,7 @@ const PaymentTerms = () => {
       {
         step: "01",
         icon: <FiMessageCircle size={28} />,
-        title: "Message Fabrice",
+        title: "Message Admin",
         desc: `Save ${ADMIN.whatsappDisplay} and send a message about your dream safari — dates, interests, group size, and budget.`,
         color: "#059669",
       },
@@ -2701,7 +2701,7 @@ const PaymentTerms = () => {
         step: "02",
         icon: <FiCalendar size={28} />,
         title: "Receive Your Itinerary",
-        desc: "Fabrice crafts a personalized itinerary and detailed quote. You'll refine every detail together.",
+        desc: "Admin crafts a personalized itinerary and detailed quote. You'll refine every detail together.",
         color: "#0891B2",
       },
       {
@@ -2715,7 +2715,7 @@ const PaymentTerms = () => {
         step: "04",
         icon: <FiDollarSign size={28} />,
         title: "Confirm with Deposit",
-        desc: "Pay 30% through your chosen method. Fabrice confirms receipt and your safari is officially booked!",
+        desc: "Pay 30% through your chosen method. Admin confirms receipt and your safari is officially booked!",
         color: "#F59E0B",
       },
       {
@@ -2735,7 +2735,7 @@ const PaymentTerms = () => {
         id: "mtn",
         name: "MTN Mobile Money",
         icon: <FiSmartphone size={24} />,
-        desc: "Send to our MTN MoMo number. Fabrice confirms instantly via WhatsApp.",
+        desc: "Send to our MTN MoMo number. Admin confirms instantly via WhatsApp.",
         popular: true,
         color: "#FFCB05",
         region: "Rwanda, Uganda",
@@ -2780,7 +2780,7 @@ const PaymentTerms = () => {
         id: "western",
         name: "Western Union / MoneyGram",
         icon: <FiGlobe size={24} />,
-        desc: "Cash pickup available. Details shared by Fabrice via WhatsApp.",
+        desc: "Cash pickup available. Details shared by Admin via WhatsApp.",
         popular: false,
         color: "#F59E0B",
         region: "Worldwide",
@@ -2805,22 +2805,22 @@ const PaymentTerms = () => {
     () => [
       {
         question: "How does the payment process work at Altuvera?",
-        answer: `Altuvera uses a personal, WhatsApp-based system. You'll chat directly with our booking manager IGIRANEZA Fabrice (${ADMIN.whatsappDisplay}), discuss your safari, declare your preferred payment method, and receive private payment instructions. Nothing is processed on our website.`,
+        answer: `Altuvera uses a personal, WhatsApp-based system. You'll chat directly with our booking manager Admin (${ADMIN.whatsappDisplay}), discuss your safari, declare your preferred payment method, and receive private payment instructions. Nothing is processed on our website.`,
       },
       {
         question: "Why doesn't Altuvera process payments on the website?",
         answer:
-          "We believe in a personal approach. Every safari is unique, and we ensure your experience is tailored before any payment. Chatting with Fabrice first lets us answer all questions and customize everything.",
+          "We believe in a personal approach. Every safari is unique, and we ensure your experience is tailored before any payment. Chatting with Admin first lets us answer all questions and customize everything.",
       },
       {
-        question: "Who is IGIRANEZA Fabrice?",
+        question: "Who is Admin?",
         answer:
-          "Fabrice is Altuvera's dedicated booking manager. He personally handles every inquiry, itinerary, and payment arrangement. When you message us on WhatsApp, you're speaking directly with him — not a chatbot.",
+          "Admin is Altuvera's dedicated booking manager. He personally handles every inquiry, itinerary, and payment arrangement. When you message us on WhatsApp, you're speaking directly with him — not a chatbot.",
       },
       {
         question: "Are gorilla and chimpanzee permits refundable?",
         answer:
-          "No. Permits from UWA (Uganda), RDB (Rwanda), or ICCN (DRC) are 100% non-refundable once purchased. Fabrice can assist with date changes subject to availability (60+ days' notice).",
+          "No. Permits from UWA (Uganda), RDB (Rwanda), or ICCN (DRC) are 100% non-refundable once purchased. Admin can assist with date changes subject to availability (60+ days' notice).",
       },
       {
         question: "What's included in the safari price?",
@@ -2830,17 +2830,17 @@ const PaymentTerms = () => {
       {
         question: "Can I pay in my local currency?",
         answer:
-          "Yes! We quote in USD but accept EUR, GBP, UGX, RWF, KES, TZS at prevailing rates. Tell Fabrice your preferred currency.",
+          "Yes! We quote in USD but accept EUR, GBP, UGX, RWF, KES, TZS at prevailing rates. Tell Admin your preferred currency.",
       },
       {
         question: "What if I need to cancel or change dates?",
         answer:
-          "With 45+ days' notice, reschedule once free. Cancellation refunds depend on notice period (see table). Message Fabrice and he'll find the best solution.",
+          "With 45+ days' notice, reschedule once free. Cancellation refunds depend on notice period (see table). Message Admin and he'll find the best solution.",
       },
       {
         question: "Is my payment information safe?",
         answer:
-          "Yes. We don't process or store payments on our website. Instructions are shared privately by Fabrice via WhatsApp. Credit card links use PCI-compliant providers.",
+          "Yes. We don't process or store payments on our website. Instructions are shared privately by Admin via WhatsApp. Credit card links use PCI-compliant providers.",
       },
     ],
     []
