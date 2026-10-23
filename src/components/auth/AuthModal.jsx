@@ -1331,7 +1331,7 @@ export default function AuthModal() {
 
       {/* Backdrop */}
       <div
-        className="am-fadeIn fixed inset-0 z-[9990] flex items-center justify-center p-0 sm:p-4 lg:p-6 bg-black/50 backdrop-blur-sm"
+        className="am-fadeIn fixed inset-0 z-[9990] flex items-center justify-center p-0 sm:p-4 lg:p-6 bg-black/55"
         onClick={closeModal}
       >
         {/* Modal */}
