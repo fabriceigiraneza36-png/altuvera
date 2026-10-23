@@ -5,7 +5,7 @@ import { useUserAuth } from "../../context/UserAuthContext";
 import {
   FiUser, FiCalendar, FiHeart, FiSettings,
   FiLogOut, FiMenu, FiX, FiBell,
-  FiStar, FiHome, FiMessageSquare, FiShield,
+  FiStar, FiHome, FiMessageSquare, FiShield, FiActivity,
 } from "react-icons/fi";
 import AnimatedSection from "../common/AnimatedSection";
 import NotificationBell from "./NotificationBell";
@@ -32,6 +32,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
     { name: "Reviews",        path: "/reviews",        icon: <FiStar size={18} />        },
     { name: "Settings",       path: "/settings",       icon: <FiSettings size={18} />    },
     { name: "Security & Recovery", path: "/account/security", icon: <FiShield size={18} /> },
+    { name: "Account Activity", path: "/account/activity", icon: <FiActivity size={18} /> },
   ];
 
   return (

@@ -1,23 +1,12 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { CheckCircle2, Info, CircleAlert, X } from "lucide-react";
 
 const ToastContext = createContext(null);
 
 const TOAST_TYPES = {
-  success: {
-    background: "linear-gradient(135deg, #dcfce7, #bbf7d0)",
-    border: "1px solid rgba(22, 163, 74, 0.18)",
-    color: "#14532d",
-  },
-  error: {
-    background: "linear-gradient(135deg, #fee2e2, #fecaca)",
-    border: "1px solid rgba(220, 38, 38, 0.18)",
-    color: "#991b1b",
-  },
-  info: {
-    background: "linear-gradient(135deg, #e0f2fe, #bae6fd)",
-    border: "1px solid rgba(3, 105, 161, 0.18)",
-    color: "#0c4a6e",
-  },
+  success: { color: "#065f46", Icon: CheckCircle2 },
+  error: { color: "#111827", Icon: CircleAlert },
+  info: { color: "#111827", Icon: Info },
 };
 
 const makeToast = ({ type = "info", title, message, duration = 4000 }) => ({
@@ -76,10 +65,12 @@ export function ToastProvider({ children }) {
           gap: 12,
           pointerEvents: "none",
           maxWidth: 360,
+          width: "calc(100vw - 24px)",
         }}
       >
         {toasts.map((toast) => {
           const theme = TOAST_TYPES[toast.type] || TOAST_TYPES.info;
+          const ToastIcon = theme.Icon;
           return (
             <div
               key={toast.id}
@@ -119,10 +110,13 @@ export function ToastProvider({ children }) {
                 padding: "14px 16px",
                 borderRadius: 18,
                 boxShadow: "0 18px 46px rgba(15, 23, 42, 0.12)",
-                background: theme.background,
-                border: theme.border,
-                color: theme.color,
-                minWidth: 260,
+                background: "#ffffff",
+                border: "1px solid #dbe7e0",
+                borderLeft: `4px solid ${theme.color}`,
+                color: "#111827",
+                minWidth: 0,
+                width: "100%",
+                maxWidth: 360,
                 overflow: "hidden",
                 touchAction: "pan-y",
                 transform: "translate3d(" + (swipePositions[toast.id]?.x || 0) + "px,0,0)",
@@ -140,11 +134,11 @@ export function ToastProvider({ children }) {
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
-                    {toast.title}
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 800, marginBottom: 4 }}>
+                    <ToastIcon size={16} color={theme.color} /> {toast.title}
                   </div>
-                  <div style={{ fontSize: 13, lineHeight: 1.4, opacity: 0.95 }}>
-                    {toast.message}
+                  <div style={{ fontSize: 12, lineHeight: 1.45, color: "#374151", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" }}>
+                    {String(toast.message || "").split(/\r?\n/)[0]}
                   </div>
                 </div>
                 <button
@@ -153,7 +147,7 @@ export function ToastProvider({ children }) {
                   style={{
                     border: "none",
                     background: "transparent",
-                    color: theme.color,
+                    color: "#111827",
                     cursor: "pointer",
                     fontSize: 16,
                     lineHeight: 1,
@@ -161,7 +155,7 @@ export function ToastProvider({ children }) {
                   }}
                   aria-label="Dismiss notification"
                 >
-                  ×
+                  <X size={15} />
                 </button>
               </div>
             </div>
