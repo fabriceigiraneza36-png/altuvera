@@ -196,6 +196,20 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
   const [gallery, setGallery] = useState(GALLERY);
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => setReducedMotion(media.matches);
+    updatePreference();
+    if (media.addEventListener) media.addEventListener("change", updatePreference);
+    else media.addListener?.(updatePreference);
+    return () => {
+      if (media.removeEventListener) media.removeEventListener("change", updatePreference);
+      else media.removeListener?.(updatePreference);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -312,10 +326,10 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
   );
 
   useEffect(() => {
-    if (isPaused || gallery.length < 2) return undefined;
+    if (isPaused || reducedMotion || gallery.length < 2) return undefined;
     const timer = setInterval(advance, intervalMs);
     return () => clearInterval(timer);
-  }, [advance, gallery.length, intervalMs, isPaused]);
+  }, [advance, gallery.length, intervalMs, isPaused, reducedMotion]);
 
   useEffect(() => {
     const next = gallery[(current + 1) % gallery.length];
@@ -385,7 +399,7 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
           </div>
         </div>
 
-        <div className="am-auth-slideshow__caption" aria-live="polite" aria-atomic="true">
+        <div className="am-auth-slideshow__caption">
           <p>{slide.caption}</p>
           <h4 key={current}>{slide.subtitle}</h4>
         </div>
@@ -601,6 +615,7 @@ export default function AuthModal() {
   /* ── Refs ── */
   const codeRefs          = useRef([]);
   const forgotCodeRefs    = useRef([]);
+  const modalRef          = useRef(null);
   const firstInputRef     = useRef(null);
   const forgotEmailRef    = useRef(null);
   const expiryTimerRef    = useRef(null);
@@ -752,6 +767,38 @@ export default function AuthModal() {
   useEffect(() => {
     document.body.style.overflow = isModalOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    if (!isModalOpen) return undefined;
+    const focusableSelector = [
+      "a[href]", "button:not([disabled])", "input:not([disabled])",
+      "select:not([disabled])", "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])",
+    ].join(",");
+    const trapTabFocus = (event) => {
+      if (event.key !== "Tab") return;
+      const dialog = modalRef.current;
+      if (!dialog) return;
+      const focusable = Array.from(dialog.querySelectorAll(focusableSelector))
+        .filter((element) => element.getClientRects().length > 0 && element.getAttribute("aria-hidden") !== "true");
+      if (!focusable.length) {
+        event.preventDefault();
+        dialog.focus?.();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", trapTabFocus);
+    return () => document.removeEventListener("keydown", trapTabFocus);
   }, [isModalOpen]);
 
   useEffect(() => {
@@ -1230,6 +1277,8 @@ export default function AuthModal() {
       >
         {/* Modal */}
         <div
+          ref={modalRef}
+          tabIndex={-1}
           className="am-modal am-modalIn relative w-full max-w-[1040px] bg-white rounded-none sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
           style={{
             maxHeight: "100dvh", height: "100dvh",
