@@ -873,6 +873,14 @@
 }
 
 .nav--scrolled .nav__hamburger { background: var(--nav-cl); }
+/* Keep navigation controls legible as the header transitions between surfaces. */
+.nav:not(.nav--scrolled) .nav__hamburger .nav__hline { background: #fff; }
+.nav.nav--scrolled .nav__hamburger .nav__hline { background: #064e3b; }
+.nav.nav--scrolled .nav__hamburger { color: #064e3b; }
+.nav:not(.nav--scrolled) .nav__icon-btn { color: #fff; }
+.nav.nav--scrolled .nav__icon-btn { color: #064e3b; }
+.nav, .nav .nav__hamburger, .nav .nav__hline, .nav .nav__icon-btn { transition: color var(--nav-med), background-color var(--nav-med), background var(--nav-med); }
+
 .nav__hamburger:hover  { transform: scale(1.05); }
 .nav__hamburger:active { transform: scale(0.93); }
 
