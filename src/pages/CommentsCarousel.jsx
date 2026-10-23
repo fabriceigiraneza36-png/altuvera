@@ -25,7 +25,7 @@ function CommentCard({ comment }) {
 
 export default function CommentsCarousel({ destination, entityType = "destination" }) {
   const destinationId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
-  const { comments, loading, error, createComment, refetch } = useDestinationComments(destinationId, entityType);
+  const { comments, loading, error, createComment, refetch, removeComment } = useDestinationComments(destinationId, entityType);
   const { isAuthenticated = false, openModal, user } = useUserAuth() || {};
   const [modalOpen, setModalOpen] = useState(false);
   const [text, setText] = useState("");
@@ -41,9 +41,37 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
   const lastScrollY = useRef(0);
   const noticeTimer = useRef(null);
 
-  const visibleComments = useMemo(() => comments.filter((comment) => comment && comment.content), [comments]);
+  const visibleComments = useMemo(() => {
+    const seenAuthors = new Set();
+    return comments.filter((comment) => {
+      if (!comment || !String(comment.content || "").trim()) return false;
+      const authorId = comment?.userId || comment?.user_id || comment?.user?.id || comment?.user?._id || comment?.authorId;
+      if (authorId == null) return true;
+      const key = String(authorId);
+      if (seenAuthors.has(key)) return false;
+      seenAuthors.add(key);
+      return true;
+    });
+  }, [comments]);
   const loopComments = useMemo(() => visibleComments.length > 0 ? [...visibleComments, ...visibleComments] : [], [visibleComments]);
   const currentUserId = user?.id || user?._id || user?.userId || user?.uid;
+
+  useEffect(() => {
+    if (!destinationId || !Array.isArray(comments) || comments.length < 2) return;
+    const firstByAuthor = new Set();
+    const duplicates = [];
+    comments.forEach((comment) => {
+      const authorId = comment?.userId || comment?.user_id || comment?.user?.id || comment?.user?._id || comment?.authorId;
+      const commentId = comment?.id || comment?._id || comment?.commentId;
+      if (authorId == null || commentId == null) return;
+      const key = String(authorId);
+      if (firstByAuthor.has(key)) duplicates.push(String(commentId));
+      else firstByAuthor.add(key);
+    });
+    duplicates.forEach((commentId) => {
+      removeComment(destinationId, commentId).catch(() => {});
+    });
+  }, [comments, destinationId, removeComment]);
   const alreadyCommented = useMemo(() => Boolean(currentUserId) && visibleComments.some((comment) => {
     const authorId = comment?.userId || comment?.user_id || comment?.user?.id || comment?.user?._id || comment?.authorId;
     return authorId != null && String(authorId) === String(currentUserId);
@@ -129,6 +157,10 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
     const clean = text.trim();
     if (!clean) {
       setSubmitError("Write a comment before saving.");
+      return;
+    }
+    if (alreadyCommented) {
+      setSubmitError("You have already commented on this destination. Only one comment per account is allowed.");
       return;
     }
     if (!destinationId) {
