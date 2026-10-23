@@ -47,7 +47,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           min-height: calc(100dvh - 80px);
           box-sizing: border-box;
           background-color: #f8fafc;
-          padding-top: 80px;
+          padding-top: 0;
           overflow: visible;
         }
         .dashboard-sidebar {
@@ -163,7 +163,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           .wl-card, .wl-list-card { max-width: 100%; }
         }
         /* Premium responsive treatment shared by all signed-in user pages. */
-        .dashboard-content { max-width: 1240px; padding: clamp(20px, 3vw, 36px); }
+        .dashboard-content { max-width: 1240px; padding: 12px clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px); }
         .dashboard-header { margin-bottom: clamp(18px, 2.4vw, 28px); }
         .dashboard-title { font-size: clamp(28px, 3.2vw, 38px); letter-spacing: -.035em; line-height: 1.12; }
         .dashboard-subtitle { max-width: 680px; line-height: 1.65; }
@@ -174,8 +174,8 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
         .dashboard-content img { max-width: 100%; }
         .dashboard-content > * { min-width: 0; }
         @media (max-width: 640px) {
-          .dashboard-content { padding: 20px 14px 88px; }
-          .dashboard-header { margin-bottom: 20px; }
+          .dashboard-content { padding: 10px 14px 88px; }
+          .dashboard-header { margin-bottom: 16px; }
           .dashboard-title { font-size: clamp(27px, 8vw, 34px); }
           .dashboard-subtitle { font-size: 14px; }
         }
@@ -227,7 +227,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
             width: 44px; height: 44px;
             z-index: 30;
           }
-          .dashboard-content { padding: 20px 16px 80px; min-height: 0; }
+          .dashboard-content { padding: 10px 16px 80px; min-height: 0; }
           .dashboard-content.dashboard-no-padding {
             padding: 0;
             height: calc(100vh - 80px);
