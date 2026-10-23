@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp, FaPhoneAlt, FaRegCommentDots, FaTimes, FaPaperPlane, FaUser, FaShieldAlt, FaExternalLinkAlt, FaChevronRight, FaChevronLeft, FaCheck, FaClock, FaRocket, FaRegComment, FaRegComments } from "react-icons/fa";
 
 // ============================================================
 // TYPOGRAPHY
@@ -95,12 +95,27 @@ const getIconUrl = (name, size = 24, color = "#000") => {
   return `https://api.iconify.design/${icon}.svg?color=%23${hex}&width=${size}&height=${size}`;
 };
 
-const Icon = ({ name, size = 24, color = "#000", style = {} }) =>
-  name === "WhatsApp" ? (
-    <FaWhatsapp aria-hidden="true" size={size} color={color} style={{ display: "block", flexShrink: 0, ...style }} />
-  ) : (
-    <img src={getIconUrl(name, size, color)} alt="" width={size} height={size} style={{ display: "block", flexShrink: 0, ...style }} loading="lazy" draggable={false} />
-  );
+const ICON_COMPONENTS = {
+  WhatsApp: FaWhatsapp,
+  Close: FaTimes,
+  Send: FaPaperPlane,
+  User: FaUser,
+  MessageSquare: FaRegComments,
+  Chat: FaRegCommentDots,
+  Phone: FaPhoneAlt,
+  Shield: FaShieldAlt,
+  Rocket: FaRocket,
+  ArrowRight: FaChevronRight,
+  ArrowLeft: FaChevronLeft,
+  Check: FaCheck,
+  ExternalLink: FaExternalLinkAlt,
+  Clock: FaClock,
+  Sparkle: FaCheck,
+};
+const Icon = ({ name, size = 24, color = "#000", style = {} }) => {
+  const IconComponent = ICON_COMPONENTS[name] || FaRegComment;
+  return <IconComponent aria-hidden="true" size={size} color={color} style={{ display: "block", flexShrink: 0, ...style }} />;
+};
 
 // ============================================================
 // CONFETTI
@@ -235,7 +250,7 @@ const S = {
     borderRadius: 26,
     width: isMobile ? "100%" : 420,
     maxWidth: 420,
-    maxHeight: isMobile ? "94vh" : "90vh",
+    maxHeight: "min(92dvh, 760px)",
     boxShadow:
       "0 25px 80px rgba(0,0,0,0.2), 0 8px 30px rgba(37,211,102,0.1)",
     display: "flex",
@@ -274,38 +289,38 @@ const S = {
   header: (isMobile) => ({
     textAlign: "center",
     flexShrink: 0,
-    padding: isMobile ? "20px 18px 16px" : "26px 28px 18px",
+    padding: isMobile ? "18px 18px 12px" : "22px 28px 14px",
     background: "linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%)",
     position: "relative",
   }),
 
   headerIcon: {
-    width: 60,
-    height: 60,
+    width: 54,
+    height: 54,
     borderRadius: "50%",
     background: "linear-gradient(145deg, #25D366, #128C7E, #075E54)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    margin: "0 auto 12px",
+    margin: "0 auto 9px",
     border: "3px solid #fff",
     boxShadow: "0 8px 28px rgba(37,211,102,0.3)",
   },
 
   headerTitle: {
     margin: "0 0 4px",
-    fontSize: "1.35rem",
+    fontSize: "clamp(1.15rem, 4.8vw, 1.35rem)",
     fontWeight: 800,
     color: "#075E54",
     fontFamily: HEADING_FONT,
-    letterSpacing: 1.5,
+    letterSpacing: 1.1,
     textTransform: "uppercase",
   },
 
   headerSub: {
     margin: "0 0 10px",
-    fontSize: "0.86rem",
-    color: "#666",
+    fontSize: "0.9rem",
+    color: "#64748b",
     fontFamily: BODY_FONT,
   },
 
@@ -316,7 +331,7 @@ const S = {
     backgroundColor: "#e8f5e9",
     padding: "7px 16px",
     borderRadius: 18,
-    fontSize: "0.76rem",
+    fontSize: "0.84rem",
     color: "#075E54",
     fontWeight: 600,
     border: "1.5px solid #c8e6c9",
@@ -346,7 +361,7 @@ const S = {
   },
 
   stepPadding: (isMobile) => ({
-    padding: isMobile ? "16px 18px 20px" : "18px 26px 24px",
+    padding: isMobile ? "14px 16px 16px" : "16px 26px 20px",
   }),
 
   stepLabel: {
@@ -364,8 +379,8 @@ const S = {
   actionCard: {
     display: "flex",
     alignItems: "center",
-    gap: 14,
-    padding: "15px 16px",
+    gap: 12,
+    padding: "13px 14px",
     backgroundColor: "#fff",
     border: "2px solid #e0f2e1",
     borderRadius: 18,
@@ -377,8 +392,8 @@ const S = {
   },
 
   actionIcon: (gradient) => ({
-    width: 48,
-    height: 48,
+    width: 46,
+    height: 46,
     borderRadius: 14,
     background: gradient,
     display: "flex",
@@ -389,7 +404,7 @@ const S = {
   }),
 
   actionTitle: {
-    fontSize: "0.95rem",
+    fontSize: "0.96rem",
     color: "#111",
     display: "block",
     fontWeight: 700,
@@ -398,8 +413,9 @@ const S = {
   },
 
   actionDesc: {
-    fontSize: "0.78rem",
-    color: "#888",
+    fontSize: "0.8rem",
+    color: "#64748b",
+    lineHeight: 1.45,
     fontFamily: BODY_FONT,
   },
 
@@ -409,8 +425,8 @@ const S = {
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    marginTop: 18,
-    padding: "10px 16px",
+    marginTop: 14,
+    padding: "9px 12px",
     backgroundColor: "#f0fdf4",
     borderRadius: 14,
     border: "1.5px solid #e8f5e9",
@@ -582,7 +598,7 @@ const S = {
     alignItems: "center",
     justifyContent: "center",
     gap: 7,
-    padding: "13px 20px 15px",
+    padding: "10px 16px 12px",
     fontSize: "0.76rem",
     color: "#bbb",
     borderTop: "1px solid #f0fdf4",
@@ -992,29 +1008,10 @@ const WhatsAppButton = () => {
 
                 <div style={S.phoneBadge}>
                   <Icon name="Phone" size={15} color="#128C7E" />
-                  <span style={{ lineHeight: 1.5, textAlign: "left" }}>
-                    {CONTACT_INFO.phone1}
-                    <br />
-                    {CONTACT_INFO.phone2}
-                  </span>
+                  <span>{CONTACT_INFO.phone1}</span>
                 </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    marginTop: 10,
-                  }}
-                >
-                  <motion.div
-                    style={S.onlineDot}
-                    animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                    transition={{ duration: 1.8, repeat: Infinity }}
-                  />
-                  <span style={S.onlineText}>Online • Replies instantly</span>
-                </div>
+
               </div>
 
               {/* ═══ SCROLLABLE CONTENT ═══ */}
@@ -1109,18 +1106,7 @@ const WhatsAppButton = () => {
                         </motion.button>
                       </div>
 
-                      {/* Response time */}
-                      <motion.div
-                        style={S.responseTimeBadge}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.35 }}
-                      >
-                        <Icon name="Clock" size={15} color="#25D366" />
-                        <span style={S.responseTimeText}>
-                          Typical response time: under 5 minutes
-                        </span>
-                      </motion.div>
+
                     </motion.div>
                   )}
 
@@ -1308,11 +1294,7 @@ const WhatsAppButton = () => {
                 </AnimatePresence>
               </div>
 
-              {/* ═══ FOOTER ═══ */}
-              <div style={S.footer}>
-                <Icon name="Shield" size={15} color="#25D366" />
-                <span>Secure & Private Conversation</span>
-              </div>
+
             </motion.div>
           </motion.div>
         )}
