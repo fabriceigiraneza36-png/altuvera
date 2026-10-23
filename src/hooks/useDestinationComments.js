@@ -80,7 +80,7 @@ export function useDestinationComments(destinationId, resource = "destination") 
   const removeComment = useCallback(async (destId, commentId) => {
     setError(null);
     try {
-      const res = await apiFetch(`/destination-comments/${encodeURIComponent(destId)}/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
+      const res = await apiFetch(`/${resource}-comments/${encodeURIComponent(destId)}/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
       const data = await res.json();
       if (data.status === "success") {
         setComments((prev) => prev.filter((c) => c.id !== commentId));
@@ -91,7 +91,7 @@ export function useDestinationComments(destinationId, resource = "destination") 
       setError(err.message);
       throw err;
     }
-  }, []);
+  }, [resource]);
 
   return { comments, loading, error, refetch: fetchComments, createComment, removeComment };
 }
