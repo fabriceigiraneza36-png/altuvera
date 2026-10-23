@@ -47,13 +47,13 @@ const styles = `
 .db-live-package,.db-live-story{display:flex;align-items:stretch;min-width:0}
 .db-live-package>.hpkg-card,.db-live-story>.hpost-card{width:100%;min-width:0;max-width:100%;height:100%;box-sizing:border-box;flex:1 1 auto;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 5px 18px rgba(15,23,42,.055);overflow:hidden}
 .db-live-package>.hpkg-card:hover,.db-live-story>.hpost-card:hover{box-shadow:0 14px 30px rgba(15,23,42,.12);transform:translateY(-3px);border-color:#a7f3d0}
-.db-live-package .hpkg-img-wrap{height:clamp(145px,18vw,190px);flex:0 0 auto}
+.db-live-package .hpkg-img-wrap{height:clamp(155px,19vw,205px);flex:0 0 auto;overflow:hidden;background:#ecfdf5}.db-live-package .hpkg-img-wrap img,.db-live-story .hpost-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}.db-live-package .hpkg-body,.db-live-story .hpost-body{display:flex;flex-direction:column}
 .db-live-package .hpkg-body,.db-live-story .hpost-body{min-width:0;overflow-wrap:anywhere;padding:16px;gap:9px}
 .db-live-package .hpkg-title,.db-live-story .hpost-title{font-size:.95rem;line-height:1.4;min-height:2.65em;overflow-wrap:anywhere}
 .db-live-package .hpkg-desc,.db-live-story .hpost-excerpt{font-size:.78rem;line-height:1.6;overflow-wrap:anywhere}
 .db-live-package .hpkg-footer{margin-top:auto;padding-top:12px}
 .db-live-package .hpkg-cta,.db-live-story .hpost-readmore{font-size:.76rem}
-.db-live-story .hpost-img-wrap{height:clamp(145px,18vw,190px);flex:0 0 auto}
+.db-live-story .hpost-img-wrap{height:clamp(155px,19vw,205px);flex:0 0 auto;overflow:hidden;background:#ecfdf5}
 .db-live-story .hpost-meta{line-height:1.5}
 .db-live-skeleton{box-sizing:border-box;flex-shrink:0}
 .db-live-state{min-width:0;box-sizing:border-box;overflow-wrap:anywhere}
@@ -88,6 +88,7 @@ function LiveRow({ title, eyebrow, to, loading, error, items, renderItem, kind, 
   const trackRef = useRef(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
+  const pauseAutoplayRef = useRef(false);
   const updateArrows = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
@@ -104,6 +105,23 @@ function LiveRow({ title, eyebrow, to, loading, error, items, renderItem, kind, 
     observer?.observe(el);
     return () => { el.removeEventListener("scroll", updateArrows); observer?.disconnect(); };
   }, [updateArrows, loading, items.length]);
+  // Auto-advance destination, package and story rows; pause during direct interaction.
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el || loading || error || items.length < 2 || typeof window === "undefined") return undefined;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
+    const timer = window.setInterval(() => {
+      if (pauseAutoplayRef.current || el.matches(":hover") || el.contains(document.activeElement)) return;
+      const max = Math.max(0, el.scrollWidth - el.clientWidth);
+      if (max <= 4) return;
+      if (el.scrollLeft >= max - 8) el.scrollTo({ left: 0, behavior: "smooth" });
+      else {
+        const card = el.querySelector(":scope > *");
+        el.scrollBy({ left: (card?.getBoundingClientRect().width || 260) + 16, behavior: "smooth" });
+      }
+    }, 4800);
+    return () => window.clearInterval(timer);
+  }, [loading, error, items.length]);
   const move = (direction) => {
     const el = trackRef.current;
     if (!el) return;
@@ -117,7 +135,7 @@ function LiveRow({ title, eyebrow, to, loading, error, items, renderItem, kind, 
       : error ? <div className="db-live-state" role="alert"><span>{error}</span><button className="db-live-retry" onClick={onRetry}><RefreshCw size={14}/> Retry</button></div>
       : items.length ? <div className={`db-live-carousel-shell ${canPrev ? "has-left" : ""} ${canNext ? "has-right" : ""}`}>
           <button type="button" className="db-live-arrow db-live-arrow--prev" aria-label={`Previous ${title}`} title="Previous" onClick={() => move(-1)} disabled={!canPrev}><ArrowLeft size={19}/></button>
-          <div ref={trackRef} className="db-live-track" aria-label={`${title} carousel`} tabIndex={0}>{items.map(renderItem)}</div>
+          <div ref={trackRef} className="db-live-track" aria-label={`${title} carousel`} tabIndex={0} onPointerDown={() => { pauseAutoplayRef.current = true; }} onPointerUp={() => { window.setTimeout(() => { pauseAutoplayRef.current = false; }, 1800); }} onKeyDown={() => { pauseAutoplayRef.current = true; window.setTimeout(() => { pauseAutoplayRef.current = false; }, 2200); }}>{items.map(renderItem)}</div>
           <button type="button" className="db-live-arrow db-live-arrow--next" aria-label={`Next ${title}`} title="Next" onClick={() => move(1)} disabled={!canNext}><ArrowRight size={19}/></button>
         </div>
       : <div className="db-live-state">{emptyText}</div>}
