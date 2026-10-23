@@ -115,6 +115,12 @@ function CelebrationParticles({ category = "" }) {
 
     // Tap or click the success experience to trigger a fresh confetti burst.
     const burstAt = (event) => {
+      clearTimeout(stopTimer);
+      if (!running) {
+        running = true;
+        raf = requestAnimationFrame(animate);
+      }
+      stopTimer = setTimeout(() => { running = false; cancelAnimationFrame(raf); }, 8500);
       const bounds = parent.getBoundingClientRect();
       const x = event.clientX - bounds.left;
       const y = event.clientY - bounds.top;
@@ -135,10 +141,10 @@ function CelebrationParticles({ category = "" }) {
     };
     parent.addEventListener("pointerdown", burstAt);
 
-    const stop = setTimeout(() => { running = false; cancelAnimationFrame(raf); }, 8500);
+    let stopTimer = setTimeout(() => { running = false; cancelAnimationFrame(raf); }, 8500);
     return () => {
       running = false;
-      clearTimeout(stop);
+      clearTimeout(stopTimer);
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       parent.removeEventListener("pointerdown", burstAt);
