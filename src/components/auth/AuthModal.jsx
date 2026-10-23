@@ -189,6 +189,22 @@ const isDismissalError = (msg = "") => {
   );
 };
 
+const formatAuthError = (error, fallback = "Something went wrong. Please try again.") => {
+  const raw = typeof error === "string" ? error : error?.response?.data?.message || error?.data?.message || error?.message || "";
+  const message = String(raw).replace(/\\s+/g, " ").trim();
+  if (!message) return fallback;
+  const lower = message.toLowerCase();
+  if (/failed to fetch|networkerror|network request failed|load failed|offline|internet connection/.test(lower)) return "We couldn't reach Altuvera. Check your internet connection and try again.";
+  if (/timeout|timed out|aborted/.test(lower)) return "The request took too long. Please try again.";
+  if (/429|too many requests|rate.?limit|too many attempts/.test(lower)) return "There have been too many attempts. Please wait a little before trying again.";
+  if (/already exists|already registered|email.*(taken|in use|registered)|duplicate.*email/.test(lower)) return "An account may already use this email. Try signing in or use the account-recovery option.";
+  if (/invalid email|email.*invalid/.test(lower)) return "Check the email address and enter it in the format name@example.com.";
+  if (/expired|invalid.*(otp|verification|security) code|incorrect.*(otp|verification|security) code/.test(lower)) return "That verification code is invalid or expired. Check the code or request a new one.";
+  if (/not found|invalid credentials|unauthorized|authentication failed|incorrect.*(name|email)|user does not exist/.test(lower)) return "We couldn't verify those details. Check your email and full name, then try again.";
+  if (message.length > 240 || /<\\/?[a-z][^>]*>|\\bat\\s+[^\\s]+\\s*\\(/i.test(message)) return fallback;
+  return message;
+};
+
 /* ═══════════════════════════════════════════════════════════════
    GALLERY SLIDESHOW
 ═══════════════════════════════════════════════════════════════ */
@@ -531,21 +547,25 @@ const SelectField = ({
 );
 
 const SocialButtons = ({
-  mode, googleLoading, githubLoading, loading, onGoogle, onGithub,
+  mode, googleLoading, githubLoading, loading, isOnline, onGoogle, onGithub,
 }) => (
-  <div className="grid grid-cols-2 gap-3">
+  <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3" role="group" aria-label="Continue with a social account">
     <button
       type="button" onClick={() => onGoogle(mode)}
-      disabled={googleLoading || loading}
-      className="flex items-center justify-center gap-2.5 h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+      disabled={googleLoading || githubLoading || loading || !isOnline}
+      aria-busy={googleLoading}
+      aria-label={googleLoading ? "Connecting to Google" : "Continue with Google"}
+      className="flex items-center justify-center gap-2.5 min-h-12 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-semibold hover:bg-emerald-50 hover:border-emerald-200 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-all duration-200"
     >
       {googleLoading ? <Spinner /> : <FcGoogle className="w-5 h-5" />}
       <span>{googleLoading ? "Connecting…" : "Google"}</span>
     </button>
     <button
       type="button" onClick={() => onGithub(mode)}
-      disabled={githubLoading || loading}
-      className="flex items-center justify-center gap-2.5 h-12 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+      disabled={githubLoading || googleLoading || loading || !isOnline}
+      aria-busy={githubLoading}
+      aria-label={githubLoading ? "Connecting to GitHub" : "Continue with GitHub"}
+      className="flex items-center justify-center gap-2.5 min-h-12 rounded-xl bg-[#102c23] text-white text-sm font-semibold hover:bg-[#174838] hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-all duration-200"
     >
       {githubLoading ? <Spinner /> : <FiGithub className="w-5 h-5" />}
       <span>{githubLoading ? "Connecting…" : "GitHub"}</span>
@@ -583,6 +603,8 @@ export default function AuthModal() {
 
   const [signUpStep,      setSignUpStep]      = useState(1);
   const [agreeTerms,      setAgreeTerms]      = useState(false);
+  const [termsTouched,    setTermsTouched]    = useState(false);
+  const [isOnline,        setIsOnline]        = useState(() => typeof navigator === "undefined" || navigator.onLine !== false);
   const [loading,         setLoading]         = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [error,           setError]           = useState("");
@@ -617,6 +639,8 @@ export default function AuthModal() {
   const forgotCodeRefs    = useRef([]);
   const modalRef          = useRef(null);
   const firstInputRef     = useRef(null);
+  const nameInputRef      = useRef(null);
+  const termsInputRef     = useRef(null);
   const forgotEmailRef    = useRef(null);
   const expiryTimerRef    = useRef(null);
   const forgotExpiryTimerRef = useRef(null);
@@ -756,7 +780,7 @@ export default function AuthModal() {
     setError(""); setSuccess("");
     setCode(emptyCode());
     setAuthMethod("email");
-    setEmailTouched(false); setNameTouched(false);
+    setEmailTouched(false); setNameTouched(false); setTermsTouched(false);
     clearSocialAuthError?.();
     if (view === "login") clearGooglePending?.();
   }, [clearGooglePending, clearSocialAuthError, loading, resetForgotUsername, setModalView, stopExpiryCountdown]);
@@ -768,6 +792,14 @@ export default function AuthModal() {
     document.body.style.overflow = isModalOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isModalOpen]);
+
+  useEffect(() => {
+    const updateConnection = () => setIsOnline(typeof navigator === "undefined" || navigator.onLine !== false);
+    window.addEventListener("online", updateConnection);
+    window.addEventListener("offline", updateConnection);
+    updateConnection();
+    return () => { window.removeEventListener("online", updateConnection); window.removeEventListener("offline", updateConnection); };
+  }, []);
 
   useEffect(() => {
     if (!isModalOpen) return undefined;
@@ -859,6 +891,7 @@ export default function AuthModal() {
   ═══════════════════════════════════════════════════════════ */
   const handleGoogleAuth = useCallback(async (mode = "signin") => {
     if (isBusy) return;
+    if (!isOnline) { setError("You appear to be offline. Reconnect before using social sign-in."); return; }
     clearSocialAuthError?.(); setError(""); setSuccess("");
     try {
       const result = await promptGoogleAuth({ mode, skipOneTap: true });
@@ -867,16 +900,17 @@ export default function AuthModal() {
     } catch (err) {
       const msg = err?.message || "";
       if (isDismissalError(msg)) return;
-      setError(msg || "Google authentication failed.");
+      setError(formatAuthError(msg, "Google authentication failed."));
     }
-  }, [clearSocialAuthError, isBusy, promptGoogleAuth]);
+  }, [clearSocialAuthError, isBusy, isOnline, promptGoogleAuth]);
 
   const handleGithubAuth = useCallback((mode = "signin") => {
     if (isBusy) return;
+    if (!isOnline) { setError("You appear to be offline. Reconnect before using social sign-in."); return; }
     clearSocialAuthError?.(); setError(""); setSuccess("");
     try { startGithubAuth(mode); }
-    catch (err) { setError(err?.message || "GitHub authentication failed."); }
-  }, [clearSocialAuthError, isBusy, startGithubAuth]);
+    catch (err) { setError(formatAuthError(err, "GitHub authentication failed.")); }
+  }, [clearSocialAuthError, isBusy, isOnline, startGithubAuth]);
 
   /* ═══════════════════════════════════════════════════════════
      AVATAR
@@ -909,9 +943,10 @@ export default function AuthModal() {
   ═══════════════════════════════════════════════════════════ */
   const handleSignIn = useCallback(async (e) => {
     e.preventDefault();
-    setEmailTouched(true); setNameTouched(true);
-    if (!emailOk) { setError("Please enter a valid email."); return; }
-    if (!nameOk)  { setError("Please enter your full name."); return; }
+    setEmailTouched(true); setNameTouched(true); setError("");
+    if (!emailOk) { setError("Check your email address. It should look like name@example.com."); firstInputRef.current?.focus(); return; }
+    if (!nameOk)  { setError("Enter the full name associated with your account."); nameInputRef.current?.focus(); return; }
+    if (!isOnline) { setError("You appear to be offline. Reconnect to request your verification code."); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
       setSessionPreference(form.keepSignedIn);
@@ -922,11 +957,11 @@ export default function AuthModal() {
       });
       setSuccess("Verification code sent!");
     } catch (err) {
-      setError(err?.message || "Sign in failed.");
+      setError(formatAuthError(err, "We could not start sign-in. Please try again."));
     } finally {
       setLoading(false);
     }
-  }, [emailOk, nameOk, form.email, form.fullName, form.keepSignedIn, login, setSessionPreference]);
+  }, [emailOk, nameOk, form.email, form.fullName, form.keepSignedIn, isOnline, login, setSessionPreference]);
 
   /* ═══════════════════════════════════════════════════════════
      FORGOT USERNAME — Step 1: Send code
@@ -949,7 +984,7 @@ export default function AuthModal() {
       setSuccess("Verification code sent! Check your inbox.");
       setTimeout(() => forgotCodeRefs.current[0]?.focus(), 300);
     } catch (err) {
-      setError(err?.message || "Failed to send verification code.");
+      setError(formatAuthError(err, "Failed to send verification code."));
     } finally {
       setLoading(false);
     }
@@ -1009,7 +1044,7 @@ export default function AuthModal() {
 
     } catch (err) {
       setForgotCodeState("error");
-      setError(err?.message || "Verification failed.");
+      setError(formatAuthError(err, "Verification failed."));
       setTimeout(() => {
         setForgotCodeState("");
         setForgotCode(emptyCode());
@@ -1081,7 +1116,7 @@ export default function AuthModal() {
       setSuccess(`New code sent to ${forgotEmail}. Valid for 15 min.`);
       forgotCodeRefs.current[0]?.focus();
     } catch (err) {
-      setError(err?.message || "Unable to resend.");
+      setError(formatAuthError(err, "Unable to resend the code."));
     } finally {
       setLoading(false);
     }
@@ -1120,8 +1155,10 @@ export default function AuthModal() {
   ═══════════════════════════════════════════════════════════ */
   const handleSignUp = useCallback(async (e) => {
     e.preventDefault();
-    if (!agreeTerms) { setError("Please accept the Terms and Privacy Policy."); return; }
-    if (authMethod === "google" && !hasGooglePending) { setError("Google auth required first."); return; }
+    setTermsTouched(true);
+    if (!agreeTerms) { setError("Please accept the Terms and Privacy Policy to create your account."); termsInputRef.current?.focus(); return; }
+    if (!isOnline) { setError("You appear to be offline. Reconnect before creating your account."); return; }
+    if (authMethod === "google" && !hasGooglePending) { setError("Reconnect your Google account, or switch to email sign-up."); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
       setVerifySource("register"); setSessionPreference(form.keepSignedIn);
@@ -1150,10 +1187,10 @@ export default function AuthModal() {
         startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
         setSuccess("Verification code sent.");
       }
-    } catch (err) { setError(err?.message || "Sign up failed."); }
+    } catch (err) { setError(formatAuthError(err, "We could not create your account. Please try again.")); }
     finally { setLoading(false); }
   }, [agreeTerms, authMethod, completeGoogleSignUp, form, hasGooglePending,
-    register, resolveAvatar, setSessionPreference, startExpiryCountdown]);
+    isOnline, register, resolveAvatar, setSessionPreference, startExpiryCountdown, termsInputRef]);
 
   /* ═══════════════════════════════════════════════════════════
      OTP HANDLERS (main)
@@ -1342,6 +1379,12 @@ export default function AuthModal() {
             {/* Scrollable body */}
             <div className="auth-scroll flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-5">
 
+              {!isOnline && (
+                <div className="am-auth-offline mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-amber-900" role="status" aria-live="polite">
+                  <HiExclamationCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1"><p className="text-sm font-semibold">You’re offline</p><p className="mt-0.5 text-xs leading-relaxed">Your details stay on this screen, but sign-in, verification and social authentication need an internet connection.</p></div>
+                </div>
+              )}
               {/* Alerts */}
               {error && (
                 <div role="alert" aria-live="polite" className="am-slideDown mb-4 flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200">
@@ -1575,7 +1618,7 @@ export default function AuthModal() {
 
                     <div>
                       <InputField
-                        id="login-name" label="Full Name" icon={HiUser}
+                        id="login-name" label="Full Name" icon={HiUser} refProp={nameInputRef}
                         value={form.fullName} onChange={(v) => set("fullName", v)}
                         onBlur={() => setNameTouched(true)}
                         placeholder="Your full name" autoComplete="name" required
@@ -1613,7 +1656,7 @@ export default function AuthModal() {
                       <span className="text-sm text-gray-600">Keep me signed in</span>
                     </label>
 
-                    <button type="submit" disabled={loading || isBusy}
+                    <button type="submit" disabled={loading || isBusy || !isOnline}
                       className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >
                       {loading
@@ -1629,7 +1672,7 @@ export default function AuthModal() {
                     </div>
 
                     <SocialButtons
-                      mode="signin"
+                      mode="signin" isOnline={isOnline}
                       googleLoaded={googleLoaded} googleLoading={googleLoading}
                       githubLoading={githubLoading} loading={loading}
                       onGoogle={handleGoogleAuth} onGithub={handleGithubAuth}
@@ -1730,7 +1773,7 @@ export default function AuthModal() {
                             valid={emailTouched && emailOk}
                           />
                           <InputField
-                            id="reg-name" label="Full Name" icon={HiUser}
+                            id="reg-name" label="Full Name" icon={HiUser} refProp={nameInputRef}
                             value={form.fullName} onChange={(v) => set("fullName", v)}
                             onBlur={() => setNameTouched(true)}
                             placeholder="Your full name" autoComplete="name" required
@@ -1741,8 +1784,8 @@ export default function AuthModal() {
                             type="button"
                             onClick={() => {
                               setEmailTouched(true); setNameTouched(true);
-                              if (emailOk && nameOk) { setAuthMethod("email"); setSignUpStep(2); }
-                              else setError("Enter a valid email and name.");
+                              if (emailOk && nameOk) { setAuthMethod("email"); setError(""); setSignUpStep(2); }
+                              else { setError(!emailOk ? "Enter a valid email address to continue." : "Enter your full name to continue."); if (!emailOk) firstInputRef.current?.focus(); else nameInputRef.current?.focus(); }
                             }}
                             disabled={isBusy}
                             className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 transition-all"
@@ -1755,7 +1798,7 @@ export default function AuthModal() {
                             <div className="flex-1 h-px bg-gray-200" />
                           </div>
                           <SocialButtons
-                            mode="signup"
+                            mode="signup" isOnline={isOnline}
                             googleLoaded={googleLoaded} googleLoading={googleLoading}
                             githubLoading={githubLoading} loading={loading}
                             onGoogle={handleGoogleAuth} onGithub={handleGithubAuth}
@@ -2069,7 +2112,7 @@ export default function AuthModal() {
                         >
                           <HiArrowLeft className="w-4 h-4" /> Back
                         </button>
-                        <button type="submit" disabled={loading || avatarUploading || !agreeTerms}
+                        <button type="submit" disabled={loading || avatarUploading || !isOnline}
                           className="flex-1 h-12 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:from-emerald-700 hover:to-emerald-600 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
                         >
                           {loading || avatarUploading
@@ -2106,7 +2149,7 @@ export default function AuthModal() {
                     finally { setLoading(false); }
                   }}>
                     {pendingFactorMethods.includes("passkey") && (
-                    <button type="button" disabled={loading} onClick={async()=>{setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(err?.message||"Passkey verification failed.");}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
+                    <button type="button" disabled={loading} onClick={async()=>{setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(formatAuthError(err, "Passkey verification failed. Try another verification method."));}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
                     )}
                     <div className="flex gap-2">
                       {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Authenticator app</button> )}
