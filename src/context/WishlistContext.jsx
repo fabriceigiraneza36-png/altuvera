@@ -41,11 +41,6 @@ export function WishlistProvider({ children }) {
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const reset = useCallback(() => {
-    setWishlistIds(new Set());
-    setLoaded(false);
-    setLoading(false);
-  }, []);
 
   const loadedRef = useRef(loaded);
   const loadingRef = useRef(loading);
