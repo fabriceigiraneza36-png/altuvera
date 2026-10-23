@@ -2472,3 +2472,130 @@
 @media (prefers-reduced-motion: reduce) {
   .am-modal-mobile { animation: none !important; }
 }
+
+
+/* Mobile auth reliability fix: render the actual modal element on small screens.
+   The component renders .am-modal (not .am-modal-mobile), so the previous
+   bottom-sheet-only rules could leave the entire form hidden below 640px. */
+@media (max-width: 639px) {
+  html:has(.am-backdrop) {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .am-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    z-index: 2147483000 !important;
+  }
+
+  .am-backdrop > .am-modal {
+    display: flex !important;
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    transform: none !important;
+    animation: am-fadeIn 180ms ease-out both !important;
+    background: #fff !important;
+  }
+
+  .am-modal::before {
+    position: absolute !important;
+    z-index: 50 !important;
+  }
+
+  .am-modal .am-gallery-panel,
+  .am-modal .am-auth-slideshow {
+    display: none !important;
+  }
+
+  .am-modal .am-form-panel {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    background: #fff !important;
+  }
+
+  .am-modal .am-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+    padding: 12px 16px !important;
+    flex-shrink: 0 !important;
+    background: #fff !important;
+    backdrop-filter: none !important;
+  }
+
+  .am-modal .am-header,
+  .am-modal .am-header * {
+    min-width: 0;
+  }
+
+  .am-modal .am-form-panel input:not([type="checkbox"]):not([type="radio"]),
+  .am-modal .am-form-panel select,
+  .am-modal .am-form-panel textarea,
+  .am-modal .am-form-panel button,
+  .am-modal .am-form-panel [contenteditable="true"] {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 16px prevents mobile Safari's focus-triggered page zoom on form fields. */
+  .am-modal .am-form-panel input:not([type="checkbox"]):not([type="radio"]),
+  .am-modal .am-form-panel select,
+  .am-modal .am-form-panel textarea,
+  .am-modal .am-form-panel .text-sm {
+    font-size: 16px !important;
+  }
+
+  .am-modal .am-form-panel input,
+  .am-modal .am-form-panel select,
+  .am-modal .am-form-panel textarea {
+    scroll-margin-block: 96px;
+  }
+
+  .am-modal .am-form-panel form,
+  .am-modal .am-form-panel > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .am-modal .am-form-panel img {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 359px) {
+  .am-modal .am-header { padding-inline: 12px !important; }
+}
