@@ -17,7 +17,7 @@ import Button from '../components/common/Button';
 import CookieSettingsButton from '../components/common/CookieSettingsButton';
 import ReviewModal from '../components/home/ReviewModal';
 import AnimatedSection from '../components/common/AnimatedSection';
-import TeamContent from '../components/common/TeamContent';
+import TeamPortraitCarousel from '../components/common/TeamPortraitCarousel';
 import { useUserAuth } from '../context/UserAuthContext';
 import { useGallery } from '../hooks/useGallery';
 
@@ -37,8 +37,19 @@ const ABOUT_STYLES = `
 
   /* ── Sections ── */
   .about-section {
-    padding: clamp(14px, 1.8vw, 24px) clamp(16px, 3vw, 32px);
+    padding: clamp(12px, 1.4vw, 18px) clamp(16px, 3vw, 32px);
   }
+
+  /* Keep the About page editorial and compact instead of stacking oversized gaps. */
+  .about-section > div > div[style*="margin-bottom: 44px"],
+  .about-section > div > div[style*="margin-bottom: 36px"],
+  .about-section > div > div[style*="margin-bottom: 32px"] {
+    margin-bottom: 18px !important;
+  }
+  .about-section .about-section-p { margin-bottom: 12px; }
+  .about-section .about-values-grid { gap: 14px; }
+  .about-section .about-value-card { padding: 22px 20px; }
+  .about-section .about-contact-grid { margin-top: 18px; }
 
   .about-section-title {
     font-family: 'Playfair Display', Georgia, serif;
@@ -866,13 +877,6 @@ const About = () => {
       </section>
 
       {/* ══════════════════════════════════════════
-          OUR TEAM — Live CMS team profiles
-      ══════════════════════════════════════════ */}
-      <section aria-label="Meet the Altuvera team" style={{ background: '#fafffe', paddingTop: 20 }}>
-        <TeamContent />
-      </section>
-
-      {/* ══════════════════════════════════════════
           VIDEO SECTION
       ══════════════════════════════════════════ */}
       <section className="about-section" style={{ background: '#fff' }}>
@@ -1150,6 +1154,9 @@ const About = () => {
           </div>
         </div>
       </section>
+
+      {/* Compact team portrait rail — full profiles remain on the dedicated team page. */}
+      <TeamPortraitCarousel />
 
       {/* ══════════════════════════════════════════
           CONTACT + CTA
