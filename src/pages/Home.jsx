@@ -462,6 +462,40 @@ const HOME_STYLES = `
   .intro-dest-side-arrow { width: 1.5rem; height: 1.5rem; }
 }
 
+/* Destination-specific homepage cards: silent, responsive image slideshows */
+.east-africa-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:16px;margin-top:24px;align-items:stretch;}
+.east-africa-destination-link{display:block;min-width:0;overflow:hidden;border-radius:14px;text-decoration:none;color:inherit;cursor:pointer;box-shadow:0 8px 24px rgba(6,40,23,.12);transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s ease;}
+.east-africa-destination-link:hover{transform:translateY(-5px) scale(1.012);box-shadow:0 16px 34px rgba(6,40,23,.2);}
+.east-africa-destination-link:active{transform:scale(.98);}
+.east-africa-destination-link:focus-visible{outline:3px solid #10b981;outline-offset:3px;}
+.east-africa-slide-frame{position:relative;width:100%;height:clamp(190px,22vw,270px);overflow:hidden;background:#e2e8f0;isolation:isolate;}
+.east-africa-slide-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;will-change:transform,opacity;transition:opacity .75s ease;}
+.east-africa-slide-image.is-active{opacity:1;animation-duration:1.2s;animation-fill-mode:both;animation-timing-function:cubic-bezier(.22,.61,.36,1);}
+.east-africa-slide-image.is-active.east-africa-slide-motion-0{animation-name:eaSlideKenBurns;}
+.east-africa-slide-image.is-active.east-africa-slide-motion-1{animation-name:eaSlideFromRight;}
+.east-africa-slide-image.is-active.east-africa-slide-motion-2{animation-name:eaSlideFromLeft;}
+.east-africa-slide-image.is-active.east-africa-slide-motion-3{animation-name:eaSlideRise;}
+.east-africa-slide-image.is-active.east-africa-slide-motion-4{animation-name:eaSlideSoftZoom;}
+.east-africa-slide-image.is-active.east-africa-slide-motion-5{animation-name:eaSlideDrift;}
+.east-africa-slide-shade{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.02) 40%,rgba(3,26,15,.76) 100%);}
+.east-africa-slide-name{position:absolute;z-index:3;left:0;right:0;bottom:0;padding:14px 15px;color:#fff;font-size:clamp(.9rem,1.1vw,1rem);font-weight:750;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,.4);overflow-wrap:anywhere;}
+.east-africa-slide-placeholder{position:absolute;inset:0;background:linear-gradient(135deg,#dcece2,#8db7a0 55%,#255c40);}
+@keyframes eaSlideKenBurns{from{transform:scale(1.12);filter:saturate(.9)}to{transform:scale(1);filter:saturate(1.04)}}
+@keyframes eaSlideFromRight{from{transform:translateX(7%) scale(1.04)}to{transform:translateX(0) scale(1)}}
+@keyframes eaSlideFromLeft{from{transform:translateX(-7%) scale(1.04)}to{transform:translateX(0) scale(1)}}
+@keyframes eaSlideRise{from{transform:translateY(6%) scale(1.035)}to{transform:translateY(0) scale(1)}}
+@keyframes eaSlideSoftZoom{from{transform:scale(1.16);clip-path:inset(5%)}to{transform:scale(1);clip-path:inset(0)}}
+@keyframes eaSlideDrift{from{transform:scale(1.07) translateY(-2%)}to{transform:scale(1) translateY(0)}}
+@media(max-width:600px){.east-africa-gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}.east-africa-slide-frame{height:clamp(170px,54vw,230px)}.east-africa-slide-name{padding:10px;font-size:.84rem}}
+@media(prefers-reduced-motion:reduce){.east-africa-destination-link{transition:none}.east-africa-destination-link:hover,.east-africa-destination-link:active{transform:none}.east-africa-slide-image.is-active{animation:none}}
+
+/* Clickable destination tiles: gentle bounce feedback and accessible focus */
+.east-africa-destination-link{cursor:pointer;transform:translateY(0) scale(1);transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s ease;box-shadow:0 4px 14px rgba(15,23,42,.08);}
+.east-africa-destination-link:hover{transform:translateY(-5px) scale(1.015);box-shadow:0 14px 28px rgba(15,23,42,.18);}
+.east-africa-destination-link:active{transform:translateY(-1px) scale(.975);}
+.east-africa-destination-link:focus-visible{outline:3px solid #10b981;outline-offset:3px;}
+@media(prefers-reduced-motion:reduce){.east-africa-destination-link{transition:none;}.east-africa-destination-link:hover,.east-africa-destination-link:active{transform:none;}}
+
 /* ── Scroll row ── */
 .mixed-scroll-row{display:flex;gap:1.25rem;overflow-x:auto;padding-bottom:1rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .mixed-scroll-row::-webkit-scrollbar{display:none;}
@@ -1341,6 +1375,102 @@ const MixedScrollRow = ({ packages, posts, loadingPkgs, loadingPosts, wishlist, 
 /* ═══════════════════════════════════════════
    MAIN HOME
 ═══════════════════════════════════════════ */
+const destinationImageUrl = (item) => {
+  if (typeof item === "string") return item;
+  if (!item || typeof item !== "object") return "";
+  return item.imageUrl || item.image_url || item.url || item.image || item.src ||
+    item.thumbnailUrl || item.thumbnail_url || item.secure_url || "";
+};
+
+const destinationImagesForCard = (destination) => {
+  const asList = (value) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) return parsed;
+        } catch { /* Keep plain image URLs as single entries. */ }
+      }
+      return trimmed ? [trimmed] : [];
+    }
+    return value ? [value] : [];
+  };
+  const unique = (items) => {
+    const seen = new Set();
+    return items.map((item) => {
+      const url = destinationImageUrl(item);
+      if (!url || seen.has(url)) return null;
+      seen.add(url);
+      return { url, alt: item && typeof item === "object" ? (item.altText || item.alt_text || item.caption || item.title || destination.name) : destination.name };
+    }).filter(Boolean);
+  };
+
+  // Admin-managed banner slides are the intended card slideshow source.
+  const bannerSlides = unique([
+    ...asList(destination.banner_slides), ...asList(destination.bannerSlides),
+    ...asList(destination.banner_images), ...asList(destination.bannerImages),
+  ]);
+  if (bannerSlides.length) return bannerSlides.slice(0, 6);
+
+  // If no banner slides exist, use only this destination's saved media,
+  // preferring hero/cover imagery before its gallery and attraction photos.
+  return unique([
+    ...asList(destination.hero_slides), ...asList(destination.heroSlides),
+    ...asList(destination.hero_images), ...asList(destination.heroImages),
+    destination.heroImage, destination.hero_image, destination.hero_image_url,
+    destination.coverImageUrl, destination.cover_image_url, destination.cover_image,
+    destination.imageUrl, destination.image_url, destination.image,
+    ...asList(destination.gallery), ...asList(destination.images),
+    ...asList(destination.image_urls), ...asList(destination.imageUrls),
+    ...asList(destination.library_images), ...asList(destination.attractions),
+    ...asList(destination.experiences), ...asList(destination.highlights),
+  ]).slice(0, 6);
+};
+
+const DestinationSlideshowCard = ({ destination, index }) => {
+  const slides = useMemo(() => destinationImagesForCard(destination), [destination]);
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    setActiveSlide(0);
+    if (slides.length < 2) return undefined;
+    const interval = window.setInterval(() => {
+      setActiveSlide((current) => (current + 1) % slides.length);
+    }, 3600 + (index % 3) * 280);
+    return () => window.clearInterval(interval);
+  }, [slides, index]);
+
+  const destinationId = destination.slug || destination.id || destination.destination_id;
+  const animationClass = `east-africa-slide-motion-${index % 6}`;
+
+  return (
+    <Link
+      to={`/destinations/${encodeURIComponent(destinationId)}`}
+      className="east-africa-destination-link"
+      aria-label={`View details for ${destination.name || "destination"}`}
+    >
+      <div className="east-africa-slide-frame">
+        {slides.length ? slides.map((slide, slideIndex) => (
+          <img
+            key={slide.url}
+            src={slide.url}
+            alt={slide.alt || destination.name || "Destination"}
+            loading={index === 0 && slideIndex === 0 ? "eager" : "lazy"}
+            className={`east-africa-slide-image ${animationClass} ${slideIndex === activeSlide ? "is-active" : ""}`}
+            onError={(event) => { event.currentTarget.style.visibility = "hidden"; }}
+          />
+        )) : (
+          <div className="east-africa-slide-placeholder" aria-hidden="true" />
+        )}
+        <div className="east-africa-slide-shade" />
+        <div className="east-africa-slide-name">{destination.name || "East Africa Destination"}</div>
+      </div>
+    </Link>
+  );
+};
+
 const Home = () => {
   useEffect(injectHomeStyles, []);
   const { setIsLoading } = useApp();
@@ -1467,90 +1597,14 @@ const featureBlocks = useMemo(() => [
             <h2 className="hsec-title">Destinations Across East Africa</h2>
             <p className="hsec-sub">Explore selected destinations across East Africa — each offering unique, authentic experiences.</p>
           </div>
-          <div className="east-africa-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginTop: '24px' }}>
-            {allDest.slice(0, 12).map((dest, idx) => {
-              // Get the first available image using the same logic as DestinationCard
-              const getFirstImage = (destination) => {
-                const images = [
-                  ...(Array.isArray(destination.images) ? destination.images : []),
-                  ...(Array.isArray(destination.gallery) ? destination.gallery : []),
-                  destination.heroImage,
-                  destination.imageUrl,
-                  destination.thumbnailUrl
-                ].filter(Boolean);
-                
-                if (images.length === 0) return "";
-                
-                // Use the first image, handling both string and object formats
-                const firstImage = images[0];
-                if (typeof firstImage === "string") return firstImage;
-                if (typeof firstImage === "object") {
-                  return firstImage.imageUrl || 
-                         firstImage.image_url || 
-                         firstImage.url || 
-                         firstImage.thumbnailUrl || 
-                         firstImage.thumbnail_url || 
-                         "";
-                }
-                return "";
-              };
-              
-              const imgSrc = getFirstImage(dest);
-              
-              return (
-                <div key={dest.slug || dest.id || idx} style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
-                  {imgSrc ? (
-                    <img
-                      src={imgSrc}
-                      alt={dest.name || 'East Africa Destination'}
-                      loading={idx === 0 ? "eager" : "lazy"}
-                      onError={(e) => {
-                        // Hide broken image and show placeholder instead
-                        e.target.style.display = 'none';
-                      }}
-                      style={{ 
-                        width: '100%', 
-                        height: '200px', 
-                        objectFit: 'cover', 
-                        display: 'block',
-                        backgroundColor: '#e2e8f0'
-                      }}
-                    />
-                  ) : null}
-                  {!imgSrc && (
-                    <div style={{ 
-                      width: '100%', 
-                      height: '200px', 
-                      background: '#e2e8f0', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      borderRadius: '12px', 
-                      color: '#94a3b8',
-                      fontSize: '14px'
-                    }}>
-                      No image available
-                    </div>
-                  )}
-                  {/* Destination name overlay */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: 'rgba(0,0,0,0.6)',
-                    color: 'white',
-                    padding: '8px 12px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    textAlign: 'center',
-                    backdropFilter: 'blur(4px)'
-                  }}>
-                    {dest.name || 'East Africa Destination'}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="east-africa-gallery">
+            {allDest.slice(0, 12).map((dest, idx) => (
+              <DestinationSlideshowCard
+                key={dest.slug || dest.id || dest.destination_id || idx}
+                destination={dest}
+                index={idx}
+              />
+            ))}
           </div>
           <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
             <Button to="/destinations" variant="primary" size="large" icon={<HiOutlineArrowRight size={16} />}>Explore All Destinations</Button>
