@@ -200,13 +200,29 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
 
   useEffect(() => {
     let cancelled = false;
-    const imageOf = (item) => item?.image_url || item?.imageUrl || item?.cover_image || item?.coverImage || item?.featured_image || item?.featuredImage || item?.thumbnail || item?.images?.[0]?.url || item?.images?.[0] || item?.gallery?.[0]?.url;
-    const titleOf = (item) => item?.name || item?.title || item?.destination_name || "Explore Africa";
-    fetch(`${API_BASE.replace(/\\/$/, "")}/destinations`)
+    const imageOf = (item) => {
+      const candidates = [
+        item?.image_url, item?.imageUrl, item?.cover_image, item?.coverImage,
+        item?.featured_image, item?.featuredImage, item?.thumbnail,
+        item?.hero_image, item?.heroImage, item?.main_image, item?.mainImage,
+        item?.images?.[0]?.url, item?.images?.[0]?.image_url,
+        typeof item?.images?.[0] === "string" ? item.images[0] : null,
+        item?.gallery?.[0]?.url, item?.gallery?.[0]?.image_url,
+        typeof item?.gallery?.[0] === "string" ? item.gallery[0] : null,
+      ];
+      return candidates.find((value) => typeof value === "string" && value.trim()) || "";
+    };
+    const titleOf = (item) => item?.name || item?.title || item?.destination_name || item?.destinationName || "Explore Africa";
+    fetch(`${String(API_BASE || "").replace(/\/$/, "")}/destinations`)
       .then((response) => { if (!response.ok) throw new Error("Destinations unavailable"); return response.json(); })
       .then((payload) => {
-        const items = Array.isArray(payload) ? payload : payload?.data || payload?.destinations || payload?.results || [];
-        const slides = items.slice(0, 20).map((item) => ({ src: imageOf(item), alt: `Discover ${titleOf(item)}`, caption: titleOf(item), subtitle: item?.short_description || item?.description || "Discover unforgettable African experiences" })).filter((item) => typeof item.src === "string" && item.src.trim());
+        const items = Array.isArray(payload) ? payload : payload?.data || payload?.destinations || payload?.results || payload?.items || [];
+        const slides = items.slice(0, 20).map((item) => ({
+          src: imageOf(item),
+          alt: `Discover ${titleOf(item)}`,
+          caption: titleOf(item),
+          subtitle: item?.short_description || item?.shortDescription || item?.description || "Discover unforgettable African experiences",
+        })).filter((item) => item.src);
         if (!cancelled && slides.length) { setGallery(slides); setCurrent(0); }
       }).catch(() => {});
     return () => { cancelled = true; };
@@ -214,7 +230,7 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
 
   const advance = useCallback(
     (dir = 1) => setCurrent((i) => (i + dir + gallery.length) % gallery.length),
-    [],
+    [gallery.length],
   );
 
   useEffect(() => {
@@ -226,7 +242,7 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
   useEffect(() => {
     const img = new Image();
     img.src = gallery[(current + 1) % gallery.length].src;
-  }, [current]);
+  }, [current, gallery]);
 
   const slide = gallery[current] || GALLERY[0];
 
