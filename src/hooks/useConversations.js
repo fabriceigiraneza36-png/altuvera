@@ -42,15 +42,27 @@ const authFetch = (url, opts = {}) => {
 };
 
 /* ─── Serialise snake_case → camelCase ──────────────────────────────── */
-const notifyMessage = (title, body, tag) => {
+const notifyMessage = (title, body, tag, actionUrl = null) => {
   try {
     if (typeof window === "undefined" || !("Notification" in window)) return;
+    const show = () => {
+      const notification = new Notification(title, {
+        body,
+        tag,
+        icon: "/favicon.ico",
+        badge: "/favicon.ico",
+      });
+      notification.onclick = () => {
+        window.focus();
+        if (actionUrl) window.location.assign(actionUrl);
+        notification.close();
+      };
+    };
     if (Notification.permission === "granted") {
-      const notification = new Notification(title, { body, tag, icon: "/favicon.ico", badge: "/favicon.ico" });
-      notification.onclick = () => { window.focus(); notification.close(); };
+      show();
     } else if (Notification.permission === "default") {
       Notification.requestPermission().then((permission) => {
-        if (permission === "granted") new Notification(title, { body, tag, icon: "/favicon.ico" });
+        if (permission === "granted") show();
       }).catch(() => {});
     }
   } catch { /* browser notifications are optional; inbox remains the source of truth */ }
@@ -329,7 +341,12 @@ export function useConversations() {
       if (!msg?.id || !cid) return;
 
       if (msg.senderType === "admin" && cid !== String(activeIdRef.current)) {
-        notifyMessage(payload?.groupName || "Altuvera group message", msg.body?.slice(0, 160) || "You received a new group message.", `altuvera-group-${payload?.groupId || cid}`);
+        notifyMessage(
+          payload?.groupName || "Altuvera group message",
+          msg.body?.slice(0, 160) || "You received a new group message.",
+          `altuvera-group-${payload?.groupId || cid}`,
+          `/messages?conversationId=${encodeURIComponent(cid)}`,
+        );
       }
 
       setConversations((prev) => {
