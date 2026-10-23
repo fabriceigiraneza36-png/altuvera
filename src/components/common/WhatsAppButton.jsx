@@ -767,11 +767,12 @@ const WhatsAppButton = () => {
   }, []);
 
   const handleDirect = useCallback(() => {
+    // Open synchronously inside the click event so mobile browsers do not block it.
+    window.open(makeURL(), "_blank");
     setIsSending(true);
     setShowSuccess(true);
     fireConfetti();
     setTimeout(() => {
-      window.open(makeURL(), "_blank");
       setIsSending(false);
       setTimeout(closeModal, 600);
     }, 1400);
@@ -781,12 +782,14 @@ const WhatsAppButton = () => {
     const msg = selectedPreset
       ? PRESET_MESSAGES.find((p) => p.id === selectedPreset)?.message
       : customMessage;
-    if (!msg) return;
+    if (!msg || !String(msg).trim()) return;
+    // Launch WhatsApp during the actual tap; delayed window.open calls are
+    // blocked by Chrome on Android and other mobile browsers.
+    window.open(makeURL(msg), "_blank");
     setIsSending(true);
     setShowSuccess(true);
     fireConfetti();
     setTimeout(() => {
-      window.open(makeURL(msg), "_blank");
       setIsSending(false);
       setTimeout(closeModal, 600);
     }, 1400);
