@@ -7,6 +7,7 @@
 //   - Removed unused imports guard comment
 // ============================================================================
 
+import { CheckCircle2, Info, TriangleAlert, CircleX } from "lucide-react";
 import React, {
   useEffect, useMemo, Suspense,
   useState, useCallback, useRef,
@@ -979,7 +980,7 @@ useEffect(injectAppStyles, []);
            {type === "warning" && <i className="fas fa-exclamation-triangle" />}
            {type === "error" && <i className="fas fa-times-circle" />}
          </div>
-         <span className="min-w-0 break-words leading-5 line-clamp-3">{String(message || "").split(/\\r?\\n/)[0]}</span>
+         <span className="min-w-0 break-words leading-5 line-clamp-3">{String(message || "").split(/\r?\n/)[0]}</span>
        </div>
      );
    };
