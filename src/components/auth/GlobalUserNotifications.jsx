@@ -278,19 +278,6 @@ export default function GlobalUserNotifications() {
           <button type="button" onClick={() => { setShowFullDetails(false); openNotification(); }} style={{ width: "100%", padding: "11px 14px", border: 0, borderRadius: 11, background: "#065f46", color: "#fff", fontWeight: 800, cursor: "pointer" }}>{actionLabel}</button>
         </div>
       </div>}
-        </div>
-      </section>
-      {showFullDetails && <div role="dialog" aria-modal="true" aria-label="Full notification details" onClick={() => setShowFullDetails(false)} style={{ position: "fixed", inset: 0, zIndex: 100000, background: "rgba(15,23,42,.35)", display: "grid", placeItems: "center", padding: 16 }}>
-        <div onClick={(event) => event.stopPropagation()} style={{ width: "min(440px, 100%)", maxHeight: "min(70vh, 560px)", overflow: "auto", background: "#fff", borderRadius: 18, padding: 18, boxShadow: "0 24px 70px rgba(15,23,42,.22)", color: "#111827" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 9 }}><Icon size={20} color={meta.color}/><h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>{title}</h2></div>
-            <button type="button" onClick={() => setShowFullDetails(false)} aria-label="Close full notification" style={{ border: 0, background: "#f3f4f6", borderRadius: 9, padding: 6, cursor: "pointer" }}><X size={16}/></button>
-          </div>
-          {isBookingConfirmed && destinationImage && <img src={destinationImage} alt={visible.destination_name || visible.destinationName || "Booked destination"} style={{ width: "100%", maxHeight: 190, objectFit: "cover", borderRadius: 12, marginTop: 14 }} />}
-          <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: 14, lineHeight: 1.65, color: "#374151" }}>{fullBody}</p>
-          <button type="button" onClick={() => { setShowFullDetails(false); openNotification(); }} style={{ width: "100%", padding: "11px 14px", border: 0, borderRadius: 11, background: "#065f46", color: "#fff", fontWeight: 800, cursor: "pointer" }}>{actionLabel}</button>
-        </div>
-      </div>}
     </>
   );
 }
