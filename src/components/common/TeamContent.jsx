@@ -642,21 +642,6 @@ const STYLES = `
 @media(max-width:480px){.tm-photo-modal{padding:14px}.tm-photo-dialog{padding:14px;border-radius:20px}.tm-photo-frame{width:min(100%,360px);border-radius:15px;margin-bottom:15px}.tm-photo-close{width:38px;height:38px;top:9px;right:9px}}
 @media(prefers-reduced-motion:reduce){.tm-photo-modal,.tm-photo-dialog{animation:none}}
 `;
-.tm-photo-modal{position:fixed;inset:0;z-index:100500;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,20,13,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:tmModalFade .18s ease-out}
-.tm-photo-dialog{position:relative;width:min(100%,520px);max-height:min(92dvh,780px);overflow:auto;background:#fff;border:1px solid rgba(16,185,129,.18);border-radius:24px;box-shadow:0 28px 90px rgba(0,0,0,.28);padding:20px;animation:tmModalRise .24s cubic-bezier(.2,.8,.2,1)}
-.tm-photo-close{position:absolute;top:12px;right:12px;z-index:2;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:1px solid rgba(6,78,59,.14);background:rgba(255,255,255,.96);color:#064e3b;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.12);font-size:28px}
-.tm-photo-frame{width:min(100%,390px);aspect-ratio:1/1;margin:0 auto 18px;overflow:hidden;border-radius:18px;background:#ecfdf5;border:1px solid #d1fae5;display:grid;place-items:center}
-.tm-photo-frame img{display:block;width:100%;height:100%;object-fit:cover}
-.tm-photo-placeholder{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#047857;font-size:13px}
-.tm-photo-name{margin:0;text-align:center;color:#052e16;font-size:clamp(21px,4vw,28px);font-weight:750;line-height:1.25}
-.tm-photo-role{margin:7px 0 0;text-align:center;color:#059669;font-size:14px;font-weight:650}
-.tm-photo-dept{display:table;margin:10px auto 0;padding:6px 11px;border-radius:999px;background:#ecfdf5;color:#065f46;font-size:12px;font-weight:650}
-.tm-photo-bio{margin:15px auto 0;max-width:440px;text-align:center;color:#64748b;font-size:14px;line-height:1.7;white-space:pre-wrap}
-@keyframes tmModalFade{from{opacity:0}to{opacity:1}}
-@keyframes tmModalRise{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-@media(max-width:480px){.tm-photo-modal{padding:14px}.tm-photo-dialog{padding:14px;border-radius:20px}.tm-photo-frame{width:min(100%,360px);border-radius:15px;margin-bottom:15px}.tm-photo-close{width:38px;height:38px;top:9px;right:9px}}
-@media(prefers-reduced-motion:reduce){.tm-photo-modal,.tm-photo-dialog{animation:none}}
-
 let _injected = false;
 function injectStyles() {
   if (_injected || typeof document === "undefined") return;
