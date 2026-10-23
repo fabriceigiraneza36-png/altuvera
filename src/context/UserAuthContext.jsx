@@ -1582,11 +1582,33 @@ export function UserAuthProvider({ children }) {
     const emailOtpAddress = url.searchParams.get("email");
 
     if (emailOtpRequired === "1" && emailOtpAddress) {
-      ["emailOtpRequired", "email", "provider"].forEach((p) => url.searchParams.delete(p));
-      window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+      // This redirect means GitHub identity was accepted but email verification
+      // is still pending. Remove every OAuth/OTP callback parameter BEFORE
+      // starting async work so context rerenders (or StrictMode) cannot consume
+      // the same callback a second time and accidentally finish the flow.
+      [
+        "code", "state", "error", "error_description", "auth_provider",
+        "emailOtpRequired", "email", "provider",
+      ].forEach((p) => url.searchParams.delete(p));
+      window.history.replaceState(
+        {}, document.title,
+        `${url.pathname}${url.search}${url.hash}`,
+      );
+
+      setPendingEmail(emailOtpAddress);
+      setSocialAuthError("");
       openModal("login", { skipNotLoggedInMessage: true });
-      try { await login({ email: emailOtpAddress }); }
-      catch (err) { setSocialAuthError(err?.message || "Could not send email verification code."); }
+      try {
+        const result = await login({ email: emailOtpAddress });
+        // Keep the verification form open even if the code-send request returns
+        // a success payload; this is not an authenticated session yet.
+        if (result?.requiresVerification || result?.requiresEmailVerification) {
+          setPendingEmail(result?.email || emailOtpAddress);
+          setModalView("verify");
+        }
+      } catch (err) {
+        setSocialAuthError(err?.message || "Could not send email verification code.");
+      }
       return;
     }
     if (!code && !oauthErr) return;
