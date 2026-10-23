@@ -317,3 +317,12 @@
   .dc-comment-spinner { animation-duration: 1.5s; }
   .dc-comment-fab, .dc-comment-success-toast { animation: none; }
 }
+
+.dc-comment-modal__submitting-note {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  margin: 10px 0 4px; padding: 10px 12px; border: 1px solid #d1fae5;
+  border-radius: 12px; background: #f0fdf4; color: #166534;
+  font-size: 12px; line-height: 1.4; font-weight: 750;
+}
+.dc-comment-modal--submitting { cursor: progress; }
+.dc-comment-modal--submitting .dc-comment-modal__close { opacity: .45; cursor: progress; }
