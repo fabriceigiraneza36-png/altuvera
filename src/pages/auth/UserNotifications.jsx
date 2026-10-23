@@ -1,30 +1,55 @@
   // src/pages/Notifications.jsx
-  import React, { useState, useMemo, useRef } from 'react';
+  import React, { useState, useMemo, useRef, useEffect } from 'react';
+  import {
+    Bell, CalendarDays, Pencil, CheckCircle2, XCircle, Trash2,
+    CreditCard, Wallet, Map, Globe2, FileText, Package, ClipboardList,
+    PartyPopper, Newspaper, AlertTriangle, Siren, Settings, MessageCircle,
+    ShieldCheck, CheckCheck,
+  } from 'lucide-react';
   import { Helmet }     from 'react-helmet-async';
   import { motion, AnimatePresence } from 'framer-motion';
   import DashboardLayout from '../../components/auth/DashboardLayout';
   import { useNotifications } from '../../hooks/useNotifications';
 
   const TYPE_META = {
-    booking_created:   { icon: '📅', color: '#059669' },
-    booking_updated:   { icon: '✏️', color: '#0ea5e9' },
-    booking_confirmed: { icon: '✅', color: '#16a34a' },
-    booking_cancelled: { icon: '❌', color: '#dc2626' },
-    booking_deleted:   { icon: '🗑️', color: '#7c3aed' },
-    payment_confirmed: { icon: '💳', color: '#059669' },
-    payment_request:   { icon: '💰', color: '#d97706' },
-    new_destination:   { icon: '🗺️', color: '#0891b2' },
-    new_country:       { icon: '🌍', color: '#0891b2' },
-    new_post:          { icon: '📝', color: '#7c3aed' },
-    new_package:       { icon: '📦', color: '#d97706' },
-    checklist_request: { icon: '📋', color: '#059669' },
-    checklist_ready:   { icon: '✅', color: '#16a34a' },
-    promotion:         { icon: '🎉', color: '#db2777' },
-    newsletter:        { icon: '📰', color: '#059669' },
-    warning:           { icon: '⚠️', color: '#f59e0b' },
-    alert:             { icon: '🚨', color: '#dc2626' },
-    system:            { icon: '⚙️', color: '#64748b' },
-    general:           { icon: '💬', color: '#059669' },
+    booking_created: { icon: CalendarDays, color: '#059669' },
+    booking_updated: { icon: Pencil, color: '#0ea5e9' },
+    booking_confirmed: { icon: CheckCircle2, color: '#16a34a' },
+    booking_cancelled: { icon: XCircle, color: '#dc2626' },
+    booking_deleted: { icon: Trash2, color: '#7c3aed' },
+    payment_confirmed: { icon: CreditCard, color: '#059669' },
+    payment_request: { icon: Wallet, color: '#d97706' },
+    new_destination: { icon: Map, color: '#0891b2' },
+    new_country: { icon: Globe2, color: '#0891b2' },
+    new_post: { icon: FileText, color: '#7c3aed' },
+    new_package: { icon: Package, color: '#d97706' },
+    checklist_request: { icon: ClipboardList, color: '#059669' },
+    checklist_ready: { icon: CheckCheck, color: '#16a34a' },
+    promotion: { icon: PartyPopper, color: '#db2777' },
+    newsletter: { icon: Newspaper, color: '#059669' },
+    warning: { icon: AlertTriangle, color: '#f59e0b' },
+    alert: { icon: Siren, color: '#dc2626' },
+    login_success: { icon: ShieldCheck, color: '#059669' },
+    user_login_success: { icon: ShieldCheck, color: '#059669' },
+    system: { icon: Settings, color: '#64748b' },
+    general: { icon: MessageCircle, color: '#059669' },
+  };
+
+  const readSessionExpiry = (notification) => {
+    const metadata = notification?.metadata || notification?.metadata_json || {};
+    const value = metadata?.sessionExpiresAt || metadata?.session_expires_at;
+    const parsed = value ? new Date(value).getTime() : 0;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  };
+
+  const formatRemaining = (expiry, now) => {
+    if (!expiry) return '';
+    const seconds = Math.max(0, Math.floor((expiry - now) / 1000));
+    if (!seconds) return 'Session expired';
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return 'Session expires in ' + (days ? days + 'd ' : '') + hours + 'h ' + minutes + 'm';
   };
 
   const formatDate = (d) => {
@@ -64,6 +89,11 @@
     const [sending,    setSending]    = useState({});
     const swipeStarts = useRef(new Map());
     const [swipeOffsets, setSwipeOffsets] = useState({});
+    const [clockNow, setClockNow] = useState(Date.now());
+    useEffect(() => {
+      const timer = window.setInterval(() => setClockNow(Date.now()), 30_000);
+      return () => window.clearInterval(timer);
+    }, []);
 
     const displayed = useMemo(() => {
       if (tab === 'bookings') return grouped.booking;
@@ -141,7 +171,7 @@
           {/* ── Header ── */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 22 }}>🔔</span>
+              <Bell size={22} color="#059669" aria-hidden="true" />
               <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>
                 {total} notification{total !== 1 ? 's' : ''}
                 {unreadCount > 0 && (
@@ -196,7 +226,7 @@
             </div>
           ) : displayed.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '64px 24px', background: '#fff', borderRadius: 20, border: '1px dashed #e2e8f0' }}>
-              <div style={{ fontSize: 52, marginBottom: 12 }}>🔔</div>
+              <Bell size={44} color="#94a3b8" style={{ margin: "0 auto 12px" }} />
               <h3 style={{ margin: '0 0 8px', color: '#0f172a' }}>All caught up!</h3>
               <p style={{ color: '#64748b', margin: 0 }}>No {tab === 'all' ? '' : tab} notifications yet.</p>
             </div>
@@ -230,8 +260,8 @@
 
                       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                         {/* Icon */}
-                        <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: `${meta.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                          {meta.icon}
+                        <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: `${meta.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <meta.icon size={20} color={meta.color} strokeWidth={2} aria-hidden="true" />
                         </div>
 
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -249,6 +279,13 @@
                           <p style={{ margin: '6px 0 0', fontSize: 14, color: '#475569', lineHeight: 1.6 }}>
                             {n.message}
                           </p>
+
+                          {readSessionExpiry(n) && (
+                            <div role="status" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 10, padding: "7px 10px", borderRadius: 9, background: "#eff6ff", color: "#1d4ed8", fontSize: 12, fontWeight: 700 }}>
+                              <ShieldCheck size={14} />
+                              {formatRemaining(readSessionExpiry(n), clockNow)}
+                            </div>
+                          )}
 
                           {/* Action link */}
                           {n.action_url && (
