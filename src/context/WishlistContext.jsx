@@ -14,9 +14,9 @@ const STORAGE_KEY = "altuvera_wishlist_ids";
 
 const WishlistContext = createContext(null);
 
-const loadFromStorage = () => {
+const loadFromStorage = (storageKey = STORAGE_KEY) => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     const parsed = raw ? JSON.parse(raw) : null;
     return Array.isArray(parsed) ? new Set(parsed) : new Set();
   } catch {
@@ -24,16 +24,18 @@ const loadFromStorage = () => {
   }
 };
 
-const saveToStorage = (set) => {
+const saveToStorage = (set, storageKey = STORAGE_KEY) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
+    localStorage.setItem(storageKey, JSON.stringify(Array.from(set)));
   } catch {
     // ignore
   }
 };
 
 export function WishlistProvider({ children }) {
-  const { isAuthenticated, openModal } = useUserAuth();
+  const { isAuthenticated, openModal, user } = useUserAuth();
+  const accountKey = user?.id || user?._id || user?.userId || user?.email || "account";
+  const storageKey = `${STORAGE_KEY}:${String(accountKey).toLowerCase()}`;
   const toast = useToast();
   const [wishlistIds, setWishlistIds] = useState(() => new Set());
   const [loaded, setLoaded] = useState(false);
@@ -61,13 +63,13 @@ export function WishlistProvider({ children }) {
 
     setLoading(true);
     try {
-      const set = loadFromStorage();
+      const set = loadFromStorage(storageKey);
       setWishlistIds(set);
       setLoaded(true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -76,7 +78,7 @@ export function WishlistProvider({ children }) {
     }
 
     loadWishlist();
-  }, [isAuthenticated, loadWishlist, reset]);
+  }, [isAuthenticated, loadWishlist, reset, storageKey]);
 
   const toggleWishlist = useCallback(
     (destinationId) => {
@@ -99,11 +101,11 @@ export function WishlistProvider({ children }) {
           next.add(destinationId);
           toast.success("Destination added to your wishlist.");
         }
-        saveToStorage(next);
+        saveToStorage(next, storageKey);
         return next;
       });
     },
-    [isAuthenticated, openModal, toast],
+    [isAuthenticated, openModal, toast, storageKey],
   );
 
   const isWishlisted = useCallback(
