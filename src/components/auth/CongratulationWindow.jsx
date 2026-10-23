@@ -203,12 +203,19 @@ const S = {
     gap:            6,
   },
   dot: (active) => ({
-    width:        active ? 20 : 7,
-    height:       7,
-    borderRadius: 99,
-    background:   active ? "#059669" : "#e2e8f0",
-    transition:   "all 0.3s",
+    width: active ? 20 : 7, height: 7, borderRadius: 99,
+    background: active ? "#059669" : "#e2e8f0", transition: "all 0.3s",
   }),
+  quickLinks: {
+    display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 8, marginTop: 14,
+  },
+  quickLink: {
+    display: "flex", alignItems: "center", gap: 8, minWidth: 0,
+    padding: "10px 11px", borderRadius: 12, border: "1px solid #dbece4",
+    background: "#fbfefc", color: "#166534", textDecoration: "none",
+    fontSize: "0.78rem", fontWeight: 750, transition: "all .18s ease",
+  },
 };
 
 const KEYFRAMES = `
@@ -232,9 +239,15 @@ const CONTENT = {
     cta:      "Explore Destinations",
     ctaLink:  "/destinations",
     tips: [
-      { icon: Globe,    text: "Browse 50+ curated destinations" },
-      { icon: Compass,  text: "Customize your perfect safari"   },
-      { icon: Star,     text: "Book with confidence"            },
+      { icon: Globe,    text: "Browse curated African destinations" },
+      { icon: Compass,  text: "Discover experiences for your next safari" },
+      { icon: Star,     text: "Save favorites and plan at your pace" },
+    ],
+    quickLinks: [
+      { icon: Globe, label: "Destinations", href: "/destinations" },
+      { icon: Compass, label: "Safari packages", href: "/packages" },
+      { icon: Bookmark, label: "My wishlist", href: "/wishlist" },
+      { icon: Calendar, label: "My bookings", href: "/my-bookings" },
     ],
   },
   login: {
@@ -245,9 +258,15 @@ const CONTENT = {
     cta:      "View My Bookings",
     ctaLink:  "/my-bookings",
     tips: [
-      { icon: Calendar, text: "Check your active bookings"    },
-      { icon: MapPin,   text: "View saved destinations"       },
-      { icon: Bookmark, text: "Update your preferences"       },
+      { icon: Calendar, text: "Check your active bookings" },
+      { icon: MapPin,   text: "Return to destinations you love" },
+      { icon: Bookmark, text: "Keep your travel plans organized" },
+    ],
+    quickLinks: [
+      { icon: Globe, label: "Destinations", href: "/destinations" },
+      { icon: Calendar, label: "My bookings", href: "/my-bookings" },
+      { icon: Bookmark, label: "My wishlist", href: "/wishlist" },
+      { icon: Star, label: "My profile", href: "/profile" },
     ],
   },
 };
@@ -416,6 +435,23 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                       </motion.div>
                     ))}
                   </div>
+
+                  {type === "signup" && (
+                    <p style={{ margin: "0 0 12px", textAlign: "center", color: "#047857", fontSize: "0.78rem", lineHeight: 1.5 }}>
+                      A welcome email is on its way to your inbox.
+                    </p>
+                  )}
+
+                  <nav aria-label="Quick links" style={S.quickLinks}>
+                    {(cfg.quickLinks || []).map(({ icon: LinkIcon, label, href }) => (
+                      <a key={href} href={href} style={S.quickLink}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#ecfdf5"; e.currentTarget.style.borderColor = "#86efac"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "#fbfefc"; e.currentTarget.style.borderColor = "#dbece4"; }}>
+                        <LinkIcon size={15} aria-hidden="true" />
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+                      </a>
+                    ))}
+                  </nav>
 
                   {/* CTA */}
                   <motion.button
