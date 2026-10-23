@@ -2223,9 +2223,10 @@ export default function AuthModal() {
                     {pendingFactorMethods.includes("passkey") && (
                     <button type="button" disabled={loading || !isOnline} onClick={async()=>{if(!isOnline){setError("You appear to be offline. Reconnect before using a passkey.");return;}setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(formatAuthError(err, "Passkey verification failed. Try another verification method."));}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
                     )}
-                    <div className="flex gap-2">
-                      {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Authenticator app</button> )}
-                      {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Recovery code</button> )}
+                    <div className="flex flex-wrap gap-2">
+                      {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");setError("");}} className="rounded-xl border px-3 py-2 text-sm"><HiShieldCheck className="mr-1 inline h-4 w-4" />Authenticator app</button> )}
+                      {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");setError("");}} className="rounded-xl border px-3 py-2 text-sm"><HiKey className="mr-1 inline h-4 w-4" />Recovery code</button> )}
+                      <button type="button" onClick={() => { setFactorCode(""); setError(""); setShowAuthMethods(false); setModalView("login"); }} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">Skip passkey / back to sign in</button>
                     </div>
                     <label htmlFor="login-factor-code" className="block text-sm font-medium">{factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}</label>
                     <input id="login-factor-code" value={factorCode} onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg tracking-widest" placeholder={factorMethod === "totp" ? "000000" : "00000"} aria-invalid={Boolean(error)} aria-describedby={error ? "factor-code-error" : undefined} disabled={loading || !isOnline} />
@@ -2327,11 +2328,6 @@ export default function AuthModal() {
                     </p>
                     {error && <p id="verify-code-error" role="alert" className="am-verify-inline-error text-center text-sm text-red-600 flex items-center justify-center gap-2"><HiExclamationCircle className="w-4 h-4 flex-shrink-0" />{error}</p>}
 
-                    {codeState === "verifying" && (
-                      <div className="am-slideDown flex items-center justify-center gap-2 p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-medium">
-                        <Spinner /> Verifying…
-                      </div>
-                    )}
                     {codeState === "success" && (
                       <div className="am-slideDown flex items-center justify-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
                         <HiCheckCircle className="w-5 h-5" /> Verified! Redirecting…
