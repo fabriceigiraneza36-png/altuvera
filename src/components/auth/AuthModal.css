@@ -2358,3 +2358,117 @@
 @media (prefers-reduced-motion: reduce) {
   .am-auth-slideshow__single-phrase { animation: none !important; }
 }
+
+
+/* Mobile login visibility + premium surface fix (2026-10-23).
+   Keep the page backdrop behind the dialog; never let blur/transparency obscure the form. */
+@media (max-width: 639px) {
+  .am-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: rgba(4, 24, 17, .72) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    isolation: isolate;
+  }
+  .am-modal-mobile {
+    position: fixed !important;
+    z-index: 10000 !important;
+    inset: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    color: #17251f !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none;
+  }
+  .am-modal-mobile .am-mobile-header {
+    flex: 0 0 auto !important;
+    min-height: 54px;
+    background: #fff !important;
+    border-bottom: 1px solid #e4eee8 !important;
+  }
+  .am-modal-mobile .am-mobile-tabs {
+    flex: 0 0 auto !important;
+    background: #f5faf7 !important;
+    border-bottom: 1px solid #e1ebe5 !important;
+  }
+  .am-modal-mobile .am-mobile-body {
+    position: relative !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    padding: 22px 18px 28px !important;
+    background: #fff !important;
+    color: #1f2937 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .am-modal-mobile .am-mobile-body h1,
+  .am-modal-mobile .am-mobile-body h2,
+  .am-modal-mobile .am-mobile-body h3 {
+    color: #14271e !important;
+    letter-spacing: -.025em;
+  }
+  .am-modal-mobile .am-mobile-body label {
+    color: #34483d;
+  }
+  .am-modal-mobile .am-mobile-body input:not([type="checkbox"]):not([type="radio"]),
+  .am-modal-mobile .am-mobile-body select,
+  .am-modal-mobile .am-mobile-body textarea {
+    color: #17251f !important;
+    background: #fbfdfb !important;
+    border: 1px solid #cbdcd1 !important;
+    border-radius: 13px !important;
+    box-shadow: 0 1px 2px rgba(12, 44, 28, .04);
+  }
+  .am-modal-mobile .am-mobile-body input::placeholder,
+  .am-modal-mobile .am-mobile-body textarea::placeholder {
+    color: #89978f !important;
+    opacity: 1;
+  }
+  .am-modal-mobile .am-mobile-body input:focus,
+  .am-modal-mobile .am-mobile-body select:focus,
+  .am-modal-mobile .am-mobile-body textarea:focus {
+    border-color: #087f55 !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(8, 127, 85, .14) !important;
+  }
+  .am-modal-mobile .am-mobile-footer {
+    flex: 0 0 auto !important;
+    background: #f7faf8 !important;
+    border-top: 1px solid #e1ebe5 !important;
+  }
+  .am-modal-mobile button:not(:disabled) {
+    cursor: pointer;
+  }
+}
+@media (max-width: 359px) {
+  .am-modal-mobile .am-mobile-body { padding: 16px 13px 24px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-modal-mobile { animation: none !important; }
+}
