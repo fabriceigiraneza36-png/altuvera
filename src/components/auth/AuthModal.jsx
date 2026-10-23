@@ -396,7 +396,12 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
                 return;
               }
               image.dataset.authFallbackApplied = "true";
-              image.src = GALLERY[index % GALLERY.length].src;
+              const fallbackImage = GALLERY[(index + 1) % GALLERY.length].src;
+              if (!fallbackImage || image.src === fallbackImage) {
+                image.style.opacity = "0";
+                return;
+              }
+              image.src = fallbackImage;
             }}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             loading={index === current || index === (current + 1) % gallery.length ? "eager" : "lazy"}
