@@ -50,7 +50,7 @@ function CelebrationParticles({ category = "" }) {
       p.rot += p.spin;
       p.x += p.vx + Math.sin(p.y * .012) * .45;
       p.y += p.vy;
-      if (p.y > h + 20) { p.y = -20; p.x = Math.random() * w; }
+      if (p.y > h + 20 && !p.burst) { p.y = -20; p.x = Math.random() * w; }
 
       ctx.save();
       ctx.globalAlpha = p.life;
@@ -104,10 +104,36 @@ function CelebrationParticles({ category = "" }) {
       }
       ctx.globalAlpha = 1;
 
-      particles.forEach(p => draw(p,w,h));
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const particle = particles[i];
+        draw(particle, w, h);
+        if (particle.burst && ++particle.age > particle.ttl) particles.splice(i, 1);
+      }
       raf = requestAnimationFrame(animate);
     };
     animate();
+
+    // Tap or click the success experience to trigger a fresh confetti burst.
+    const burstAt = (event) => {
+      const bounds = parent.getBoundingClientRect();
+      const x = event.clientX - bounds.left;
+      const y = event.clientY - bounds.top;
+      for (let i = 0; i < 54; i++) {
+        const angle = (Math.PI * 2 * i) / 54 + (Math.random() - .5) * .24;
+        const speed = 2.2 + Math.random() * 5.2;
+        particles.push({
+          kind: "confetti", x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 1.4,
+          size: 2.5 + Math.random() * 5,
+          rot: Math.random() * Math.PI,
+          spin: (Math.random() - .5) * .3,
+          life: .95, hue: i % confetti.length,
+          burst: true, age: 0, ttl: 38 + Math.floor(Math.random() * 28),
+        });
+      }
+    };
+    parent.addEventListener("pointerdown", burstAt);
 
     const stop = setTimeout(() => { running = false; cancelAnimationFrame(raf); }, 8500);
     return () => {
@@ -115,6 +141,7 @@ function CelebrationParticles({ category = "" }) {
       clearTimeout(stop);
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      parent.removeEventListener("pointerdown", burstAt);
     };
   }, [category]);
 
