@@ -11,7 +11,7 @@ const Team = () => {
         backgroundImage="https://i.pinimg.com/736x/01/1b/ec/011becf0757dead7b3ff94de27293eeb.jpg"
         breadcrumbs={[{ label: "Team" }]}
       />
-      <TeamContent />
+      <TeamContent showHeading={false} />
     </div>
   );
 };
