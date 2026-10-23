@@ -193,12 +193,27 @@ const isDismissalError = (msg = "") => {
    GALLERY SLIDESHOW
 ═══════════════════════════════════════════════════════════════ */
 const GallerySlideshow = ({ intervalMs = 5000 }) => {
+  const [gallery, setGallery] = useState(GALLERY);
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    const imageOf = (item) => item?.image_url || item?.imageUrl || item?.cover_image || item?.coverImage || item?.featured_image || item?.featuredImage || item?.thumbnail || item?.images?.[0]?.url || item?.images?.[0] || item?.gallery?.[0]?.url;
+    const titleOf = (item) => item?.name || item?.title || item?.destination_name || "Explore Africa";
+    fetch(`${API_BASE.replace(/\\/$/, "")}/destinations`)
+      .then((response) => { if (!response.ok) throw new Error("Destinations unavailable"); return response.json(); })
+      .then((payload) => {
+        const items = Array.isArray(payload) ? payload : payload?.data || payload?.destinations || payload?.results || [];
+        const slides = items.slice(0, 20).map((item) => ({ src: imageOf(item), alt: `Discover ${titleOf(item)}`, caption: titleOf(item), subtitle: item?.short_description || item?.description || "Discover unforgettable African experiences" })).filter((item) => typeof item.src === "string" && item.src.trim());
+        if (!cancelled && slides.length) { setGallery(slides); setCurrent(0); }
+      }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
   const advance = useCallback(
-    (dir = 1) => setCurrent((i) => (i + dir + GALLERY.length) % GALLERY.length),
+    (dir = 1) => setCurrent((i) => (i + dir + gallery.length) % gallery.length),
     [],
   );
 
@@ -210,10 +225,10 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
 
   useEffect(() => {
     const img = new Image();
-    img.src = GALLERY[(current + 1) % GALLERY.length].src;
+    img.src = gallery[(current + 1) % gallery.length].src;
   }, [current]);
 
-  const slide = GALLERY[current];
+  const slide = gallery[current] || GALLERY[0];
 
   return (
     <div
@@ -222,7 +237,7 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
       onMouseLeave={() => setIsPaused(false)}
       aria-hidden="true"
     >
-      {GALLERY.map((item, i) => (
+      {gallery.map((item, i) => (
         <div
           key={i}
           style={{
@@ -277,42 +292,8 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
             </h4>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {GALLERY.map((_, i) => (
-                <button
-                  key={i} onClick={() => setCurrent(i)}
-                  style={{
-                    transition: "all 300ms", borderRadius: "9999px",
-                    width: i === current ? "2rem" : "0.5rem", height: "0.5rem",
-                    backgroundColor: i === current ? "rgb(52 211 153)" : "rgba(255,255,255,0.4)",
-                    border: "none", cursor: "pointer", padding: 0,
-                  }}
-                  aria-label={`Slide ${i + 1}`}
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <button
-                onClick={() => advance(-1)}
-                className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                aria-label="Previous"
-              ><HiChevronLeft className="w-4 h-4" /></button>
-              <button
-                onClick={() => advance(1)}
-                className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                aria-label="Next"
-              ><HiChevronRight className="w-4 h-4" /></button>
-            </div>
-          </div>
 
-          <div className="w-full h-0.5 bg-white/10 rounded-full overflow-hidden">
-            <div
-              key={`prog-${current}`}
-              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full"
-              style={{ animation: !isPaused ? `progressBar ${intervalMs}ms linear forwards` : "none" }}
-            />
-          </div>
+
         </div>
       </div>
     </div>
