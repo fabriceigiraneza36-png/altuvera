@@ -221,7 +221,7 @@ export default function DestinationDetail() {
 
   const { destination, loading, error } = useDestination(target);
   const { isWishlisted, toggleWishlist } = useWishlist();
-  const wishlistId = destination?.slug || destination?._id || destination?.id || target;
+  const wishlistId = destination?.slug || destination?.id || destination?._id || target;
   const isFavourite = Boolean(destination && isWishlisted(String(wishlistId)));
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [lightboxControlsVisible, setLightboxControlsVisible] = useState(true);
