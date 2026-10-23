@@ -962,15 +962,15 @@ useEffect(injectAppStyles, []);
 
    const Toast = ({ message, type = "info", onClose }) => {
      const bgColors = {
-       info: "bg-blue-500",
-       success: "bg-green-500",
-       warning: "bg-yellow-500",
-       error: "bg-red-500",
+       info: "border-gray-900",
+       success: "border-emerald-800",
+       warning: "border-amber-700",
+       error: "border-red-800",
      };
-     const textColor = "text-white";
+     const textColor = "text-gray-900";
      return (
        <div
-         className={`fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg ${bgColors[type]} ${textColor} text-sm flex items-center gap-2 z-50`}
+         className={`fixed top-4 right-3 sm:right-4 w-[min(360px,calc(100vw-24px))] px-4 py-3 rounded-xl shadow-xl border border-gray-200 border-l-4 ${bgColors[type]} bg-white ${textColor} text-sm flex items-start gap-2 z-[9998]`}
          onClick={onClose}
        >
          <div className="flex-shrink-0">
@@ -979,7 +979,7 @@ useEffect(injectAppStyles, []);
            {type === "warning" && <i className="fas fa-exclamation-triangle" />}
            {type === "error" && <i className="fas fa-times-circle" />}
          </div>
-         <span>{message}</span>
+         <span className="min-w-0 break-words leading-5 line-clamp-3">{String(message || "").split(/\\r?\\n/)[0]}</span>
        </div>
      );
    };
