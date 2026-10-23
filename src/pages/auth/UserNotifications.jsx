@@ -103,8 +103,8 @@
 
     const tabs = useMemo(() => [
       { key: 'all',      label: 'All',         count: grouped.all.length     },
-      { key: 'bookings', label: '📅 Bookings',  count: grouped.booking.length },
-      { key: 'updates',  label: '📢 Updates',   count: grouped.system.length  },
+      { key: 'bookings', label: 'Bookings', count: grouped.booking.length },
+      { key: 'updates', label: 'Updates', count: grouped.system.length },
     ], [grouped]);
 
     const handleReply = async (id) => {
@@ -137,7 +137,7 @@
               >
                 <div style={{ padding: '12px 18px', background: '#fffbeb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#92400e' }}>
-                    ✈️ Upcoming Trip Reminders ({tripAlerts.length})
+                    Upcoming Trip Reminders ({tripAlerts.length})
                   </h4>
                   <button onClick={dismissAllTripAlerts} style={btnStyle('#92400e')}>Dismiss all</button>
                 </div>
