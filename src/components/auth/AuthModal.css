@@ -1802,3 +1802,89 @@
 @media (prefers-reduced-motion: reduce) {
   .am-modal, .am-modal-mobile, .am-modal * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* Altuvera auth polish: calm emerald focus, compact responsive surfaces, clear brand hierarchy. */
+.am-modal {
+  border: 1px solid rgba(6, 78, 59, .08);
+  box-shadow: 0 28px 90px rgba(3, 30, 23, .24);
+}
+.am-modal button,
+.am-modal-mobile button { -webkit-tap-highlight-color: transparent; }
+.am-modal input,
+.am-modal-mobile input,
+.am-modal textarea,
+.am-modal-mobile textarea,
+.am-modal select,
+.am-modal-mobile select {
+  border-width: 1px !important;
+  border-style: solid;
+  border-color: #dbe4df;
+  border-radius: 13px;
+  background-color: #fbfdfb;
+}
+.am-modal input:hover:not(:disabled),
+.am-modal-mobile input:hover:not(:disabled),
+.am-modal textarea:hover:not(:disabled),
+.am-modal-mobile textarea:hover:not(:disabled),
+.am-modal select:hover:not(:disabled),
+.am-modal-mobile select:hover:not(:disabled) { border-color: #a7c8b7; }
+.am-modal input:focus,
+.am-modal-mobile input:focus,
+.am-modal textarea:focus,
+.am-modal-mobile textarea:focus,
+.am-modal select:focus,
+.am-modal-mobile select:focus,
+.am-modal input:focus-visible,
+.am-modal-mobile input:focus-visible,
+.am-modal textarea:focus-visible,
+.am-modal-mobile textarea:focus-visible,
+.am-modal select:focus-visible,
+.am-modal-mobile select:focus-visible {
+  outline: none !important;
+  border-color: #047857 !important;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, .13) !important;
+}
+.am-modal input:disabled,
+.am-modal-mobile input:disabled,
+.am-modal select:disabled,
+.am-modal-mobile select:disabled { background: #f3f6f4; }
+.am-modal button:focus-visible,
+.am-modal-mobile button:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 3px;
+}
+@media (min-width: 1024px) {
+  .am-modal {
+    width: min(1040px, calc(100vw - 48px));
+    min-height: min(620px, calc(100dvh - 48px));
+    max-height: min(820px, calc(100dvh - 48px)) !important;
+    border-radius: 28px;
+  }
+  .am-modal > .auth-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5d1 transparent;
+  }
+}
+@media (max-width: 1023px) {
+  .am-modal { border-radius: 0; max-height: 100dvh !important; }
+}
+@media (max-width: 639px) {
+  .am-modal-mobile, .am-modal {
+    width: 100vw; max-width: 100vw; min-height: 100dvh;
+    height: 100dvh !important; max-height: 100dvh !important;
+    border-radius: 0; box-shadow: none;
+  }
+  .am-modal input, .am-modal-mobile input,
+  .am-modal textarea, .am-modal-mobile textarea,
+  .am-modal select, .am-modal-mobile select {
+    min-height: 48px; font-size: 16px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-modal *, .am-modal-mobile * {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
