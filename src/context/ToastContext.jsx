@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";\nimport { CheckCircle2, Info, CircleAlert, X } from "lucide-react";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { CheckCircle2, Info, CircleAlert, X } from "lucide-react";
 
 const ToastContext = createContext(null);
 
@@ -63,11 +64,13 @@ export function ToastProvider({ children }) {
           flexDirection: "column",
           gap: 12,
           pointerEvents: "none",
-          maxWidth: 360,\n          width: "calc(100vw - 24px)",
+          maxWidth: 360,
+          width: "calc(100vw - 24px)",
         }}
       >
         {toasts.map((toast) => {
-          const theme = TOAST_TYPES[toast.type] || TOAST_TYPES.info;\n          const ToastIcon = theme.Icon;
+          const theme = TOAST_TYPES[toast.type] || TOAST_TYPES.info;
+          const ToastIcon = theme.Icon;\n          const ToastIcon = theme.Icon;
           return (
             <div
               key={toast.id}
@@ -107,9 +110,10 @@ export function ToastProvider({ children }) {
                 padding: "14px 16px",
                 borderRadius: 18,
                 boxShadow: "0 18px 46px rgba(15, 23, 42, 0.12)",
-                background: theme.background,
-                border: theme.border,
-                color: theme.color,
+                background: "#ffffff",
+                border: "1px solid #dbe7e0",
+                borderLeft: `4px solid ${theme.color}`,
+                color: "#111827",
                 minWidth: 0,\n                width: "100%",\n                maxWidth: 360,
                 overflow: "hidden",
                 touchAction: "pan-y",
@@ -128,11 +132,11 @@ export function ToastProvider({ children }) {
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
-                    {toast.title}
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 800, marginBottom: 4 }}>
+                    <ToastIcon size={16} color={theme.color} /> {toast.title}
                   </div>
-                  <div style={{ fontSize: 13, lineHeight: 1.4, opacity: 0.95 }}>
-                    {toast.message}
+                  <div style={{ fontSize: 12, lineHeight: 1.45, color: "#374151", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" }}>
+                    {String(toast.message || "").split(/\r?\n/)[0]}
                   </div>
                 </div>
                 <button
