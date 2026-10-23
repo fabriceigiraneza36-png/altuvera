@@ -5,7 +5,7 @@ import { useUserAuth } from "../../context/UserAuthContext";
 import {
   FiUser, FiCalendar, FiHeart, FiSettings,
   FiLogOut, FiMenu, FiX, FiBell,
-  FiStar, FiHome, FiMessageSquare, FiShield,
+  FiStar, FiHome, FiMessageSquare, FiShield, FiActivity,
 } from "react-icons/fi";
 import AnimatedSection from "../common/AnimatedSection";
 import NotificationBell from "./NotificationBell";
