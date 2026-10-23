@@ -73,16 +73,17 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
   useEffect(() => () => window.clearTimeout(noticeTimer.current), []);
 
   const closeModal = useCallback(() => {
+    if (submitting) return;
     setModalOpen(false);
     setEmojiOpen(false);
     setEmojiFiltersOpen(false);
     setSubmitError("");
-  }, []);
+  }, [submitting]);
 
   useEffect(() => {
     if (!modalOpen) return undefined;
     const onKeyDown = (event) => {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape" || submitting) return;
       if (emojiOpen) {
         setEmojiOpen(false);
         setEmojiFiltersOpen(false);
@@ -92,7 +93,7 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [modalOpen, emojiOpen, closeModal]);
+  }, [modalOpen, emojiOpen, closeModal, submitting]);
 
   // Clicking elsewhere closes only the picker, not the comment composer.
   useEffect(() => {
@@ -193,9 +194,9 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
       )}
 
       {modalOpen && (
-        <div className="dc-comment-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModal(); }}>
-          <section className={"dc-comment-modal" + (submitting ? " dc-comment-modal--submitting" : "")} role="dialog" aria-modal="true" aria-label="Write a destination comment">
-            <button type="button" className="dc-comment-modal__close" onClick={closeModal} aria-label="Close comment modal"><X size={19} /></button>
+        <div className="dc-comment-modal-backdrop" onMouseDown={(event) => { if (!submitting && event.target === event.currentTarget) closeModal(); }}>
+          <section className={"dc-comment-modal" + (submitting ? " dc-comment-modal--submitting" : "")} role="dialog" aria-modal="true" aria-busy={submitting} aria-label="Write a destination comment">
+            <button type="button" className="dc-comment-modal__close" onClick={closeModal} disabled={submitting} aria-label="Close comment modal"><X size={19} /></button>
             <form onSubmit={handleSubmit}>
               <textarea
                 className="dc-comment-modal__textarea"
@@ -208,6 +209,7 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
                 autoFocus
                 aria-label="Your comment"
               />
+              {submitting && <div className="dc-comment-modal__submitting-note" role="status"><span className="dc-comment-spinner" aria-hidden="true" /> Saving your comment securely…</div>}
               <div className="dc-comment-modal__tools">
                 <button ref={emojiToggleRef} type="button" className="dc-comment-modal__emoji" disabled={submitting} onClick={() => { setEmojiOpen((open) => !open); setEmojiFiltersOpen(false); }} aria-label="Open emoji picker" aria-expanded={emojiOpen}>
                   <Smile size={20} />
