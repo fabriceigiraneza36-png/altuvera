@@ -201,7 +201,7 @@ const formatAuthError = (error, fallback = "Something went wrong. Please try aga
   if (/invalid email|email.*invalid/.test(lower)) return "Check the email address and enter it in the format name@example.com.";
   if (/expired|invalid.*(otp|verification|security) code|incorrect.*(otp|verification|security) code/.test(lower)) return "That verification code is invalid or expired. Check the code or request a new one.";
   if (/not found|invalid credentials|unauthorized|authentication failed|incorrect.*(name|email)|user does not exist/.test(lower)) return "We couldn't verify those details. Check your email and full name, then try again.";
-  if (message.length > 240 || /<\/?[a-z][^>]*>|\bat\s+[^\s]+\s*\(/i.test(message)) return fallback;
+  if (message.length > 240 || /<\/?[a-z][^>]*>|\bat\s+[^\s]+\s*\(|typeerror|referenceerror|syntaxerror|unexpected token|unexpected end of json|cannot read properties|is not a function|internal server error|bad gateway/i.test(message)) return fallback;
   return message;
 };
 
@@ -783,7 +783,7 @@ export default function AuthModal() {
      SWITCH VIEW
   ═══════════════════════════════════════════════════════════ */
   const switchView = useCallback((view) => {
-    if (loading) return;
+    if (isBusy) return;
     stopExpiryCountdown();
     resetForgotUsername();
     setModalView(view);
@@ -793,7 +793,7 @@ export default function AuthModal() {
     setEmailTouched(false); setNameTouched(false); setTermsTouched(false);
     clearSocialAuthError?.();
     if (view === "login") clearGooglePending?.();
-  }, [clearGooglePending, clearSocialAuthError, loading, resetForgotUsername, setModalView, stopExpiryCountdown]);
+  }, [clearGooglePending, clearSocialAuthError, isBusy, resetForgotUsername, setModalView, stopExpiryCountdown]);
 
   /* ═══════════════════════════════════════════════════════════
      EFFECTS
@@ -973,7 +973,7 @@ export default function AuthModal() {
         fullName:       form.fullName.trim(),
         persistSession: form.keepSignedIn,
       });
-      setSuccess("Verification code sent!");
+      setSuccess("Verification code sent. Check your inbox, including the spam folder.");
     } catch (err) {
       setError(formatAuthError(err, "We could not start sign-in. Please try again."));
     } finally {
@@ -1384,7 +1384,7 @@ export default function AuthModal() {
                   { view: "login",    label: "Sign In",        icon: HiLockClosed },
                   { view: "register", label: "Create Account", icon: HiSparkles   },
                 ].map(({ view, label, icon: TabIcon }) => (
-                  <button key={view} onClick={() => switchView(view)} disabled={loading}
+                  <button key={view} onClick={() => switchView(view)} disabled={isBusy}
                     className={`relative flex items-center gap-1.5 px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all duration-200 ${
                       modalView === view ? "text-emerald-600" : "text-gray-500 hover:text-gray-700"
                     }`}
@@ -1413,7 +1413,7 @@ export default function AuthModal() {
                 <div role="alert" aria-live="polite" className="am-slideDown mb-4 flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200">
                   <HiExclamationCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <p className="flex-1 text-sm text-red-700">{typeof error === "string" ? error : "An error occurred."}</p>
-                  <button onClick={() => setError("")} className="text-red-400 hover:text-red-600 p-0.5 rounded transition-colors">
+                  <button aria-label="Dismiss error message" onClick={() => setError("")} className="text-red-400 hover:text-red-600 p-0.5 rounded transition-colors">
                     <HiX className="w-4 h-4" />
                   </button>
                 </div>
@@ -1634,7 +1634,7 @@ export default function AuthModal() {
                       value={form.email} onChange={(v) => set("email", v)}
                       onBlur={() => setEmailTouched(true)}
                       placeholder="you@example.com" autoComplete="email"
-                      required isEmail refProp={firstInputRef}
+                      required isEmail refProp={firstInputRef} disabled={isBusy}
                       error={emailTouched && !emailOk ? "Please enter a valid email." : ""}
                       valid={emailTouched && emailOk}
                     />
@@ -1643,7 +1643,7 @@ export default function AuthModal() {
                       <InputField
                         id="login-name" label="Full Name" icon={HiUser} refProp={nameInputRef}
                         value={form.fullName} onChange={(v) => set("fullName", v)}
-                        onBlur={() => setNameTouched(true)}
+                        onBlur={() => setNameTouched(true)} disabled={isBusy}
                         placeholder="Your full name" autoComplete="name" required
                         error={nameTouched && !nameOk ? "At least 2 characters required." : ""}
                         valid={nameTouched && nameOk}
@@ -1739,7 +1739,7 @@ export default function AuthModal() {
                   </div>
 
                   {/* Stepper */}
-                  <div className="flex items-center justify-center mb-5 px-2" role="progressbar" aria-label="Account setup progress" aria-valuemin={1} aria-valuemax={4} aria-valuenow={signUpStep}>
+                  <div className="flex items-center justify-center mb-5 px-2" role="progressbar" aria-label="Account setup progress" aria-valuemin={1} aria-valuemax={4} aria-valuenow={signUpStep} aria-valuetext={"Step " + signUpStep + " of 4: " + STEP_TITLES[signUpStep - 1]}>
                     {STEP_LABELS.map((label, i) => {
                       const n      = i + 1;
                       const done   = signUpStep > n;
@@ -1791,14 +1791,14 @@ export default function AuthModal() {
                             value={form.email} onChange={(v) => set("email", v)}
                             onBlur={() => setEmailTouched(true)}
                             placeholder="traveler@example.com" autoComplete="email"
-                            required isEmail refProp={firstInputRef}
+                            required isEmail refProp={firstInputRef} disabled={isBusy}
                             error={emailTouched && !emailOk ? "Enter a valid email." : ""}
                             valid={emailTouched && emailOk}
                           />
                           <InputField
                             id="reg-name" label="Full Name" icon={HiUser} refProp={nameInputRef}
                             value={form.fullName} onChange={(v) => set("fullName", v)}
-                            onBlur={() => setNameTouched(true)}
+                            onBlur={() => setNameTouched(true)} disabled={isBusy}
                             placeholder="Your full name" autoComplete="name" required
                             error={nameTouched && !nameOk ? "At least 2 characters." : ""}
                             valid={nameTouched && nameOk}
