@@ -800,7 +800,7 @@ function NewConvModal({ onClose, onCreated }) {
       const res  = await authFetch(`${API_BASE}/messages/conversations`, {
         method:"POST",
         body: JSON.stringify({
-          subject: subject.trim() || (validDestination ? `Question about ${validDestination.name}` : activeInquiry.subject),
+          subject: subject.trim() || (validDestination ? `Destination enquiry: ${validDestination.name}` : (relatedReference.trim() ? `${activeInquiry.subject}: ${relatedReference.trim()}` : activeInquiry.subject)),
           body: body.trim(),
           firstMessage: body.trim(),
           destinationName: (inquiryType === "destination" ? (validDestination?.name || relatedReference.trim()) : validDestination?.name) || null,
