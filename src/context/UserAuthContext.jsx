@@ -1125,7 +1125,7 @@ export function UserAuthProvider({ children }) {
         return { requiresVerification: true, email: data?.data?.email || "" };
       }
 
-      const { isNewUser, requiresProfile } = extractPayload(data);
+      const { token: sessionToken, isNewUser, requiresProfile } = extractPayload(data);
 
       if (isNewUser || requiresProfile) {
         const decoded = decodeJWT(credential);
@@ -1141,6 +1141,14 @@ export function UserAuthProvider({ children }) {
         setModalView("register");
         openModal("register", { skipNotLoggedInMessage: true });
         return { ...data, requiresProfile: true, googleUser: pending };
+      }
+
+      // Never close the modal or imply success unless the backend actually
+      // issued a session token. Google identity alone is not an Altuvera login.
+      if (!sessionToken) {
+        throw new Error(
+          "Google verified your identity, but Altuvera did not create a login session. Please try again or sign in with email.",
+        );
       }
 
       saveAuth(data, { persist: persistSession });
