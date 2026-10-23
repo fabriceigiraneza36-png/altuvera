@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   X, CheckCircle, ArrowRight, MapPin, Bookmark,
-  Calendar, Star, Sparkles, Globe, Compass, ShieldCheck,
+  Calendar, Star, Sparkles, Globe, Compass, ShieldCheck, Clock, Mail,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -122,7 +122,36 @@ const S = {
 
   greeting: {
     textAlign:    "center",
-    marginBottom: 20,
+    marginBottom: 14,
+  },
+  identityChip: {
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+    maxWidth: "100%", margin: "0 auto 10px", padding: "7px 11px",
+    borderRadius: 999, background: "#f0fdf4", border: "1px solid #dcfce7",
+    color: "#166534", fontSize: "0.76rem", fontWeight: 750,
+    overflowWrap: "anywhere",
+  },
+  loginMeta: {
+    display: "flex", alignItems: "center", gap: 12, padding: "12px 13px",
+    margin: "0 0 14px", borderRadius: 15,
+    background: "linear-gradient(115deg,#f0fdf4 0%,#ffffff 72%)",
+    border: "1px solid #d9f0e2", boxShadow: "0 5px 18px rgba(6,78,59,.045)",
+  },
+  loginMetaIcon: {
+    width: 39, height: 39, flex: "0 0 39px", borderRadius: 13,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    color: "#047857", background: "#dcfce7",
+  },
+  loginMetaLabel: {
+    margin: "0 0 3px", fontSize: "0.7rem", textTransform: "uppercase",
+    letterSpacing: ".09em", fontWeight: 850, color: "#527565",
+  },
+  loginMetaValue: {
+    margin: 0, fontSize: "0.84rem", lineHeight: 1.4, fontWeight: 800,
+    color: "#123c2d", overflowWrap: "anywhere",
+  },
+  loginMetaHint: {
+    margin: "3px 0 0", fontSize: "0.72rem", lineHeight: 1.35, color: "#64756b",
   },
   greetName: {
     fontSize:   "1.05rem",
@@ -287,9 +316,25 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
   }, [isVisible, type]);
 
   const cfg       = CONTENT[type] || CONTENT.login;
-  const firstName = (user?.fullName || user?.name || "").split(" ")[0] || null;
+  const displayName = (user?.fullName || user?.name || "").trim();
+  const firstName = displayName.split(/\s+/)[0] || null;
   const avatarUrl = user?.avatar || user?.profilePicture || user?.profileImage || user?.avatarUrl || user?.picture || "";
-  const avatarInitials = (user?.fullName || user?.name || user?.email || "A").trim().split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const avatarInitials = (displayName || user?.email || "A").trim().split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const lastLoginRaw = user?.lastLogin || user?.last_login || user?.lastLoginAt || user?.last_login_at || null;
+  const lastLoginDate = lastLoginRaw ? new Date(lastLoginRaw) : null;
+  const hasLastLogin = Boolean(lastLoginDate && Number.isFinite(lastLoginDate.getTime()));
+  const sessionDate = new Date();
+  const timestampDate = hasLastLogin ? lastLoginDate : sessionDate;
+  const formattedLoginTime = timestampDate.toLocaleString(undefined, {
+    weekday: "short", month: "short", day: "numeric",
+    hour: "numeric", minute: "2-digit",
+  });
+  const formattedLoginFullDate = timestampDate.toLocaleDateString(undefined, {
+    year: "numeric", month: "long", day: "numeric",
+  });
+  const formattedLoginClock = timestampDate.toLocaleTimeString(undefined, {
+    hour: "numeric", minute: "2-digit", timeZoneName: "short",
+  });
 
   /* ── Confetti ── */
   useEffect(() => {
@@ -441,8 +486,36 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                           ? `Welcome, ${firstName}!`
                           : `Hello again, ${firstName}!`}
                       </p>
+                      {user?.email && (
+                        <div style={S.identityChip}>
+                          <Mail size={13} aria-hidden="true" />
+                          <span>{user.email}</span>
+                        </div>
+                      )}
                       <p style={S.greetMsg}>{cfg.subtitle}</p>
                     </motion.div>
+                  )}
+
+                  {type !== "signup" && (
+                    <motion.section
+                      aria-label="Last login details"
+                      style={S.loginMeta}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.43, duration: 0.32 }}
+                    >
+                      <div style={S.loginMetaIcon}><Clock size={19} aria-hidden="true" /></div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <p style={S.loginMetaLabel}>{hasLastLogin ? "Last login" : "Signed in this session"}</p>
+                        <p style={S.loginMetaValue} title={`${formattedLoginFullDate} · ${formattedLoginClock}`}>
+                          {formattedLoginTime}
+                        </p>
+                        <p style={S.loginMetaHint}>
+                          {hasLastLogin ? "Time shown in your device’s local time zone" : `Session started ${formattedLoginClock} · last-login history wasn’t provided by the server`}
+                        </p>
+                      </div>
+                      <CheckCircle size={17} color="#059669" aria-hidden="true" style={{ flex: "0 0 auto" }} />
+                    </motion.section>
                   )}
 
                   {/* Tips */}
