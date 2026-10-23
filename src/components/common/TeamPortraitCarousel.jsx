@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiUsers } from 'react-icons/fi';
 
 const resolveApiBase = () => {
-  const raw = (import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com').trim().replace(/\\/+$/, '');
-  return /\\/api$/i.test(raw) ? raw : `${raw}/api`;
+  const raw = (import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com').trim().replace(/\/+$/, '');
+  return /\/api$/i.test(raw) ? raw : `${raw}/api`;
 };
 const API_BASE = resolveApiBase();
 const assetUrl = (value) => {
   if (!value || typeof value !== 'string') return '';
-  if (/^https?:\\/\\//i.test(value) || value.startsWith('data:')) return value;
-  const origin = API_BASE.replace(/\\/api$/i, '');
+  if (/^https?:\/\//i.test(value) || value.startsWith('data:')) return value;
+  const origin = API_BASE.replace(/\/api$/i, '');
   return value.startsWith('/uploads/') || value.startsWith('/storage/') ? origin + value : value;
 };
 const extractMembers = (payload) => {
