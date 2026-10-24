@@ -1344,7 +1344,7 @@ export default function MyBookings() {
 
     const { error: submitErr } = await safeFetch(
       authFetch,
-      `/bookings/${booking.id}/request-cancellation`,
+      `/bookings/${booking.id}/cancel-request`,
       { method: "POST", body: JSON.stringify({ type, reason }) }
     );
 
