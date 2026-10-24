@@ -346,6 +346,28 @@ const CSS = `
   color: #059669;
 }
 
+
+.dc-favourite-toast {
+  position: absolute; top: 58px; right: 12px; z-index: 12;
+  display: inline-flex; align-items: center; gap: 8px;
+  max-width: calc(100% - 24px); padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.7); border-radius: 14px;
+  background: rgba(255,255,255,.97); color: #065f46;
+  box-shadow: 0 12px 34px rgba(15,23,42,.2);
+  font-size: 12px; line-height: 1.25; font-weight: 800;
+  pointer-events: none; animation: dc-favourite-toast-in 2s ease both;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.dc-favourite-toast svg { flex: 0 0 auto; color: #e11d48; }
+@keyframes dc-favourite-toast-in {
+  0% { opacity: 0; transform: translateY(-8px) scale(.96); }
+  12%, 82% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-4px) scale(.98); }
+}
+@media (max-width: 480px) {
+  .dc-favourite-toast { top: 52px; right: 8px; padding: 9px 11px; font-size: 11px; }
+}
+
 .dc-toast {
   position: absolute;
   top: calc(100% + 6px);
@@ -948,6 +970,9 @@ const getImageUrl = (image) => {
 ───────────────────────────────────────────────────────────── */
 export function DestinationCardSkeleton() {
   useEffect(() => { injectStyles(); }, []);
+  useEffect(() => () => {
+    if (favouriteToastTimer.current) window.clearTimeout(favouriteToastTimer.current);
+  }, []);
 
   return (
     <div
@@ -993,6 +1018,8 @@ const DestinationCard = memo(function DestinationCard({
 
   const [heartAnim, setHeartAnim] = useState(false);
   const [copied,    setCopied]    = useState(false);
+  const [favouriteToast, setFavouriteToast] = useState("");
+  const favouriteToastTimer = useRef(null);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
   const likeId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
   const ratingIdValue = destination?.numericId || destination?.id || destination?._id;
@@ -1288,9 +1315,13 @@ const blurb =
     (e) => {
       e.stopPropagation();
       setHeartAnim(true);
-      setTimeout(() => setHeartAnim(false), 560);
+      window.setTimeout(() => setHeartAnim(false), 560);
       toggleWishlist(destId);
-      onWishlistToggle?.(destId, !isLiked);
+      const nextIsLiked = !isLiked;
+      setFavouriteToast(nextIsLiked ? "Added to favourites" : "Removed from favourites");
+      if (favouriteToastTimer.current) window.clearTimeout(favouriteToastTimer.current);
+      favouriteToastTimer.current = window.setTimeout(() => setFavouriteToast(""), 2000);
+      onWishlistToggle?.(destId, nextIsLiked);
     },
     [destId, isLiked, toggleWishlist, onWishlistToggle],
   );
@@ -1364,6 +1395,7 @@ const blurb =
 
           <div className="dc-actions">
             <button
+              type="button"
               onClick={handleWishlist}
               aria-label={isLiked ? "Remove from wishlist" : "Save to wishlist"}
               aria-pressed={isLiked}
@@ -1406,6 +1438,12 @@ const blurb =
               )}
             </div>
           </div>
+          {favouriteToast && (
+            <div className="dc-favourite-toast" role="status" aria-live="polite">
+              <FiHeart size={15} fill="currentColor" aria-hidden="true" />
+              <span>{favouriteToast}</span>
+            </div>
+          )}
 
         </div>
       </div>
@@ -1524,14 +1562,14 @@ const blurb =
         <div
           role="presentation"
           onClick={(event) => { event.stopPropagation(); setRatingModalOpen(false); }}
-          style={{ position: "fixed", inset: 0, zIndex: 10000, display: "grid", placeItems: "center", padding: 18, background: "rgba(2, 20, 13, .58)", backdropFilter: "blur(5px)" }}
+          style={{ position: "fixed", inset: 0, zIndex: 10000, display: "grid", placeItems: "center", overflowY: "auto", padding: "max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom))", background: "rgba(2, 20, 13, .64)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
         >
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby={`dc-rating-title-${ratingId || "destination"}`}
             onClick={(event) => event.stopPropagation()}
-            style={{ width: "min(100%, 420px)", padding: 24, borderRadius: 22, background: "#fff", boxShadow: "0 24px 80px rgba(0,0,0,.24)", color: "#0f172a" }}
+            style={{ boxSizing: "border-box", width: "min(100%, 460px)", maxHeight: "min(88dvh, 760px)", overflowY: "auto", overscrollBehavior: "contain", padding: "clamp(18px, 4.5vw, 28px)", border: "1px solid rgba(255,255,255,.75)", borderRadius: "clamp(18px, 4vw, 26px)", background: "linear-gradient(155deg, #ffffff 0%, #f8fffb 100%)", boxShadow: "0 28px 90px rgba(0,0,0,.3)", color: "#0f172a", margin: "auto" }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 12 }}>
               <div>
