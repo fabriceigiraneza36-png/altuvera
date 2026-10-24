@@ -970,9 +970,6 @@ const getImageUrl = (image) => {
 ───────────────────────────────────────────────────────────── */
 export function DestinationCardSkeleton() {
   useEffect(() => { injectStyles(); }, []);
-  useEffect(() => () => {
-    if (favouriteToastTimer.current) window.clearTimeout(favouriteToastTimer.current);
-  }, []);
 
   return (
     <div
@@ -1020,6 +1017,9 @@ const DestinationCard = memo(function DestinationCard({
   const [copied,    setCopied]    = useState(false);
   const [favouriteToast, setFavouriteToast] = useState("");
   const favouriteToastTimer = useRef(null);
+  useEffect(() => () => {
+    if (favouriteToastTimer.current) window.clearTimeout(favouriteToastTimer.current);
+  }, []);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
   const likeId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
   const ratingIdValue = destination?.numericId || destination?.id || destination?._id;
