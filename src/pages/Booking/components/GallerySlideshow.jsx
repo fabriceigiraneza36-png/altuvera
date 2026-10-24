@@ -1,185 +1,122 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 
-const GALLERY = [
-  { src: "https://i.pinimg.com/736x/7a/e8/6f/7ae86f7fb7eddaceb8ed5ba212c19a0e.jpg",
-    alt: "Male lion in savanna", caption: "Serengeti, Tanzania", subtitle: "Where the wild roams free" },
-  { src: "https://i.pinimg.com/736x/81/3c/12/813c12e76fbd4fc43517b90804423d90.jpg",
-    alt: "Turquoise waters", caption: "Zanzibar, Tanzania", subtitle: "Paradise found" },
-  { src: "https://i.pinimg.com/1200x/34/da/8e/34da8ee9bedf86bde3797e5b37884910.jpg",
-    alt: "Kilimanjaro", caption: "Kilimanjaro, Tanzania", subtitle: "Touch the sky" },
-  { src: "https://i.pinimg.com/736x/74/23/d3/7423d340555f9ae1eeba5a9528a94715.jpg",
-    alt: "Gorilla in mist", caption: "Volcanoes NP, Rwanda", subtitle: "Meet our closest relatives" },
-  { src: "https://i.pinimg.com/736x/30/f1/ad/30f1ada2ba80044e4b1db79ac0e95768.jpg",
-    alt: "Giraffes at sunset", caption: "Maasai Mara, Kenya", subtitle: "Golden hour magic" },
-  { src: "https://i.pinimg.com/736x/3d/f5/f7/3df5f7a59bdb7704087eec05f6ee4476.jpg",
-    alt: "Ngorongoro Crater", caption: "Ngorongoro, Tanzania", subtitle: "Nature's amphitheatre" },
-];
+const API = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
+const LOGO = "/altuvera.png";
 
-export default function GallerySlideshow({
-  intervalMs = 5000,
-  showBrand = true,
-  hero = null,
-  heroMs = 5000,
-}) {
+const asImages = (destination) => {
+  if (!destination) return [];
+  const values = [
+    destination.hero_images, destination.heroImages, destination.hero_slides,
+    destination.heroSlides, destination.gallery, destination.images,
+    destination.attraction_images, destination.attractionImages,
+    destination.banner_images, destination.bannerImages,
+    destination.cover_image_url, destination.coverImage,
+    destination.image_url, destination.imageUrl, destination.thumbnail_url,
+    destination.thumbnailUrl, destination.image, destination.thumbnail,
+  ];
+  const urls = [];
+  const add = (value) => {
+    if (Array.isArray(value)) return value.forEach(add);
+    if (typeof value === "string" && /^https?:\/\//i.test(value.trim())) urls.push(value.trim());
+    else if (value && typeof value === "object") {
+      add(value.url || value.src || value.image_url || value.imageUrl || value.image || value.path);
+    }
+  };
+  values.forEach(add);
+  return [...new Set(urls)];
+};
+
+export default function GallerySlideshow({ intervalMs = 4800, showBrand = false, hero = null }) {
+  const [slides, setSlides] = useState([]);
   const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [heroActive, setHeroActive] = useState(false);
+  const [paused, setPaused] = useState(false);
   const timerRef = useRef(null);
 
-  const advance = useCallback(
-    (dir = 1) => setCurrent((i) => (i + dir + GALLERY.length) % GALLERY.length),
-    [],
-  );
-
-  // Show a selected destination briefly, then automatically resume the gallery.
   useEffect(() => {
+    let alive = true;
+    setCurrent(0);
     if (!hero) {
-      setHeroActive(false);
-      return;
+      setSlides([]);
+      return () => { alive = false; };
     }
-    setHeroActive(true);
-    const timer = window.setTimeout(() => setHeroActive(false), heroMs);
-    return () => window.clearTimeout(timer);
-  }, [hero, heroMs]);
+    const direct = asImages(hero);
+    setSlides(direct.length ? direct : (hero.src ? [hero.src] : []));
+    const findDestinationImages = async () => {
+      try {
+        const response = await fetch(`${API}/destinations?is_active=true&limit=200`);
+        if (!response.ok) return;
+        const json = await response.json();
+        const destinations = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
+        const wanted = String(hero.id || hero.slug || hero.caption || "").trim().toLowerCase();
+        const match = destinations.find((item) => [
+          item.id, item.slug, item.name, item.title,
+        ].some((value) => String(value ?? "").trim().toLowerCase() === wanted));
+        const destinationImages = asImages(match);
+        if (alive && destinationImages.length) setSlides(destinationImages);
+      } catch {
+        // The destination's primary image remains as a reliable fallback.
+      }
+    };
+    findDestinationImages();
+    return () => { alive = false; };
+  }, [hero?.id, hero?.slug, hero?.caption, hero?.src]);
+
+  const advance = useCallback((direction = 1) => {
+    setCurrent((index) => {
+      const length = slides.length;
+      return length ? (index + direction + length) % length : 0;
+    });
+  }, [slides.length]);
 
   useEffect(() => {
-    if (isPaused || heroActive) return;
-    timerRef.current = setInterval(() => advance(1), intervalMs);
-    return () => clearInterval(timerRef.current);
-  }, [advance, intervalMs, isPaused, heroActive]);
+    if (paused || slides.length < 2) return undefined;
+    timerRef.current = window.setInterval(() => advance(1), intervalMs);
+    return () => window.clearInterval(timerRef.current);
+  }, [advance, intervalMs, paused, slides.length]);
 
-  useEffect(() => {
-    const img = new Image();
-    img.src = GALLERY[(current + 1) % GALLERY.length].src;
-  }, [current]);
-
-  const slide = GALLERY[current];
-
+  const slide = slides[current];
   return (
     <div
-      className="relative h-full w-full overflow-hidden group"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      aria-hidden="true"
+      className="bk-gallery"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+      style={{ position: "relative", width: "100%", height: "100%", minHeight: "inherit", overflow: "hidden", background: "#064e3b" }}
+      aria-label={hero ? "Selected destination slideshow" : "Altuvera booking"}
     >
-      {GALLERY.map((item, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute", inset: 0,
-            transition: "opacity 1200ms ease-in-out, transform 1200ms ease-in-out",
-            opacity: i === current ? 1 : 0,
-            transform: i === current ? "scale(1)" : "scale(1.05)",
-          }}
-        >
-          <img
-            src={item.src} alt={item.alt}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            loading={i <= 1 ? "eager" : "lazy"} decoding="async"
-          />
+      {!hero || !slide ? (
+        <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "radial-gradient(circle at center, #0b6b4e 0%, #064e3b 60%, #043b2d 100%)" }}>
+          <img src={LOGO} alt="Altuvera logo" style={{ display: "block", width: "min(58%, 260px)", maxHeight: "46%", objectFit: "contain", filter: "drop-shadow(0 10px 24px rgba(0,0,0,.18))" }} />
         </div>
-      ))}
-
-      {/* Hero override — chosen destination image, shown silently for heroMs */}
-      {heroActive && (
-        <div style={{
-          position: "absolute", inset: 0, zIndex: 30,
-          transition: "opacity 800ms ease-in-out",
-        }}>
-          <img
-            src={hero.src} alt={hero.alt || "Selected destination"}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            loading="eager" decoding="async"
-          />
-          <div style={{ position: "absolute", inset: 0, zIndex: 10 }}
-            className="bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
-          <div className="absolute bottom-4 left-4 z-20">
-            <p className="text-emerald-400 text-[10px] font-semibold uppercase tracking-widest mb-0.5">
-              {hero.tag || "Your selection"}
-            </p>
-            <p className="text-white text-base sm:text-lg font-bold leading-tight tracking-tight">
-              {hero.caption || ""}
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div style={{ position: "absolute", inset: 0, zIndex: 10 }}
-        className="bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
-      <div style={{ position: "absolute", inset: 0, zIndex: 10 }}
-        className="bg-gradient-to-r from-black/30 to-transparent" />
-
-      <div style={{ position: "absolute", inset: 0, zIndex: 20 }}
-        className="flex flex-col justify-between p-6 sm:p-8">
-
-        {showBrand && (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md p-1.5
-                            ring-1 ring-white/20 flex items-center justify-center">
-              <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600
-                              flex items-center justify-center">
-                <span className="text-white text-xs font-black">A</span>
+      ) : (
+        <>
+          {slides.map((src, index) => (
+            <div key={src} style={{ position: "absolute", inset: 0, opacity: index === current ? 1 : 0, transform: index === current ? "scale(1)" : "scale(1.055)", transition: "opacity 1000ms ease, transform 5000ms ease" }}>
+              <img src={src} alt={`${hero.caption || "Selected destination"} view ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            </div>
+          ))}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.58))", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", left: 22, right: 22, bottom: 24, zIndex: 2, color: "#fff" }}>
+            <p style={{ margin: "0 0 7px", color: "#6ee7b7", fontSize: 11, letterSpacing: ".16em", fontWeight: 800, textTransform: "uppercase" }}>Your selected destination</p>
+            <h2 style={{ margin: 0, fontSize: "clamp(22px,3vw,32px)", lineHeight: 1.1, fontWeight: 850 }}>{hero.caption || "Your adventure"}</h2>
+            {slides.length > 1 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  {slides.map((_, index) => <button key={index} type="button" onClick={() => setCurrent(index)} aria-label={`Show destination image ${index + 1}`} style={{ width: index === current ? 24 : 7, height: 7, border: 0, padding: 0, borderRadius: 99, background: index === current ? "#6ee7b7" : "rgba(255,255,255,.6)", cursor: "pointer", transition: "all .25s" }} />)}
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button type="button" onClick={() => advance(-1)} aria-label="Previous destination image" style={controlStyle}><HiChevronLeft size={19} /></button>
+                  <button type="button" onClick={() => advance(1)} aria-label="Next destination image" style={controlStyle}><HiChevronRight size={19} /></button>
+                </div>
               </div>
-            </div>
-            <div>
-              <h3 className="text-white font-bold text-lg leading-tight tracking-tight">Altuvera</h3>
-              <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">
-                Premium Safaris
-              </p>
-            </div>
+            )}
           </div>
-        )}
-
-        <div className="space-y-4">
-          <div key={current}>
-            <p className="text-emerald-400 text-xs font-semibold uppercase tracking-widest mb-1">
-              {slide.caption}
-            </p>
-            <h4 className="text-white text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight"
-              style={{ animation: "fadeSlideUp 600ms ease-out both" }}>
-              {slide.subtitle}
-            </h4>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {GALLERY.map((_, i) => (
-                <button key={i} onClick={() => setCurrent(i)}
-                  style={{
-                    transition: "all 300ms", borderRadius: "9999px",
-                    width: i === current ? "2rem" : "0.5rem", height: "0.5rem",
-                    backgroundColor: i === current ? "rgb(52 211 153)" : "rgba(255,255,255,0.4)",
-                    border: "none", cursor: "pointer", padding: 0,
-                  }}
-                  aria-label={`Slide ${i + 1}`}
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <button onClick={() => advance(-1)}
-                className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20
-                           flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                aria-label="Previous">
-                <HiChevronLeft className="w-4 h-4" />
-              </button>
-              <button onClick={() => advance(1)}
-                className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20
-                           flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                aria-label="Next">
-                <HiChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="w-full h-0.5 bg-white/10 rounded-full overflow-hidden">
-            <div key={`prog-${current}`}
-              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full"
-              style={{ animation: !isPaused ? `progressBar ${intervalMs}ms linear forwards` : "none" }}
-            />
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
+
+const controlStyle = { width: 34, height: 34, borderRadius: "50%", display: "grid", placeItems: "center", border: "1px solid rgba(255,255,255,.45)", color: "#fff", background: "rgba(255,255,255,.15)", cursor: "pointer" };
