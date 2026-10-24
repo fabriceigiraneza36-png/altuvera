@@ -47,9 +47,9 @@ export default function RatingPanel({ entityId, entityType = "destination", enti
     return () => { active = false; };
   }, [base, id, isAuthenticated]);
 
-  const open = () => {
+  const open = (selectedStar = 0) => {
     if (!isAuthenticated) { if (typeof openModal === "function") openModal("login"); return; }
-    setDraftRating(Number(myRating?.rating) || 0);
+    setDraftRating(Number(myRating?.rating) || selectedStar || 0);
     setDraftReview("");
     setNotice(myRating ? "You have already rated this " + entityType + ". Each account can rate it once." : "");
     setModalOpen(true);
@@ -99,7 +99,7 @@ export default function RatingPanel({ entityId, entityType = "destination", enti
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div><strong style={{ display: "block", color: "#0f172a", fontSize: 30, lineHeight: 1.1 }}>{total ? average.toFixed(2) : "—"}</strong><span style={{ color: "#64748b", fontSize: 12 }}>{total} {total === 1 ? "rating" : "ratings"}</span></div>
-          <div aria-label={average.toFixed(2) + " out of 5"} style={{ display: "flex", gap: 2 }}>{[1,2,3,4,5].map((star) => <Star key={star} size={20} fill={star <= Math.round(average) ? "#f59e0b" : "none"} color={star <= Math.round(average) ? "#f59e0b" : "#cbd5e1"} />)}</div>
+          <div aria-label={average.toFixed(2) + " out of 5. Select a star to rate"} style={{ display: "flex", gap: 2 }}>{[1,2,3,4,5].map((star) => <button key={star} type="button" onClick={() => open(star)} aria-label={"Rate " + star + " out of 5 stars"} style={{ border: 0, padding: 2, background: "transparent", cursor: "pointer", color: star <= Math.round(average) ? "#f59e0b" : "#cbd5e1" }}><Star size={20} fill={star <= Math.round(average) ? "currentColor" : "none"} /></button>)}</div>
         </div>
       </div>
       <button type="button" onClick={open} style={{ marginTop: 18, border: 0, borderRadius: 12, padding: "11px 16px", background: "#047857", color: "#fff", fontWeight: 800, cursor: "pointer" }}>{myRating ? "You have already rated this " + entityType : "Rate this " + entityType}</button>
