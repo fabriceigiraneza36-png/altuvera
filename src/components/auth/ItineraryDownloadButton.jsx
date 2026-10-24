@@ -63,7 +63,7 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
         const props = pdf.getImageProperties(logoData);
         const ratio = props.width / Math.max(1, props.height);
         const width = Math.min(34, 17 * ratio);
-        pdf.addImage(logoData, "PNG", margin + 6, y + 4, width, width / Math.max(.01, ratio), undefined, "FAST");
+        pdf.addImage(logoData, "PNG", pageWidth - margin - width - 6, y + 5, width, width / Math.max(.01, ratio), undefined, "FAST");
       }
       pdf.setTextColor(255, 255, 255);
       pdf.setFont("helvetica", "bold");
