@@ -24,11 +24,6 @@ import { API_URL, apiFetch } from "../../utils/apiBase";
 import { useDestinationLikes } from "../../hooks/useDestinationLikes";
 import { useUserAuth } from "../../context/UserAuthContext";
 
-/* Favourite marker for destinations saved in the user's wishlist. */
-const FAVOURITE_MARKER_STYLES = `
-.dc-favourite-marker{position:absolute;top:12px;right:56px;z-index:7;display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;color:#be123c;background:rgba(255,255,255,.96);border:1px solid rgba(251,113,133,.3);box-shadow:0 5px 18px rgba(15,23,42,.16);font-size:10px;line-height:1;font-weight:800;pointer-events:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-@media(max-width:480px){.dc-favourite-marker{top:9px;right:52px;padding:6px 7px;font-size:9px;gap:4px}}
-`;
 /* ─────────────────────────────────────────────────────────────
    CONSTANTS
 ───────────────────────────────────────────────────────────── */
@@ -346,27 +341,6 @@ const CSS = `
   color: #059669;
 }
 
-
-.dc-favourite-toast {
-  position: absolute; top: 58px; right: 12px; z-index: 12;
-  display: inline-flex; align-items: center; gap: 8px;
-  max-width: calc(100% - 24px); padding: 10px 14px;
-  border: 1px solid rgba(255,255,255,.7); border-radius: 14px;
-  background: rgba(255,255,255,.97); color: #065f46;
-  box-shadow: 0 12px 34px rgba(15,23,42,.2);
-  font-size: 12px; line-height: 1.25; font-weight: 800;
-  pointer-events: none; animation: dc-favourite-toast-in 2s ease both;
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-}
-.dc-favourite-toast svg { flex: 0 0 auto; color: #e11d48; }
-@keyframes dc-favourite-toast-in {
-  0% { opacity: 0; transform: translateY(-8px) scale(.96); }
-  12%, 82% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-4px) scale(.98); }
-}
-@media (max-width: 480px) {
-  .dc-favourite-toast { top: 52px; right: 8px; padding: 9px 11px; font-size: 11px; }
-}
 
 .dc-toast {
   position: absolute;
@@ -1015,7 +989,7 @@ const DestinationCard = memo(function DestinationCard({
 
   const [heartAnim, setHeartAnim] = useState(false);
   const [copied,    setCopied]    = useState(false);
-  const [favouriteToast, setFavouriteToast] = useState("");
+  const [showFavouriteIcon, setShowFavouriteIcon] = useState(false);
   const favouriteToastTimer = useRef(null);
   useEffect(() => () => {
     if (favouriteToastTimer.current) window.clearTimeout(favouriteToastTimer.current);
@@ -1318,9 +1292,9 @@ const blurb =
       window.setTimeout(() => setHeartAnim(false), 560);
       toggleWishlist(destId);
       const nextIsLiked = !isLiked;
-      setFavouriteToast(nextIsLiked ? "Added to favourites" : "Removed from favourites");
+      setShowFavouriteIcon(nextIsLiked);
       if (favouriteToastTimer.current) window.clearTimeout(favouriteToastTimer.current);
-      favouriteToastTimer.current = window.setTimeout(() => setFavouriteToast(""), 2000);
+      favouriteToastTimer.current = window.setTimeout(() => setShowFavouriteIcon(false), 2000);
       onWishlistToggle?.(destId, nextIsLiked);
     },
     [destId, isLiked, toggleWishlist, onWishlistToggle],
@@ -1350,7 +1324,6 @@ const blurb =
   return (
     <article className={`dc-card${compact ? " dc-card--compact" : ""}`}>
 
-      <style>{FAVOURITE_MARKER_STYLES}</style>
       {/* ════ IMAGE SECTION ════ */}
       <div className="dc-img-wrap">
         <div className="dc-img-frame">
@@ -1365,7 +1338,7 @@ const blurb =
           )}
 
           <div className="dc-img-overlay" aria-hidden="true" />
-          {isLiked && <span className="dc-favourite-marker" title="Saved to favourites" aria-label="Saved to favourites"><FiHeart size={12} fill="currentColor" aria-hidden="true" /><span>Favourite</span></span>}
+          {showFavouriteIcon && <span title="Favourite updated" aria-label="Favourite updated" style={{ position: "absolute", top: 12, right: 56, zIndex: 7, display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: 999, color: "#be123c", background: "rgba(255,255,255,.96)", border: "1px solid rgba(251,113,133,.3)", boxShadow: "0 5px 18px rgba(15,23,42,.16)", pointerEvents: "none" }}><FiHeart size={15} fill="currentColor" aria-hidden="true" /></span>}
           <button type="button" className={`dc-live-like-label${destinationLikes.isLiked ? " dc-live-like-label--liked" : ""}`} onClick={handleDestinationLike} disabled={likeBusy || likesLoading} aria-label={destinationLikes.isLiked ? `Unlike ${name}` : `Like ${name}`} aria-pressed={destinationLikes.isLiked} title={destinationLikeError || (destinationLikes.isLiked ? "Unlike destination" : "Like destination")}>
             <FiThumbsUp size={17} aria-hidden="true" />
             <span className="dc-live-like-count">{Number(destinationLikes.total || 0).toLocaleString()}</span>
@@ -1438,12 +1411,6 @@ const blurb =
               )}
             </div>
           </div>
-          {favouriteToast && (
-            <div className="dc-favourite-toast" role="status" aria-live="polite">
-              <FiHeart size={15} fill="currentColor" aria-hidden="true" />
-              <span>{favouriteToast}</span>
-            </div>
-          )}
 
         </div>
       </div>
