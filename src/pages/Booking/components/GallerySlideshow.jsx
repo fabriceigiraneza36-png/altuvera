@@ -8,10 +8,10 @@ const asImages = (destination) => {
   if (!destination) return [];
   const values = [
     destination.hero_images, destination.heroImages, destination.hero_slides,
-    destination.heroSlides, destination.gallery, destination.images,
-    destination.attraction_images, destination.attractionImages,
+    destination.heroSlides, destination.gallery_images, destination.galleryImages, destination.gallery, destination.images,
+    destination.attraction_images, destination.attractionImages, destination.attractions, destination.highlights,
     destination.banner_images, destination.bannerImages,
-    destination.cover_image_url, destination.coverImage,
+    destination.cover_image_url, destination.coverImage, destination.cover_image, destination.coverImageUrl, destination.hero_image_url, destination.heroImage, destination.hero_image,
     destination.image_url, destination.imageUrl, destination.thumbnail_url,
     destination.thumbnailUrl, destination.image, destination.thumbnail,
   ];
