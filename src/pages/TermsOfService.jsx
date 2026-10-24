@@ -246,7 +246,7 @@ export default function TermsOfService() {
       {/* Summary Bar */}
       <section className="terms-summary-bar" style={styles.summaryBar}>
         <div style={styles.wrap}>
-          <div style={styles.summaryGrid}>
+          <div className="terms-summary-grid" style={styles.summaryGrid}>
             {[
               { icon: FiFileText, label: "Legal Agreement", sub: "Binding terms" },
               { icon: FiShield, label: "Your Rights", sub: "Protected by law" },
@@ -274,7 +274,7 @@ export default function TermsOfService() {
             <FiInfo size={18} color={BRAND.green700} />
             <span>Key Points Summary</span>
           </div>
-          <div style={styles.keyPointsGrid}>
+          <div className="terms-keypoints-grid" style={styles.keyPointsGrid}>
             {[
               { icon: FiCheckCircle, title: "Agreement Required", desc: "Using our services means you accept these terms" },
               { icon: FiUser, title: "Age Requirement", desc: "You must be 18+ or have guardian consent" },
@@ -343,7 +343,7 @@ export default function TermsOfService() {
                 </nav>
 
                 {/* Actions */}
-                <div style={styles.sidebarActions}>
+                <div className="terms-sidebar-actions" style={styles.sidebarActions}>
                   <button style={styles.actionBtn} onClick={handlePrint}>
                     <FiPrinter size={15} />
                     <span>Print Terms</span>
