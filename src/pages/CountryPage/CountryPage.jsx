@@ -26,6 +26,7 @@ import DestinationCard, {
 import { useCountry, useCountryDestinations } from "../../hooks/useCountries";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import CommentsCarousel from "../CommentsCarousel";
+import RatingPanel from "@components/common/RatingPanel";
 /* ═══════════════════════════════════════════════════════════
    CSS
 ═══════════════════════════════════════════════════════════ */
@@ -1596,6 +1597,9 @@ export default function CountryPage() {
 
       <HeroSection country={country} navigate={navigate} />
       <AboutSection country={country} />
+      <div className="cp-inner" style={{ paddingTop: 24, paddingBottom: 24 }}>
+        <RatingPanel entityId={country?.numericId || country?.id || country?._id} entityType="country" entityName={country.name || "this country"} />
+      </div>
       <DestinationsSection country={country} allDests={allDests} destsLoading={destsLoading} />
       <CountryAttractionsSection country={country} />
       <GallerySection country={country} />

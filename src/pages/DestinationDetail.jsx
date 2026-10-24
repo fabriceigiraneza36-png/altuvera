@@ -28,6 +28,7 @@ import { useDestination } from "../hooks/useDestinations";
 import "./DestinationDetail.css";
 import AltuveraLoader from "../components/common/AltuveraLoader";
 import CommentsCarousel from "./CommentsCarousel";
+import RatingPanel from "../components/common/RatingPanel";
 import { useWishlist } from "../context/WishlistContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.altuverasafaris.com";
@@ -655,6 +656,7 @@ export default function DestinationDetail() {
                 </Reveal>
               ))}
             </div>
+            <RatingPanel entityId={destination?.numericId || destination?.id || destination?._id} entityType="destination" entityName={destination.name || "this destination"} />
           </div>
         </section>
 
