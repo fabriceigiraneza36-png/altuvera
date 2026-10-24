@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { jsPDF } from "jspdf";
 import { Download, LoaderCircle } from "lucide-react";
+import { API_URL } from "../../utils/apiBase";
 
 const safeText = (value) => String(value ?? "").replace(/\s+/g, " ").trim();
 
@@ -18,17 +19,30 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
       const contentWidth = pageWidth - margin * 2;
       let y = 18;
 
-      const imageToDataUrl = (url) => new Promise((resolve, reject) => {
+      const imageToDataUrl = (url, targetAspect = null) => new Promise((resolve, reject) => {
         const image = new Image();
         image.crossOrigin = "anonymous";
         image.onload = () => {
           try {
+            const sourceWidth = image.naturalWidth || image.width;
+            const sourceHeight = image.naturalHeight || image.height;
+            let sx = 0;
+            let sy = 0;
+            let sw = sourceWidth;
+            let sh = sourceHeight;
+            if (targetAspect && sourceWidth / sourceHeight > targetAspect) {
+              sw = sourceHeight * targetAspect;
+              sx = (sourceWidth - sw) / 2;
+            } else if (targetAspect && sourceWidth / sourceHeight < targetAspect) {
+              sh = sourceWidth / targetAspect;
+              sy = (sourceHeight - sh) / 2;
+            }
             const canvas = document.createElement("canvas");
-            canvas.width = image.naturalWidth || image.width;
-            canvas.height = image.naturalHeight || image.height;
+            canvas.width = targetAspect ? 1400 : sourceWidth;
+            canvas.height = targetAspect ? Math.round(1400 / targetAspect) : sourceHeight;
             const context = canvas.getContext("2d");
             if (!context) return reject(new Error("Canvas unavailable"));
-            context.drawImage(image, 0, 0);
+            context.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
             resolve(canvas.toDataURL("image/png"));
           } catch (error) { reject(error); }
         };
@@ -36,8 +50,49 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
         image.src = url;
       });
 
+      const pickDestinationImage = (record) => {
+        if (!record || typeof record !== "object") return "";
+        const galleryImage = Array.isArray(record.gallery) ? record.gallery.find(Boolean) : null;
+        const firstImage = Array.isArray(record.images) ? record.images.find(Boolean) : null;
+        const candidates = [
+          record.destination_image_url, record.destinationImageUrl, record.destination_image, record.destinationImage,
+          record.hero_image_url, record.heroImageUrl, record.hero_image, record.heroImage,
+          record.cover_image_url, record.coverImageUrl, record.image_url, record.imageUrl,
+          record.thumbnail_url, record.thumbnailUrl, record.image,
+          record.destination?.hero_image_url, record.destination?.heroImageUrl,
+          record.destination?.cover_image_url, record.destination?.coverImageUrl,
+          record.destination?.image_url, record.destination?.imageUrl, record.destination?.image,
+          firstImage?.imageUrl, firstImage?.image_url, firstImage?.url, firstImage?.src,
+          galleryImage?.imageUrl, galleryImage?.image_url, galleryImage?.url, galleryImage?.src,
+          typeof firstImage === "string" ? firstImage : "",
+          typeof galleryImage === "string" ? galleryImage : "",
+        ];
+        return candidates.find((value) => typeof value === "string" && value.trim())?.trim() || "";
+      };
+
+      let destinationImageUrl = pickDestinationImage(booking) || pickDestinationImage(itinerary);
+      if (!destinationImageUrl) {
+        const destinationId = booking?.destination_id || booking?.destinationId || booking?.destination?.id ||
+          itinerary?.destination_id || itinerary?.destinationId;
+        if (destinationId) {
+          try {
+            const response = await fetch(`${API_URL}/destinations/${encodeURIComponent(destinationId)}`);
+            if (response.ok) {
+              const payload = await response.json();
+              const destination = payload?.data?.destination || payload?.data || payload?.destination || payload;
+              destinationImageUrl = pickDestinationImage(destination);
+            }
+          } catch { /* image is optional; the PDF content can still be downloaded */ }
+        }
+      }
+
       let logoData = null;
+      let destinationImageData = null;
       try { logoData = await imageToDataUrl(new URL("/altuvera.png", window.location.origin).href); } catch { /* keep the PDF usable if the logo cannot load */ }
+      if (destinationImageUrl) {
+        try { destinationImageData = await imageToDataUrl(new URL(destinationImageUrl, window.location.origin).href, contentWidth / 48); }
+        catch { /* a cross-origin image without CORS should not prevent PDF downloads */ }
+      }
 
       const addPageIfNeeded = (height = 8) => {
         if (y + height > pageHeight - 17) {
@@ -75,6 +130,15 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
       pdf.text(safeText(booking?.destination_name || "Your journey"), margin + 6, y + 21);
       pdf.text("Booking: " + safeText(booking?.booking_number || "—"), margin + 6, y + 28);
       y += 42;
+
+      if (destinationImageData) {
+        addPageIfNeeded(54);
+        pdf.setDrawColor(167, 243, 208);
+        pdf.setLineWidth(0.5);
+        pdf.roundedRect(margin, y, contentWidth, 48, 2.5, 2.5, "S");
+        pdf.addImage(destinationImageData, "PNG", margin + 0.5, y + 0.5, contentWidth - 1, 47, undefined, "FAST");
+        y += 55;
+      }
 
       line("PERSONALIZED TRAVEL PLAN", { bold: true, fontSize: 9, color: [5, 150, 105], gapAfter: 4 });
       line("Traveller: " + (booking?.full_name || "—"));
