@@ -26,6 +26,7 @@ import {
 } from "react-icons/fi";
 import { HiSparkles } from "react-icons/hi";
 import PageHeader from "../components/common/PageHeader";
+import "./terms-responsive.css";
 
 /* ══════════════════════════════════════════════════════════════
    BRAND TOKENS
