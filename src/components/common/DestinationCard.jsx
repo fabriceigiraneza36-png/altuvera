@@ -1003,6 +1003,8 @@ const DestinationCard = memo(function DestinationCard({
   const [myRating, setMyRating] = useState(null);
   const [ratingSummary, setRatingSummary] = useState(null);
   const [ratingMessage, setRatingMessage] = useState("");
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [draftRating, setDraftRating] = useState(0);
 
   useEffect(() => { injectStyles(); }, []);
 
@@ -1033,6 +1035,17 @@ const DestinationCard = memo(function DestinationCard({
     window.addEventListener("altuvera:destination-rating-updated", onRatingUpdate);
     return () => window.removeEventListener("altuvera:destination-rating-updated", onRatingUpdate);
   }, [ratingId]);
+
+  const openRatingModal = useCallback((event, score) => {
+    event?.stopPropagation();
+    if (!isAuthenticated) {
+      if (typeof openModal === "function") openModal("login");
+      return;
+    }
+    setDraftRating(myRating ?? score ?? 0);
+    setRatingMessage(myRating !== null ? `You already rated this destination ${myRating}/5` : "");
+    setRatingModalOpen(true);
+  }, [isAuthenticated, openModal, myRating]);
 
   const rateDestination = useCallback(async (event, score) => {
     event?.stopPropagation();
@@ -1068,6 +1081,7 @@ const DestinationCard = memo(function DestinationCard({
       window.dispatchEvent(new CustomEvent("altuvera:destination-rating-updated", {
         detail: { destinationId: ratingId, rating: average, reviewCount: totalRatings },
       }));
+      setRatingModalOpen(false);
     } catch (error) {
       setRatingMessage(error?.message || "Unable to save your rating");
     } finally {
@@ -1284,19 +1298,8 @@ const blurb =
 
   /* ── render ── */
   return (
-    <article
-      className={`dc-card${compact ? " dc-card--compact" : ""}`}
-      onClick={goDetail}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          goDetail();
-        }
-      }}
-      aria-label={`View details for ${name}`}
-    >
+    <article className={`dc-card${compact ? " dc-card--compact" : ""}`}>
+
       <style>{FAVOURITE_MARKER_STYLES}</style>
       {/* ════ IMAGE SECTION ════ */}
       <div className="dc-img-wrap">
@@ -1406,7 +1409,7 @@ const blurb =
         )}
 
         <div className="dc-stats">
-          <Stars rating={ratingSummary?.rating ?? rating} count={ratingSummary?.count ?? reviewCount} onRate={rateDestination} busy={ratingBusy} rated={myRating !== null} userRating={myRating} message={ratingMessage} />
+          <Stars rating={ratingSummary?.rating ?? rating} count={ratingSummary?.count ?? reviewCount} onRate={openRatingModal} busy={ratingBusy} rated={false} userRating={myRating} message={ratingMessage} />
 
           {durationStr && (
             <>
@@ -1498,6 +1501,49 @@ const blurb =
         </div>
 
       </div>
+      {ratingModalOpen && (
+        <div
+          role="presentation"
+          onClick={(event) => { event.stopPropagation(); setRatingModalOpen(false); }}
+          style={{ position: "fixed", inset: 0, zIndex: 10000, display: "grid", placeItems: "center", padding: 18, background: "rgba(2, 20, 13, .58)", backdropFilter: "blur(5px)" }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`dc-rating-title-${ratingId || "destination"}`}
+            onClick={(event) => event.stopPropagation()}
+            style={{ width: "min(100%, 420px)", padding: 24, borderRadius: 22, background: "#fff", boxShadow: "0 24px 80px rgba(0,0,0,.24)", color: "#0f172a" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 12 }}>
+              <div>
+                <p style={{ margin: 0, color: "#047857", fontSize: 11, fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase" }}>Traveller review</p>
+                <h3 id={`dc-rating-title-${ratingId || "destination"}`} style={{ margin: "6px 0 0", fontSize: 21, fontWeight: 800 }}>Rate {name}</h3>
+              </div>
+              <button type="button" onClick={() => setRatingModalOpen(false)} aria-label="Close rating dialog" style={{ border: 0, background: "#f1f5f9", borderRadius: 999, width: 34, height: 34, fontSize: 20, cursor: "pointer" }}>×</button>
+            </div>
+            <p style={{ margin: "12px 0 16px", color: "#64748b", fontSize: 13 }}>Your rating helps travellers discover experiences they will love.</p>
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, margin: "16px 0" }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button key={star} type="button" onClick={() => myRating === null && setDraftRating(star)}
+                  aria-label={`${star} out of 5 stars`} aria-pressed={draftRating === star}
+                  disabled={myRating !== null}
+                  style={{ border: 0, background: "transparent", padding: 4, cursor: myRating !== null ? "default" : "pointer", color: star <= (myRating ?? draftRating) ? "#f59e0b" : "#cbd5e1", transform: draftRating === star ? "scale(1.16)" : "scale(1)", transition: "transform .15s ease" }}>
+                  <StarSVG filled={star <= (myRating ?? draftRating)} />
+                </button>
+              ))}
+            </div>
+            <p style={{ minHeight: 20, textAlign: "center", margin: "0 0 14px", color: ratingMessage && /couldn't|already|unable|failed/i.test(ratingMessage) ? "#b91c1c" : "#475569", fontSize: 13 }} role="status">
+              {myRating !== null ? `You have already rated this destination ${myRating}/5.` : ratingMessage || (draftRating ? `${draftRating} out of 5 stars selected` : "Choose a star rating")}
+            </p>
+            <button type="button" disabled={ratingBusy || myRating !== null || !draftRating}
+              onClick={(event) => rateDestination(event, draftRating)}
+              style={{ width: "100%", border: 0, borderRadius: 12, padding: "13px 16px", color: "#fff", background: ratingBusy || myRating !== null || !draftRating ? "#94a3b8" : "#047857", fontWeight: 800, cursor: ratingBusy || myRating !== null || !draftRating ? "not-allowed" : "pointer" }}>
+              {ratingBusy ? "Saving rating…" : myRating !== null ? "Rating already submitted" : "Submit rating"}
+            </button>
+            <p style={{ margin: "12px 0 0", color: "#94a3b8", fontSize: 11, textAlign: "center" }}>One rating per traveller for each destination.</p>
+          </section>
+        </div>
+      )}
     </article>
   );
 });
