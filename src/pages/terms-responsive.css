@@ -1,0 +1,169 @@
+/* Altuvera Terms of Service — responsive layout and overflow protection.
+   These rules intentionally override the legacy inline layout values, because
+   media queries inside React style objects are not applied by the browser. */
+.terms-page,
+.terms-page * {
+  box-sizing: border-box;
+}
+.terms-page {
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+.terms-page img,
+.terms-page svg {
+  max-width: 100%;
+}
+.terms-page a,
+.terms-page p,
+.terms-page h1,
+.terms-page h2,
+.terms-page h3,
+.terms-page span,
+.terms-page strong {
+  overflow-wrap: anywhere;
+}
+.terms-page [style*="grid-template-columns"] {
+  min-width: 0;
+}
+.terms-page .terms-main-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(20px, 3vw, 40px);
+}
+.terms-page .terms-sidebar {
+  min-width: 0;
+  position: sticky;
+  top: 96px;
+  max-height: calc(100dvh - 112px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.terms-page .terms-sidebar-inner {
+  min-width: 0;
+}
+.terms-page .terms-content {
+  min-width: 0;
+  width: 100%;
+}
+.terms-page .terms-toc-nav {
+  max-height: min(42dvh, 400px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.terms-page .terms-toc-item {
+  min-width: 0;
+  text-align: left;
+}
+.terms-page .terms-toc-item > span {
+  min-width: 0;
+}
+.terms-page input {
+  max-width: 100%;
+  min-width: 0;
+}
+.terms-page .terms-summary-grid,
+.terms-page .terms-keypoints-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.terms-page .terms-section-card,
+.terms-page .terms-intro-card,
+.terms-page .terms-agreement-notice,
+.terms-page .terms-contact-card {
+  min-width: 0;
+  max-width: 100%;
+}
+.terms-page .terms-section-card {
+  scroll-margin-top: 100px;
+}
+.terms-page button,
+.terms-page a {
+  -webkit-tap-highlight-color: transparent;
+}
+.terms-page button:focus-visible,
+.terms-page a:focus-visible,
+.terms-page input:focus-visible {
+  outline: 3px solid rgba(5, 150, 105, .35);
+  outline-offset: 3px;
+}
+@media (max-width: 1024px) {
+  .terms-page .terms-main-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .terms-page .terms-sidebar {
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .terms-page .terms-sidebar-inner {
+    padding: clamp(14px, 3vw, 22px);
+    border-radius: 18px;
+  }
+  .terms-page .terms-toc-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    max-height: 260px;
+  }
+}
+@media (max-width: 640px) {
+  .terms-page .terms-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .terms-page .terms-keypoints-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .terms-page .terms-toc-nav {
+    grid-template-columns: minmax(0, 1fr);
+    max-height: 240px;
+  }
+  .terms-page .terms-toc-item {
+    padding: 10px;
+    font-size: 13px;
+  }
+  .terms-page .terms-section-card {
+    padding: clamp(16px, 4vw, 22px);
+    border-radius: 16px;
+  }
+  .terms-page .terms-intro-card,
+  .terms-page .terms-agreement-notice {
+    padding: clamp(16px, 4vw, 22px);
+    gap: 12px;
+  }
+  .terms-page .terms-contact-card {
+    padding: 16px;
+  }
+  .terms-page .terms-bottom-cta {
+    padding: 28px 16px;
+    border-radius: 18px;
+  }
+  .terms-page .terms-bottom-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .terms-page .terms-bottom-buttons a {
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+@media print {
+  .terms-page .terms-sidebar,
+  .terms-page .terms-bottom-cta,
+  .terms-page .terms-summary-bar {
+    display: none !important;
+  }
+  .terms-page .terms-main-layout {
+    display: block;
+  }
+  .terms-page .terms-section-card {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+}
