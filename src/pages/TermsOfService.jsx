@@ -235,7 +235,7 @@ export default function TermsOfService() {
   }, [searchQuery]);
 
   return (
-    <div style={styles.page}>
+    <div className="terms-page" style={styles.page}>
       <PageHeader
         title="Terms of Service"
         subtitle="The legal terms governing your use of Altuvera's East African travel platform."
@@ -244,7 +244,7 @@ export default function TermsOfService() {
       />
 
       {/* Summary Bar */}
-      <section style={styles.summaryBar}>
+      <section className="terms-summary-bar" style={styles.summaryBar}>
         <div style={styles.wrap}>
           <div style={styles.summaryGrid}>
             {[
@@ -302,10 +302,10 @@ export default function TermsOfService() {
       {/* Main Content */}
       <section style={styles.main}>
         <div style={styles.wrap}>
-          <div style={styles.layout}>
+          <div className="terms-main-layout" style={styles.layout}>
             {/* Sidebar */}
-            <aside style={styles.sidebar}>
-              <div style={styles.sidebarInner}>
+            <aside className="terms-sidebar" style={styles.sidebar}>
+              <div className="terms-sidebar-inner" style={styles.sidebarInner}>
                 <div style={styles.sidebarHeader}>
                   <FiFileText size={16} color={BRAND.green700} />
                   <span>Table of Contents</span>
@@ -324,9 +324,10 @@ export default function TermsOfService() {
                 </div>
 
                 {/* Nav */}
-                <nav style={styles.nav}>
+                <nav className="terms-toc-nav" style={styles.nav}>
                   {SECTIONS.map((section, i) => (
                     <button
+                      className="terms-toc-item"
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
                       style={{
@@ -356,10 +357,10 @@ export default function TermsOfService() {
             </aside>
 
             {/* Content */}
-            <main style={styles.content}>
+            <main className="terms-content" style={styles.content}>
               {/* Intro Card */}
               <ScrollReveal>
-                <div style={styles.introCard}>
+                <div className="terms-intro-card" style={styles.introCard}>
                   <div style={styles.introIcon}>
                     <HiSparkles size={26} color={BRAND.green700} />
                   </div>
@@ -383,7 +384,7 @@ export default function TermsOfService() {
 
               {/* Agreement Notice */}
               <ScrollReveal delay={0.05}>
-                <div style={styles.agreementNotice}>
+                <div className="terms-agreement-notice" style={styles.agreementNotice}>
                   <div style={styles.noticeIcon}>
                     <FiAlertCircle size={22} />
                   </div>
@@ -414,6 +415,7 @@ export default function TermsOfService() {
                 return (
                   <ScrollReveal key={section.id} delay={i * 0.03}>
                     <article
+                      className="terms-section-card"
                       id={section.id}
                       ref={(el) => (sectionRefs.current[section.id] = el)}
                       style={{
@@ -454,7 +456,7 @@ export default function TermsOfService() {
                       </div>
 
                       {section.isContact && (
-                        <div style={styles.contactCard}>
+                        <div className="terms-contact-card" style={styles.contactCard}>
                           <div style={styles.contactRow}>
                             <FiMail size={18} color={BRAND.green700} />
                             <div>
@@ -482,7 +484,7 @@ export default function TermsOfService() {
 
               {/* Bottom CTA */}
               <ScrollReveal>
-                <div style={styles.bottomCta}>
+                <div className="terms-bottom-cta" style={styles.bottomCta}>
                   <div style={styles.bottomIcon}>
                     <FiShield size={28} color="#fff" />
                   </div>
@@ -490,7 +492,7 @@ export default function TermsOfService() {
                   <p style={styles.bottomText}>
                     Review our complete legal framework to understand your rights.
                   </p>
-                  <div style={styles.bottomBtns}>
+                  <div className="terms-bottom-buttons" style={styles.bottomBtns}>
                     <a href="/privacy" style={styles.ctaBtnWhite}>
                       <FiShield size={16} /> Privacy Policy
                     </a>
