@@ -17,8 +17,6 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
       const margin = 17;
       const contentWidth = pageWidth - margin * 2;
       let y = 18;
-      let logoData = null;
-      try { logoData = await imageToDataUrl(new URL("/altuvera.png", window.location.origin).href); } catch { /* keep the PDF usable if the logo cannot load */ }
 
       const imageToDataUrl = (url) => new Promise((resolve, reject) => {
         const image = new Image();
@@ -37,6 +35,9 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
         image.onerror = reject;
         image.src = url;
       });
+
+      let logoData = null;
+      try { logoData = await imageToDataUrl(new URL("/altuvera.png", window.location.origin).href); } catch { /* keep the PDF usable if the logo cannot load */ }
 
       const addPageIfNeeded = (height = 8) => {
         if (y + height > pageHeight - 17) {
