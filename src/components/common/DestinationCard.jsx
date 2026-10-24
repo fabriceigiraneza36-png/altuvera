@@ -1005,6 +1005,7 @@ const DestinationCard = memo(function DestinationCard({
   const [ratingMessage, setRatingMessage] = useState("");
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
   const [draftRating, setDraftRating] = useState(0);
+  const [draftReview, setDraftReview] = useState("");
 
   useEffect(() => { injectStyles(); }, []);
 
@@ -1036,6 +1037,23 @@ const DestinationCard = memo(function DestinationCard({
     return () => window.removeEventListener("altuvera:destination-rating-updated", onRatingUpdate);
   }, [ratingId]);
 
+  useEffect(() => {
+    if (!ratingId) return undefined;
+    let active = true;
+    const refreshStats = async () => {
+      try {
+        const response = await apiFetch("/destination-ratings/" + encodeURIComponent(ratingId) + "/ratings/stats");
+        const payload = await response.json();
+        if (!active || !response.ok || payload?.status !== "success") return;
+        const stats = payload.data || {};
+        setRatingSummary({ rating: Number(stats.averageRating) || 0, count: Number(stats.totalRatings) || 0 });
+      } catch { /* Keep the current summary if live stats are temporarily unavailable. */ }
+    };
+    refreshStats();
+    const timer = window.setInterval(refreshStats, 30000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [ratingId]);
+
   const openRatingModal = useCallback((event, score) => {
     event?.stopPropagation();
     if (!isAuthenticated) {
@@ -1043,6 +1061,7 @@ const DestinationCard = memo(function DestinationCard({
       return;
     }
     setDraftRating(myRating ?? score ?? 0);
+    setDraftReview("");
     setRatingMessage(myRating !== null ? `You already rated this destination ${myRating}/5` : "");
     setRatingModalOpen(true);
   }, [isAuthenticated, openModal, myRating]);
@@ -1060,7 +1079,7 @@ const DestinationCard = memo(function DestinationCard({
     try {
       const response = await apiFetch(`/destination-ratings/${encodeURIComponent(ratingId)}/ratings`, {
         method: "POST",
-        body: JSON.stringify({ rating: score }),
+        body: JSON.stringify({ rating: score, review: draftReview.trim() }),
       });
       const payload = await response.json();
       if (response.status === 409) {
@@ -1087,7 +1106,7 @@ const DestinationCard = memo(function DestinationCard({
     } finally {
       setRatingBusy(false);
     }
-  }, [isAuthenticated, openModal, ratingId, ratingBusy, myRating]);
+  }, [isAuthenticated, openModal, ratingId, ratingBusy, myRating, draftReview]);
 
   /* ── guard ── */
   if (!destination) return <DestinationCardSkeleton />;
@@ -1535,6 +1554,15 @@ const blurb =
             <p style={{ minHeight: 20, textAlign: "center", margin: "0 0 14px", color: ratingMessage && /couldn't|already|unable|failed/i.test(ratingMessage) ? "#b91c1c" : "#475569", fontSize: 13 }} role="status">
               {myRating !== null ? `You have already rated this destination ${myRating}/5.` : ratingMessage || (draftRating ? `${draftRating} out of 5 stars selected` : "Choose a star rating")}
             </p>
+            {myRating === null && (
+              <label style={{ display: "block", margin: "0 0 14px", color: "#334155", fontSize: 12, fontWeight: 700 }}>
+                Your experience (optional)
+                <textarea value={draftReview} onChange={(event) => setDraftReview(event.target.value.slice(0, 4000))}
+                  maxLength={4000} rows={3} placeholder="Share a helpful comment for other travellers…"
+                  style={{ display: "block", boxSizing: "border-box", width: "100%", marginTop: 7, padding: 11, border: "1px solid #cbd5e1", borderRadius: 10, resize: "vertical", font: "inherit", fontWeight: 400 }} />
+                <span style={{ display: "block", marginTop: 4, color: "#94a3b8", textAlign: "right", fontWeight: 400 }}>{draftReview.length}/4000</span>
+              </label>
+            )}
             <button type="button" disabled={ratingBusy || myRating !== null || !draftRating}
               onClick={(event) => rateDestination(event, draftRating)}
               style={{ width: "100%", border: 0, borderRadius: 12, padding: "13px 16px", color: "#fff", background: ratingBusy || myRating !== null || !draftRating ? "#94a3b8" : "#047857", fontWeight: 800, cursor: ratingBusy || myRating !== null || !draftRating ? "not-allowed" : "pointer" }}>
