@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { jsPDF } from "jspdf";
 import { Download, LoaderCircle } from "lucide-react";
 
-const safeText = (value) => String(value ?? "").replace(/\\s+/g, " ").trim();
+const safeText = (value) => String(value ?? "").replace(/\s+/g, " ").trim();
 
 export default function ItineraryDownloadButton({ booking, itinerary }) {
   const [busy, setBusy] = useState(false);
@@ -17,6 +17,26 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
       const margin = 17;
       const contentWidth = pageWidth - margin * 2;
       let y = 18;
+      let logoData = null;
+      try { logoData = await imageToDataUrl(new URL("/altuvera.png", window.location.origin).href); } catch { /* keep the PDF usable if the logo cannot load */ }
+
+      const imageToDataUrl = (url) => new Promise((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        image.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = image.naturalWidth || image.width;
+            canvas.height = image.naturalHeight || image.height;
+            const context = canvas.getContext("2d");
+            if (!context) return reject(new Error("Canvas unavailable"));
+            context.drawImage(image, 0, 0);
+            resolve(canvas.toDataURL("image/png"));
+          } catch (error) { reject(error); }
+        };
+        image.onerror = reject;
+        image.src = url;
+      });
 
       const addPageIfNeeded = (height = 8) => {
         if (y + height > pageHeight - 17) {
@@ -38,10 +58,16 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
 
       pdf.setFillColor(6, 78, 59);
       pdf.roundedRect(margin, y, contentWidth, 34, 3, 3, "F");
+      if (logoData) {
+        const props = pdf.getImageProperties(logoData);
+        const ratio = props.width / Math.max(1, props.height);
+        const width = Math.min(34, 17 * ratio);
+        pdf.addImage(logoData, "PNG", margin + 6, y + 4, width, width / Math.max(.01, ratio), undefined, "FAST");
+      }
       pdf.setTextColor(255, 255, 255);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(17);
-      pdf.text(pdf.splitTextToSize(safeText(itinerary?.title || "Your Altuvera Itinerary"), contentWidth - 12), margin + 6, y + 10);
+      pdf.text(pdf.splitTextToSize(safeText(itinerary?.title || "Your Travel Itinerary"), contentWidth - 12), margin + 6, y + 10);
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(9);
       pdf.setTextColor(209, 250, 229);
@@ -91,7 +117,12 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(8);
         pdf.setTextColor(100, 116, 139);
-        pdf.text("ALTUVERA SAFARIS · TRUE ADVENTURE IN HIGH PLACES & DEEP CULTURE", margin, pageHeight - 8);
+        if (logoData) {
+          const props = pdf.getImageProperties(logoData);
+          const ratio = props.width / Math.max(1, props.height);
+          const width = Math.min(24, 10 * ratio);
+          pdf.addImage(logoData, "PNG", margin, pageHeight - 14, width, width / Math.max(.01, ratio), undefined, "FAST");
+        }
         pdf.text(page + " / " + pages, pageWidth - margin, pageHeight - 8, { align: "right" });
       }
       pdf.save((booking?.booking_number || "altuvera") + "-itinerary.pdf");
