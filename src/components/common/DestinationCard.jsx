@@ -996,7 +996,7 @@ const DestinationCard = memo(function DestinationCard({
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
   const likeId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
   const ratingIdValue = destination?.numericId || destination?.id || destination?._id;
-  const ratingId = /^\\d+$/.test(String(ratingIdValue ?? "")) ? String(ratingIdValue) : null;
+  const ratingId = /^\d+$/.test(String(ratingIdValue ?? "")) ? String(ratingIdValue) : null;
   const { likes: destinationLikes, loading: likesLoading, error: destinationLikeError, toggleLike } = useDestinationLikes(likeId, "destination");
   const [likeBusy, setLikeBusy] = useState(false);
   const [ratingBusy, setRatingBusy] = useState(false);
