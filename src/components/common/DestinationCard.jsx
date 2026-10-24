@@ -20,7 +20,7 @@ import {
   FiCamera,
 } from "react-icons/fi";
 import { useWishlist } from "../../hooks/useWishlist";
-import { API_URL } from "../../utils/apiBase";
+import { API_URL, apiFetch } from "../../utils/apiBase";
 import { useDestinationLikes } from "../../hooks/useDestinationLikes";
 import { useUserAuth } from "../../context/UserAuthContext";
 
@@ -664,6 +664,18 @@ const CSS = `
 .dc-live-like-count { font-size: 10px; line-height: 1; font-weight: 800; color: inherit; }
 .dc-like-error { position: absolute; left: 56px; bottom: 16px; z-index: 8; max-width: calc(100% - 76px); padding: 6px 9px; border-radius: 8px; background: #7f1d1d; color: #fff; font-size: 11px; line-height: 1.3; box-shadow: 0 2px 10px #0003; }
 
+.dc-rating-stat{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.dc-rating-row{display:inline-flex;align-items:center;gap:4px;min-width:0}
+.dc-rating-stars{display:inline-flex;align-items:center;gap:1px}
+.dc-rating-btn{width:17px;height:20px;padding:0;display:inline-grid;place-items:center;line-height:1;border:0;background:transparent;cursor:pointer;border-radius:4px;transition:transform .16s ease,background .16s ease}
+.dc-rating-btn svg{width:13px;height:13px;display:block}
+.dc-rating-btn:hover:not(:disabled),.dc-rating-btn:focus-visible:not(:disabled){transform:translateY(-1px) scale(1.16);background:#fffbeb;outline:2px solid #fde68a;outline-offset:1px}
+.dc-rating-btn:disabled{cursor:default}
+.dc-rating-value{margin-left:2px;color:#475569;font-size:11.5px;font-weight:800}
+.dc-rating-count{color:#94a3b8;font-size:11px}
+.dc-rating-message{display:block;max-width:210px;color:#047857;font-size:9.5px;font-weight:700;line-height:1.3;white-space:normal}
+.dc-rating-message.is-error{color:#b91c1c}
+@media(max-width:480px){.dc-rating-btn{width:18px;height:22px}.dc-rating-btn svg{width:14px;height:14px}.dc-rating-message{max-width:190px}}
 @media (prefers-reduced-motion: reduce) {
   .dc-card, .dc-track, .dc-img, .dc-btn-book,
   .dc-btn-learn, .dc-action-btn, .dc-nav-btn {
@@ -709,29 +721,43 @@ function StarSVG({ filled }) {
 /* ─────────────────────────────────────────────────────────────
    STARS component
 ───────────────────────────────────────────────────────────── */
-function Stars({ rating, count }) {
-  const filled = Math.round((Number(rating) || 0) * 2) / 2;
+function Stars({ rating, count, onRate, busy = false, rated = false, userRating = null, message = "" }) {
+  const [hovered, setHovered] = useState(0);
+  const value = Number(rating) || 0;
+  const filled = hovered || Math.round(value);
+  const countText = Number(count) >= 1000
+    ? `${(Number(count) / 1000).toFixed(1)}k`
+    : Number(count) || 0;
 
   return (
-    <div
-      className="dc-stat"
-      aria-label={`Rating: ${rating != null ? Number(rating).toFixed(1) : "New"} out of 5`}
-    >
-      <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
-        {[1, 2, 3, 4, 5].map((s) => (
-          <StarSVG key={s} filled={s <= filled} />
-        ))}
+    <div className="dc-rating-stat" onClick={(event) => event.stopPropagation()}>
+      <div className="dc-rating-row" role="group" aria-label={`Rate this destination. Average rating: ${value ? value.toFixed(2) : "No ratings yet"} out of 5`}>
+        <div className="dc-rating-stars" onMouseLeave={() => setHovered(0)}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              className={`dc-rating-btn${star <= filled ? " is-filled" : ""}`}
+              aria-label={`Rate ${star} out of 5 stars`}
+              aria-pressed={userRating === star}
+              title={rated ? `You already rated this destination ${userRating}/5` : `Rate ${star}/5`}
+              disabled={busy || rated}
+              onMouseEnter={() => !rated && setHovered(star)}
+              onFocus={() => !rated && setHovered(star)}
+              onBlur={() => setHovered(0)}
+              onClick={(event) => onRate?.(event, star)}
+            >
+              <StarSVG filled={star <= filled} />
+            </button>
+          ))}
+        </div>
+
+        <strong className="dc-rating-value">{value > 0 ? value.toFixed(1) : "New"}</strong>
+        {Number(count) > 0 && <span className="dc-rating-count">({countText})</span>}
       </div>
-
-      <strong style={{ marginLeft: 4 }}>
-        {rating != null ? Number(rating).toFixed(1) : "New"}
-      </strong>
-
-      {Number(count) > 0 && (
-        <span style={{ color: "#94a3b8", fontSize: "11px" }}>
-          ({Number(count) >= 1000
-            ? `${(Number(count) / 1000).toFixed(1)}k`
-            : count})
+      {(rated || message) && (
+        <span className={`dc-rating-message${message && /couldn.t|already|sign in|failed|unable/i.test(message) ? " is-error" : ""}`} role="status">
+          {message || (userRating ? `Your rating: ${userRating}/5` : "")}
         </span>
       )}
     </div>
@@ -969,10 +995,85 @@ const DestinationCard = memo(function DestinationCard({
   const [copied,    setCopied]    = useState(false);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
   const likeId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
+  const ratingIdValue = destination?.numericId || destination?.id || destination?._id;
+  const ratingId = /^\\d+$/.test(String(ratingIdValue ?? "")) ? String(ratingIdValue) : null;
   const { likes: destinationLikes, loading: likesLoading, error: destinationLikeError, toggleLike } = useDestinationLikes(likeId, "destination");
   const [likeBusy, setLikeBusy] = useState(false);
+  const [ratingBusy, setRatingBusy] = useState(false);
+  const [myRating, setMyRating] = useState(null);
+  const [ratingSummary, setRatingSummary] = useState(null);
+  const [ratingMessage, setRatingMessage] = useState("");
 
   useEffect(() => { injectStyles(); }, []);
+
+  useEffect(() => {
+    let active = true;
+    setRatingSummary(null);
+    setRatingMessage("");
+    if (!isAuthenticated || !ratingId) {
+      setMyRating(null);
+      return () => { active = false; };
+    }
+    apiFetch(`/destination-ratings/${encodeURIComponent(ratingId)}/ratings/user`)
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) return;
+        const userValue = payload?.data?.rating?.rating;
+        if (active) setMyRating(userValue == null ? null : Number(userValue));
+      })
+      .catch(() => { /* rating summary remains available if the account check fails */ });
+    return () => { active = false; };
+  }, [isAuthenticated, ratingId]);
+
+  useEffect(() => {
+    const onRatingUpdate = (event) => {
+      if (String(event.detail?.destinationId) !== String(ratingId)) return;
+      setRatingSummary({ rating: Number(event.detail.rating), count: Number(event.detail.reviewCount) });
+    };
+    window.addEventListener("altuvera:destination-rating-updated", onRatingUpdate);
+    return () => window.removeEventListener("altuvera:destination-rating-updated", onRatingUpdate);
+  }, [ratingId]);
+
+  const rateDestination = useCallback(async (event, score) => {
+    event?.stopPropagation();
+    if (!isAuthenticated) {
+      if (typeof openModal === "function") openModal("login");
+      return;
+    }
+    if (!ratingId || ratingBusy || myRating !== null) return;
+
+    setRatingBusy(true);
+    setRatingMessage("");
+    try {
+      const response = await apiFetch(`/destination-ratings/${encodeURIComponent(ratingId)}/ratings`, {
+        method: "POST",
+        body: JSON.stringify({ rating: score }),
+      });
+      const payload = await response.json();
+      if (response.status === 409) {
+        const existingRating = Number(payload?.data?.rating?.rating);
+        if (Number.isInteger(existingRating) && existingRating >= 1 && existingRating <= 5) setMyRating(existingRating);
+        setRatingMessage(payload?.message || "You have already rated this destination");
+        return;
+      }
+      if (!response.ok || payload?.status !== "success") {
+        throw new Error(payload?.message || "We couldn't save your rating. Please try again.");
+      }
+      const stats = payload?.data?.stats || {};
+      const average = Number(stats.averageRating ?? score);
+      const totalRatings = Number(stats.totalRatings ?? 1);
+      setMyRating(score);
+      setRatingSummary({ rating: average, count: totalRatings });
+      setRatingMessage(`Thanks — you rated ${score}/5`);
+      window.dispatchEvent(new CustomEvent("altuvera:destination-rating-updated", {
+        detail: { destinationId: ratingId, rating: average, reviewCount: totalRatings },
+      }));
+    } catch (error) {
+      setRatingMessage(error?.message || "Unable to save your rating");
+    } finally {
+      setRatingBusy(false);
+    }
+  }, [isAuthenticated, openModal, ratingId, ratingBusy, myRating]);
 
   /* ── guard ── */
   if (!destination) return <DestinationCardSkeleton />;
@@ -1305,7 +1406,7 @@ const blurb =
         )}
 
         <div className="dc-stats">
-          <Stars rating={rating} count={reviewCount} />
+          <Stars rating={ratingSummary?.rating ?? rating} count={ratingSummary?.count ?? reviewCount} onRate={rateDestination} busy={ratingBusy} rated={myRating !== null} userRating={myRating} message={ratingMessage} />
 
           {durationStr && (
             <>
