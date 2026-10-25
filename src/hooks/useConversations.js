@@ -87,6 +87,8 @@ const normConv = (c) => ({
   subject:        c.subject,
   groupId:        c.group_id ?? c.groupId ?? null,
   groupName:      c.group_name || c.groupName || null,
+  channel:         c.channel || null,
+  metadata:        c.metadata || {},
   conversationType: c.conversation_type || c.conversationType || (c.group_id ? "group" : "direct"),
   status:         c.status          || "open",
   priority:       c.priority        || "normal",
@@ -108,6 +110,7 @@ const normMsg = (m) => ({
   senderEmail:    m.sender_email    || m.senderEmail,
   senderAvatar:   m.sender_avatar   || m.senderAvatar,
   body:           m.body,
+  msgType:        m.msg_type        || m.msgType || "text",
   isRead:         m.is_read         ?? m.isRead ?? false,
   readAt:         m.read_at         || m.readAt,
   replyToId:      m.reply_to_id     || m.replyToId,
@@ -566,7 +569,7 @@ export function useConversations() {
 
   /* ── Send message ────────────────────────────────────────── */
   const sendMessage = useCallback(
-    async (conversationId, body, replyToId = null) => {
+    async (conversationId, body, replyToId = null, metadata = null) => {
       if (!body?.trim() || !conversationId) return;
 
       setSaving(true);
@@ -581,6 +584,8 @@ export function useConversations() {
         isRead:         false,
         reactions:      {},
         replyToId:      replyToId || null,
+        metadata:       metadata || {},
+        msgType:        metadata?.kind === "itinerary" ? "itinerary" : "text",
         createdAt:      new Date().toISOString(),
       };
       setMessages((prev) => [...prev, optimistic]);
@@ -588,7 +593,20 @@ export function useConversations() {
       try {
         const s = socketRef.current;
         let saved;
-        if (s?.connected) {
+        // Context-bearing booking/resource messages must pass through REST so
+        // the backend can verify booking ownership and normalize metadata.
+        if (metadata) {
+          const res = await authFetch(
+            `${API_BASE}/messages/conversations/${conversationId}/messages`,
+            {
+              method: "POST",
+              body: JSON.stringify({ body: body.trim(), ...(replyToId ? { replyToId } : {}), metadata }),
+            },
+          );
+          const payload = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(payload.message || "Failed to send contextual message.");
+          saved = normMsg(payload.data);
+        } else if (s?.connected) {
           const ack = await new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
               reject(new Error("The server did not confirm delivery. Check your connection and try again."));
