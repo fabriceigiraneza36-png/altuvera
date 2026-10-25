@@ -11,6 +11,7 @@ import {
   ChevronDown, Circle, MoreHorizontal, Edit3, Pin, Highlighter, Undo2, Search, MapPin,
 } from "lucide-react";
 import ChatPreferencesPanel from "../../components/auth/ChatPreferencesPanel";
+import ItineraryDownloadButton from "../../components/auth/ItineraryDownloadButton";
 import DashboardLayout      from "../../components/auth/DashboardLayout";
 import { useConversations } from "../../hooks/useConversations";
 import "../../messaging-phase2.css";
@@ -523,7 +524,9 @@ function ScrollToBottomBtn({ visible, onClick, composerVisible = true }) {
 
 const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping }) {
   const isGroup = conv.conversationType === "group" || Boolean(conv.groupId);
-  const title    = conv.groupName || conv.subject ||
+  const title    = isGroup ? (conv.groupName || conv.subject || "Group conversation")
+    : conv.conversationType === "personal" ? "Personal chat with Altuvera"
+    : conv.conversationType === "resource_support" ? "Bookings & travel help" : conv.subject ||
     (conv.bookingNumber ? `Booking #${conv.bookingNumber}` : conv.guestName || "Conversation");
   const hasUnread = (conv.unreadUser || 0) > 0;
 
@@ -674,7 +677,29 @@ const MsgBubble = React.memo(function MsgBubble({
                   <MapPin size={12}/> Destination · {destinationName}
                 </span>
               )}
-              <span>{isDeleted ? "This message was unsent" : message.body}</span>
+              {!isDeleted && message.metadata?.bookingNumber && (
+                <span className={`mb-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${mine ? "bg-white/15 text-white" : "bg-emerald-50 text-emerald-800"}`}>
+                  <MessageSquare size={12}/> Booking #{message.metadata.bookingNumber}{message.metadata.booking?.status ? ` · ${message.metadata.booking.status}` : ""}
+                </span>
+              )}
+              {!isDeleted && message.metadata?.resource?.name && (
+                <span className={`mb-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${mine ? "bg-white/15 text-white" : "bg-slate-100 text-slate-700"}`}>
+                  <Search size={12}/> {message.metadata.resource.type || "Resource"} · {message.metadata.resource.name}
+                </span>
+              )}
+              {!isDeleted && (message.msgType === "itinerary" || message.metadata?.kind === "itinerary") ? (
+                <div className="mt-1 min-w-[220px] max-w-[360px] rounded-xl border border-emerald-200 bg-white p-3 text-slate-800 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center"><FileText size={16} className="text-emerald-700"/></div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-extrabold text-slate-900">Your safari itinerary</p>
+                      <p className="text-[10px] text-slate-500 truncate">{message.metadata?.booking?.destination_name || "Personalized travel plan"}{message.metadata?.bookingNumber ? ` · #${message.metadata.bookingNumber}` : ""}</p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-slate-600 mb-3">{message.metadata?.itinerary?.introduction || message.body}</p>
+                  {message.metadata?.itinerary && message.metadata?.booking && <ItineraryDownloadButton booking={message.metadata.booking} itinerary={message.metadata.itinerary}/>}
+                </div>
+              ) : <span>{isDeleted ? "This message was unsent" : message.body}</span>}
               {message.edited && !isDeleted && <span className={`ml-2 text-[9px] ${mine ? "text-emerald-100" : "text-slate-400"}`}>edited</span>}
             </div>
           )}
@@ -1026,6 +1051,73 @@ export default function Messages() {
     adminPresence,
   } = useConversations();
 
+  const [bookingReference, setBookingReference] = useState("");
+  const [bookingContext, setBookingContext] = useState(null);
+  const [bookingLookupBusy, setBookingLookupBusy] = useState(false);
+  const [bookingLookupError, setBookingLookupError] = useState("");
+  const [resourceType, setResourceType] = useState("destination");
+  const [resourceQuery, setResourceQuery] = useState("");
+  const [resourceResults, setResourceResults] = useState([]);
+  const [resourceSearchBusy, setResourceSearchBusy] = useState(false);
+  const [resourceSearchError, setResourceSearchError] = useState("");
+  const [selectedResource, setSelectedResource] = useState(null);
+
+  const isResourceSupport = activeConversation?.conversationType === "resource_support" || activeConversation?.channel === "booking_support";
+
+  const verifyBooking = useCallback(async () => {
+    const reference = bookingReference.trim();
+    if (!reference) { setBookingLookupError("Enter your booking ID or booking reference."); return; }
+    setBookingLookupBusy(true);
+    setBookingLookupError("");
+    try {
+      const response = await authFetch(`${API_BASE}/messages/booking-context/${encodeURIComponent(reference)}`);
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "We couldn't verify this booking.");
+      setBookingContext(payload.data);
+      setBookingReference(payload.data.bookingNumber || String(payload.data.id));
+    } catch (err) {
+      setBookingContext(null);
+      setBookingLookupError(err.message || "Could not verify this booking. Try again.");
+    } finally { setBookingLookupBusy(false); }
+  }, [bookingReference]);
+
+  useEffect(() => {
+    if (!isResourceSupport || resourceQuery.trim().length < 2) {
+      setResourceResults([]);
+      setResourceSearchBusy(false);
+      setResourceSearchError("");
+      return;
+    }
+    const controller = new AbortController();
+    setResourceSearchBusy(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await authFetch(`${API_BASE}/messages/resources/search?type=${encodeURIComponent(resourceType)}&q=${encodeURIComponent(resourceQuery.trim())}`, { signal: controller.signal });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.message || "Search failed.");
+        setResourceResults(Array.isArray(payload.data) ? payload.data : []);
+        setResourceSearchError("");
+      } catch (err) {
+        if (err.name !== "AbortError") setResourceSearchError(err.message || "Search is unavailable.");
+      } finally {
+        if (!controller.signal.aborted) setResourceSearchBusy(false);
+      }
+    }, 250);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [isResourceSupport, resourceQuery, resourceType]);
+
+  useEffect(() => {
+    if (!isResourceSupport) {
+      setBookingReference("");
+      setBookingContext(null);
+      setBookingLookupError("");
+      setResourceType("destination");
+      setResourceQuery("");
+      setResourceResults([]);
+      setSelectedResource(null);
+    }
+  }, [isResourceSupport]);
+
   useEffect(() => { injectMsgStyles(); }, []);
 
   useEffect(() => {
@@ -1098,20 +1190,16 @@ export default function Messages() {
     const hasGroupConversation = conversations.some(c =>
       c.conversationType === "group" || Boolean(c.groupId)
     );
-    const shouldChooseConversation = hasGroupConversation || conversations.length > 1;
-
-    if (shouldChooseConversation) {
-      // Group members always land on the conversation chooser unless they
-      // followed a notification/deep link to a specific thread.
+    // Travelers without groups go straight into their personal admin chat.
+    // Users with groups see the chooser so they can pick either private channel
+    // or any group they are actually a member of.
+    if (hasGroupConversation) {
       if (activeId) openConversation(null);
       return;
     }
-
-    if (!activeId && conversations.length === 1) {
-      const onlyConversation = conversations[0];
-      if (onlyConversation.conversationType !== "group" && !onlyConversation.groupId) {
-        openConversation(onlyConversation.id);
-      }
+    if (!activeId) {
+      const personal = conversations.find(item => item.conversationType === "personal" || item.channel === "personal_support");
+      if (personal) openConversation(personal.id);
     }
   }, [requestedConversationId, conversations, activeId, openConversation, loading]);
 
@@ -1254,8 +1342,13 @@ export default function Messages() {
     isTypingRef.current = false;
     emitTyping(activeId, false);
     setDraft(""); setReplyToId(null); setAtBottom(true);
-    await sendMessage(activeId, text, replyToId);
-  }, [draft, activeId, sending, replyToId, sendMessage, emitTyping]);
+    const contextMetadata = isResourceSupport && (bookingContext || selectedResource) ? {
+      ...(bookingContext ? { bookingId: bookingContext.id } : {}),
+      ...(selectedResource ? { resource: { type: selectedResource.type, id: selectedResource.id, name: selectedResource.name } } : {}),
+    } : null;
+    await sendMessage(activeId, text, replyToId, contextMetadata);
+    if (contextMetadata) setSelectedResource(null);
+  }, [draft, activeId, sending, replyToId, sendMessage, emitTyping, isResourceSupport, bookingContext, selectedResource]);
 
   /* ── Reactions ── */
   const toggleReaction = useCallback(async (messageId, emoji) => {
@@ -1611,6 +1704,62 @@ export default function Messages() {
                   {/* Status pill */}
                   <StatusPill status={activeConversation.status || "open"} />
                 </div>
+
+                {isResourceSupport && (
+                  <section className="shrink-0 border-b border-emerald-100 bg-emerald-50/70 px-3 py-3 sm:px-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-white border border-emerald-100 flex items-center justify-center shrink-0"><FileText size={15} className="text-emerald-700"/></div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-extrabold text-slate-900">Booking & travel workspace</p>
+                        <p className="text-[10px] leading-relaxed text-slate-600">Verify your booking to share its live status with the coordinator. Search destinations, packages, and itineraries to ask specific questions.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <input value={bookingReference} onChange={e=>{setBookingReference(e.target.value);setBookingLookupError("");}} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();verifyBooking();}}} placeholder="Booking ID or reference" aria-label="Booking ID or reference" className="min-w-0 flex-1 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-500"/>
+                      <button type="button" onClick={verifyBooking} disabled={bookingLookupBusy} className="shrink-0 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{bookingLookupBusy ? "Checking…" : "Verify"}</button>
+                    </div>
+                    {bookingLookupError && <p role="alert" className="text-[11px] text-rose-700">{bookingLookupError}</p>}
+                    {bookingContext && (
+                      <div className="rounded-xl border border-emerald-200 bg-white p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-extrabold text-slate-900">Booking #{bookingContext.bookingNumber || bookingContext.id}</p>
+                            <p className="mt-0.5 text-xs font-bold text-emerald-800">{bookingContext.destinationName || "Safari booking"}{bookingContext.countryName ? ` · ${bookingContext.countryName}` : ""}</p>
+                            <p className="mt-1 text-[10px] text-slate-500">{bookingContext.travelDate || "Flexible dates"}{bookingContext.returnDate ? ` → ${bookingContext.returnDate}` : ""} · {bookingContext.travelers || "—"} traveler(s)</p>
+                          </div>
+                          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-extrabold uppercase text-emerald-800">{bookingContext.status || "verified"}</span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                          <span>Itinerary: {String(bookingContext.itineraryStatus || "not_started").replaceAll("_"," ")}</span>
+                          <span>· Email: {bookingContext.itineraryEmailStatus || "not_sent"}</span>
+                        </div>
+                        {bookingContext.itineraryEmailStatus === "failed" && bookingContext.itineraryEmailError && <p className="mt-1 text-[10px] text-rose-700">{bookingContext.itineraryEmailError}</p>}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-[minmax(0,110px)_1fr] gap-2">
+                      <select value={resourceType} onChange={e=>{setResourceType(e.target.value);setSelectedResource(null);setResourceQuery("");}} aria-label="Resource type" className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
+                        <option value="destination">Destinations</option>
+                        <option value="package">Packages</option>
+                        <option value="itinerary">My itineraries</option>
+                      </select>
+                      <input value={resourceQuery} onChange={e=>setResourceQuery(e.target.value)} placeholder="Search live records…" aria-label="Search live destinations, packages, and itineraries" className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-400"/>
+                    </div>
+                    {(resourceSearchBusy || resourceSearchError || resourceResults.length > 0) && (
+                      <div className="max-h-32 overflow-y-auto rounded-xl border border-slate-200 bg-white">
+                        {resourceSearchBusy && <p className="px-3 py-2 text-[10px] text-slate-500">Searching live records…</p>}
+                        {resourceSearchError && <p className="px-3 py-2 text-[10px] text-rose-600">{resourceSearchError}</p>}
+                        {resourceResults.map(item=><button type="button" key={`${item.type}:${item.id}`} onClick={()=>{setSelectedResource(item);setResourceQuery(item.name);setResourceResults([]);}} className="block w-full border-b border-slate-100 px-3 py-2 text-left last:border-0 hover:bg-emerald-50">
+                          <span className="block truncate text-[11px] font-bold text-slate-800">{item.name}</span>
+                          <span className="block truncate text-[10px] text-slate-500">{item.country || item.destination || item.bookingNumber || item.description || item.status || item.type}</span>
+                        </button>)}
+                      </div>
+                    )}
+                    {selectedResource && <div className="flex items-center justify-between gap-2 rounded-lg bg-white border border-emerald-200 px-3 py-2 text-[10px]">
+                      <span className="min-w-0 truncate text-emerald-800"><b>Attached:</b> {selectedResource.type} · {selectedResource.name}</span>
+                      <button type="button" onClick={()=>setSelectedResource(null)} aria-label="Remove selected resource" className="shrink-0 text-slate-500 hover:text-rose-600"><X size={13}/></button>
+                    </div>}
+                  </section>
+                )}
 
                 {/* ── SCROLLABLE MESSAGE BODY ── */}
                 {/*
