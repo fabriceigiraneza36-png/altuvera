@@ -697,6 +697,7 @@ const MsgBubble = React.memo(function MsgBubble({
                     </div>
                   </div>
                   <p className="text-[11px] leading-relaxed text-slate-600 mb-3">{message.metadata?.itinerary?.introduction || message.body}</p>
+                  <p className="mb-2 text-[10px] text-slate-500">Email status: <span className={message.metadata?.emailStatus === "sent" ? "font-bold text-emerald-700" : "font-bold text-rose-600"}>{message.metadata?.emailStatus === "sent" ? "sent to email provider" : "not confirmed sent"}</span></p>
                   {message.metadata?.itinerary && message.metadata?.booking && <ItineraryDownloadButton booking={message.metadata.booking} itinerary={message.metadata.itinerary}/>}
                 </div>
               ) : <span>{isDeleted ? "This message was unsent" : message.body}</span>}
@@ -1169,6 +1170,12 @@ export default function Messages() {
     ].some(value => String(value || "").toLocaleLowerCase().includes(query)));
   }, [conversations, conversationSearch]);
 
+  const openResourceSupport = useCallback(() => {
+    const support = conversations.find(item => item.conversationType === "resource_support" || item.channel === "booking_support");
+    if (support?.id) openConversation(support.id);
+    else fetchConversations();
+  }, [conversations, openConversation, fetchConversations]);
+
   useEffect(() => {
     if (!conversations.length) return;
 
@@ -1345,7 +1352,7 @@ export default function Messages() {
     emitTyping(activeId, false);
     setDraft(""); setReplyToId(null); setAtBottom(true);
     const contextMetadata = isResourceSupport && (bookingContext || selectedResource) ? {
-      ...(bookingContext ? { bookingId: bookingContext.id } : {}),
+      ...(bookingContext ? { bookingId: bookingContext.id } : selectedResource?.type === "itinerary" && selectedResource?.bookingId ? { bookingId: selectedResource.bookingId } : {}),
       ...(selectedResource ? { resource: { type: selectedResource.type, id: selectedResource.id, name: selectedResource.name } } : {}),
     } : null;
     await sendMessage(activeId, text, replyToId, contextMetadata);
@@ -1419,7 +1426,7 @@ export default function Messages() {
       }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "n" && !typingTarget) {
         event.preventDefault();
-        setShowNewChat(true);
+        openResourceSupport();
         return;
       }
       if (event.key === "/" && !typingTarget && !event.ctrlKey && !event.metaKey && !event.altKey) {
@@ -1506,7 +1513,7 @@ export default function Messages() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setShowNewChat(true)} aria-label="New conversation" title="New conversation (Ctrl/⌘+N)"
+                  <button onClick={() => openResourceSupport()} aria-label="Open booking support" title="Open bookings & travel help (Ctrl/⌘+N)"
                     className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
                     <Plus size={15} />
                   </button>
@@ -1561,7 +1568,7 @@ export default function Messages() {
                   <p className="text-xs text-slate-400 leading-relaxed">
                     Start a private conversation with the Altuvera team, right here.
                   </p>
-                  <button onClick={() => setShowNewChat(true)}
+                  <button onClick={() => openResourceSupport()}
                     className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700">
                     <Plus size={14}/> Start a conversation
                   </button>
@@ -1650,7 +1657,7 @@ export default function Messages() {
                     ? "Choose your private chat with Altuvera Admin or open a group conversation from your list."
                     : "Your conversations with the Altuvera team will appear here. You can also start a new conversation."}
                 </p>
-                <button onClick={()=>setShowNewChat(true)}
+                <button onClick={()=>openResourceSupport()}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white
                              text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm">
                   <Plus size={15}/> New Conversation
@@ -1979,7 +1986,7 @@ export default function Messages() {
 
                   {/* Keyboard hint */}
                   <p className="text-center text-[10px] text-slate-300 mt-1.5 select-none">
-                    Enter ↵ to send · Shift+Enter for new line · Esc to cancel reply · Ctrl/⌘+K search · Ctrl/⌘+N new chat
+                    Enter ↵ to send · Shift+Enter for new line · Esc to cancel reply · Ctrl/⌘+K search · Ctrl/⌘+N booking help
                   </p>
                 </div>
               </>
