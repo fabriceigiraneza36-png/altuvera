@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, BellRing, Check, MessageCircle, Send, X, CalendarDays, Pencil, CheckCircle2, ClipboardList, AlertTriangle, Siren, Settings } from "lucide-react";
+import { ArrowUpRight, BellRing, Check, MessageCircle, Send, X, CalendarDays, Pencil, CheckCircle2, ClipboardList, AlertTriangle, Siren, Settings, ChevronDown, ChevronUp, UsersRound } from "lucide-react";
 import { useNotifications } from "../../hooks/useNotifications";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
@@ -39,6 +39,7 @@ export default function GlobalUserNotifications() {
   const swipeStartX = useRef(null);
   const swipeDeltaX = useRef(0);
   const [replyText, setReplyText] = useState("");
+  const [replyExpanded, setReplyExpanded] = useState(false);
   const [replyBusy, setReplyBusy] = useState(false);
   const [replyError, setReplyError] = useState("");
   const [seen, setSeen] = useState(() => {
@@ -54,6 +55,7 @@ export default function GlobalUserNotifications() {
     if (!fresh) return;
     setVisible(fresh);
     setReplyText("");
+    setReplyExpanded(false);
     setReplyError("");
     const next = new Set(seen);
     next.add(String(fresh.id));
@@ -81,8 +83,19 @@ export default function GlobalUserNotifications() {
   );
   const MetaIcon = meta[0];
   const conversationId = conversationIdOf(visible);
-  const isChatNotification = Boolean(conversationId) &&
-    (visible?.category === "message" || visible?.type === "message_received" || Boolean(visible?.metadata?.messageId));
+  const isChatNotification = Boolean(conversationId) && (
+    visible?.category === "message" ||
+    String(visible?.type || "").toLowerCase().includes("message") ||
+    Boolean(visible?.metadata?.messageId) ||
+    Boolean(visible?.metadata?.groupId) ||
+    Boolean(visible?.group_id) ||
+    Boolean(visible?.groupId)
+  );
+  const isGroupChatNotification = Boolean(
+    visible?.group_id || visible?.groupId ||
+    visible?.metadata?.groupId || visible?.metadata?.group_id ||
+    visible?.conversation_type === "group" || visible?.conversationType === "group"
+  );
 
   const consumeNotification = (item) => {
     if (!item?.id) return;
@@ -172,63 +185,70 @@ export default function GlobalUserNotifications() {
         style={{
           touchAction: "pan-y", transition: "transform 120ms ease-out, opacity 120ms ease-out",
           position: "fixed", right: 16, bottom: "max(16px, env(safe-area-inset-bottom))",
-          zIndex: 9999, width: "min(410px, calc(100vw - 24px))",
+          zIndex: 9999, width: "min(350px, calc(100vw - 20px))",
           animation: "altuvera-user-toast-in 240ms cubic-bezier(.2,.8,.2,1)",
           fontFamily: "Inter, system-ui, sans-serif",
         }}>
         <div style={{
-          background: "#fff", border: "1px solid #dbe7e0", borderLeft: `4px solid ${meta[1]}`,
-          borderRadius: 19, boxShadow: "0 22px 65px rgba(15,23,42,.2)", overflow: "hidden",
+          background: "#fff", border: "1px solid #dbe7e0", borderLeft: `3px solid ${meta[1]}`,
+          borderRadius: 15, boxShadow: "0 12px 34px rgba(15,23,42,.16)", overflow: "hidden",
         }}>
-          <div style={{ padding: "15px 16px 12px", display: "flex", alignItems: "flex-start", gap: 11 }}>
+          <div style={{ padding: "10px 11px 9px", display: "flex", alignItems: "flex-start", gap: 9 }}>
             <div aria-hidden="true" style={{
-              width: 42, height: 42, borderRadius: 14, background: `${meta[1]}15`,
+              width: 34, height: 34, borderRadius: 11, background: `${meta[1]}15`,
               display: "grid", placeItems: "center", flexShrink: 0, position: "relative",
             }}>
-              <MetaIcon size={20} aria-hidden="true" strokeWidth={2.2} />
+              <MetaIcon size={17} aria-hidden="true" strokeWidth={2.2} />
               <span style={{ position: "absolute", right: -2, top: -2, width: 9, height: 9, borderRadius: 99, background: "#10b981", border: "2px solid white" }}/>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ margin: 0, color: "#0f172a", fontSize: 13, fontWeight: 800, lineHeight: 1.35 }}>{title}</p>
-                  <p style={{ margin: "4px 0 0", color: "#94a3b8", fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>Altuvera · New activity</p>
+                  <p style={{ margin: "3px 0 0", color: "#94a3b8", fontSize: 9, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase" }}>Altuvera · {isGroupChatNotification ? "Group message" : isChatNotification ? "New message" : "New activity"}</p>
                 </div>
                 <button type="button" onClick={dismissNotification} aria-label="Dismiss and clear notification"
                   style={{ width: 28, height: 28, border: 0, borderRadius: 9, display: "grid", placeItems: "center", background: "#f8fafc", color: "#64748b", cursor: "pointer", flexShrink: 0 }}>
                   <X size={15}/>
                 </button>
               </div>
-              <p style={{ margin: "9px 0 0", color: "#475569", fontSize: 13, lineHeight: 1.55, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{body}</p>
+              <p style={{ margin: "6px 0 0", color: "#475569", fontSize: 12, lineHeight: 1.45, whiteSpace: "pre-wrap", overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{body}</p>
             </div>
           </div>
 
           {isChatNotification && (
-            <form onSubmit={sendReply} style={{ padding: "0 16px 12px 69px" }}>
-              <label htmlFor="altuvera-notification-reply" style={{ display: "block", marginBottom: 5, color: "#64748b", fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>Quick reply</label>
-              <div style={{ display: "flex", gap: 7 }}>
-                <input id="altuvera-notification-reply" value={replyText} onChange={(event) => setReplyText(event.target.value)}
-                  placeholder="Write a quick reply…" maxLength={5000}
-                  style={{ flex: 1, minWidth: 0, border: "1px solid #dbe4df", borderRadius: 11, padding: "10px 11px", outline: "none", fontSize: 12, color: "#0f172a", background: "#fbfdfc" }}/>
-                <button type="submit" disabled={!replyText.trim() || replyBusy}
-                  aria-label="Send quick reply"
-                  style={{ border: 0, borderRadius: 11, width: 40, flexShrink: 0, display: "grid", placeItems: "center", background: "#059669", color: "#fff", cursor: replyText.trim() ? "pointer" : "not-allowed", opacity: !replyText.trim() || replyBusy ? .5 : 1 }}>
-                  {replyBusy ? <span style={{ fontSize: 11 }}>…</span> : <Send size={15}/>}
-                </button>
-              </div>
-              {replyError && <p role="alert" style={{ margin: "6px 0 0", color: "#dc2626", fontSize: 11, lineHeight: 1.4 }}>{replyError}</p>}
-            </form>
+            <div style={{ padding: "0 11px 8px 54px" }}>
+              <button type="button" onClick={() => setReplyExpanded(value => !value)}
+                aria-expanded={replyExpanded}
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid #dce9e2", borderRadius: 8, background: "#f8fcf9", color: "#047857", padding: "5px 8px", fontSize: 10, fontWeight: 750, cursor: "pointer" }}>
+                <MessageCircle size={12}/>{replyExpanded ? "Hide reply" : "Quick reply"}
+                {replyExpanded ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
+              </button>
+              {replyExpanded && (
+                <form onSubmit={sendReply} style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 7 }}>
+                  <input id="altuvera-notification-reply" value={replyText} onChange={(event) => setReplyText(event.target.value)}
+                    placeholder="Write a reply…" maxLength={5000}
+                    style={{ flex: "1 1 150px", minWidth: 0, border: "1px solid #dbe4df", borderRadius: 9, padding: "8px 9px", outline: "none", fontSize: 12, color: "#0f172a", background: "#fbfdfc" }}/>
+                  <button type="submit" disabled={!replyText.trim() || replyBusy}
+                    aria-label="Send quick reply"
+                    style={{ border: 0, borderRadius: 9, width: 34, height: 34, flexShrink: 0, display: "grid", placeItems: "center", background: "#059669", color: "#fff", cursor: replyText.trim() ? "pointer" : "not-allowed", opacity: !replyText.trim() || replyBusy ? .5 : 1 }}>
+                    {replyBusy ? <span style={{ fontSize: 11 }}>…</span> : <Send size={14}/>}
+                  </button>
+                  {replyError && <p role="alert" style={{ flexBasis: "100%", margin: "2px 0 0", color: "#dc2626", fontSize: 10, lineHeight: 1.4 }}>{replyError}</p>}
+                </form>
+              )}
+            </div>
           )}
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px 13px", borderTop: "1px solid #f1f5f9", background: "#fbfdfc" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 11px 9px", borderTop: "1px solid #f1f5f9", background: "#fbfdfc" }}>
             <button type="button" onClick={openNotification}
-              style={{ flex: 1, minHeight: 37, display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 7, padding: "9px 12px", border: 0, borderRadius: 11, background: "#059669", color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 10px rgba(5,150,105,.16)" }}>
+              style={{ flex: 1, minHeight: 32, display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 7, padding: "9px 12px", border: 0, borderRadius: 11, background: "#059669", color: "#fff", fontSize: 11, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 10px rgba(5,150,105,.16)" }}>
               {conversationId ? <MessageCircle size={15}/> : <BellRing size={15}/>}
               {actionLabel} <ArrowUpRight size={14}/>
             </button>
             <span style={{ color: "#94a3b8", fontSize: 10, display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}><Check size={12}/> Clears when opened</span>
           </div>
-          {unreadCount > 1 && <div style={{ padding: "0 16px 10px", color: "#94a3b8", fontSize: 10 }}>{unreadCount} unread notifications in your inbox</div>}
+          {unreadCount > 1 && <div style={{ padding: "0 11px 8px", color: "#94a3b8", fontSize: 9 }}>{unreadCount} unread notifications in your inbox</div>}
         </div>
       </section>
     </>
