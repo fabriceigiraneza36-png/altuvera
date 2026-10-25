@@ -8,7 +8,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   MessageSquare, UsersRound, Send, Smile, X, CornerUpLeft,
   Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen,
-  ChevronDown, Circle, MoreHorizontal, Edit3, Pin, Highlighter, Undo2, Search, MapPin,
+  ChevronDown, Circle, MoreHorizontal, Edit3, Pin, Highlighter, Undo2, Search, MapPin, FileText,
 } from "lucide-react";
 import ChatPreferencesPanel from "../../components/auth/ChatPreferencesPanel";
 import ItineraryDownloadButton from "../../components/auth/ItineraryDownloadButton";
@@ -1194,7 +1194,9 @@ export default function Messages() {
     // Users with groups see the chooser so they can pick either private channel
     // or any group they are actually a member of.
     if (hasGroupConversation) {
-      if (activeId) openConversation(null);
+      // Do not clear an active conversation here: this effect also runs after
+      // every click. With groups present, the inbox chooser is the initial view;
+      // once a thread is selected, keep it open.
       return;
     }
     if (!activeId) {
