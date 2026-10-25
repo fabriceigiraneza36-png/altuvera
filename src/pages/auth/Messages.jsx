@@ -1207,8 +1207,19 @@ export default function Messages() {
       return;
     }
     if (!activeId) {
-      const personal = conversations.find(item => item.conversationType === "personal" || item.channel === "personal_support");
-      if (personal) openConversation(personal.id);
+      // Prefer the dedicated personal channel, then booking support, but never
+      // leave a traveller staring at an empty chat pane just because an older
+      // conversation has the legacy "direct" type or no channel metadata.
+      const preferred = conversations.find(item =>
+        item.conversationType === "personal" || item.channel === "personal_support"
+      ) || conversations.find(item =>
+        item.conversationType === "resource_support" || item.channel === "booking_support"
+      );
+      const fallback = conversations.find(item =>
+        item.conversationType !== "group" && !item.groupId
+      );
+      const firstPrivate = preferred || fallback;
+      if (firstPrivate?.id != null) openConversation(firstPrivate.id);
     }
   }, [requestedConversationId, conversations, activeId, openConversation, loading]);
 
