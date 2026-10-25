@@ -645,6 +645,11 @@ const MsgBubble = React.memo(function MsgBubble({
 
         {replyTo && (
           <div className={`text-[11px] mb-1.5 max-w-full ${mine ? "self-end" : "self-start"}`}>
+            {message.senderType === "admin" && replyTo.senderType === "admin" && (
+              <span className="mb-1 block text-[10px] font-semibold text-emerald-700">
+                Admin replied to himself
+              </span>
+            )}
             <div className={`border-l-2 pl-2 py-0.5 pr-3 rounded-lg truncate max-w-[280px] ${mine ? "border-emerald-300 bg-emerald-700/15 text-emerald-100" : "border-slate-300 bg-slate-100/80 text-slate-500"}`}>
               <span className="font-semibold block text-[10px] mb-0.5 opacity-70">↩ {replyTo.senderType==="admin" ? "Altuvera" : (replyTo.senderName||"You")}</span>
               <span className="block truncate">{(replyTo.body||"").slice(0,60)}</span>
