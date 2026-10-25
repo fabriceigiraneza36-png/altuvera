@@ -1101,7 +1101,9 @@ export default function Messages() {
     const shouldChooseConversation = hasGroupConversation || conversations.length > 1;
 
     if (shouldChooseConversation) {
-      // Do not silently select a group or replace a thread the user has chosen.
+      // Group members always land on the conversation chooser unless they
+      // followed a notification/deep link to a specific thread.
+      if (activeId) openConversation(null);
       return;
     }
 
