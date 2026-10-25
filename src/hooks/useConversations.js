@@ -194,7 +194,8 @@ export function useConversations() {
     setError("");
     try {
       const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100&status=all`, { forceRefresh: true });
-      setConversations((data.data || []).map(normConv));
+      const rows = Array.isArray(data.data) ? data.data : Array.isArray(data.data?.conversations) ? data.data.conversations : Array.isArray(data.conversations) ? data.conversations : [];
+      setConversations(rows.map(normConv));
     } catch (err) {
       setError(err.message || "Failed to load conversations.");
     } finally {
@@ -492,11 +493,24 @@ export function useConversations() {
       }
       // Ignore an older request if the user has already opened another chat.
       if (requestId !== openRequestRef.current || String(activeIdRef.current) !== String(id)) return;
-      if (!payload.data) throw new Error("This conversation is no longer available.");
-      const conv = normConv(payload.data);
+      // Accept both API envelope shapes used by older and newer backend builds.
+      // Some responses wrap the thread under data.conversation and return messages
+      // alongside it; others return the conversation (including messages) directly.
+      const thread = payload.data?.conversation || payload.data;
+      if (!thread || typeof thread !== "object") {
+        throw new Error("This conversation is no longer available. Refresh your inbox and try again.");
+      }
+      const threadMessages = Array.isArray(payload.data?.messages)
+        ? payload.data.messages
+        : Array.isArray(thread.messages)
+          ? thread.messages
+          : Array.isArray(payload.messages)
+            ? payload.messages
+            : [];
+      const conv = normConv(thread);
       setActiveConversation(conv);
-      setMessages((payload.data.messages || []).map(normMsg));
-      setHasMoreMessages(Boolean(payload.data.hasMoreMessages));
+      setMessages(threadMessages.map(normMsg));
+      setHasMoreMessages(Boolean(payload.data?.hasMoreMessages ?? thread.hasMoreMessages ?? payload.hasMoreMessages));
 
       authFetch(`${API_BASE}/messages/conversations/${encodeURIComponent(id)}/read`, {
         method: "PATCH",
