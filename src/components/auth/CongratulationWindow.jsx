@@ -505,7 +505,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                 {/* ── Body ──────────────────────────────────────────── */}
                 <div className="cg-body" style={S.body}>
 
-                  {type === "signup" && showSecurityPrompt ? (
+                  {(type === "signup" || type === "login") && showSecurityPrompt ? (
                     <div style={{ textAlign: "center", padding: "8px 0 12px" }}>
                       <div style={{ width: 62, height: 62, margin: "0 auto 16px", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "#047857", background: "#ecfdf5" }}>
                         <ShieldCheck size={30} />
