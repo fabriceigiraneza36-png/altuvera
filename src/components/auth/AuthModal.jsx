@@ -737,7 +737,12 @@ export default function AuthModal() {
   }, [pendingVerification?.email, pendingVerification?.expiresAt]);
 
   useEffect(() => {
-    if (isVerify && codeExpired && pendingVerification) clearPendingVerification();
+    if (
+      isVerify &&
+      codeExpired &&
+      pendingVerification &&
+      Number(pendingVerification.expiresAt) <= Date.now()
+    ) clearPendingVerification();
   }, [isVerify, codeExpired, pendingVerification, clearPendingVerification]);
   const emailOk       = EMAIL_RE.test(form.email.trim());
   const nameOk        = form.fullName.trim().length >= 2;
