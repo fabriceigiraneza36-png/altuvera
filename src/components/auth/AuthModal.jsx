@@ -652,6 +652,14 @@ export default function AuthModal() {
     keepSignedIn: restoredSignupDraft?.data?.keepSignedIn ?? persistSession,
   }));
   const [pendingPromptDismissed, setPendingPromptDismissed] = useState(false);
+  const [pendingClockNow, setPendingClockNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!pendingVerification?.expiresAt) return undefined;
+    setPendingClockNow(Date.now());
+    const timer = window.setInterval(() => setPendingClockNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [pendingVerification?.expiresAt]);
 
   const [signUpStep,      setSignUpStep]      = useState(1);
   const [agreeTerms,      setAgreeTerms]      = useState(false);
@@ -1396,7 +1404,7 @@ export default function AuthModal() {
   /* ── Guard ── */
   if (!isModalOpen) {
     if (!pendingVerification?.email || pendingPromptDismissed) return null;
-    const remainingSeconds = Math.max(0, Math.ceil((pendingVerification.expiresAt - Date.now()) / 1000));
+    const remainingSeconds = Math.max(0, Math.ceil((pendingVerification.expiresAt - pendingClockNow) / 1000));
     return (
       <div className="fixed z-[10050] bottom-3 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 sm:w-[min(92vw,390px)] am-viewIn" role="status" aria-live="polite">
         <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-white p-4 shadow-2xl shadow-emerald-950/15">
