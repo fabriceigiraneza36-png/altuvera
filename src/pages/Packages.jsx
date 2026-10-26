@@ -227,7 +227,7 @@ const PKG_CSS = `
 .pk-poster-wish { position:absolute; top:12px; right:12px; width:40px; height:40px; border:1px solid rgba(255,255,255,.8); border-radius:50%; display:grid; place-items:center; color:#334155; background:rgba(255,255,255,.95); cursor:pointer; }
 .pk-poster-wish.is-wish { color:#e11d48; }
 @keyframes pkCardIn { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:translateY(0) } }
-.pk-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(16px,2.2vw,28px); align-items:stretch; }
+.pk-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(18px,2.4vw,30px); align-items:stretch; width:100%; }
 .pk-card { min-width:0; height:100%; border-radius:24px; border:1px solid #dcefe6; box-shadow:0 8px 26px rgba(2,44,34,.07); }
 .pk-card-media { position:relative; height:clamp(190px,20vw,260px); overflow:hidden; background:#064e3b; isolation:isolate; }
 .pk-card-media-link { display:block; position:absolute; inset:0; overflow:hidden; }
@@ -263,7 +263,7 @@ const PKG_CSS = `
 .pk-card-category-inline { color:#047857; background:#ecfdf5; border:1px solid #d1fae5; padding:6px 10px; border-radius:999px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
 .pk-list-body .pk-card-wish { position:static; flex-shrink:0; border-color:#e2e8f0; }
 .pk-list-body .pk-card-description { -webkit-line-clamp:4; min-height:0; }
-@media(max-width:1050px) { .pk-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:1180px) { .pk-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:640px) {
  .pk-grid { grid-template-columns:minmax(0,1fr)!important; gap:18px; }
  .pk-card { border-radius:20px; }
@@ -1477,7 +1477,7 @@ return (
                     style={view === 'grid'
                       ? {
                           display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))',
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))',
                           gap: 'clamp(14px,2vw,24px)',
                         }
                       : { display: 'flex', flexDirection: 'column', gap: 20 }
