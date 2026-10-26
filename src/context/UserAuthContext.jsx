@@ -68,6 +68,35 @@ const KEYS = {
   LOGIN_COUNTER:        "altuvera_login_counter",
   LAST_LOGOUT:          "altuvera_last_logout",
   WELCOME_SHOWN_PREFIX: "altuvera_welcome_shown:",
+  PENDING_VERIFICATION: "altuvera_pending_email_verification_v1",
+};
+
+const PENDING_VERIFICATION_TTL_MS = 10 * 60 * 1000;
+
+const readPendingVerification = () => {
+  try {
+    const raw = sessionStorage.getItem(KEYS.PENDING_VERIFICATION);
+    if (!raw) return null;
+    const pending = JSON.parse(raw);
+    const expiresAt = Number(pending?.expiresAt);
+    if (!pending?.email || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      sessionStorage.removeItem(KEYS.PENDING_VERIFICATION);
+      return null;
+    }
+    return { ...pending, email: String(pending.email).trim(), expiresAt };
+  } catch { return null; }
+};
+
+const writePendingVerification = (pending) => {
+  try { sessionStorage.setItem(KEYS.PENDING_VERIFICATION, JSON.stringify(pending)); }
+  catch { /* current-session verification still works if storage is unavailable */ }
+};
+
+const clearStoredPendingVerification = () => {
+  try {
+    sessionStorage.removeItem(KEYS.PENDING_VERIFICATION);
+    sessionStorage.removeItem("altuvera_signup_draft_v1");
+  } catch { /* storage unavailable */ }
 };
 
 // ============================================================================
@@ -496,7 +525,8 @@ export function UserAuthProvider({ children }) {
   // ── Modal ─────────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen]   = useState(false);
   const [modalView,   setModalView]     = useState("login");
-  const [pendingEmail, setPendingEmail] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(() => readPendingVerification());
+  const [pendingEmail, setPendingEmail] = useState(() => readPendingVerification()?.email || "");
   const [pendingFactorChallenge, setPendingFactorChallenge] = useState("");
   const [pendingFactorMethods, setPendingFactorMethods] = useState([]);
 
@@ -528,6 +558,7 @@ export function UserAuthProvider({ children }) {
   const profileCacheRef = useRef(null);
   const congratTimerRef = useRef(null);
   const notLoggedInRef  = useRef(null);
+  const otpRestoreAttemptedRef = useRef(false);
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const isAuthenticated  = useMemo(() => !!user && !!token, [user, token]);
@@ -551,6 +582,48 @@ export function UserAuthProvider({ children }) {
   }, []);
 
   const getCache = useCallback(() => profileCacheRef.current ?? {}, []);
+
+  const persistPendingVerification = useCallback((email, details = {}) => {
+    const normalizedEmail = trim(email);
+    if (!normalizedEmail) return null;
+    const now = Date.now();
+    const previous = readPendingVerification();
+    const requestedExpiry = Number(details.expiresAt);
+    const next = {
+      ...(previous || {}),
+      ...details,
+      email: normalizedEmail,
+      createdAt: now,
+      expiresAt: Number.isFinite(requestedExpiry) && requestedExpiry > now
+        ? requestedExpiry : now + PENDING_VERIFICATION_TTL_MS,
+    };
+    writePendingVerification(next);
+    setPendingVerification(next);
+    setPendingEmail(normalizedEmail);
+    return next;
+  }, []);
+
+  const clearPendingVerification = useCallback(() => {
+    clearStoredPendingVerification();
+    setPendingVerification(null);
+    setPendingEmail("");
+  }, []);
+
+  // Restore a still-valid email-code flow after refresh/OAuth navigation.
+  // This one-shot check avoids reopening the modal immediately after a user closes it.
+  useEffect(() => {
+    if (authLoading || otpRestoreAttemptedRef.current) return;
+    otpRestoreAttemptedRef.current = true;
+    const saved = readPendingVerification();
+    if (!saved) return;
+    setPendingVerification(saved);
+    setPendingEmail(saved.email);
+    if (!isAuthenticated) {
+      setModalView("verify");
+      setIsModalOpen(true);
+      document.body.style.overflow = "hidden";
+    }
+  }, [authLoading, isAuthenticated]);
 
   // ── Sync loginCounter to storage whenever it changes ─────────────────────
   useEffect(() => { store.setLoginCounter(loginCounter); }, [loginCounter]);
@@ -701,8 +774,10 @@ export function UserAuthProvider({ children }) {
   }, []);
 
   const closeModal = useCallback(() => {
+    const savedVerification = readPendingVerification();
+    setPendingVerification(savedVerification);
     setIsModalOpen(false);
-    setPendingEmail("");
+    setPendingEmail(savedVerification?.email || "");
     setSocialAuthError("");
     setGoogleUser(null);
     store.remove(KEYS.GOOGLE_PENDING);
@@ -903,12 +978,14 @@ export function UserAuthProvider({ children }) {
       pendingRef.current = { ...pendingRef.current, fullName: returnedName };
     }
 
-    setPendingEmail(email);
+    persistPendingVerification(email, {
+      fullName: trim(returnedName || p.fullName), purpose: "login", provider: "email",
+    });
     setRequiresLoginVerification(false);
     setModalView("verify");
 
     return data;
-  }, [authFetch, setSessionPreference]);
+  }, [authFetch, persistPendingVerification, setSessionPreference]);
 
   const register = useCallback(async (payload) => {
     const p     = typeof payload === "object" ? payload : { email: payload };
@@ -936,11 +1013,13 @@ export function UserAuthProvider({ children }) {
       throw new Error(err?.message || "Failed to send verification code.");
     });
 
-    setPendingEmail(email);
+    persistPendingVerification(email, {
+      fullName: trim(p.fullName), purpose: "signup", provider: "email",
+    });
     setModalView("verify");
 
     return data;
-  }, [authFetch, setSessionPreference]);
+  }, [authFetch, persistPendingVerification, setSessionPreference]);
 
   // ============================================================================
   // Verify Code
@@ -962,6 +1041,7 @@ export function UserAuthProvider({ children }) {
     });
 
     if (data?.requiresSecondFactor || data?.data?.requiresSecondFactor) {
+      clearPendingVerification();
       const challenge = data.challengeToken || data.data?.challengeToken;
       if (!challenge) throw new Error("The additional verification challenge was missing. Please sign in again.");
       setPendingFactorChallenge(challenge);
@@ -987,7 +1067,7 @@ export function UserAuthProvider({ children }) {
       store.setLoginCounter(newCounter);
       setRequiresLoginVerification(false);
       setPendingSocialAuth(null);
-      setPendingEmail("");
+      clearPendingVerification();
       closeModal();
       triggerCongratulation(
         data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
@@ -996,7 +1076,7 @@ export function UserAuthProvider({ children }) {
     }
 
     saveAuth(data, { persist: persistSession });
-    setPendingEmail("");
+    clearPendingVerification();
     setLoginCounter(newCounter);
     store.setLoginCounter(newCounter);
     closeModal();
@@ -1005,7 +1085,7 @@ export function UserAuthProvider({ children }) {
     );
     return data;
   }, [
-    authFetch, closeModal, pendingEmail, pendingSocialAuth,
+    authFetch, clearPendingVerification, closeModal, pendingEmail, pendingSocialAuth,
     persistSession, requiresLoginVerification, saveAuth, triggerCongratulation,
   ]);
 
@@ -1082,9 +1162,15 @@ export function UserAuthProvider({ children }) {
     if (returnedName && pendingRef.current) {
       pendingRef.current = { ...pendingRef.current, fullName: returnedName };
     }
+    const previous = readPendingVerification();
+    persistPendingVerification(e, {
+      purpose: previous?.purpose || "login",
+      provider: previous?.provider || "email",
+      fullName: returnedName || pendingRef.current?.fullName || "",
+    });
 
     return data;
-  }, [authFetch, pendingEmail]);
+  }, [authFetch, pendingEmail, persistPendingVerification]);
 
   const checkEmail = useCallback(async (email) => {
     const e = trim(email);
@@ -1510,7 +1596,9 @@ export function UserAuthProvider({ children }) {
       });
 
       if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
-        setPendingEmail(data?.data?.email || "");
+        persistPendingVerification(data?.data?.email || "", {
+          fullName: data?.data?.fullName || "", purpose: "login", provider: "github",
+        });
         openModal("verify", { skipNotLoggedInMessage: true });
         return { requiresVerification: true, email: data?.data?.email || "" };
       }
@@ -1530,7 +1618,7 @@ export function UserAuthProvider({ children }) {
         errData?.requiresReVerification
       ) {
         const revEmail = errData.email || "";
-        setPendingEmail(revEmail);
+        persistPendingVerification(revEmail, { purpose: "reverification", provider: "github" });
         setSocialAuthError("");
         setRequiresLoginVerification(true);
         setModalView("verify");
@@ -1543,7 +1631,7 @@ export function UserAuthProvider({ children }) {
     } finally {
       setGithubLoading(false);
     }
-  }, [authFetch, closeModal, openModal, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, clearPendingVerification, closeModal, openModal, persistPendingVerification, persistSession, saveAuth, triggerCongratulation]);
 
   const startGithubAuth = useCallback((mode = "signin") => {
     if (!GITHUB_CLIENT_ID) {
@@ -1774,8 +1862,8 @@ export function UserAuthProvider({ children }) {
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, socialAuthError, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
-    requiresLoginVerification, dismissCongratulation,
-    openModal, closeModal, setModalView,
+    requiresLoginVerification, dismissCongratulation, pendingVerification,
+    openModal, closeModal, setModalView, persistPendingVerification, clearPendingVerification,
     login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
