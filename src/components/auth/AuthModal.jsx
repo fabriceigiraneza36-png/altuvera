@@ -95,7 +95,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_BIO = 300;
 const MAX_FILE = 10 * 1024 * 1024;
 const CODE_TTL_LOGIN_REGISTER = 10 * 60;
-const CODE_TTL_RESEND = 15 * 60;
+const CODE_TTL_RESEND = 10 * 60;
+const SIGNUP_DRAFT_KEY = "altuvera_signup_draft_v1";
+const SIGNUP_DRAFT_TTL_MS = 10 * 60 * 1000;
 
 const API_BASE = API_URL;
 
@@ -137,6 +139,51 @@ const TRAVEL_STYLES = [
    UTILITIES
 ═══════════════════════════════════════════════════════════════ */
 const emptyCode = () => ["", "", "", "", "", ""];
+
+const readSignupDraft = () => {
+  try {
+    const raw = sessionStorage.getItem(SIGNUP_DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw);
+    const expiresAt = Number(draft?.expiresAt);
+    if (!draft?.data || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
+      return null;
+    }
+    const data = draft.data;
+    return {
+      expiresAt,
+      data: {
+        email: String(data.email || ""),
+        fullName: String(data.fullName || ""),
+        phone: String(data.phone || ""),
+        bio: String(data.bio || ""),
+        role: String(data.role || "user"),
+        keepSignedIn: data.keepSignedIn !== false,
+        avatarPreview: /^https?:\/\//i.test(data.avatarPreview || "") ? data.avatarPreview : "",
+        dateOfBirth: String(data.dateOfBirth || ""),
+        nationality: String(data.nationality || ""),
+        residenceCountry: String(data.residenceCountry || ""),
+        preferredLanguage: String(data.preferredLanguage || ""),
+        profession: String(data.profession || ""),
+        travelStyles: Array.isArray(data.travelStyles) ? data.travelStyles.filter((v) => typeof v === "string").slice(0, 16) : [],
+      },
+    };
+  } catch { return null; }
+};
+
+const persistSignupDraft = (form, expiresAt) => {
+  const safeAvatar = /^https?:\/\//i.test(form.avatarPreview || "") ? form.avatarPreview : "";
+  const data = {
+    email: form.email || "", fullName: form.fullName || "", phone: form.phone || "",
+    bio: form.bio || "", role: form.role || "user", keepSignedIn: Boolean(form.keepSignedIn),
+    avatarPreview: safeAvatar, dateOfBirth: form.dateOfBirth || "", nationality: form.nationality || "",
+    residenceCountry: form.residenceCountry || "", preferredLanguage: form.preferredLanguage || "",
+    profession: form.profession || "", travelStyles: Array.isArray(form.travelStyles) ? form.travelStyles.slice(0, 16) : [],
+  };
+  try { sessionStorage.setItem(SIGNUP_DRAFT_KEY, JSON.stringify({ expiresAt, data })); }
+  catch { /* form continues to work in memory if browser storage is unavailable */ }
+};
 
 const getInitials = (v = "") =>
   v.trim().split(/\s+/).filter(Boolean).slice(0, 2)
@@ -577,9 +624,9 @@ const SocialButtons = ({
 ═══════════════════════════════════════════════════════════════ */
 export default function AuthModal() {
   const {
-    isModalOpen, modalView, setModalView, closeModal,
+    isModalOpen, modalView, setModalView, closeModal, openModal,
     login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode,
-    pendingEmail, pendingFactorMethods, persistSession, setSessionPreference,
+    pendingEmail, pendingVerification, clearPendingVerification, pendingFactorMethods, persistSession, setSessionPreference, updateProfile,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, promptGoogleAuth, startGithubAuth,
     completeGoogleSignUp, clearGooglePending,
@@ -591,14 +638,20 @@ export default function AuthModal() {
   useAuthStats();
 
   /* ── Form state ── */
-  const [form, setForm] = useState({
+  const [restoredSignupDraft] = useState(() => readSignupDraft());
+  const signupDraftExpiresAtRef = useRef(restoredSignupDraft?.expiresAt || (Date.now() + SIGNUP_DRAFT_TTL_MS));
+  const [form, setForm] = useState(() => ({
     email: "", fullName: "", phone: "", bio: "",
     role: "user", keepSignedIn: persistSession,
     avatarFile: null, avatarPreview: "",
     dateOfBirth: "", nationality: "",
     residenceCountry: "", preferredLanguage: "",
     profession: "", travelStyles: [],
-  });
+    ...(restoredSignupDraft?.data || {}),
+    avatarFile: null,
+    keepSignedIn: restoredSignupDraft?.data?.keepSignedIn ?? persistSession,
+  }));
+  const [pendingPromptDismissed, setPendingPromptDismissed] = useState(false);
 
   const [signUpStep,      setSignUpStep]      = useState(1);
   const [agreeTerms,      setAgreeTerms]      = useState(false);
@@ -655,6 +708,29 @@ export default function AuthModal() {
   const isFactor   = modalView === "factor";
 
   const activeEmail   = (pendingEmail || form.email || googleUser?.email || "").trim();
+
+  useEffect(() => {
+    if (!pendingVerification?.email) return;
+    setForm((previous) => ({
+      ...previous,
+      email: previous.email || pendingVerification.email,
+      fullName: previous.fullName || pendingVerification.fullName || "",
+    }));
+  }, [pendingVerification?.email, pendingVerification?.fullName]);
+
+  useEffect(() => {
+    if (modalView !== "register" || !form.email.trim()) return;
+    const expiresAt = signupDraftExpiresAtRef.current;
+    if (expiresAt > Date.now()) persistSignupDraft(form, expiresAt);
+  }, [form, modalView]);
+
+  useEffect(() => {
+    setPendingPromptDismissed(false);
+  }, [pendingVerification?.email, pendingVerification?.expiresAt]);
+
+  useEffect(() => {
+    if (isVerify && codeExpired && pendingVerification) clearPendingVerification();
+  }, [isVerify, codeExpired, pendingVerification, clearPendingVerification]);
   const emailOk       = EMAIL_RE.test(form.email.trim());
   const nameOk        = form.fullName.trim().length >= 2;
   const bioOk         = form.bio.trim().length <= MAX_BIO;
@@ -868,6 +944,21 @@ export default function AuthModal() {
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [closeModal, isModalOpen, professionOpen]);
+
+  useEffect(() => {
+    if (!isModalOpen || !isVerify || !pendingVerification?.expiresAt) return undefined;
+    const remaining = Math.max(0, Math.ceil((pendingVerification.expiresAt - Date.now()) / 1000));
+    if (remaining <= 0) {
+      setCodeExpired(true);
+      setError("This verification code has expired. Request a new code to continue.");
+      return undefined;
+    }
+    startExpiryCountdown(remaining);
+    return () => {
+      if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
+      expiryTimerRef.current = null;
+    };
+  }, [isModalOpen, isVerify, pendingVerification?.expiresAt, startExpiryCountdown]);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -1146,7 +1237,7 @@ export default function AuthModal() {
       setForgotResendTimer(60);
       setForgotCode(emptyCode());
       setForgotCodeState("");
-      setSuccess(`New code sent to ${forgotEmail}. Valid for 15 min.`);
+      setSuccess(`New code sent to ${forgotEmail}. Valid for 10 min.`);
       forgotCodeRefs.current[0]?.focus();
     } catch (err) {
       setError(formatAuthError(err, "Unable to resend the code."));
@@ -1197,6 +1288,9 @@ export default function AuthModal() {
       setLoading(true); setError(""); setSuccess("");
       setVerifySource("register"); setSessionPreference(form.keepSignedIn);
       const avatar = await resolveAvatar();
+      const draftExpiry = Date.now() + SIGNUP_DRAFT_TTL_MS;
+      signupDraftExpiresAtRef.current = draftExpiry;
+      persistSignupDraft({ ...form, avatarPreview: avatar || form.avatarPreview }, draftExpiry);
       if (authMethod === "google") {
         await completeGoogleSignUp({
           fullName: form.fullName.trim(),
@@ -1217,6 +1311,14 @@ export default function AuthModal() {
           email: form.email.trim(), fullName: form.fullName.trim(),
           phone: form.phone.trim(), bio: form.bio.trim(),
           role: form.role, avatar, persistSession: form.keepSignedIn,
+          preferences: {
+            dateOfBirth: form.dateOfBirth,
+            nationality: form.nationality,
+            residenceCountry: form.residenceCountry,
+            preferredLanguage: form.preferredLanguage,
+            profession: form.profession,
+            travelStyles: form.travelStyles,
+          },
         });
         startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
         setSuccess("Verification code sent.");
@@ -1280,7 +1382,7 @@ export default function AuthModal() {
       await resendCode(activeEmail);
       startExpiryCountdown(CODE_TTL_RESEND);
       setResendTimer(60); setCode(emptyCode()); setCodeState("");
-      setSuccess(`New code sent to ${activeEmail}. Valid for 15 min.`);
+      setSuccess(`New code sent to ${activeEmail}. Valid for 10 min.`);
       codeRefs.current[0]?.focus();
     } catch (err) { setError(formatAuthError(err, "Unable to resend.")); }
     finally { setLoading(false); }
@@ -1292,7 +1394,29 @@ export default function AuthModal() {
   }, [setModalView, stopExpiryCountdown, verifySource]);
 
   /* ── Guard ── */
-  if (!isModalOpen) return null;
+  if (!isModalOpen) {
+    if (!pendingVerification?.email || pendingPromptDismissed) return null;
+    const remainingSeconds = Math.max(0, Math.ceil((pendingVerification.expiresAt - Date.now()) / 1000));
+    return (
+      <div className="fixed z-[10050] bottom-3 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 sm:w-[min(92vw,390px)] am-viewIn" role="status" aria-live="polite">
+        <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-white p-4 shadow-2xl shadow-emerald-950/15">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-600 via-emerald-400 to-teal-300" />
+          <div className="flex items-start gap-3 pt-1">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><HiMail className="h-5 w-5" /></div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-gray-900">Email verification is waiting</p>
+              <p className="mt-1 break-all text-xs text-gray-500">{pendingVerification.email}</p>
+              <p className="mt-1 text-xs text-emerald-700">{remainingSeconds > 0 ? `Your code remains valid for ${formatExpiry(remainingSeconds)}.` : "Your code has expired. Request a new one."}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button type="button" disabled={remainingSeconds <= 0} onClick={() => openModal("verify", { skipNotLoggedInMessage: true })} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"><HiShieldCheck className="h-4 w-4" /> Continue verification</button>
+                <button type="button" onClick={() => setPendingPromptDismissed(true)} className="min-h-10 rounded-xl px-3 py-2 text-xs font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-800">Not now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   /* ── Step labels ── */
   const STEP_LABELS    = ["Method",               "Profile",              "Details",                          "Confirm"];
