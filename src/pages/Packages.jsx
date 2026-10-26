@@ -962,7 +962,7 @@ function FilterPanel(props) {
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#022c22' }}>Filters</span>
               </div>
 <button
-                   onClick={handleReset}
+                   onClick={props.onReset}
                    style={{
                      padding: '8px 18px', borderRadius: 999, border: 'none',
                      background: '#fef2f2', color: '#dc2626', fontSize: 13,
