@@ -130,7 +130,7 @@ export function useConversations() {
   const [messages,           setMessages]           = useState([]);
   const [activeId,           setActiveId]           = useState(null);
   const [activeConversation, setActiveConversation] = useState(null);
-  const [loading,            setLoading]            = useState(false);
+  const [loading,            setLoading]            = useState(true);
   const [loadingMsgs,        setLoadingMsgs]        = useState(false);
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
@@ -194,7 +194,16 @@ export function useConversations() {
     setError("");
     try {
       const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100&status=all`, { forceRefresh: true });
-      const rows = Array.isArray(data.data) ? data.data : Array.isArray(data.data?.conversations) ? data.data.conversations : Array.isArray(data.conversations) ? data.conversations : [];
+      if (data?.success === false) throw new Error(data.message || "The server could not load your conversations.");
+      const rows = Array.isArray(data?.data) ? data.data
+        : Array.isArray(data?.data?.conversations) ? data.data.conversations
+        : Array.isArray(data?.data?.rows) ? data.data.rows
+        : Array.isArray(data?.data?.items) ? data.data.items
+        : Array.isArray(data?.conversations) ? data.conversations
+        : Array.isArray(data?.items) ? data.items
+        : Array.isArray(data?.results) ? data.results
+        : null;
+      if (!rows) throw new Error("The inbox response was unexpected. Please refresh to try again.");
       setConversations(rows.map(normConv));
     } catch (err) {
       setError(err.message || "Failed to load conversations.");
