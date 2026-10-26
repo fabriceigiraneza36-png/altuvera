@@ -217,7 +217,7 @@ ${body}
                     Follow us on social media
                   </p>
                   <div style="margin-bottom: 16px;">
-                    <a href="#" style="display: inline-block; margin: 0 6px; color: #ffffff; text-decoration: none;">Facebook</a>
+                    <a href="https://www.facebook.com/profile.php?id=61591972225527&sfnsn=mo&mibextid=RUbZ1f" style="display: inline-block; margin: 0 6px; color: #ffffff; text-decoration: none;">Facebook</a>
                     <a href="#" style="display: inline-block; margin: 0 6px; color: #ffffff; text-decoration: none;">Instagram</a>
                     <a href="#" style="display: inline-block; margin: 0 6px; color: #ffffff; text-decoration: none;">Twitter</a>
                   </div>
