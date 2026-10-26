@@ -8,7 +8,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import {
   MessageSquare, UsersRound, Send, Smile, X, CornerUpLeft,
-  Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen,
+  Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen, Copy,
   ChevronDown, Circle, MoreHorizontal, Edit3, Pin, Highlighter, Undo2, Search, MapPin, FileText,
 } from "lucide-react";
 import ChatPreferencesPanel from "../../components/auth/ChatPreferencesPanel";
@@ -822,9 +822,15 @@ const MsgBubble = React.memo(function MsgBubble({
       const roomBelow = window.innerHeight - rect.bottom;
       const roomAbove = rect.top;
       const isMobile = window.matchMedia("(max-width: 767px)").matches;
-      const placeAbove = !isMobile && roomBelow < Math.min(height, 260) + gap && roomAbove > roomBelow;
+      const availableHeight = Math.max(120, window.innerHeight - margin * 2);
+      const effectiveHeight = Math.min(height, availableHeight);
+      const placeAbove = isMobile
+        ? roomBelow < effectiveHeight + 8 && roomAbove > roomBelow
+        : roomBelow < Math.min(height, 260) + gap && roomAbove > roomBelow;
       const top = isMobile
-        ? Math.max(margin, Math.min(window.innerHeight - Math.min(height, window.innerHeight - margin * 2) - margin, rect.bottom + 8))
+        ? (placeAbove
+          ? Math.max(margin, rect.top - effectiveHeight - 8)
+          : Math.min(window.innerHeight - effectiveHeight - margin, rect.bottom + 8))
         : placeAbove
           ? Math.max(margin, rect.top - height - gap)
           : Math.min(window.innerHeight - height - margin, rect.bottom + gap);
@@ -857,6 +863,21 @@ const MsgBubble = React.memo(function MsgBubble({
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, [menuOpen]);
+
+  const copyMessage = async () => {
+    const text = String(message.body || "");
+    try {
+      if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+      else {
+        const field = document.createElement("textarea");
+        field.value = text;
+        field.style.position = "fixed"; field.style.opacity = "0";
+        document.body.appendChild(field); field.select();
+        document.execCommand("copy"); field.remove();
+      }
+    } catch (error) { console.warn("Could not copy message", error); }
+    setMenuOpen(false);
+  };
 
   const clearLongPress = () => {
     if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
@@ -924,8 +945,8 @@ const MsgBubble = React.memo(function MsgBubble({
               </div>
             </div>
           ) : (
-            <div className={`px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap rounded-2xl shadow-sm select-text ${mine ? "bg-emerald-600 text-white rounded-br-sm" : "bg-white text-slate-800 border border-slate-200/80 rounded-bl-sm"} ${isPending ? "opacity-60" : ""} ${isDeleted ? "italic opacity-60" : ""}`}
-              style={{ wordBreak:"break-word", maxWidth:"100%" }}>
+            <div className={`msg-message-text px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap rounded-2xl shadow-sm select-none ${mine ? "bg-emerald-600 text-white rounded-br-sm" : "bg-white text-slate-800 border border-slate-200/80 rounded-bl-sm"} ${isPending ? "opacity-60" : ""} ${isDeleted ? "italic opacity-60" : ""}`}
+              style={{ wordBreak:"break-word", maxWidth:"100%", WebkitUserSelect:"none", userSelect:"none", WebkitTouchCallout:"none" }}>
               {!isDeleted && destinationName && (
                 <span className={`mb-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${mine ? "bg-white/15 text-white" : "bg-emerald-50 text-emerald-700"}`}>
                   <MapPin size={12}/> Destination · {destinationName}
@@ -966,6 +987,7 @@ const MsgBubble = React.memo(function MsgBubble({
               </button>
               {menuOpen && (
                 <div ref={actionMenuRef} style={{ position: "fixed", top: menuPosition?.top ?? 0, left: menuPosition?.left ?? 10, width: menuPosition?.width ?? "min(13rem, calc(100vw - 20px))", maxHeight: menuPosition?.maxHeight ?? "calc(100dvh - 20px)", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", visibility: menuPosition ? "visible" : "hidden" }} className="z-[140] rounded-2xl border border-slate-200 bg-white shadow-2xl p-1.5">
+                  <button type="button" onClick={copyMessage} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><Copy size={17}/> Copy message</button>
                   <button type="button" onClick={()=>{setMenuOpen(false);setReactionPickerOpen(true)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><Smile size={17}/> React</button>
                   <button type="button" onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><CornerUpLeft size={17}/> Reply</button>
                   {mine && <>
