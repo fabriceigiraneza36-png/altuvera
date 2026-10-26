@@ -3,6 +3,7 @@ import EmojiPickerNative from "emoji-picker-react";
 import React, {
   useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect,
 } from "react";
+import { createPortal } from "react-dom";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
@@ -829,20 +830,20 @@ const MsgBubble = React.memo(function MsgBubble({
       // Measure natural menu height, then use the side with more room if neither side fits.
       const naturalHeight = menu.scrollHeight || menu.offsetHeight || 240;
       const preferAbove = roomBelow < Math.min(naturalHeight, 220) && roomAbove > roomBelow;
-      const placeAbove = isMobile ? preferAbove
+      const placeAbove = isMobile ? false
         : (window.innerHeight - rect.bottom < Math.min(naturalHeight, 260) + gap && roomAbove > window.innerHeight - rect.bottom);
-      const sideSpace = isMobile ? (placeAbove ? roomAbove : roomBelow) : availableHeight;
-      const maxHeight = isMobile
-        ? Math.max(80, Math.min(availableHeight, sideSpace || Math.max(roomAbove, roomBelow)))
-        : availableHeight;
-      const effectiveHeight = Math.min(naturalHeight, maxHeight);
+      // On mobile the action sheet must always float immediately BELOW its own bubble.
+      // Portal rendering removes ancestor stacking/overflow contexts; the menu itself
+      // scrolls when the composer or viewport limits the available room.
       const top = isMobile
-        ? (placeAbove
-          ? Math.max(margin, rect.top - effectiveHeight - 8)
-          : Math.max(margin, Math.min(safeBottom - effectiveHeight, rect.bottom + 8)))
+        ? Math.min(Math.max(margin, rect.bottom + 8), Math.max(margin, safeBottom - 72))
         : placeAbove
           ? Math.max(margin, rect.top - naturalHeight - gap)
           : Math.min(window.innerHeight - naturalHeight - margin, rect.bottom + gap);
+      const sideSpace = isMobile ? Math.max(80, safeBottom - top) : availableHeight;
+      const maxHeight = isMobile
+        ? Math.max(80, Math.min(availableHeight, sideSpace))
+        : availableHeight;
       const preferredLeft = mine ? rect.right - width : rect.left;
       const left = Math.max(margin, Math.min(window.innerWidth - width - margin, preferredLeft));
       setMenuPosition({ top, left, width, maxHeight });
@@ -994,8 +995,8 @@ const MsgBubble = React.memo(function MsgBubble({
               <button ref={actionButtonRef} onClick={()=>{setMenuPosition(null);setMenuOpen(v=>!v)}} aria-label="Message actions" aria-expanded={menuOpen} className="msg-message-actions-button w-9 h-9 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 flex items-center justify-center opacity-100 touch-manipulation transition">
                 <MoreHorizontal size={15}/>
               </button>
-              {menuOpen && (
-                <div ref={actionMenuRef} style={{ position: "fixed", top: menuPosition?.top ?? 0, left: menuPosition?.left ?? 10, width: menuPosition?.width ?? "min(13rem, calc(100vw - 20px))", maxHeight: menuPosition?.maxHeight ?? "calc(100dvh - 20px)", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", visibility: menuPosition ? "visible" : "hidden" }} className="z-[140] rounded-2xl border border-slate-200 bg-white shadow-2xl p-1.5">
+              {menuOpen && createPortal(
+                <div ref={actionMenuRef} style={{ position: "fixed", top: menuPosition?.top ?? 0, left: menuPosition?.left ?? 10, width: menuPosition?.width ?? "min(13rem, calc(100vw - 20px))", maxHeight: menuPosition?.maxHeight ?? "calc(100dvh - 20px)", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", visibility: menuPosition ? "visible" : "hidden", zIndex: 2147483000, isolation: "isolate", touchAction: "pan-y" }} className="rounded-2xl border border-slate-200 bg-white shadow-2xl p-1.5">
                   <button type="button" onClick={copyMessage} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><Copy size={17}/> Copy message</button>
                   <button type="button" onClick={()=>{setMenuOpen(false);setReactionPickerOpen(true)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><Smile size={17}/> React</button>
                   <button type="button" onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><CornerUpLeft size={17}/> Reply</button>
@@ -1005,7 +1006,8 @@ const MsgBubble = React.memo(function MsgBubble({
                   </>}
                   <button type="button" onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-slate-50 active:bg-slate-100"><Pin size={17}/> {message.isPinned ? "Unpin" : "Pin"}</button>
                   <button type="button" onClick={()=>{onHighlight(message.id,!message.isHighlighted);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-amber-50 active:bg-amber-100"><Highlighter size={17}/> {message.isHighlighted ? "Remove highlight" : "Highlight"}</button>
-                </div>
+                </div>,
+                document.body
               )}
               {reactionPickerOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/25 p-4" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setReactionPickerOpen(false)}}>
