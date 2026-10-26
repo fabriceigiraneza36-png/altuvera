@@ -71,7 +71,7 @@ const SEO = ({
         availableLanguage: 'English',
       },
       sameAs: [
-        'https://facebook.com/altuvera',
+        'https://www.facebook.com/profile.php?id=61591972225527',
         'https://twitter.com/altuvera',
         'https://instagram.com/altuvera',
         'https://linkedin.com/company/altuvera',
