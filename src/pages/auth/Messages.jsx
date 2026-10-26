@@ -818,32 +818,31 @@ const MsgBubble = React.memo(function MsgBubble({
       const gap = 6;
       const rect = anchor.getBoundingClientRect();
       const width = Math.min(menu.offsetWidth || 208, window.innerWidth - margin * 2);
-      const height = menu.offsetHeight || 240;
       const isMobile = window.matchMedia("(max-width: 767px)").matches;
-      // The composer overlays the bottom of the message viewport on phones; never place
-      // the menu underneath it. Prefer the nearest side of the exact pressed bubble.
       const visualHeight = window.visualViewport?.height || window.innerHeight;
       const composer = isMobile ? document.querySelector(".msg-chat-foot") : null;
       const composerTop = composer ? composer.getBoundingClientRect().top : visualHeight;
-      const safeBottom = Math.max(margin + 80, Math.min(visualHeight - margin, composerTop - margin));
-      const roomBelow = Math.max(0, safeBottom - rect.bottom);
-      const roomAbove = Math.max(0, rect.top - margin);
-      const availableHeight = Math.max(96, visualHeight - margin * 2);
-      const placeAbove = isMobile
-        ? (roomBelow < Math.min(height, 220) + 8 && roomAbove > roomBelow)
-        : (window.innerHeight - rect.bottom < Math.min(height, 260) + gap && roomAbove > window.innerHeight - rect.bottom);
-      const sideSpace = placeAbove ? roomAbove : roomBelow;
+      const safeBottom = Math.max(margin + 60, Math.min(visualHeight - margin, composerTop - margin));
+      const roomBelow = Math.max(0, safeBottom - rect.bottom - 8);
+      const roomAbove = Math.max(0, rect.top - margin - 8);
+      const availableHeight = Math.max(80, visualHeight - margin * 2);
+      // Measure natural menu height, then use the side with more room if neither side fits.
+      const naturalHeight = menu.scrollHeight || menu.offsetHeight || 240;
+      const preferAbove = roomBelow < Math.min(naturalHeight, 220) && roomAbove > roomBelow;
+      const placeAbove = isMobile ? preferAbove
+        : (window.innerHeight - rect.bottom < Math.min(naturalHeight, 260) + gap && roomAbove > window.innerHeight - rect.bottom);
+      const sideSpace = isMobile ? (placeAbove ? roomAbove : roomBelow) : availableHeight;
       const maxHeight = isMobile
-        ? Math.max(96, Math.min(availableHeight, sideSpace - 8))
+        ? Math.max(80, Math.min(availableHeight, sideSpace || Math.max(roomAbove, roomBelow)))
         : availableHeight;
-      const effectiveHeight = Math.min(height, maxHeight);
+      const effectiveHeight = Math.min(naturalHeight, maxHeight);
       const top = isMobile
         ? (placeAbove
           ? Math.max(margin, rect.top - effectiveHeight - 8)
-          : Math.min(safeBottom - effectiveHeight, rect.bottom + 8))
+          : Math.max(margin, Math.min(safeBottom - effectiveHeight, rect.bottom + 8)))
         : placeAbove
-          ? Math.max(margin, rect.top - height - gap)
-          : Math.min(window.innerHeight - height - margin, rect.bottom + gap);
+          ? Math.max(margin, rect.top - naturalHeight - gap)
+          : Math.min(window.innerHeight - naturalHeight - margin, rect.bottom + gap);
       const preferredLeft = mine ? rect.right - width : rect.left;
       const left = Math.max(margin, Math.min(window.innerWidth - width - margin, preferredLeft));
       setMenuPosition({ top, left, width, maxHeight });
