@@ -266,6 +266,17 @@ const PKG_CSS = `
 @media(max-width:1180px) { .pk-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:640px) {
  .pk-grid { grid-template-columns:minmax(0,1fr)!important; gap:18px; }
+ .pk-card-media { height:clamp(190px,58vw,245px); }
+ .pk-card-category { left:10px; top:10px; max-width:calc(100% - 66px); padding:5px 8px; font-size:9px; letter-spacing:.025em; }
+ .pk-card-wish { width:34px; height:34px; top:9px; right:9px; }
+ .pk-card-destination { left:12px; right:12px; bottom:11px; gap:5px; font-size:10px; line-height:1.35; overflow-wrap:anywhere; }
+ .pk-card-body { padding:14px; gap:9px; }
+ .pk-card-title { font-size:clamp(18px,5vw,22px); line-height:1.2; overflow-wrap:anywhere; }
+ .pk-card-description { font-size:12px; line-height:1.5; min-height:0; }
+ .pk-card-facts { gap:6px 10px; font-size:10px; }
+ .pk-card-footer { padding-top:12px; flex-wrap:wrap; }
+ .pk-card-price strong { font-size:17px; }
+ .pk-card-action { padding:9px 10px; font-size:10px; }
  .pk-card { border-radius:20px; }
  .pk-card-media { height:230px; }
  .pk-card-body { padding:17px; gap:10px; }
