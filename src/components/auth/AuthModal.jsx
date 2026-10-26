@@ -1416,7 +1416,7 @@ export default function AuthModal() {
               <p className="mt-1 break-all text-xs text-gray-500">{pendingVerification.email}</p>
               <p className="mt-1 text-xs text-emerald-700">{remainingSeconds > 0 ? `Your code remains valid for ${formatExpiry(remainingSeconds)}.` : "Your code has expired. Request a new one."}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button type="button" disabled={remainingSeconds <= 0} onClick={() => openModal("verify", { skipNotLoggedInMessage: true })} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"><HiShieldCheck className="h-4 w-4" /> Continue verification</button>
+                <button type="button" onClick={() => openModal("verify", { skipNotLoggedInMessage: true })} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800"><HiShieldCheck className="h-4 w-4" /> {remainingSeconds > 0 ? "Continue verification" : "Request a new code"}</button>
                 <button type="button" onClick={() => setPendingPromptDismissed(true)} className="min-h-10 rounded-xl px-3 py-2 text-xs font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-800">Not now</button>
               </div>
             </div>
