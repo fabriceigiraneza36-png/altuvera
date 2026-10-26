@@ -669,6 +669,9 @@ const GitHubCallbackPage = React.memo(() => {
 
   useEffect(() => {
     if (githubLoading) return;
+    // Never navigate away while the verification UI is active, even if a
+    // previous session token exists. This avoids closing a fresh OTP flow.
+    if (pendingVerification?.email || (isModalOpen && modalView === "verify")) return;
     // Keep the callback route mounted while an email OTP is pending. A hard
     // redirect here destroys the just-opened verification modal and its input.
     // We only return home after a real session is created or OAuth fails.
@@ -678,7 +681,7 @@ const GitHubCallbackPage = React.memo(() => {
       : CALLBACK_REDIRECT_DELAY_MS;
     const t = setTimeout(() => navigate("/", { replace: true }), delay);
     return () => clearTimeout(t);
-  }, [githubLoading, isAuthenticated, socialAuthError, navigate]);
+  }, [githubLoading, isAuthenticated, socialAuthError, pendingVerification?.email, isModalOpen, modalView, navigate]);
 
   const isError = Boolean(socialAuthError);
   const isDone  = !githubLoading && isAuthenticated && !isError;
