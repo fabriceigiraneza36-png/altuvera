@@ -12,7 +12,7 @@ import React, {
   useState, useCallback, useRef,
 } from "react";
 import {
-  Routes, Route, useLocation,
+  Routes, Route, useLocation, useNavigate,
   Navigate, Outlet,
 } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react"
@@ -661,16 +661,24 @@ const FEATURE_BADGES = [
 // GITHUB CALLBACK PAGE
 // ============================================================================
 const GitHubCallbackPage = React.memo(() => {
-  const { githubLoading, isAuthenticated, socialAuthError } = useUserAuth();
+  const {
+    githubLoading, isAuthenticated, socialAuthError,
+    pendingEmail, pendingVerification, isModalOpen, modalView,
+  } = useUserAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (githubLoading) return;
+    // Keep the callback route mounted while an email OTP is pending. A hard
+    // redirect here destroys the just-opened verification modal and its input.
+    // We only return home after a real session is created or OAuth fails.
+    if (!isAuthenticated && !socialAuthError) return;
     const delay = socialAuthError
       ? CALLBACK_ERROR_REDIRECT_DELAY_MS
       : CALLBACK_REDIRECT_DELAY_MS;
-    const t = setTimeout(() => window.location.replace("/"), delay);
+    const t = setTimeout(() => navigate("/", { replace: true }), delay);
     return () => clearTimeout(t);
-  }, [githubLoading, isAuthenticated, socialAuthError]);
+  }, [githubLoading, isAuthenticated, socialAuthError, navigate]);
 
   const isError = Boolean(socialAuthError);
   const isDone  = !githubLoading && isAuthenticated && !isError;
@@ -681,10 +689,15 @@ const GitHubCallbackPage = React.memo(() => {
     ? "gh-status--done"
     : "gh-status--default";
 
+  const awaitingEmailCode = Boolean(!isAuthenticated && (pendingVerification?.email || pendingEmail));
   const statusMsg = isError
     ? "Sign-in failed. Redirecting…"
     : isDone
-    ? "Signed in! Redirecting…"
+    ? "Signed in! Returning to Altuvera…"
+    : awaitingEmailCode
+    ? (isModalOpen && modalView === "verify"
+        ? `Enter the code sent to ${pendingVerification?.email || pendingEmail} to finish signing in.`
+        : "Your email verification is saved for 10 minutes. Resume it to finish signing in.")
     : githubLoading
     ? "Verifying your GitHub account…"
     : "Completing sign-in…";
