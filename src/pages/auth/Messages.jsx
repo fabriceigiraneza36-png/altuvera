@@ -836,13 +836,13 @@ const MsgBubble = React.memo(function MsgBubble({
       // Portal rendering removes ancestor stacking/overflow contexts; the menu itself
       // scrolls when the composer or viewport limits the available room.
       const top = isMobile
-        ? Math.min(Math.max(margin, rect.bottom + 8), Math.max(margin, safeBottom - 72))
+        ? Math.max(margin, rect.bottom + 8)
         : placeAbove
           ? Math.max(margin, rect.top - naturalHeight - gap)
           : Math.min(window.innerHeight - naturalHeight - margin, rect.bottom + gap);
-      const sideSpace = isMobile ? Math.max(80, safeBottom - top) : availableHeight;
+      const sideSpace = isMobile ? Math.max(64, visualHeight - margin - top) : availableHeight;
       const maxHeight = isMobile
-        ? Math.max(80, Math.min(availableHeight, sideSpace))
+        ? Math.max(64, Math.min(availableHeight, sideSpace, Math.max(64, safeBottom - top)))
         : availableHeight;
       const preferredLeft = mine ? rect.right - width : rect.left;
       const left = Math.max(margin, Math.min(window.innerWidth - width - margin, preferredLeft));
