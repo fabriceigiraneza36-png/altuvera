@@ -250,17 +250,33 @@ export default function PackageDetail() {
 
   const needsPhone = form.preferred_contact_method === "phone" ||
     form.preferred_contact_method === "whatsapp";
+  const now = new Date();
+  const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
   const validate = () => {
     const next = {};
-    if (!accountName) next.guest_name = "Please complete your name in your Altuvera profile.";
+    const adults = Number(form.adults);
+    const children = Number(form.children);
+    if (!accountName || accountName.trim().length < 2)
+      next.guest_name = "Please complete your name in your Altuvera profile.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail))
       next.guest_email = "Your account must have a valid email address.";
     if (!form.nationality) next.nationality = "Please select your nationality.";
     if (!form.country_of_residence) next.country_of_residence = "Please select your country of residence.";
-    if (Number(form.adults) < 1) next.adults = "At least one adult is required.";
+    if (!Number.isInteger(adults) || adults < 1)
+      next.adults = "At least one adult is required.";
+    else if (adults > 500)
+      next.adults = "The number of adults cannot exceed 500.";
+    if (!Number.isInteger(children) || children < 0)
+      next.children = "The number of children must be zero or more.";
+    else if (Number.isInteger(adults) && adults >= 1 && adults + children > 500)
+      next.children = "The total number of travelers cannot exceed 500.";
+    if (form.travel_date && form.travel_date < todayDate)
+      next.travel_date = "Departure date cannot be in the past.";
+    if (form.end_date && form.end_date < todayDate)
+      next.end_date = "Return date cannot be in the past.";
     if (form.travel_date && form.end_date && form.end_date < form.travel_date)
-      next.end_date = "Return date must be after the travel date.";
+      next.end_date = "Return date must be on or after the departure date.";
     if (needsPhone && !form.guest_phone.trim())
       next.guest_phone = "A phone number is required for this contact method.";
     return next;
@@ -448,17 +464,17 @@ export default function PackageDetail() {
           <div className="pkg-section">
             <div className="pkg-section-title"><span>02</span><div><b>Travel plans</b><small>Dates and group size</small></div></div>
             <div className="pkg-three">
-              <Field label="Departure">
-                <input type="date" value={form.travel_date} onChange={(e) => update("travel_date", e.target.value)} />
+              <Field label="Departure" error={errors.travel_date}>
+                <input type="date" min={todayDate} value={form.travel_date} onChange={(e) => update("travel_date", e.target.value)} />
               </Field>
               <Field label="Return" error={errors.end_date}>
-                <input type="date" value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
+                <input type="date" min={todayDate} value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
               </Field>
               <Field label="Adults" required error={errors.adults}>
                 <input type="number" min="1" max="500" value={form.adults} onChange={(e) => update("adults", e.target.value)} />
               </Field>
             </div>
-            <Field label="Children">
+            <Field label="Children" error={errors.children}>
               <input type="number" min="0" max="500" value={form.children} onChange={(e) => update("children", e.target.value)} />
             </Field>
           </div>

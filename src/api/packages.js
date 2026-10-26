@@ -52,11 +52,20 @@ const request = async (method, path, body = null, params = null) => {
   const data = await res.json().catch(() => ({}))
 
   if (!res.ok) {
+    // Prefer actionable validation details over the API's generic "Validation failed" label.
+    const validationErrors = Array.isArray(data?.errors)
+      ? data.errors
+          .map((entry) => typeof entry === 'string'
+            ? entry
+            : entry?.message || entry?.msg || entry?.detail || '')
+          .filter(Boolean)
+      : typeof data?.errors === 'string'
+      ? [data.errors]
+      : []
     const message =
-      data?.error   ||
-      data?.message ||
-      (Array.isArray(data?.errors) ? data.errors[0] : null) ||
-      `Request failed (${res.status})`
+      validationErrors.length
+        ? validationErrors.join('; ')
+        : data?.error || data?.message || `Request failed (${res.status})`
 
     const err = new Error(typeof message === 'string' ? message : JSON.stringify(message))
     err.status = res.status
