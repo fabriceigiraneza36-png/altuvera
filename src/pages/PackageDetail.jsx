@@ -570,20 +570,23 @@ const CSS = `
 
 /* Desktop package introduction: let the copy flow beside the poster, then below it. */
 @media(min-width:901px){
-  .pkg-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+  .pkg-layout{display:block;width:100%}
   .pkg-intro-flow{display:flow-root;min-width:0;max-width:100%}
-  .pkg-intro-flow .pkg-poster{float:left;position:relative;top:auto;width:48%;height:clamp(430px,46vw,650px);min-height:0;max-height:none;margin:0 20px 14px 0;border-radius:24px}
-  .pkg-intro-flow .pkg-detail-copy{display:block;grid-column:auto;min-width:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;overflow:visible}
+  .pkg-intro-flow .pkg-poster{float:left;position:relative;top:auto;width:40%;height:clamp(430px,46vw,650px);min-height:0;max-height:none;margin:0 26px 18px 0;border-radius:24px}
+  .pkg-intro-flow .pkg-detail-copy{display:block;grid-column:auto;min-width:0;width:auto;margin:0;padding:0;border:0;border-radius:0;background:transparent;overflow:visible}
   .pkg-intro-flow .pkg-detail-copy>p{margin:0 0 16px;line-height:1.75;overflow-wrap:anywhere}
   .pkg-intro-flow .pkg-detail-copy .pkg-detail-lead{font-size:1.05rem}
   .pkg-intro-flow .pkg-detail-copy section{margin:0 0 18px}
   .pkg-intro-flow .pkg-detail-copy section h2{margin:0 0 9px}
   .pkg-intro-flow .pkg-detail-copy ul{padding-left:18px}
+  .pkg-layout>.pkg-form-card{clear:both;display:block;width:100%;max-width:none;margin:32px 0 0}
 }
 @media(max-width:900px){
+  .pkg-layout{display:block}
   .pkg-intro-flow{display:block;min-width:0}
   .pkg-intro-flow .pkg-poster{float:none;width:100%;margin:0 0 18px;position:relative;top:auto}
   .pkg-intro-flow .pkg-detail-copy{display:block;margin:0;padding:20px;border:1px solid rgba(16,80,55,.12);border-radius:22px;background:rgba(255,255,255,.92)}
+  .pkg-layout>.pkg-form-card{clear:both;width:100%;margin:24px 0 0}
 }
 `;
 
