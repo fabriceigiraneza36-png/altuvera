@@ -1142,3 +1142,29 @@
     font-size: clamp(.78rem, .95vw, 1rem);
   }
 }
+
+
+/* Testimonials: keep the active slide in normal flow and prevent image/text
+   columns from escaping their card on wide screens or narrow laptops. */
+.tshow-section, .tshow-container, .tshow-frame, .tshow-card-wrapper,
+.tshow-card, .tshow-content { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.tshow-frame { width: 100%; min-height: 250px; height: auto; }
+.tshow-card-wrapper { width: 100%; }
+.tshow-card { align-items: flex-start; }
+.tshow-text { overflow-wrap: anywhere; word-break: normal; }
+.tshow-avatar-col { flex: 0 0 auto; }
+.tshow-avatar-ring { width: clamp(52px, 5vw, 68px); height: clamp(52px, 5vw, 68px); }
+@media (min-width: 801px) {
+  .tshow-container { max-width: 1180px; }
+  .tshow-card-wrapper > .tshow-card { min-height: 220px; }
+}
+@media (max-width: 800px) {
+  .tshow-frame { min-height: 280px; }
+  .tshow-card { gap: 14px; }
+}
+@media (max-width: 480px) {
+  .tshow-frame { min-height: 340px; }
+  .tshow-card { padding: 14px; gap: 12px; }
+  .tshow-avatar-ring { width: 48px; height: 48px; }
+  .tshow-text { min-height: 0; }
+}

@@ -3747,3 +3747,35 @@
 @media(prefers-reduced-motion:reduce){
   .nav-search-empty-actions button{transition:none!important}
 }
+
+
+/* Desktop navigation stays clean: link icons are reserved for the mobile menu. */
+@media (min-width: 761px) {
+  .nav__link-icon { display: none !important; }
+  .nav-search-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 10050 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 24px !important;
+    overflow-y: auto;
+    background: rgba(5, 20, 13, .62) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .nav-search-modal {
+    width: min(1120px, calc(100vw - 48px)) !important;
+    max-width: 1120px !important;
+    height: auto !important;
+    max-height: min(88vh, 900px) !important;
+    min-height: 0 !important;
+    border-radius: 24px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: auto !important;
+  }
+  .nav-search-results { min-height: 0; overflow-y: auto; }
+}
