@@ -578,7 +578,7 @@ bottomLink: {
         {/* ── Bottom Bar ── */}
         <div style={styles.bottom}>
           <p style={styles.copyright}>
-            © 2026 Altuvera. All rights reserved.
+            © {new Date().getFullYear()} Altuvera. All rights reserved.
             {user && displayName && <> Made for you, {displayName}.</>}
           </p>
 
