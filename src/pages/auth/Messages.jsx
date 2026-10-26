@@ -5,6 +5,7 @@ import React, {
 } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
+import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import {
   MessageSquare, UsersRound, Send, Smile, X, CornerUpLeft,
   Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen,
@@ -759,7 +760,7 @@ const MsgBubble = React.memo(function MsgBubble({
    NEW CONVERSATION MODAL
 ══════════════════════════════════════════════════════════════════════════ */
 
-function NewConvModal({ onClose, onCreated }) {
+function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConversation = () => {} }) {
   const [subject, setSubject] = useState("");
   const [inquiryType, setInquiryType] = useState("general");
   const [relatedReference, setRelatedReference] = useState("");
@@ -990,10 +991,20 @@ function NewConvModal({ onClose, onCreated }) {
           </div>
 
           {error && (
-            <p role="alert"
-               className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-              {error}
-            </p>
+            <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+          )}
+          {groupConversations.length > 0 && (
+            <section className="border-t border-slate-100 pt-4" aria-label="Your group conversations">
+              <h4 className="mb-2 text-xs font-extrabold text-slate-800">Your group conversations</h4>
+              <p className="mb-2 text-[11px] text-slate-500">You can continue in a group while setting up your private Altuvera support conversation.</p>
+              <div className="space-y-2">
+                {groupConversations.map(group => <button key={String(group.id)} type="button" onClick={() => onOpenConversation(group.id)} className="flex w-full items-center gap-3 rounded-xl border border-slate-200 p-3 text-left hover:border-emerald-300 hover:bg-emerald-50">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><UsersRound size={16}/></span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold text-slate-800">{group.groupName || group.subject || "Group conversation"}</span><span className="block truncate text-[10px] text-slate-500">{group.lastMessage || "Open group conversation"}</span></span>
+                  {(group.unreadUser || 0) > 0 && <span className="rounded-full bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white">{group.unreadUser > 99 ? "99+" : group.unreadUser}</span>}
+                </button>)}
+              </div>
+            </section>
           )}
         </div>
 
@@ -1042,6 +1053,7 @@ export default function Messages() {
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [conversationSearch, setConversationSearch] = useState("");
   const [showNewChat, setShowNewChat] = useState(false);
+  const previousHasPrivateConversationRef = useRef(null);
   const {
     conversations, messages, activeId, activeConversation,
     unreadCount, loading, loadingMsgs, loadingOlderMessages, hasMoreMessages,
@@ -1162,13 +1174,33 @@ export default function Messages() {
     }
   }, [chatPreferencesKey]);
 
+  const isGroupConversation = useCallback(c => c?.conversationType === "group" || Boolean(c?.groupId), []);
+  const privateConversations = useMemo(() => conversations.filter(c => !isGroupConversation(c)), [conversations, isGroupConversation]);
+  const groupConversations = useMemo(() => conversations.filter(isGroupConversation), [conversations, isGroupConversation]);
+
+  useEffect(() => {
+    if (loading || error) return;
+    const hasPrivate = privateConversations.length > 0;
+    const previous = previousHasPrivateConversationRef.current;
+    previousHasPrivateConversationRef.current = hasPrivate;
+    if (!hasPrivate && previous !== false) setShowNewChat(true);
+    if (hasPrivate) setShowNewChat(false);
+  }, [loading, error, privateConversations]);
+
   const visibleConversations = useMemo(() => {
     const query = conversationSearch.trim().toLocaleLowerCase();
-    if (!query) return conversations;
-    return conversations.filter(c => [
-      c.subject, c.groupName, c.guestName, c.guestEmail, c.lastMessage, c.bookingNumber,
-    ].some(value => String(value || "").toLocaleLowerCase().includes(query)));
-  }, [conversations, conversationSearch]);
+    const ordered = [...conversations].sort((a, b) => {
+      const ag = isGroupConversation(a), bg = isGroupConversation(b);
+      if (ag !== bg) return ag ? 1 : -1;
+      const ap = a.conversationType === "personal" || a.channel === "personal_support";
+      const bp = b.conversationType === "personal" || b.channel === "personal_support";
+      if (!ag && !bg && ap !== bp) return ap ? -1 : 1;
+      return new Date(b.lastMessageAt || b.updatedAt || b.createdAt || 0).getTime() - new Date(a.lastMessageAt || a.updatedAt || a.createdAt || 0).getTime();
+    });
+    if (!query) return ordered;
+    return ordered.filter(c => [c.subject, c.groupName, c.guestName, c.guestEmail, c.lastMessage, c.bookingNumber]
+      .some(value => String(value || "").toLocaleLowerCase().includes(query)));
+  }, [conversations, conversationSearch, isGroupConversation]);
 
   const openResourceSupport = useCallback(() => {
     const support = conversations.find(item => item.conversationType === "resource_support" || item.channel === "booking_support");
@@ -1487,10 +1519,9 @@ export default function Messages() {
         </nav>
         {/* Error */}
         {error && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2
-                          px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700
-                          shadow-lg whitespace-nowrap">
-            <X size={14}/> {error}
+          <div role="alert" className="relative z-40 mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-800 shadow-sm sm:mx-5 sm:text-sm">
+            <X size={14} className="shrink-0"/><span className="min-w-0 flex-1">{error} Your messages have not been deleted.</span>
+            <button type="button" onClick={fetchConversations} disabled={loading} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 font-bold text-rose-700 disabled:opacity-50"><RefreshCw size={12} className={loading ? "animate-spin" : ""}/> Retry</button>
           </div>
         )}
 
@@ -1566,6 +1597,13 @@ export default function Messages() {
                     </div>
                   </div>
                 ))
+              ) : conversations.length === 0 && error ? (
+                <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
+                  <RefreshCw size={22} className="mb-3 text-rose-500"/>
+                  <p className="mb-1 text-sm font-bold text-slate-700">Inbox couldn't load</p>
+                  <p className="mb-4 text-xs leading-relaxed text-slate-500">We couldn't confirm whether your conversations are available.</p>
+                  <button type="button" onClick={fetchConversations} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white">Retry loading</button>
+                </div>
               ) : conversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-5 text-center">
                   <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center
@@ -1637,21 +1675,13 @@ export default function Messages() {
               </div>
             ) : loading && conversations.length === 0 ? (
               /* ── Inbox Loading State ── */
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50">
-                <div className="w-20 h-20 rounded-3xl bg-white border border-emerald-100 shadow-sm
-                                flex items-center justify-center mb-5 animate-pulse">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700
-                                  flex items-center justify-center shadow-md">
-                    <MessageSquare size={24} className="text-white" />
-                  </div>
+              <div className="flex-1 flex flex-col items-center justify-center bg-white p-6 text-center sm:p-8">
+                <div className="mb-5 flex h-28 w-28 items-center justify-center rounded-[2rem] border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 shadow-[0_16px_45px_rgba(5,150,105,0.12)]">
+                  <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} className="h-16 w-16 animate-bounce object-contain" onError={event => { event.currentTarget.style.display = "none"; }}/>
                 </div>
-                <div className="flex items-center gap-2 text-emerald-700 font-semibold text-sm">
-                  <RefreshCw size={15} className="animate-spin" />
-                  Loading your conversations…
-                </div>
-                <div className="mt-5 w-48 h-2 rounded-full bg-slate-200 overflow-hidden">
-                  <div className="h-full w-1/2 bg-emerald-500 rounded-full animate-pulse" />
-                </div>
+                <div className="flex items-center gap-2 text-sm font-bold text-emerald-800"><RefreshCw size={15} className="animate-spin"/>Loading your conversations…</div>
+                <p className="mt-2 max-w-xs text-xs leading-relaxed text-slate-500">Securely connecting to your Altuvera inbox.</p>
+                <div className="mt-5 h-1.5 w-48 overflow-hidden rounded-full bg-emerald-50"><div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-emerald-500 to-emerald-300"/></div>
               </div>
             ) : !activeConversation ? (
               /* ── Genuine Empty State ── */
@@ -2004,8 +2034,10 @@ export default function Messages() {
             )}
           </div>
         </div>
-        {showNewChat && (
+        {showNewChat && !loading && !error && privateConversations.length === 0 && (
           <NewConvModal
+            groupConversations={groupConversations}
+            onOpenConversation={id => { setShowNewChat(false); openConversation(id); }}
             onClose={() => setShowNewChat(false)}
             onCreated={handleNewConvCreated}
           />
