@@ -36,7 +36,7 @@ export const BRAND_CONTACT = {
 };
 
 export const BRAND_SOCIAL = {
-  facebook: "https://www.facebook.com/profile.php?id=61591972225527",
+  facebook: "https://www.facebook.com/profile.php?id=61591972225527&sfnsn=mo&mibextid=RUbZ1f",
   instagram: "https://instagram.com/altuverasafaris",
   twitter: "https://twitter.com/altuverasafaris",
   youtube: "https://youtube.com/@altuverasafaris",
