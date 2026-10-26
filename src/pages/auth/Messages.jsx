@@ -380,6 +380,12 @@ const MSG_STYLES = `
   .bubble-actions, .msg-meta { transition:none !important; }
 }
 
+/* On phones, the initial view is the conversation list. Only show chat after a conversation is selected. */
+@media (max-width: 767px) {
+  .msg-sidebar.mobile-inbox-visible { display: flex !important; }
+  .msg-chat.mobile-inbox-hidden { display: none !important; }
+}
+
 /* Traveller messaging portal: keep essential controls inside the mobile viewport. */
 @media (max-width: 767px) {
   .dashboard-layout:has(.msg-layout) {
@@ -1704,7 +1710,7 @@ export default function Messages() {
         <div className="msg-layout w-full flex-1 min-h-0" style={{ height: "auto" }}>
 
           {/* ═══════════════ SIDEBAR ═══════════════ */}
-          <div className={`msg-sidebar ${showMobile ? "hidden md:flex" : "flex"} flex-col transition-all duration-200 ${sidebarOpen ? "" : "md:hidden"}`}>
+          <div className={`msg-sidebar ${showMobile ? "hidden md:flex" : "flex"} ${!showMobile ? "mobile-inbox-visible" : ""} flex-col transition-all duration-200 ${sidebarOpen ? "" : "md:hidden"}`}>
 
             {/* Sidebar fixed header */}
             <div className="msg-sidebar-head px-3 pt-3 pb-2 space-y-2">
@@ -1814,7 +1820,7 @@ export default function Messages() {
           </div>
 
           {/* ═══════════════ CHAT PANEL ═══════════════ */}
-          <div className={`msg-chat ${showMobile ? "flex" : "hidden md:flex"} flex-col min-h-0 min-w-0`}
+          <div className={`msg-chat ${showMobile ? "flex" : "hidden md:flex"} ${!showMobile ? "mobile-inbox-hidden" : ""} flex-col min-h-0 min-w-0`}
             data-theme={chatPrefs.theme}>
 
             {loadingMsgs && activeId ? (
