@@ -1733,7 +1733,7 @@ export function UserAuthProvider({ children }) {
       sessionStorage.removeItem(KEYS.GITHUB_INTENT);
       setGithubLoading(false);
     }
-  }, [githubSignIn, openModal, login]);
+  }, [githubSignIn, openModal, persistPendingVerification, setModalView]);
 
   // ============================================================================
   // Profile Management
