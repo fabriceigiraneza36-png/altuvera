@@ -374,6 +374,7 @@ export default function PackageDetail() {
       </div>
 
       <section className="pkg-layout">
+        <div className="pkg-intro-flow">
         <div className="pkg-poster">
           {cover ? (
             <img key={cover} src={cover} alt={pkg.title} />
@@ -406,6 +407,7 @@ export default function PackageDetail() {
           {firstArray(pkg.highlights || pkg.features).length > 0 && <section><h2>Trip highlights</h2><ul>{firstArray(pkg.highlights || pkg.features).map((item, i) => <li key={i}>{typeof item === "string" ? item : item.title || item.name || item.description || JSON.stringify(item)}</li>)}</ul></section>}
           {firstArray(pkg.inclusions).length > 0 && <section><h2>What's included</h2><ul>{firstArray(pkg.inclusions).map((item, i) => <li key={i}>{typeof item === "string" ? item : item.title || item.name || JSON.stringify(item)}</li>)}</ul></section>}
           {firstArray(pkg.exclusions).length > 0 && <section><h2>Not included</h2><ul>{firstArray(pkg.exclusions).map((item, i) => <li key={i}>{typeof item === "string" ? item : item.title || item.name || JSON.stringify(item)}</li>)}</ul></section>}
+        </div>
         </div>
 
         {canRequest ? (<form className="pkg-form-card" onSubmit={submit} noValidate>
@@ -565,5 +567,23 @@ const CSS = `
 @media(max-width:640px){.pkg-topbar{padding:16px}.pkg-layout{padding:0 12px}.pkg-poster{height:58vh;min-height:400px;border-radius:20px}.pkg-poster-copy h1{font-size:38px}.pkg-form-head,.pkg-section{padding:22px 18px}.pkg-two,.pkg-three{grid-template-columns:1fr}.pkg-choice-grid{grid-template-columns:1fr}.pkg-submit-row{padding:18px;display:block}.pkg-submit-row>div{margin-bottom:14px;max-width:none}.pkg-submit{width:100%}.pkg-alert{margin-left:18px;margin-right:18px}.pkg-success{margin:8vh 14px;padding:36px 20px}}
 
 @media(min-width:901px){.pkg-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(18px,2.2vw,34px);width:100%;box-sizing:border-box}.pkg-layout>*{min-width:0;max-width:100%;box-sizing:border-box}.pkg-poster{width:100%;height:clamp(440px,48vw,700px);min-height:0;max-height:calc(100vh - 120px);top:88px}.pkg-form-card{width:100%;min-width:0}.pkg-detail-copy{min-width:0;overflow-wrap:anywhere}}@media(min-width:721px) and (max-width:1100px){.pkg-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}.pkg-poster{height:560px;min-height:0;position:relative;top:auto}}@media(max-width:900px){.pkg-layout{grid-template-columns:minmax(0,1fr);gap:18px}.pkg-poster{position:relative;top:auto;height:clamp(300px,70vw,520px);min-height:0}.pkg-detail-copy{grid-column:auto}}
+
+/* Desktop package introduction: let the copy flow beside the poster, then below it. */
+@media(min-width:901px){
+  .pkg-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+  .pkg-intro-flow{display:flow-root;min-width:0;max-width:100%}
+  .pkg-intro-flow .pkg-poster{float:left;position:relative;top:auto;width:48%;height:clamp(430px,46vw,650px);min-height:0;max-height:none;margin:0 20px 14px 0;border-radius:24px}
+  .pkg-intro-flow .pkg-detail-copy{display:block;grid-column:auto;min-width:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;overflow:visible}
+  .pkg-intro-flow .pkg-detail-copy>p{margin:0 0 16px;line-height:1.75;overflow-wrap:anywhere}
+  .pkg-intro-flow .pkg-detail-copy .pkg-detail-lead{font-size:1.05rem}
+  .pkg-intro-flow .pkg-detail-copy section{margin:0 0 18px}
+  .pkg-intro-flow .pkg-detail-copy section h2{margin:0 0 9px}
+  .pkg-intro-flow .pkg-detail-copy ul{padding-left:18px}
+}
+@media(max-width:900px){
+  .pkg-intro-flow{display:block;min-width:0}
+  .pkg-intro-flow .pkg-poster{float:none;width:100%;margin:0 0 18px;position:relative;top:auto}
+  .pkg-intro-flow .pkg-detail-copy{display:block;margin:0;padding:20px;border:1px solid rgba(16,80,55,.12);border-radius:22px;background:rgba(255,255,255,.92)}
+}
 `;
 
