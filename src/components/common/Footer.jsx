@@ -77,7 +77,7 @@ const Footer = () => {
   {
     icon: FiFacebook,
     label: "Facebook",
-    url: "https://www.facebook.com/profile.php?id=61591972225527",
+    url: "https://www.facebook.com/profile.php?id=61591972225527&sfnsn=mo&mibextid=RUbZ1f",
   },
   {
     icon: FaXTwitter,
