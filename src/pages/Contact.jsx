@@ -107,7 +107,7 @@ const TRIP_TYPES = [
 ];
 
 const SOCIALS = [
-  { icon: FaFacebookF, label: "Facebook", url: "#", color: "#1877F2" },
+  { icon: FaFacebookF, label: "Facebook", url: "https://www.facebook.com/profile.php?id=61591972225527&sfnsn=mo&mibextid=RUbZ1f", color: "#1877F2" },
   { icon: FaInstagram, label: "Instagram", url: "#", color: "#E1306C" },
   { icon: FaTwitter, label: "Twitter", url: "#", color: "#1DA1F2" },
   { icon: FaYoutube, label: "YouTube", url: "#", color: "#FF0000" },
