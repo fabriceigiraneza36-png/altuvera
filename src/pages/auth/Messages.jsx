@@ -518,6 +518,8 @@ const MSG_STYLES = `
     visibility: visible !important;
     pointer-events: auto !important;
   }
+  .msg-message-actions-button { display: none !important; }
+  .msg-bubble-wrap { -webkit-touch-callout: none; }
   .msg-chat .msg-scroll-layer {
     display: block !important;
     position: absolute;
@@ -789,6 +791,7 @@ const MsgBubble = React.memo(function MsgBubble({
   const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState(null);
   const actionButtonRef = useRef(null);
+  const bubbleRef = useRef(null);
   const actionMenuRef = useRef(null);
   const longPressTimerRef = useRef(null);
   const longPressTriggeredRef = useRef(false);
@@ -808,7 +811,7 @@ const MsgBubble = React.memo(function MsgBubble({
   useLayoutEffect(() => {
     if (!menuOpen) return undefined;
     const positionMenu = () => {
-      const anchor = actionButtonRef.current;
+      const anchor = window.matchMedia("(max-width: 767px)").matches ? bubbleRef.current : actionButtonRef.current;
       const menu = actionMenuRef.current;
       if (!anchor || !menu) return;
       const margin = 10;
@@ -818,11 +821,14 @@ const MsgBubble = React.memo(function MsgBubble({
       const height = menu.offsetHeight || 220;
       const roomBelow = window.innerHeight - rect.bottom;
       const roomAbove = rect.top;
-      const placeAbove = roomBelow < Math.min(height, 260) + gap && roomAbove > roomBelow;
-      const top = placeAbove
-        ? Math.max(margin, rect.top - height - gap)
-        : Math.min(window.innerHeight - height - margin, rect.bottom + gap);
-      const preferredLeft = mine ? rect.right - width : rect.left;
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      const placeAbove = !isMobile && roomBelow < Math.min(height, 260) + gap && roomAbove > roomBelow;
+      const top = isMobile
+        ? Math.max(margin, Math.min(window.innerHeight - Math.min(height, window.innerHeight - margin * 2) - margin, rect.bottom + 8))
+        : placeAbove
+          ? Math.max(margin, rect.top - height - gap)
+          : Math.min(window.innerHeight - height - margin, rect.bottom + gap);
+      const preferredLeft = isMobile ? (mine ? rect.right - width : rect.left) : (mine ? rect.right - width : rect.left);
       const left = Math.max(margin, Math.min(window.innerWidth - width - margin, preferredLeft));
       setMenuPosition({ top, left, width, maxHeight: Math.max(120, window.innerHeight - margin * 2) });
     };
@@ -859,6 +865,7 @@ const MsgBubble = React.memo(function MsgBubble({
 
   return (
     <div
+      ref={bubbleRef}
       className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}
       style={{ transform: swipeOffset ? `translateX(${swipeOffset}px)` : undefined, transition: touchStartX.current == null ? "transform 180ms cubic-bezier(.2,.8,.2,1)" : "none" }}
       onTouchStart={event => {
@@ -954,7 +961,7 @@ const MsgBubble = React.memo(function MsgBubble({
 
           {!isPending && !isDeleted && !isEditing && (
             <div className="relative flex-shrink-0">
-              <button ref={actionButtonRef} onClick={()=>{setMenuPosition(null);setMenuOpen(v=>!v)}} aria-label="Message actions" aria-expanded={menuOpen} className="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 flex items-center justify-center opacity-100 touch-manipulation transition">
+              <button ref={actionButtonRef} onClick={()=>{setMenuPosition(null);setMenuOpen(v=>!v)}} aria-label="Message actions" aria-expanded={menuOpen} className="msg-message-actions-button w-9 h-9 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 flex items-center justify-center opacity-100 touch-manipulation transition">
                 <MoreHorizontal size={15}/>
               </button>
               {menuOpen && (
