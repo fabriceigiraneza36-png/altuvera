@@ -375,10 +375,179 @@ const MSG_STYLES = `
 .msg-chat[data-theme="midnight"] .msg-chat-foot textarea::placeholder { color:#9fb1ca !important; }
 .msg-chat[data-theme="midnight"] .msg-chat-head span,
 .msg-chat[data-theme="midnight"] .msg-chat-head div { color:#e2e8f0; }
+
 @media (prefers-reduced-motion: reduce) {
   .bubble-actions, .msg-meta { transition:none !important; }
 }
-`;
+
+/* Traveller messaging portal: keep essential controls inside the mobile viewport. */
+@media (max-width: 767px) {
+  .dashboard-layout:has(.msg-layout) {
+    height: calc(100dvh - var(--site-nav-height, 80px)) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  .dashboard-layout:has(.msg-layout) .dashboard-content {
+    height: calc(100dvh - var(--site-nav-height, 80px)) !important;
+    max-height: calc(100dvh - var(--site-nav-height, 80px)) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  .dashboard-layout:has(.msg-layout) .dashboard-content .dashboard-inner-content {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  .msg-page-nav { gap: 6px !important; min-width: 0; }
+  .msg-page-nav > div:first-child { min-width: 0; }
+  .msg-page-nav-actions { gap: 5px !important; }
+  .msg-layout {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+  .msg-sidebar {
+    flex: 1 1 auto;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+  .msg-chat {
+    inset: 0;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+  .msg-chat-head {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    overflow: visible;
+  }
+  .msg-chat-head > button { flex-shrink: 0; }
+  .msg-chat-head > div:nth-child(2) {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+  }
+  .msg-chat-head > div:nth-child(3) {
+    flex: 1 1 auto;
+    width: 0;
+    min-width: 0 !important;
+  }
+  .msg-chat-head > div:nth-child(3) p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .msg-chat-head > span:last-child {
+    flex: 0 0 auto;
+    max-width: 60px;
+    padding: 2px 5px;
+    gap: 3px;
+    font-size: 9px;
+  }
+  .msg-chat-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 10px 9px !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+  .msg-chat-foot {
+    position: relative;
+    flex: 0 0 auto !important;
+    min-width: 0;
+    padding: 8px 7px max(10px, env(safe-area-inset-bottom)) !important;
+    transform: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  .msg-composer-row {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    gap: 4px !important;
+    padding: 4px !important;
+    border-radius: 16px !important;
+  }
+  .msg-composer-row textarea {
+    flex: 1 1 auto;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    font-size: 16px !important;
+    max-height: 104px !important;
+  }
+  .msg-composer-row > div,
+  .msg-composer-row > button { flex-shrink: 0 !important; }
+  .msg-composer-row button { min-width: 36px; }
+  .msg-chat > section {
+    flex: 0 1 auto !important;
+    max-height: 32dvh;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .msg-bubble-wrap { max-width: 100%; }
+  .msg-bubble-wrap > div { min-width: 0; max-width: calc(100% - 32px); }
+  .msg-bubble-wrap [class~="min-w-[220px]"] {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100%;
+  }
+  .msg-bubble-wrap button[aria-label="Message actions"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+  .msg-chat .msg-scroll-layer {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .msg-scroll-layer > button { pointer-events: auto; }
+  .msg-scroll-layer > button {
+    bottom: calc(env(safe-area-inset-bottom) + 100px) !important;
+    right: 12px !important;
+  }
+  .msg-bubble-wrap .absolute.top-full {
+    position: fixed !important;
+    top: auto !important;
+    bottom: calc(env(safe-area-inset-bottom) + 90px) !important;
+    right: 12px !important;
+    left: auto !important;
+    width: min(10rem, calc(100vw - 24px)) !important;
+    margin-top: 0 !important;
+    z-index: 100 !important;
+  }
+  .msg-chat .msg-meta { opacity: 1 !important; }
+}
+@media (max-width: 380px) {
+  .msg-page-nav { gap: 4px !important; padding-left: 8px !important; padding-right: 8px !important; }
+  .msg-page-nav-actions { gap: 4px !important; }
+  .msg-page-nav-actions a { padding: 7px !important; }
+  .msg-page-nav-actions a span { display: none; }
+  .msg-chat-head { gap: 4px !important; padding-left: 6px !important; padding-right: 6px !important; }
+  .msg-chat-head > div:nth-child(2) { flex-basis: 30px; width: 30px; height: 30px; }
+  .msg-chat-head > span:last-child { max-width: 50px; padding: 2px 4px; font-size: 8px; }
+  .msg-chat-head > button { padding: 5px !important; }
+  .msg-chat-foot { padding-left: 6px !important; padding-right: 6px !important; }
+  .msg-composer-row button { min-width: 34px; width: 34px; }
+}`;
 
 let stylesInjected = false;
 function injectMsgStyles() {
@@ -628,7 +797,7 @@ const MsgBubble = React.memo(function MsgBubble({
   return (
     <div
       className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}
-      style={{ transform: `translateX(${swipeOffset}px)`, transition: touchStartX.current == null ? "transform 180ms cubic-bezier(.2,.8,.2,1)" : "none" }}
+      style={{ transform: swipeOffset ? `translateX(${swipeOffset}px)` : undefined, transition: touchStartX.current == null ? "transform 180ms cubic-bezier(.2,.8,.2,1)" : "none" }}
       onTouchStart={event => { touchStartX.current = event.touches?.[0]?.clientX ?? null; swipeOffsetX.current = 0; swipeTriggered.current = false; }}
       onTouchMove={event => {
         if (touchStartX.current == null) return;
@@ -708,7 +877,7 @@ const MsgBubble = React.memo(function MsgBubble({
 
           {!isPending && !isDeleted && !isEditing && (
             <div className="relative flex-shrink-0">
-              <button onClick={()=>setMenuOpen(v=>!v)} aria-label="Message actions" className="w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 flex items-center justify-center sm:opacity-0 sm:group-hover/bubble:opacity-100 transition">
+              <button onClick={()=>setMenuOpen(v=>!v)} aria-label="Message actions" className="w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 flex items-center justify-center opacity-100 touch-manipulation transition">
                 <MoreHorizontal size={15}/>
               </button>
               {menuOpen && (
@@ -1041,7 +1210,7 @@ export default function Messages() {
     const timer = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(timer);
   }, []);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedConversationId = searchParams.get("conversationId");
   const chatPreferencesKey = `altuvera:chat-preferences:${getAccountChatKey()}`;
   const [chatPrefs, setChatPrefs] = useState(() => {
@@ -1054,6 +1223,8 @@ export default function Messages() {
   const [conversationSearch, setConversationSearch] = useState("");
   const [showNewChat, setShowNewChat] = useState(false);
   const previousHasPrivateConversationRef = useRef(null);
+  // Prevent a manual return to the inbox from being overridden by auto-open rules.
+  const returnedToInboxRef = useRef(false);
   const {
     conversations, messages, activeId, activeConversation,
     unreadCount, loading, loadingMsgs, loadingOlderMessages, hasMoreMessages,
@@ -1213,7 +1384,7 @@ export default function Messages() {
 
     // Notification links intentionally open the exact thread, including a
     // group thread. This takes precedence over the normal inbox entry rules.
-    if (requestedConversationId) {
+    if (requestedConversationId && !returnedToInboxRef.current) {
       const target = conversations.find(c => String(c.id) === String(requestedConversationId));
       if (target) {
         if (String(activeId) !== String(target.id)) openConversation(target.id);
@@ -1232,13 +1403,13 @@ export default function Messages() {
     // Travelers without groups go straight into their personal admin chat.
     // Users with groups see the chooser so they can pick either private channel
     // or any group they are actually a member of.
-    if (hasGroupConversation) {
+    if (hasGroupConversation || conversations.length > 1) {
       // Do not clear an active conversation here: this effect also runs after
       // every click. With groups present, the inbox chooser is the initial view;
       // once a thread is selected, keep it open.
       return;
     }
-    if (!activeId) {
+    if (!activeId && !returnedToInboxRef.current) {
       // Prefer the dedicated personal channel, then booking support, but never
       // leave a traveller staring at an empty chat pane just because an older
       // conversation has the legacy "direct" type or no channel metadata.
@@ -1310,9 +1481,8 @@ export default function Messages() {
     const el = scrollRef.current;
     if (!el) return;
     const bottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-    const previousTop = lastScrollTopRef.current;
-    if (bottom || el.scrollTop < previousTop - 2) setComposerVisible(true);
-    else if (el.scrollTop > previousTop + 2) setComposerVisible(false);
+    // Keep the composer reachable at all times; only the message history scrolls.
+    setComposerVisible(true);
     lastScrollTopRef.current = el.scrollTop;
     setAtBottom(bottom);
     setShowScrollBtn(!bottom);
@@ -1502,13 +1672,13 @@ export default function Messages() {
         /* Keep the chat viewport-sized and retain the mobile toggle for dashboard sidebar navigation. */
         noPadding
       >
-        <nav aria-label="Message page navigation" className="flex min-h-[44px] flex-shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-2 sm:px-5">
+        <nav aria-label="Message page navigation" className="msg-page-nav flex min-h-[44px] flex-shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-2 sm:px-5">
           <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-500">
             <MessageSquare size={15} className="shrink-0 text-emerald-600" />
             <span className="truncate">Your conversations</span>
             {connected && <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"/>Live</span>}
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="msg-page-nav-actions flex shrink-0 items-center gap-2">
             <Link to="/" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700">
               <ArrowLeft size={14}/> <span>Homepage</span>
             </Link>
@@ -1677,7 +1847,7 @@ export default function Messages() {
                     </div>
                   ))}
                 </div>
-                <div className="msg-chat-foot px-3 pt-2.5 pb-3 bg-white" style={{ transform: composerVisible ? "translateY(0)" : "translateY(110%)", opacity: composerVisible ? 1 : 0, pointerEvents: composerVisible ? "auto" : "none", transition: "transform 180ms ease, opacity 180ms ease" }}>
+                <div className="msg-chat-foot px-3 pt-2.5 pb-3 bg-white" style={{ transform: "none", opacity: 1, pointerEvents: "auto" }}>
                   <div className="h-11 w-full rounded-2xl bg-slate-100 animate-pulse" />
                 </div>
               </div>
@@ -1719,7 +1889,7 @@ export default function Messages() {
                 {/* ── FIXED CHAT HEADER ── */}
                 <div className="msg-chat-head px-4 py-3 flex items-center gap-3 shadow-sm">
                   {/* Back button — mobile */}
-                  <button onClick={()=>openConversation(null)} aria-label="Back"
+                  <button onClick={() => { returnedToInboxRef.current = true; setSearchParams({}, { replace: true }); openConversation(null); }} aria-label="Back"
                     className="md:hidden p-2 -ml-1 rounded-xl hover:bg-slate-100 transition
                                text-slate-600 flex-shrink-0">
                     <ArrowLeft size={18}/>
@@ -1921,7 +2091,7 @@ export default function Messages() {
                 </div>
 
                 {/* ── FIXED COMPOSER ── */}
-                <div className="msg-chat-foot px-3 pt-2.5 pb-3" style={{ transform: composerVisible ? "translateY(0)" : "translateY(110%)", opacity: composerVisible ? 1 : 0, pointerEvents: composerVisible ? "auto" : "none", transition: "transform 180ms ease, opacity 180ms ease" }}>
+                <div className="msg-chat-foot px-3 pt-2.5 pb-3" style={{ transform: "none", opacity: 1, pointerEvents: "auto" }}>
 
                   {/* Closed conversation notice */}
                   {activeConversation.status === "closed" && (
