@@ -73,6 +73,12 @@ const KEYS = {
 
 const PENDING_VERIFICATION_TTL_MS = 10 * 60 * 1000;
 
+const getCodeExpiryTimestamp = (response) => {
+  const raw = response?.data?.codeExpiresAt ?? response?.codeExpiresAt;
+  const timestamp = typeof raw === "number" ? raw : Date.parse(raw || "");
+  return Number.isFinite(timestamp) && timestamp > Date.now() ? timestamp : undefined;
+};
+
 const readPendingVerification = () => {
   try {
     const raw = sessionStorage.getItem(KEYS.PENDING_VERIFICATION);
@@ -979,6 +985,7 @@ export function UserAuthProvider({ children }) {
 
     persistPendingVerification(email, {
       fullName: trim(returnedName || p.fullName), purpose: "login", provider: "email",
+      expiresAt: getCodeExpiryTimestamp(data),
     });
     setRequiresLoginVerification(false);
     setModalView("verify");
@@ -1015,6 +1022,7 @@ export function UserAuthProvider({ children }) {
 
     persistPendingVerification(email, {
       fullName: trim(p.fullName), purpose: "signup", provider: "email",
+      expiresAt: getCodeExpiryTimestamp(data),
     });
     setModalView("verify");
 
@@ -1167,6 +1175,7 @@ export function UserAuthProvider({ children }) {
       purpose: previous?.purpose || "login",
       provider: previous?.provider || "email",
       fullName: returnedName || pendingRef.current?.fullName || "",
+      expiresAt: getCodeExpiryTimestamp(data),
     });
 
     return data;
@@ -1208,6 +1217,7 @@ export function UserAuthProvider({ children }) {
       if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
         persistPendingVerification(data?.data?.email || "", {
           fullName: data?.data?.fullName || "", purpose: "login", provider: "google",
+          expiresAt: getCodeExpiryTimestamp(data),
         });
         openModal("verify", { skipNotLoggedInMessage: true });
         return { requiresVerification: true, email: data?.data?.email || "" };
@@ -1550,6 +1560,7 @@ export function UserAuthProvider({ children }) {
     if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
       persistPendingVerification(data?.data?.email || pending.email, {
         fullName, purpose: "signup", provider: "google",
+        expiresAt: getCodeExpiryTimestamp(data),
       });
       openModal("verify", { skipNotLoggedInMessage: true });
       pendingRef.current = null;
@@ -1602,6 +1613,7 @@ export function UserAuthProvider({ children }) {
       if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
         persistPendingVerification(data?.data?.email || "", {
           fullName: data?.data?.fullName || "", purpose: "login", provider: "github",
+          expiresAt: getCodeExpiryTimestamp(data),
         });
         openModal("verify", { skipNotLoggedInMessage: true });
         return { requiresVerification: true, email: data?.data?.email || "" };
