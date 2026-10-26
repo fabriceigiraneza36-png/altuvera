@@ -1331,13 +1331,12 @@ export default function AuthModal() {
             travelStyles: form.travelStyles,
           },
         });
-        startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
         setSuccess("Verification code sent.");
       }
     } catch (err) { setError(formatAuthError(err, "We could not create your account. Please try again.")); }
     finally { setLoading(false); }
   }, [agreeTerms, authMethod, completeGoogleSignUp, form, hasGooglePending,
-    isOnline, register, resolveAvatar, setSessionPreference, startExpiryCountdown, termsInputRef]);
+    isOnline, register, resolveAvatar, setSessionPreference, termsInputRef]);
 
   /* ═══════════════════════════════════════════════════════════
      OTP HANDLERS (main)
@@ -1391,13 +1390,12 @@ export default function AuthModal() {
     try {
       setLoading(true); setError(""); setSuccess("");
       await resendCode(activeEmail);
-      startExpiryCountdown(CODE_TTL_RESEND);
       setResendTimer(60); setCode(emptyCode()); setCodeState("");
       setSuccess(`New code sent to ${activeEmail}. Valid for 10 min.`);
       codeRefs.current[0]?.focus();
     } catch (err) { setError(formatAuthError(err, "Unable to resend.")); }
     finally { setLoading(false); }
-  }, [activeEmail, isOnline, loading, resendCode, resendTimer, startExpiryCountdown]);
+  }, [activeEmail, isOnline, loading, resendCode, resendTimer]);
 
   const handleBackFromVerify = useCallback(() => {
     stopExpiryCountdown(); setCode(emptyCode()); setError(""); setSuccess("");
