@@ -10,6 +10,7 @@ import {
   Calendar, Star, Sparkles, Globe, Compass, ShieldCheck, Clock, Mail,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { API_URL } from "../../utils/apiBase";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    STYLES
@@ -312,7 +313,48 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
   const [showSecurityPrompt, setShowSecurityPrompt] = useState(false);
 
   useEffect(() => {
-    if (isVisible) setShowSecurityPrompt(type === "signup");
+    let cancelled = false;
+    if (!isVisible) {
+      setShowSecurityPrompt(false);
+      return undefined;
+    }
+
+    // Offer the optional security setup to new sign-ups and returning users
+    // who have not enrolled another sign-in factor. Failure to load status
+    // must never block sign-in or the welcome screen.
+    setShowSecurityPrompt(true);
+    if (type !== "signup" && type !== "login") {
+      setShowSecurityPrompt(false);
+      return undefined;
+    }
+
+    const checkFactors = async () => {
+      try {
+        const token = localStorage.getItem("altuvera_auth_token") || sessionStorage.getItem("altuvera_auth_token");
+        const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+        const [factorResponse, passkeyResponse] = await Promise.all([
+          fetch(`${API_URL}/users/security/factors`, { headers }),
+          fetch(`${API_URL}/users/security/passkeys`, { headers }),
+        ]);
+        if (!factorResponse.ok || !passkeyResponse.ok) return;
+        const factorsPayload = await factorResponse.json();
+        const passkeysPayload = await passkeyResponse.json();
+        const factors = factorsPayload?.data || {};
+        const passkeys = passkeysPayload?.data || [];
+        const hasExtraMethod = Boolean(
+          factors.authenticatorEnabled ||
+          factors.totpEnabled ||
+          factors.passkeyEnabled ||
+          factors.recoveryCodesAvailable ||
+          (Array.isArray(passkeys) && passkeys.length > 0)
+        );
+        if (!cancelled && hasExtraMethod) setShowSecurityPrompt(false);
+      } catch {
+        // Keep the optional prompt available if the status endpoint is unreachable.
+      }
+    };
+    checkFactors();
+    return () => { cancelled = true; };
   }, [isVisible, type]);
 
   const cfg       = CONTENT[type] || CONTENT.login;
@@ -375,6 +417,12 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
   }, [isVisible]);
 
   const handleClose = () => {
+    // Dismissing the optional setup step should advance to the welcome screen,
+    // not dismiss the authenticated session or reopen the login flow.
+    if (showSecurityPrompt) {
+      setShowSecurityPrompt(false);
+      return;
+    }
     confettiFiredRef.current = false;
     onClose?.();
   };
@@ -462,14 +510,27 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                       <div style={{ width: 62, height: 62, margin: "0 auto 16px", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "#047857", background: "#ecfdf5" }}>
                         <ShieldCheck size={30} />
                       </div>
-                      <h3 style={{ margin: "0 0 8px", color: "#102a20", fontSize: "1.2rem", lineHeight: 1.3, fontWeight: 850 }}>Add another way to sign in?</h3>
-                      <p style={{ margin: "0 auto 20px", maxWidth: 330, color: "#64756b", fontSize: "0.88rem", lineHeight: 1.6 }}>Your account is ready. You can set up a passkey using your device's fingerprint, face unlock, PIN, or security key. You can also skip this and continue.</p>
+                      <h3 style={{ margin: "0 0 8px", color: "#102a20", fontSize: "clamp(1.08rem, 4vw, 1.2rem)", lineHeight: 1.3, fontWeight: 850 }}>Add another way to sign in?</h3>
+                      <p style={{ margin: "0 auto 16px", maxWidth: 340, color: "#64756b", fontSize: "0.88rem", lineHeight: 1.6 }}>Your account is ready. Add a backup sign-in method for extra protection. This is optional, and you can continue without setting anything up.</p>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 9, textAlign: "left", margin: "0 0 18px" }}>
+                        {[
+                          { Icon: ShieldCheck, title: "Authenticator app", detail: "Free 6-digit codes" },
+                          { Icon: CheckCircle, title: "Passkey", detail: "Device PIN, face or fingerprint" },
+                          { Icon: Clock, title: "Recovery codes", detail: "A backup if you lose access" },
+                        ].map(({ Icon: MethodIcon, title, detail }) => (
+                          <div key={title} style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, padding: "11px 10px", border: "1px solid #dcefe4", background: "#fbfefc", borderRadius: 13 }}>
+                            <span style={{ width: 34, height: 34, flex: "0 0 34px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, background: "#ecfdf5", color: "#047857" }}><MethodIcon size={17} /></span>
+                            <span style={{ minWidth: 0 }}><strong style={{ display: "block", color: "#153b2d", fontSize: "0.79rem" }}>{title}</strong><span style={{ display: "block", color: "#64756b", fontSize: "0.7rem", lineHeight: 1.4 }}>{detail}</span></span>
+                          </div>
+                        ))}
+                      </div>
                       <button type="button" onClick={() => { setShowSecurityPrompt(false); window.open("/account/security", "_blank", "noopener,noreferrer"); }} style={{ ...S.cta, marginBottom: 10 }}>
-                        Set up a passkey <ArrowRight size={18} />
+                        Explore security options <ArrowRight size={18} />
                       </button>
-                      <button type="button" onClick={() => setShowSecurityPrompt(false)} style={{ width: "100%", minHeight: 44, border: "1px solid #dbe8e0", borderRadius: 13, background: "#fff", color: "#456153", fontSize: "0.88rem", fontWeight: 750, cursor: "pointer" }}>
-                        Skip for now
+                      <button type="button" onClick={() => setShowSecurityPrompt(false)} style={{ width: "100%", minHeight: 46, border: "1px solid #dbe8e0", borderRadius: 13, background: "#fff", color: "#456153", fontSize: "0.88rem", fontWeight: 750, cursor: "pointer", transition: "background .2s, border-color .2s" }}>
+                        Skip for now and continue <ArrowRight size={15} style={{ marginLeft: 5, verticalAlign: "middle" }} />
                       </button>
+                      <p style={{ margin: "10px 0 0", color: "#7b8c82", fontSize: "0.72rem", lineHeight: 1.4 }}>You can add or change these methods anytime in Account Security.</p>
                     </div>
                   ) : (
                     <>
