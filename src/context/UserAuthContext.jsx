@@ -609,8 +609,9 @@ export function UserAuthProvider({ children }) {
     setPendingEmail("");
   }, []);
 
-  // Restore a still-valid email-code flow after refresh/OAuth navigation.
-  // This one-shot check avoids reopening the modal immediately after a user closes it.
+  // Restore a still-valid email-code flow after a page refresh, including
+  // OAuth callbacks where a previous session token may still exist. Closing the
+  // modal does not discard the challenge; it can be resumed for the same 10 min.
   useEffect(() => {
     if (authLoading || otpRestoreAttemptedRef.current) return;
     otpRestoreAttemptedRef.current = true;
@@ -618,12 +619,10 @@ export function UserAuthProvider({ children }) {
     if (!saved) return;
     setPendingVerification(saved);
     setPendingEmail(saved.email);
-    if (!isAuthenticated) {
-      setModalView("verify");
-      setIsModalOpen(true);
-      document.body.style.overflow = "hidden";
-    }
-  }, [authLoading, isAuthenticated]);
+    setModalView("verify");
+    setIsModalOpen(true);
+    document.body.style.overflow = "hidden";
+  }, [authLoading]);
 
   // ── Sync loginCounter to storage whenever it changes ─────────────────────
   useEffect(() => { store.setLoginCounter(loginCounter); }, [loginCounter]);
@@ -1675,10 +1674,10 @@ export function UserAuthProvider({ children }) {
     const emailOtpAddress = url.searchParams.get("email");
 
     if (emailOtpRequired === "1" && emailOtpAddress) {
-      // This redirect means GitHub identity was accepted but email verification
-      // is still pending. Remove every OAuth/OTP callback parameter BEFORE
-      // starting async work so context rerenders (or StrictMode) cannot consume
-      // the same callback a second time and accidentally finish the flow.
+      // The backend has ALREADY sent the OTP before redirecting here. Never call
+      // /users/login again: that would send a second code and can invalidate the
+      // first one. Persist the original challenge synchronously before React can
+      // render the callback page, so its redirect guard sees the pending OTP.
       [
         "code", "state", "error", "error_description", "auth_provider",
         "emailOtpRequired", "email", "provider",
@@ -1688,20 +1687,15 @@ export function UserAuthProvider({ children }) {
         `${url.pathname}${url.search}${url.hash}`,
       );
 
-      setPendingEmail(emailOtpAddress);
+      persistPendingVerification(emailOtpAddress, {
+        purpose: "login",
+        provider: "github",
+        fullName: "",
+        expiresAt: Date.now() + PENDING_VERIFICATION_TTL_MS,
+      });
       setSocialAuthError("");
-      openModal("login", { skipNotLoggedInMessage: true });
-      try {
-        const result = await login({ email: emailOtpAddress });
-        // Keep the verification form open even if the code-send request returns
-        // a success payload; this is not an authenticated session yet.
-        if (result?.requiresVerification || result?.requiresEmailVerification) {
-          setPendingEmail(result?.email || emailOtpAddress);
-          setModalView("verify");
-        }
-      } catch (err) {
-        setSocialAuthError(err?.message || "Could not send email verification code.");
-      }
+      setModalView("verify");
+      openModal("verify", { skipNotLoggedInMessage: true });
       return;
     }
     if (!code && !oauthErr) return;
