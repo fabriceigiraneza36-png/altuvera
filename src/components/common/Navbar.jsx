@@ -31,7 +31,6 @@ import {
   FiCreditCard,
   FiUsers,
 } from "react-icons/fi";
-import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { preloadRoute } from "../../utils/routeUtils";
@@ -295,7 +294,6 @@ const Navbar = () => {
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { favorites } = useApp();
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
   const { countries: backendCountries = [], loading: countriesLoading, error: countriesError } = useCountries({ limit: 500 });
@@ -580,7 +578,7 @@ const Navbar = () => {
     const items = [
       { to: "/profile", icon: FiUser, label: "Profile" },
       { to: "/my-bookings", icon: FiCalendar, label: "Your Bookings" },
-      { to: "/wishlist", icon: FiHeart, label: "Your Wishlist" },
+      { to: "/wishlist", icon: FiHeart, label: "Wishlist" },
       { to: "/settings", icon: FiSettings, label: "Your Settings" },
     ];
     if (user?.role === "admin" || user?.role === "manager")
@@ -1023,19 +1021,18 @@ const Navbar = () => {
           {/* ── Actions ── */}
           <div className="nav__actions">
 
-            <Link to="/gallery" className="nav__icon-link">
-              <span
+            <div className="nav__icon-link">
+              <button
+                type="button"
                 className="nav__icon-btn"
-                role="button"
-                aria-label="Favorites"
+                aria-label="Search destinations and countries"
+                aria-haspopup="dialog"
+                onClick={(event) => openSearch(event)}
               >
-                <FiHeart size={19} />
-                {favorites.length > 0 && (
-                  <span className="nav__badge">{favorites.length}</span>
-                )}
+                <FiSearch size={19} />
                 <span className="nav__icon-ripple" />
-              </span>
-            </Link>
+              </button>
+            </div>
 
             {/* Auth */}
             {authLoading ? (
