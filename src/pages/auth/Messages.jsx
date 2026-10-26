@@ -787,6 +787,11 @@ const MsgBubble = React.memo(function MsgBubble({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState(null);
+  const actionButtonRef = useRef(null);
+  const actionMenuRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+  const longPressTriggeredRef = useRef(false);
   const touchStartX = useRef(null);
   const swipeOffsetX = useRef(0);
   const swipeTriggered = useRef(false);
@@ -800,22 +805,88 @@ const MsgBubble = React.memo(function MsgBubble({
   const isEditing = String(editingId) === String(message.id);
   const destinationName = message.metadata?.destinationName || message.metadata?.destination_name || null;
 
+  useLayoutEffect(() => {
+    if (!menuOpen) return undefined;
+    const positionMenu = () => {
+      const anchor = actionButtonRef.current;
+      const menu = actionMenuRef.current;
+      if (!anchor || !menu) return;
+      const margin = 10;
+      const gap = 6;
+      const rect = anchor.getBoundingClientRect();
+      const width = Math.min(menu.offsetWidth || 208, window.innerWidth - margin * 2);
+      const height = menu.offsetHeight || 220;
+      const roomBelow = window.innerHeight - rect.bottom;
+      const roomAbove = rect.top;
+      const placeAbove = roomBelow < Math.min(height, 260) + gap && roomAbove > roomBelow;
+      const top = placeAbove
+        ? Math.max(margin, rect.top - height - gap)
+        : Math.min(window.innerHeight - height - margin, rect.bottom + gap);
+      const preferredLeft = mine ? rect.right - width : rect.left;
+      const left = Math.max(margin, Math.min(window.innerWidth - width - margin, preferredLeft));
+      setMenuPosition({ top, left, width, maxHeight: Math.max(120, window.innerHeight - margin * 2) });
+    };
+    positionMenu();
+    const frame = window.requestAnimationFrame(positionMenu);
+    window.addEventListener("resize", positionMenu);
+    window.addEventListener("scroll", positionMenu, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", positionMenu);
+      window.removeEventListener("scroll", positionMenu, true);
+    };
+  }, [menuOpen, mine]);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const closeOnOutside = (event) => {
+      if (actionMenuRef.current?.contains(event.target) || actionButtonRef.current?.contains(event.target)) return;
+      setMenuOpen(false);
+    };
+    const closeOnEscape = (event) => { if (event.key === "Escape") setMenuOpen(false); };
+    document.addEventListener("pointerdown", closeOnOutside, true);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutside, true);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
+
+  const clearLongPress = () => {
+    if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = null;
+  };
+
   return (
     <div
       className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}
       style={{ transform: swipeOffset ? `translateX(${swipeOffset}px)` : undefined, transition: touchStartX.current == null ? "transform 180ms cubic-bezier(.2,.8,.2,1)" : "none" }}
-      onTouchStart={event => { touchStartX.current = event.touches?.[0]?.clientX ?? null; swipeOffsetX.current = 0; swipeTriggered.current = false; }}
+      onTouchStart={event => {
+        touchStartX.current = event.touches?.[0]?.clientX ?? null;
+        swipeOffsetX.current = 0;
+        swipeTriggered.current = false;
+        longPressTriggeredRef.current = false;
+        clearLongPress();
+        longPressTimerRef.current = window.setTimeout(() => {
+          longPressTriggeredRef.current = true;
+          setMenuOpen(true);
+          if (navigator.vibrate) navigator.vibrate(12);
+        }, 520);
+      }}
       onTouchMove={event => {
         if (touchStartX.current == null) return;
         const currentX = event.touches?.[0]?.clientX;
         if (currentX == null) return;
         const delta = currentX - touchStartX.current;
-        if (Math.abs(delta) > 8) { swipeOffsetX.current = Math.max(-12, Math.min(76, delta)); setSwipeOffset(swipeOffsetX.current); }
+        if (Math.abs(delta) > 8) { clearLongPress(); swipeOffsetX.current = Math.max(-12, Math.min(76, delta)); setSwipeOffset(swipeOffsetX.current); }
       }}
       onTouchEnd={() => {
+        clearLongPress();
         if (Math.abs(swipeOffsetX.current) > 48 && !swipeTriggered.current) { swipeTriggered.current = true; onReply(message.id); }
         touchStartX.current = null; swipeOffsetX.current = 0; setSwipeOffset(0);
       }}
+      onTouchCancel={() => { clearLongPress(); touchStartX.current = null; swipeOffsetX.current = 0; setSwipeOffset(0); }}
+      onDoubleClick={() => { if (!isDeleted && !isPending) onReact(message.id, "❤️"); }}
       title="Swipe horizontally to reply on touch screens">
       {!mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mr-2 self-end mb-6">A</div>}
 
@@ -883,19 +954,19 @@ const MsgBubble = React.memo(function MsgBubble({
 
           {!isPending && !isDeleted && !isEditing && (
             <div className="relative flex-shrink-0">
-              <button onClick={()=>setMenuOpen(v=>!v)} aria-label="Message actions" className="w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 flex items-center justify-center opacity-100 touch-manipulation transition">
+              <button ref={actionButtonRef} onClick={()=>{setMenuPosition(null);setMenuOpen(v=>!v)}} aria-label="Message actions" aria-expanded={menuOpen} className="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 flex items-center justify-center opacity-100 touch-manipulation transition">
                 <MoreHorizontal size={15}/>
               </button>
               {menuOpen && (
-                <div className={`absolute top-full mt-1 z-40 w-40 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-xl p-1 ${mine ? "right-0" : "left-0"}`}>
-                  <button type="button" onClick={()=>{setMenuOpen(false);setReactionPickerOpen(true)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-emerald-50"><Smile size={15}/> React</button>
-                  <button type="button" onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-emerald-50"><CornerUpLeft size={15}/> Reply</button>
+                <div ref={actionMenuRef} style={{ position: "fixed", top: menuPosition?.top ?? 0, left: menuPosition?.left ?? 10, width: menuPosition?.width ?? "min(13rem, calc(100vw - 20px))", maxHeight: menuPosition?.maxHeight ?? "calc(100dvh - 20px)", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", visibility: menuPosition ? "visible" : "hidden" }} className="z-[140] rounded-2xl border border-slate-200 bg-white shadow-2xl p-1.5">
+                  <button type="button" onClick={()=>{setMenuOpen(false);setReactionPickerOpen(true)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><Smile size={17}/> React</button>
+                  <button type="button" onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><CornerUpLeft size={17}/> Reply</button>
                   {mine && <>
-                    <button type="button" onClick={()=>{onStartEdit(message);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-slate-50"><Edit3 size={15}/> Edit</button>
-                    <button type="button" onClick={()=>{onUnsend(message.id);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"><Undo2 size={15}/> Unsend</button>
+                    <button type="button" onClick={()=>{onStartEdit(message);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-slate-50 active:bg-slate-100"><Edit3 size={17}/> Edit</button>
+                    <button type="button" onClick={()=>{onUnsend(message.id);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-rose-600 hover:bg-rose-50 active:bg-rose-100"><Undo2 size={17}/> Unsend</button>
                   </>}
-                  <button type="button" onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-slate-50"><Pin size={15}/> {message.isPinned ? "Unpin" : "Pin"}</button>
-                  <button type="button" onClick={()=>{onHighlight(message.id,!message.isHighlighted);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-amber-50"><Highlighter size={15}/> {message.isHighlighted ? "Remove highlight" : "Highlight"}</button>
+                  <button type="button" onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-slate-50 active:bg-slate-100"><Pin size={17}/> {message.isPinned ? "Unpin" : "Pin"}</button>
+                  <button type="button" onClick={()=>{onHighlight(message.id,!message.isHighlighted);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-amber-50 active:bg-amber-100"><Highlighter size={17}/> {message.isHighlighted ? "Remove highlight" : "Highlight"}</button>
                 </div>
               )}
               {reactionPickerOpen && (
