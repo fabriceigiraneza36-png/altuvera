@@ -970,7 +970,10 @@ export default function AuthModal() {
 
   useEffect(() => {
     if (!isModalOpen) return;
-    stopExpiryCountdown();
+    // When reopening a saved OTP, keep the original absolute expiry. Resetting
+    // this countdown to ten minutes would make the UI promise more time than
+    // the server will accept after a refresh or a dismissed modal.
+    if (!isVerify) stopExpiryCountdown();
     resetForgotUsername();
     setError(""); setSuccess("");
     setCode(emptyCode()); setResendTimer(0);
@@ -980,7 +983,7 @@ export default function AuthModal() {
     setForm((p) => ({ ...p, keepSignedIn: persistSession }));
     const focusTimer = window.setTimeout(() => firstInputRef.current?.focus(), 350);
     return () => window.clearTimeout(focusTimer);
-  }, [isLogin, isModalOpen, isRegister, persistSession, hasGooglePending,
+  }, [isLogin, isModalOpen, isRegister, isVerify, persistSession, hasGooglePending,
     stopExpiryCountdown, resetForgotUsername]);
 
   useEffect(() => {
