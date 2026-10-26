@@ -1672,6 +1672,7 @@ export function UserAuthProvider({ children }) {
     const provider = url.searchParams.get("auth_provider");
     const emailOtpRequired = url.searchParams.get("emailOtpRequired");
     const emailOtpAddress = url.searchParams.get("email");
+    const emailOtpExpiry = Number(url.searchParams.get("expiresAt"));
 
     if (emailOtpRequired === "1" && emailOtpAddress) {
       // The backend has ALREADY sent the OTP before redirecting here. Never call
@@ -1680,7 +1681,7 @@ export function UserAuthProvider({ children }) {
       // render the callback page, so its redirect guard sees the pending OTP.
       [
         "code", "state", "error", "error_description", "auth_provider",
-        "emailOtpRequired", "email", "provider",
+        "emailOtpRequired", "email", "provider", "expiresAt",
       ].forEach((p) => url.searchParams.delete(p));
       window.history.replaceState(
         {}, document.title,
@@ -1691,7 +1692,9 @@ export function UserAuthProvider({ children }) {
         purpose: "login",
         provider: "github",
         fullName: "",
-        expiresAt: Date.now() + PENDING_VERIFICATION_TTL_MS,
+        expiresAt: Number.isFinite(emailOtpExpiry) && emailOtpExpiry > Date.now()
+          ? emailOtpExpiry
+          : Date.now() + PENDING_VERIFICATION_TTL_MS,
       });
       setSocialAuthError("");
       setModalView("verify");
