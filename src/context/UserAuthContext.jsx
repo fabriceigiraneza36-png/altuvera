@@ -1007,6 +1007,7 @@ export function UserAuthProvider({ children }) {
         phone:    trim(p.phone)    || undefined,
         bio:      trim(p.bio)      || undefined,
         avatar:   trim(p.avatar)   || undefined,
+        preferences: p.preferences && typeof p.preferences === "object" ? p.preferences : undefined,
       }),
     }).catch((err) => {
       pendingRef.current = null;
@@ -1206,7 +1207,9 @@ export function UserAuthProvider({ children }) {
       });
 
       if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
-        setPendingEmail(data?.data?.email || "");
+        persistPendingVerification(data?.data?.email || "", {
+          fullName: data?.data?.fullName || "", purpose: "login", provider: "google",
+        });
         openModal("verify", { skipNotLoggedInMessage: true });
         return { requiresVerification: true, email: data?.data?.email || "" };
       }
@@ -1248,7 +1251,7 @@ export function UserAuthProvider({ children }) {
         errData?.requiresReVerification
       ) {
         const revEmail = errData.email || "";
-        setPendingEmail(revEmail);
+        persistPendingVerification(revEmail, { purpose: "reverification", provider: "google" });
         setSocialAuthError("");
         setRequiresLoginVerification(true);
         setModalView("verify");
@@ -1261,7 +1264,7 @@ export function UserAuthProvider({ children }) {
     } finally {
       setGoogleLoading(false);
     }
-  }, [authFetch, closeModal, openModal, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, clearPendingVerification, closeModal, openModal, persistPendingVerification, persistSession, saveAuth, triggerCongratulation]);
 
   // ============================================================================
   // One Tap Response Handler
@@ -1535,7 +1538,7 @@ export function UserAuthProvider({ children }) {
         errData?.code === "REVERIFICATION_REQUIRED" ||
         errData?.requiresReVerification
       ) {
-        setPendingEmail(errData.email || pending.email);
+        persistPendingVerification(errData.email || pending.email, { purpose: "reverification", provider: "google" });
         setRequiresLoginVerification(true);
         setModalView("verify");
         pendingRef.current = null;
@@ -1546,7 +1549,9 @@ export function UserAuthProvider({ children }) {
     }
 
     if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
-      setPendingEmail(data?.data?.email || pending.email);
+      persistPendingVerification(data?.data?.email || pending.email, {
+        fullName, purpose: "signup", provider: "google",
+      });
       openModal("verify", { skipNotLoggedInMessage: true });
       pendingRef.current = null;
       setGoogleUser(null);
@@ -1567,7 +1572,7 @@ export function UserAuthProvider({ children }) {
     triggerCongratulation("signup");
 
     return data;
-  }, [authFetch, closeModal, googleUser, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, clearPendingVerification, closeModal, googleUser, persistPendingVerification, persistSession, saveAuth, triggerCongratulation]);
 
   const clearGooglePending = useCallback(() => {
     setGoogleUser(null);
