@@ -1649,7 +1649,15 @@ export default function Messages() {
 
             {loadingMsgs && activeId ? (
               /* ── Conversation Loading State ── */
-              <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
+              <div className="relative flex-1 flex flex-col min-h-0 bg-slate-50">
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/90 px-5 text-center backdrop-blur-sm" role="status" aria-live="polite">
+                  <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-[1.75rem] border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 shadow-[0_16px_45px_rgba(5,150,105,0.14)] sm:h-28 sm:w-28">
+                    <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} className="h-14 w-14 animate-bounce object-contain sm:h-16 sm:w-16" onError={event => { event.currentTarget.style.display = "none"; }}/>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-extrabold text-emerald-800"><RefreshCw size={15} className="animate-spin"/>Opening conversation…</div>
+                  <p className="mt-2 max-w-xs text-xs leading-relaxed text-slate-500">Loading your messages securely. Please keep this page open.</p>
+                  <div className="mt-4 h-1.5 w-44 overflow-hidden rounded-full bg-emerald-50"><div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-emerald-500 to-emerald-300"/></div>
+                </div>
                 <div className="msg-chat-head px-4 py-3 flex items-center gap-3 shadow-sm bg-white">
                   <div className="w-9 h-9 rounded-xl bg-emerald-100 animate-pulse flex-shrink-0" />
                   <div className="flex-1 space-y-2">
