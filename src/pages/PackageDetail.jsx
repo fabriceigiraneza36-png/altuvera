@@ -272,11 +272,11 @@ export default function PackageDetail() {
     else if (Number.isInteger(adults) && adults >= 1 && adults + children > 500)
       next.children = "The total number of travelers cannot exceed 500.";
     if (form.travel_date && form.travel_date < todayDate)
-      next.travel_date = "Departure date cannot be in the past.";
+      next.travel_date = "Arrival date cannot be in the past.";
     if (form.end_date && form.end_date < todayDate)
-      next.end_date = "Return date cannot be in the past.";
+      next.end_date = "Departure date cannot be in the past.";
     if (form.travel_date && form.end_date && form.end_date < form.travel_date)
-      next.end_date = "Return date must be on or after the departure date.";
+      next.end_date = "Departure must be on or after the arrival date.";
     if (needsPhone && !form.guest_phone.trim())
       next.guest_phone = "A phone number is required for this contact method.";
     return next;
@@ -468,7 +468,7 @@ export default function PackageDetail() {
                 <input type="date" min={todayDate} value={form.travel_date} onChange={(e) => update("travel_date", e.target.value)} />
               </Field>
               <Field label="Departure" error={errors.end_date}>
-                <input type="date" min={todayDate} value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
+                <input type="date" min={form.travel_date || todayDate} value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
               </Field>
               <Field label="Adults" required error={errors.adults}>
                 <input type="number" min="1" max="500" value={form.adults} onChange={(e) => update("adults", e.target.value)} />
