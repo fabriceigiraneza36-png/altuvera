@@ -1226,7 +1226,35 @@ export default function UserDashboard() {
     : travelStats.completed >= 2  ? { label: "Trailblazer",       pct: Math.round(travelStats.completed / 5  * 100), next: 5  }
     :                               { label: "Explorer",           pct: Math.round(travelStats.completed / 2  * 100), next: 2  };
 
-  const recentActivity = useMemo(() => notifications.slice(0, 5), [notifications]);
+  const isUrgentBookingActivity = (notification = {}) => {
+    const type = String(notification.type || "").toLowerCase();
+    const category = String(notification.category || "").toLowerCase();
+    const title = String(notification.title || "");
+    const message = String(notification.message || "");
+    return type.includes("booking") || type.includes("itinerary") ||
+      category === "booking" || category === "itinerary" ||
+      /\\bbooking\\b|\\breservation\\b|\\bitinerary\\b|\\btrip request\\b/i.test(title + " " + message);
+  };
+
+  const getDashboardActivityTarget = (notification = {}) => {
+    const metadata = notification.metadata && typeof notification.metadata === "object"
+      ? notification.metadata
+      : {};
+    const bookingId = notification.booking_id || notification.bookingId ||
+      metadata.bookingId || metadata.booking_id;
+    return isUrgentBookingActivity(notification) && bookingId
+      ? `/my-bookings?bookingId=${encodeURIComponent(bookingId)}`
+      : "/notifications";
+  };
+
+  // Booking and itinerary updates are time-sensitive. Keep them ahead of
+  // routine activity while preserving their relative order within each group.
+  const recentActivity = useMemo(
+    () => [...notifications]
+      .sort((a, b) => Number(isUrgentBookingActivity(b)) - Number(isUrgentBookingActivity(a)))
+      .slice(0, 5),
+    [notifications]
+  );
 
   /* ═════════════════════════════════════════════════════════════════════
      RENDER
@@ -1621,19 +1649,47 @@ export default function UserDashboard() {
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.07 }}
-                      style={S.notifItem}
+                      style={{
+                        ...S.notifItem,
+                        ...(isUrgentBookingActivity(n) ? {
+                          background: "#fff1f2",
+                          borderLeft: "3px solid #dc2626",
+                          paddingLeft: 10,
+                        } : {}),
+                      }}
                     >
-                      <div style={S.notifDot(n.is_read)} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={S.notifTitle}>{n.title}</p>
-                        {n.message && (
-                          <span style={S.notifSub}>
-                            {n.message.length > 75
-                              ? n.message.slice(0, 75) + "…"
-                              : n.message}
-                          </span>
-                        )}
-                      </div>
+                      <Link
+                        to={getDashboardActivityTarget(n)}
+                        aria-label={`Open notification: ${String(n.title || "Activity")}`}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10,
+                          flex: 1, minWidth: 0, color: "inherit", textDecoration: "none",
+                        }}
+                      >
+                        <div style={S.notifDot(n.is_read)} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {isUrgentBookingActivity(n) && (
+                            <span style={{
+                              display: "inline-flex", alignItems: "center", gap: 4,
+                              marginBottom: 4, padding: "2px 7px", borderRadius: 999,
+                              background: "#fee2e2", color: "#991b1b",
+                              fontSize: 9, fontWeight: 900, letterSpacing: ".06em",
+                            }}>URGENT · BOOKING</span>
+                          )}
+                          <p style={{
+                            ...S.notifTitle,
+                            ...(isUrgentBookingActivity(n) ? { color: "#991b1b" } : {}),
+                          }}>{n.title || "Activity update"}</p>
+                          {n.message && (
+                            <span style={S.notifSub}>
+                              {String(n.message).length > 75
+                                ? String(n.message).slice(0, 75) + "…"
+                                : String(n.message)}
+                            </span>
+                          )}
+                        </div>
+                        <ChevronRight size={14} aria-hidden="true" />
+                      </Link>
                     </motion.div>
                   ))}
                 </AnimatePresence>
