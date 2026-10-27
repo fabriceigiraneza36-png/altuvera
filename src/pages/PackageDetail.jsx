@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { packagesAPI } from "../api/packages";
 import { useUserAuth } from "../context/UserAuthContext";
+import { apiFetch } from "../utils/apiBase";
 import CountryPhoneSelect, {
   COUNTRIES,
   FlagImg,
@@ -203,6 +204,12 @@ export default function PackageDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
+  const [packageComments, setPackageComments] = useState([]);
+  const [packageCommentText, setPackageCommentText] = useState("");
+  const [packageCommentsLoading, setPackageCommentsLoading] = useState(false);
+  const [packageCommentBusy, setPackageCommentBusy] = useState(false);
+  const [packageCommentError, setPackageCommentError] = useState("");
+  const [packageCommentNotice, setPackageCommentNotice] = useState("");
   const canRequest = isAuthenticated && !authLoading;
   const accountName = String(user?.fullName || user?.full_name || user?.name || "").trim();
   const accountEmail = String(user?.email || "").trim().toLowerCase();
@@ -237,6 +244,47 @@ export default function PackageDetail() {
 
     return () => { alive = false; };
   }, [slug]);
+
+  useEffect(() => {
+    if (!pkg?.id) return undefined;
+    let alive = true;
+    setPackageCommentsLoading(true);
+    apiFetch(`/packages/${encodeURIComponent(pkg.id)}/comments`)
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.success === false) throw new Error(payload.message || "Package discussion is unavailable.");
+        if (alive) setPackageComments(Array.isArray(payload.data) ? payload.data : []);
+      })
+      .catch((error) => { if (alive) setPackageCommentError(error.message || "Could not load comments."); })
+      .finally(() => { if (alive) setPackageCommentsLoading(false); });
+    return () => { alive = false; };
+  }, [pkg?.id]);
+
+  const submitPackageComment = async (event) => {
+    event.preventDefault();
+    const content = packageCommentText.trim();
+    if (!content || packageCommentBusy) return;
+    if (!isAuthenticated) { openModal("login"); return; }
+    setPackageCommentBusy(true);
+    setPackageCommentError("");
+    setPackageCommentNotice("");
+    try {
+      const response = await apiFetch(`/packages/${encodeURIComponent(pkg.id)}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success || !payload.data) throw new Error(payload.message || "Could not publish your comment.");
+      setPackageComments((current) => [payload.data, ...current]);
+      setPackageCommentText("");
+      setPackageCommentNotice("Your comment has been published.");
+    } catch (error) {
+      setPackageCommentError(error.message || "Could not publish your comment.");
+    } finally {
+      setPackageCommentBusy(false);
+    }
+  };
 
   const update = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -545,6 +593,51 @@ export default function PackageDetail() {
           </div>
         )}
       </section>
+
+      <section className="pkg-discussion" aria-labelledby="pkg-discussion-title">
+        <div className="pkg-discussion-head">
+          <div>
+            <span className="pkg-eyebrow">TRAVELLER COMMUNITY</span>
+            <h2 id="pkg-discussion-title">Package discussion <span>{packageComments.length}</span></h2>
+            <p>Ask questions or share useful thoughts about {pkg?.title || "this safari package"}.</p>
+          </div>
+          <Link className="pkg-discussion-chat" to={`/messages?newConversation=1&inquiryType=package&resourceId=${encodeURIComponent(pkg?.id || "")}&resourceTitle=${encodeURIComponent(pkg?.title || "")}&resourceSlug=${encodeURIComponent(pkg?.slug || slug || "")}&resourceImage=${encodeURIComponent(pkg?.cover_image_url || pkg?.image_url || "")}`}>
+            <MessageCircle size={17}/> Discuss with our team
+          </Link>
+        </div>
+
+        <form className="pkg-comment-form" onSubmit={submitPackageComment}>
+          <div className="pkg-comment-avatar">{accountAvatar ? <img src={accountAvatar} alt="" /> : <span>{(accountName || "T").slice(0,1).toUpperCase()}</span>}</div>
+          <div className="pkg-comment-compose">
+            <textarea value={packageCommentText} onChange={(event) => setPackageCommentText(event.target.value)} maxLength={4000} rows={3}
+              placeholder={isAuthenticated ? "Write a helpful comment or ask a question…" : "Sign in to join the package discussion."}
+              aria-label="Package comment" />
+            <div className="pkg-comment-actions">
+              <small>{packageCommentText.length}/4000 · Be respectful and helpful.</small>
+              <button type="submit" disabled={packageCommentBusy || !packageCommentText.trim()}>
+                {packageCommentBusy ? <><Loader2 size={15} className="spin"/> Posting…</> : <><Send size={15}/> Post comment</>}
+              </button>
+            </div>
+          </div>
+        </form>
+        {packageCommentError && <p role="alert" className="pkg-comment-alert">{packageCommentError}</p>}
+        {packageCommentNotice && <p role="status" className="pkg-comment-notice">{packageCommentNotice}</p>}
+        <div className="pkg-comment-list">
+          {packageCommentsLoading ? <p className="pkg-comment-empty">Loading the discussion…</p> :
+            packageComments.length === 0 ? <p className="pkg-comment-empty">No comments yet. Start the conversation and help other travellers.</p> :
+            packageComments.map((comment) => {
+              const name = comment.authorName || "Traveller";
+              const avatar = comment.authorAvatar || "";
+              return <article className="pkg-comment" key={comment.id}>
+                <div className="pkg-comment-avatar">{avatar ? <img src={avatar} alt="" loading="lazy"/> : <span>{name.slice(0,1).toUpperCase()}</span>}</div>
+                <div className="pkg-comment-content">
+                  <div className="pkg-comment-byline"><strong>{name}</strong><time dateTime={comment.createdAt || undefined}>{comment.createdAt ? new Date(comment.createdAt).toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}) : "Just now"}</time></div>
+                  <p>{comment.content}</p>
+                </div>
+              </article>;
+            })}
+        </div>
+      </section>
     </main>
   );
 }
@@ -558,7 +651,7 @@ const CSS = `
 .pkg-layout{max-width:1400px;margin:auto;padding:0 clamp(16px,4vw,48px);display:grid;grid-template-columns:minmax(0,1.08fr) minmax(420px,.92fr);gap:28px;align-items:start}
 .pkg-poster{position:sticky;top:92px;height:min(76vh,760px);min-height:560px;border-radius:28px;overflow:hidden;background:#064e3b;box-shadow:0 22px 70px rgba(2,44,34,.18)}
 .pkg-poster>img{width:100%;height:100%;object-fit:cover;display:block}
-.pkg-gallery-controls{position:absolute;z-index:3;left:16px;right:16px;bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}.pkg-gallery-controls>button{width:38px;height:38px;border:1px solid rgba(255,255,255,.5);border-radius:50%;background:rgba(8,20,16,.4);color:white;font-size:28px;line-height:1;backdrop-filter:blur(8px)}.pkg-gallery-dots{display:flex;gap:7px;align-items:center;justify-content:center}.pkg-gallery-dots button{width:7px;height:7px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.58)}.pkg-gallery-dots button.active{width:22px;border-radius:9px;background:#fff}.pkg-detail-copy{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:0 0 8px;padding:24px;border:1px solid rgba(16,80,55,.12);border-radius:22px;background:rgba(255,255,255,.92)}.pkg-detail-copy>p{grid-column:1/-1;margin:0;line-height:1.75;color:#475569}.pkg-detail-copy .pkg-detail-lead{font-size:1.12rem;color:#14532d;font-weight:650}.pkg-detail-copy section h2{font-size:1rem;font-weight:750;margin:0 0 10px;color:#0f3527}.pkg-detail-copy ul{margin:0;padding-left:19px;display:grid;gap:7px;color:#475569;font-size:.94rem;line-height:1.5}@media(max-width:720px){.pkg-detail-copy{grid-template-columns:1fr;padding:18px}.pkg-gallery-controls{left:10px;right:10px;bottom:10px}}.pkg-poster-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,44,34,.08) 25%,rgba(2,44,34,.9) 100%)}
+.pkg-gallery-controls{position:absolute;z-index:3;left:16px;right:16px;bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}.pkg-gallery-controls>button{width:38px;height:38px;border:1px solid rgba(255,255,255,.5);border-radius:50%;background:rgba(8,20,16,.4);color:white;font-size:28px;line-height:1;backdrop-filter:blur(8px)}.pkg-gallery-dots{display:flex;gap:7px;align-items:center;justify-content:center}.pkg-gallery-dots button{width:7px;height:7px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.58)}.pkg-gallery-dots button.active{width:22px;border-radius:9px;background:#fff}.pkg-discussion{max-width:1400px;margin:26px auto 0;padding:clamp(18px,3vw,32px);width:calc(100% - clamp(32px,8vw,96px));box-sizing:border-box;background:#fff;border:1px solid #d7eee1;border-radius:26px;box-shadow:0 12px 36px rgba(2,44,34,.06)}.pkg-discussion-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}.pkg-discussion-head h2{margin:7px 0 6px;font-size:clamp(22px,3vw,30px);font-weight:850;letter-spacing:-.03em;color:#10231b}.pkg-discussion-head h2 span{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;margin-left:5px;padding:0 8px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:12px;vertical-align:middle}.pkg-discussion-head p{margin:0;color:#64748b;font-size:13px;line-height:1.6}.pkg-discussion-chat{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;padding:11px 14px;border-radius:13px;background:#047857;color:white;text-decoration:none;font-size:12px;font-weight:800}.pkg-comment-form{display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid #d7eee1;border-radius:18px;background:#f8fffb}.pkg-comment-avatar{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:42px;height:42px;border-radius:50%;overflow:hidden;background:#d1fae5;color:#047857;font-size:15px;font-weight:800}.pkg-comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}.pkg-comment-compose{min-width:0;flex:1}.pkg-comment-compose textarea{width:100%;box-sizing:border-box;resize:vertical;border:1px solid #d1e7dc;border-radius:12px;padding:12px;background:white;color:#10231b;outline:none;font:inherit;font-size:13px;line-height:1.6}.pkg-comment-compose textarea:focus{border-color:#059669;box-shadow:0 0 0 3px rgba(5,150,105,.1)}.pkg-comment-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}.pkg-comment-actions small{color:#64748b;font-size:10px}.pkg-comment-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:11px;padding:10px 13px;background:#047857;color:white;font-size:12px;font-weight:800}.pkg-comment-actions button:disabled{opacity:.5;cursor:not-allowed}.pkg-comment-alert,.pkg-comment-notice{margin:12px 0 0;border-radius:12px;padding:11px 13px;font-size:12px}.pkg-comment-alert{border:1px solid #fecaca;background:#fef2f2;color:#b91c1c}.pkg-comment-notice{border:1px solid #a7f3d0;background:#ecfdf5;color:#047857}.pkg-comment-list{display:grid;gap:0;margin-top:12px}.pkg-comment{display:flex;align-items:flex-start;gap:12px;padding:18px 4px;border-bottom:1px solid #edf5ef}.pkg-comment:last-child{border-bottom:0}.pkg-comment-content{flex:1;min-width:0}.pkg-comment-byline{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.pkg-comment-byline strong{color:#173b2b;font-size:12px;font-weight:800}.pkg-comment-byline time{color:#94a3b8;font-size:10px}.pkg-comment-content p{white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0 0;color:#475569;font-size:13px;line-height:1.7}.pkg-comment-empty{padding:22px 8px;text-align:center;color:#64748b;font-size:12px}@media(max-width:640px){.pkg-discussion{width:calc(100% - 28px);padding:17px;margin-top:18px;border-radius:20px}.pkg-discussion-head{flex-direction:column}.pkg-discussion-chat{width:100%;box-sizing:border-box}.pkg-comment-form{padding:11px;gap:9px}.pkg-comment-avatar{width:35px;height:35px}.pkg-comment-actions{align-items:flex-end}.pkg-comment-actions small{max-width:55%;line-height:1.4}}.pkg-detail-copy{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:0 0 8px;padding:24px;border:1px solid rgba(16,80,55,.12);border-radius:22px;background:rgba(255,255,255,.92)}.pkg-detail-copy>p{grid-column:1/-1;margin:0;line-height:1.75;color:#475569}.pkg-detail-copy .pkg-detail-lead{font-size:1.12rem;color:#14532d;font-weight:650}.pkg-detail-copy section h2{font-size:1rem;font-weight:750;margin:0 0 10px;color:#0f3527}.pkg-detail-copy ul{margin:0;padding-left:19px;display:grid;gap:7px;color:#475569;font-size:.94rem;line-height:1.5}@media(max-width:720px){.pkg-detail-copy{grid-template-columns:1fr;padding:18px}.pkg-gallery-controls{left:10px;right:10px;bottom:10px}}.pkg-poster-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,44,34,.08) 25%,rgba(2,44,34,.9) 100%)}
 .pkg-poster-copy{position:absolute;left:clamp(22px,4vw,48px);right:24px;bottom:clamp(24px,4vw,48px);color:white}
 .pkg-poster-copy h1{font:400 clamp(32px,4vw,58px)/1.05 "DM Serif Display",serif;margin:10px 0 18px;max-width:760px}
 .pkg-meta{display:flex;flex-wrap:wrap;gap:10px}.pkg-meta span,.pkg-meta strong{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.13);backdrop-filter:blur(12px);font-size:12px}.pkg-meta strong{background:#10b981}
