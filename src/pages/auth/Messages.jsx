@@ -873,7 +873,7 @@ const MsgBubble = React.memo(function MsgBubble({
   const relatedResourceTitle = relatedResource?.title || relatedResource?.name || null;
   const relatedResourceImage = relatedResource?.image || relatedResource?.imageUrl || relatedResource?.image_url || null;
   const relatedResourcePath = relatedResource?.type === "package" && (relatedResource.slug || relatedResource.id) ? `/packages/${relatedResource.slug || relatedResource.id}`
-    : relatedResource?.type === "destination" && (relatedResource.slug || relatedResource.id) ? `/destination/${relatedResource.slug || relatedResource.id}`
+    : relatedResource?.type === "destination" && (relatedResource.slug || relatedResource.id) ? `/destinations/${relatedResource.slug || relatedResource.id}`
     : relatedResource?.type === "country" && (relatedResource.slug || relatedResource.title) ? `/country/${relatedResource.slug || encodeURIComponent(relatedResource.title)}`
     : (relatedResource?.type === "post" || relatedResource?.type === "story") && (relatedResource.slug || relatedResource.id) ? `/post/${relatedResource.slug || relatedResource.id}` : null;
 
