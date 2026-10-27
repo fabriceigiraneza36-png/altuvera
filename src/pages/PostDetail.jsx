@@ -15,6 +15,7 @@ import {
 import AnimatedSection from '../components/common/AnimatedSection';
 import { getBrandLogoUrl, toAbsoluteUrl, toMetaDescription } from '../utils/seo';
 import { apiFetch } from '../utils/apiBase';
+import { useUserAuth } from '../context/UserAuthContext';
 
 /* ═══════════════════════════════════════════════════════
    API
@@ -501,6 +502,9 @@ function ErrorState({ error, onRetry }) {
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════ */
 const PostDetail = () => {
+  const { user, isAuthenticated } = useUserAuth() || {};
+  const profileName = String(user?.fullName || user?.full_name || user?.name || '').trim();
+  const profileAvatar = user?.avatar || user?.avatarUrl || user?.avatar_url || user?.picture || null;
   const { slug } = useParams();
 
   const [post,         setPost]         = useState(null);
@@ -522,6 +526,8 @@ const PostDetail = () => {
   const [commentText,       setCommentText]       = useState('');
   const [commentName,       setCommentName]       = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [commentError, setCommentError] = useState('');
+  const [commentNotice, setCommentNotice] = useState('');
 
   const articleRef = useRef(null);
   const isMounted  = useRef(true);
@@ -531,6 +537,10 @@ const PostDetail = () => {
   const progress   = useReadingProgress();
 
   useEffect(() => { injectPD2Styles(); }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && profileName) setCommentName(profileName);
+  }, [isAuthenticated, profileName]);
 
   /* ── Fetch post ── */
   const fetchPost = useCallback(async () => {
@@ -625,13 +635,20 @@ const PostDetail = () => {
   /* ── Comment submit ── */
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    if (!commentText.trim() || !commentName.trim()) return;
+    if (!commentText.trim() || !(profileName || commentName.trim())) return;
     setCommentSubmitting(true);
+    setCommentError('');
+    setCommentNotice('');
     try {
-      const res = await postsAPI.addComment(slug, { author_name: commentName.trim(), content: commentText.trim() });
+      const res = await postsAPI.addComment(slug, {
+        author_name: profileName || commentName.trim(),
+        author_avatar: profileAvatar || null,
+        content: commentText.trim(),
+      });
       if (res.data) setComments(prev => [res.data, ...prev]);
       setCommentText('');
-    } catch (err) { console.error(err.message); }
+      setCommentNotice('Your comment has been published.');
+    } catch (err) { setCommentError(err.message || 'Could not publish your comment. Please try again.'); }
     finally { setCommentSubmitting(false); }
   };
 
@@ -946,18 +963,29 @@ const PostDetail = () => {
 
             {/* Comments */}
             <div className="pd2-comment-section" style={{ marginBottom: 40 }}>
-              <SectionLabel icon={FiMessageCircle} title={`Discussion (${comments.length})`} subtitle="Join the conversation" />
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+                <SectionLabel icon={FiMessageCircle} title={`Discussion (${comments.length})`} subtitle="Join the conversation" />
+                <Link to={`/messages?newConversation=1&inquiryType=post&resourceId=${encodeURIComponent(post?.id || '')}&resourceTitle=${encodeURIComponent(post?.title || '')}&resourceSlug=${encodeURIComponent(post?.slug || slug || '')}&resourceImage=${encodeURIComponent(post?.cover_image_url || post?.featured_image || post?.image_url || '')}`}
+                  style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8, padding:'10px 14px', borderRadius:12, background:'#047857', color:'#fff', textDecoration:'none', fontSize:12, fontWeight:800 }}>
+                  <FiMessageCircle size={14}/> Discuss this story with Altuvera
+                </Link>
+              </div>
 
               {/* Comment form */}
               <form onSubmit={handleCommentSubmit} style={{ background: 'white', borderRadius: 20, border: '1px solid #d1fae5', padding: 'clamp(16px,3vw,24px)', marginBottom: 24 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 10 }}>
-                  <input
-                    value={commentName} onChange={e => setCommentName(e.target.value)}
-                    placeholder="Your name"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1.5px solid #d1fae5', background: '#f9fffe', fontSize: 13.5, color: '#1f2937', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', transition: 'all 0.2s' }}
-                    onFocus={e => { e.target.style.borderColor = '#059669'; e.target.style.boxShadow = '0 0 0 3px rgba(5,150,105,0.10)'; }}
-                    onBlur={e => { e.target.style.borderColor = '#d1fae5'; e.target.style.boxShadow = 'none'; }}
-                  />
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    {profileAvatar ? <img src={profileAvatar} alt="" style={{ width:34, height:34, borderRadius:'50%', objectFit:'cover', flexShrink:0 }} /> : <div style={{ width:34, height:34, borderRadius:'50%', background:'#d1fae5', color:'#047857', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, flexShrink:0 }}>{(profileName || commentName || 'T').slice(0,1).toUpperCase()}</div>}
+                    <input
+                      value={isAuthenticated ? (profileName || commentName) : commentName}
+                      onChange={e => setCommentName(e.target.value)}
+                      placeholder="Your name"
+                      readOnly={isAuthenticated && Boolean(profileName)}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1.5px solid #d1fae5', background: isAuthenticated ? '#f0fdf4' : '#f9fffe', fontSize: 13.5, color: '#1f2937', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', transition: 'all 0.2s' }}
+                      onFocus={e => { e.target.style.borderColor = '#059669'; e.target.style.boxShadow = '0 0 0 3px rgba(5,150,105,0.10)'; }}
+                      onBlur={e => { e.target.style.borderColor = '#d1fae5'; e.target.style.boxShadow = 'none'; }}
+                    />
+                  </div>
                   <textarea
                     value={commentText} onChange={e => setCommentText(e.target.value)}
                     placeholder="Share your thoughts on this article…" rows={3}
@@ -967,11 +995,13 @@ const PostDetail = () => {
                   />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <button type="submit" className="pd2-cta" disabled={!commentText.trim() || !commentName.trim() || commentSubmitting}
-                    style={{ fontSize: 13.5, padding: '10px 22px', opacity: (commentText.trim() && commentName.trim() && !commentSubmitting) ? 1 : 0.5, cursor: (commentText.trim() && commentName.trim() && !commentSubmitting) ? 'pointer' : 'not-allowed' }}>
+                  <button type="submit" className="pd2-cta" disabled={!commentText.trim() || !(profileName || commentName.trim()) || commentSubmitting}
+                    style={{ fontSize: 13.5, padding: '10px 22px', opacity: (commentText.trim() && (profileName || commentName.trim()) && !commentSubmitting) ? 1 : 0.5, cursor: (commentText.trim() && (profileName || commentName.trim()) && !commentSubmitting) ? 'pointer' : 'not-allowed' }}>
                     {commentSubmitting ? <><FiLoader size={13} className="pd2-spin" /> Posting…</> : <><FiSend size={13} /> Post Comment</>}
                   </button>
                 </div>
+                {commentError && <p role="alert" style={{ color:'#b91c1c', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:10, padding:'9px 12px', fontSize:12, marginTop:12 }}>{commentError}</p>}
+                {commentNotice && <p role="status" style={{ color:'#047857', background:'#ecfdf5', border:'1px solid #a7f3d0', borderRadius:10, padding:'9px 12px', fontSize:12, marginTop:12 }}>{commentNotice}</p>}
               </form>
 
               {/* Comment list */}
