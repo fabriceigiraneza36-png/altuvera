@@ -762,6 +762,7 @@ function ScrollToBottomBtn({ visible, onClick, composerVisible = true }) {
 const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping, currentUserId }) {
   const isGroup = conv.conversationType === "group" || Boolean(conv.groupId);
   const latestMessagePreview = getConversationLastMessagePreview(conv, currentUserId);
+  const relatedResource = conv.metadata?.relatedResource || conv.metadata?.related_resource || null;
   const title    = isGroup ? (conv.groupName || conv.subject || "Group conversation")
     : conv.conversationType === "personal" ? "Personal chat with Altuvera"
     : conv.conversationType === "resource_support" ? "Bookings & travel help" : conv.subject ||
@@ -830,6 +831,7 @@ const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping, 
             </p>
           )}
 
+          {relatedResource?.title && <p className="mb-1 flex items-center gap-1 truncate text-[10px] font-semibold text-emerald-700"><FileText size={10} className="shrink-0"/><span className="truncate">{relatedResource.type || "Related item"}: {relatedResource.title}</span></p>}
           {/* Status */}
           <StatusPill status={conv.status || "open"} />
         </div>
@@ -867,6 +869,11 @@ const MsgBubble = React.memo(function MsgBubble({
   const isDeleted = Boolean(message.deleted);
   const isEditing = String(editingId) === String(message.id);
   const destinationName = message.metadata?.destinationName || message.metadata?.destination_name || null;
+  const relatedResource = message.metadata?.relatedResource || message.metadata?.related_resource || null;
+  const relatedResourcePath = relatedResource?.type === "package" && (relatedResource.slug || relatedResource.id) ? `/packages/${relatedResource.slug || relatedResource.id}`
+    : relatedResource?.type === "destination" && (relatedResource.slug || relatedResource.id) ? `/destination/${relatedResource.slug || relatedResource.id}`
+    : relatedResource?.type === "country" && (relatedResource.slug || relatedResource.title) ? `/country/${relatedResource.slug || encodeURIComponent(relatedResource.title)}`
+    : relatedResource?.type === "post" && (relatedResource.slug || relatedResource.id) ? `/post/${relatedResource.slug || relatedResource.id}` : null;
 
   useLayoutEffect(() => {
     if (!menuOpen) return undefined;
@@ -1020,6 +1027,16 @@ const MsgBubble = React.memo(function MsgBubble({
                 <span className={`mb-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${mine ? "bg-white/15 text-white" : "bg-emerald-50 text-emerald-700"}`}>
                   <MapPin size={12}/> Destination · {destinationName}
                 </span>
+              )}
+              {!isDeleted && relatedResource?.title && (
+                <div className={"mb-2 flex items-center gap-2 rounded-xl border px-2.5 py-2 " + (mine ? "border-white/20 bg-white/10" : "border-emerald-100 bg-emerald-50")}>
+                  {relatedResource.image && <img src={relatedResource.image} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" loading="lazy" />}
+                  <div className="min-w-0 flex-1">
+                    <span className={"block text-[9px] font-extrabold uppercase tracking-wider " + (mine ? "text-emerald-50" : "text-emerald-700")}>Imported {relatedResource.type || "item"}</span>
+                    {relatedResourcePath ? <Link to={relatedResourcePath} className={"block truncate text-[11px] font-bold underline underline-offset-2 " + (mine ? "text-white" : "text-slate-800")}>{relatedResource.title}</Link>
+                      : <span className={"block truncate text-[11px] font-bold " + (mine ? "text-white" : "text-slate-800")}>{relatedResource.title}</span>}
+                  </div>
+                </div>
               )}
               {!isDeleted && message.metadata?.bookingNumber && (
                 <span className={`mb-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${mine ? "bg-white/15 text-white" : "bg-emerald-50 text-emerald-800"}`}>
