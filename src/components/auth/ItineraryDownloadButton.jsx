@@ -185,7 +185,7 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
       line("PERSONALIZED TRAVEL PLAN", { bold: true, fontSize: 9, color: [5, 150, 105], gapAfter: 4 });
       line("Traveller: " + (booking?.full_name || "—"));
       line("Country: " + (booking?.country_name || booking?.country || "—"));
-      line("Travel dates: " + (booking?.travel_date || "Flexible") + " to " + (booking?.return_date || "—"));
+      line("Arrival → Departure: " + (booking?.travel_date || booking?.arrival_date || "Flexible") + " to " + (booking?.end_date || booking?.return_date || booking?.departure_date || "—"));
       line("Number of travellers: " + (booking?.number_of_travelers || "—"), { gapAfter: 5 });
       if (itinerary?.introduction) line(itinerary.introduction, { gapAfter: 7 });
 
