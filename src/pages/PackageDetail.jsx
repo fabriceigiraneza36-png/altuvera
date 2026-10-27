@@ -468,7 +468,7 @@ export default function PackageDetail() {
                 <input type="date" min={todayDate} value={form.travel_date} onChange={(e) => update("travel_date", e.target.value)} />
               </Field>
               <Field label="Departure" error={errors.end_date}>
-                <input type="date" min={form.travel_date || todayDate} value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
+                <input type="date" min={todayDate} value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
               </Field>
               <Field label="Adults" required error={errors.adults}>
                 <input type="number" min="1" max="500" value={form.adults} onChange={(e) => update("adults", e.target.value)} />
