@@ -96,9 +96,16 @@
     }, []);
 
     const displayed = useMemo(() => {
-      if (tab === 'bookings') return grouped.booking;
-      if (tab === 'updates')  return grouped.system;
-      return grouped.all;
+      const source = tab === 'bookings' ? grouped.booking : tab === 'updates' ? grouped.system : grouped.all;
+      // Booking updates are time-sensitive customer actions: pin them first,
+      // with unread booking messages ahead of older/read notifications.
+      return [...source].sort((a, b) => {
+        const aBooking = String(a.type || '').startsWith('booking_') ? 1 : 0;
+        const bBooking = String(b.type || '').startsWith('booking_') ? 1 : 0;
+        if (aBooking !== bBooking) return bBooking - aBooking;
+        if (Boolean(a.is_read) !== Boolean(b.is_read)) return Number(Boolean(a.is_read)) - Number(Boolean(b.is_read));
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
     }, [tab, grouped]);
 
     const tabs = useMemo(() => [
@@ -235,6 +242,7 @@
               <AnimatePresence initial={false}>
                 {displayed.map((n, idx) => {
                   const meta = TYPE_META[n.type] || TYPE_META.general;
+                  const isUrgentBooking = String(n.type || '').startsWith('booking_');
                   return (
                     <motion.div
                       key={n.id} layout
@@ -248,7 +256,8 @@
                       style={{
                         padding: '18px 24px',
                         borderBottom: idx < displayed.length - 1 ? '1px solid #f1f5f9' : 'none',
-                        background: n.is_read ? '#fff' : '#f0fdf4',
+                        background: isUrgentBooking ? (n.is_read ? '#fff7f7' : '#fff1f2') : (n.is_read ? '#fff' : '#f0fdf4'),
+                        boxShadow: isUrgentBooking ? 'inset 4px 0 0 #dc2626' : 'none',
                         position: 'relative', touchAction: 'pan-y', willChange: 'transform, opacity',
                         transform: 'translate3d(' + (swipeOffsets[n.id]?.x || 0) + 'px,0,0)', opacity: swipeOffsets[n.id]?.opacity ?? 1,
                         transition: swipeStarts.current.has(n.id) ? 'none' : 'transform 220ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease',
@@ -267,9 +276,12 @@
                         <div style={{ flex: 1, minWidth: 0 }}>
                           {/* Title + time */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                            <p style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#0f172a' }}>
-                              {n.title}
-                            </p>
+                            <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                              <p style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#0f172a' }}>
+                                {n.title}
+                              </p>
+                              {isUrgentBooking && <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 7px',borderRadius:999,background:'#fee2e2',color:'#b91c1c',fontSize:10,fontWeight:900,textTransform:'uppercase',letterSpacing:'.04em'}}><Siren size={12}/> Urgent</span>}
+                            </div>
                             <span style={{ fontSize: 12, color: '#94a3b8', flexShrink: 0 }}>
                               {formatDate(n.created_at)}
                             </span>
