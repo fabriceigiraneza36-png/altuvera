@@ -108,7 +108,7 @@ const normMsg = (m) => ({
   senderId:       m.sender_id       || m.senderId,
   senderName:     m.sender_name     || m.senderName,
   senderEmail:    m.sender_email    || m.senderEmail,
-  senderAvatar:   m.sender_avatar   || m.senderAvatar,
+  senderAvatar:   m.sender_avatar || m.senderAvatar || m.sender_avatar_url || m.senderAvatarUrl || m.avatar_url || m.avatarUrl || m.profile_picture_url || m.profilePictureUrl || m.profile_picture || m.profilePicture || m.user_avatar || m.userAvatar || m.avatar || null,
   body:           m.body,
   msgType:        m.msg_type        || m.msgType || "text",
   isRead:         m.is_read         ?? m.isRead ?? false,
