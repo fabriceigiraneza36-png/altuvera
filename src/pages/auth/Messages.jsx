@@ -1345,7 +1345,7 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
               <div className="space-y-2">
                 {groupConversations.map(group => <button key={String(group.id)} type="button" onClick={() => onOpenConversation(group.id)} className="flex w-full items-center gap-3 rounded-xl border border-slate-200 p-3 text-left hover:border-emerald-300 hover:bg-emerald-50">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><UsersRound size={16}/></span>
-                  <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold text-slate-800">{group.groupName || group.subject || "Group conversation"}</span><span className="block truncate text-[10px] text-slate-500">{group.lastMessage || "Open group conversation"}</span></span>
+                  <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold text-slate-800">{group.groupName || group.subject || "Group conversation"}</span><span className="block truncate text-[10px] text-slate-500">{group.lastMessage ? getConversationLastMessagePreview(group, getPreviewCurrentUserId()) : "Open group conversation"}</span></span>
                   {(group.unreadUser || 0) > 0 && <span className="rounded-full bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white">{group.unreadUser > 99 ? "99+" : group.unreadUser}</span>}
                 </button>)}
               </div>
