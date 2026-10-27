@@ -14,7 +14,7 @@ import {
   ChevronDown as FiChevronDown, Minus as FiMinus, Plus as FiPlus,
   ChevronUp as FiChevronUp, Mail as FiMail, WifiOff as FiWifiOff,
   ArrowLeft as FiArrowLeft, RefreshCw as FiRefreshCw,
-  ExternalLink as FiExternalLink
+  ExternalLink as FiExternalLink, MessageCircle as FiMessageCircle
 } from "lucide-react";
 import SEO from "@components/common/SEO";
 import AnimatedSection from "@components/common/AnimatedSection";
@@ -1476,7 +1476,10 @@ function InfoSection({ country }) {
                   <div className="cp-contact__title">Still have questions?</div>
                   <div className="cp-contact__text">Our {name} specialists are happy to help.</div>
                 </div>
-                <Link to="/contact" className="cp-btn cp-btn--primary" style={{ padding: "12px 24px", fontSize: 13 }}>
+                <Link to={`/messages?newConversation=1&inquiryType=country&resourceId=${encodeURIComponent(country.id || "")}&resourceTitle=${encodeURIComponent(country.name || "")}&resourceSlug=${encodeURIComponent(country.slug || getCountrySlug(country.name) || "")}&resourceImage=${encodeURIComponent(images?.[0] || "")}`} className="cp-btn cp-btn--primary" style={{ padding: "12px 24px", fontSize: 13 }}>
+                  <FiMessageCircle size={14} /> Discuss this country
+                </Link>
+                <Link to="/contact" className="cp-btn cp-btn--outline" style={{ padding: "12px 24px", fontSize: 13 }}>
                   <FiMail size={14} /> Get in Touch
                 </Link>
               </div>
