@@ -119,9 +119,14 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
         try { destinationImageData = await imageToDataUrl(new URL(destinationImageUrl, window.location.origin).href, contentWidth / 48); }
         catch { /* a cross-origin image without CORS should not prevent PDF downloads */ }
       }
-      if (itinerary?.backgroundMode === "destination" && destinationImageData) {
-        try { destinationBackgroundData = await makeFadedBackground(destinationImageData); }
-        catch { /* Keep the standard white background if an image cannot be processed safely. */ }
+      if (itinerary?.backgroundMode === "destination" && destinationImageUrl) {
+        try {
+          const portraitBackgroundData = await imageToDataUrl(
+            new URL(destinationImageUrl, window.location.origin).href,
+            pageWidth / pageHeight,
+          );
+          destinationBackgroundData = await makeFadedBackground(portraitBackgroundData, 0.12);
+        } catch { /* Keep the standard white background if an image cannot be processed safely. */ }
       }
 
       const drawPageBackground = () => {

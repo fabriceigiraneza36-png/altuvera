@@ -272,11 +272,11 @@ export default function PackageDetail() {
     else if (Number.isInteger(adults) && adults >= 1 && adults + children > 500)
       next.children = "The total number of travelers cannot exceed 500.";
     if (form.travel_date && form.travel_date < todayDate)
-      next.travel_date = "Arrival date cannot be in the past.";
+      next.travel_date = "Departure date cannot be in the past.";
     if (form.end_date && form.end_date < todayDate)
-      next.end_date = "Departure date cannot be in the past.";
+      next.end_date = "Return date cannot be in the past.";
     if (form.travel_date && form.end_date && form.end_date < form.travel_date)
-      next.end_date = "Departure date must be on or after the arrival date.";
+      next.end_date = "Return date must be on or after the departure date.";
     if (needsPhone && !form.guest_phone.trim())
       next.guest_phone = "A phone number is required for this contact method.";
     return next;
