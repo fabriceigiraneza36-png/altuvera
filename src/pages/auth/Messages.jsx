@@ -1158,6 +1158,8 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
           id: d.id ?? d.value ?? d.slug,
           name: String(d.name ?? d.title ?? d.label ?? "").trim(),
           country: String(d.country?.name ?? d.country_name ?? d.countryName ?? (typeof d.country === "string" ? d.country : "")).trim(),
+          slug: d.slug || null,
+          image: d.image_url || d.imageUrl || d.cover_image_url || null,
         })).filter(d => d.name));
       }).catch(() => { if (alive) setDestinationOptions([]); });
     return () => { alive = false; };
@@ -1181,7 +1183,7 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
     const matchedDestination = typedDestination
       ? destinationOptions.find(d => d.name.toLowerCase() === typedDestination.toLowerCase())
       : null;
-    if (typedDestination && !matchedDestination) {
+    if (typedDestination && !matchedDestination && !selectedDestination) {
       setError("Please choose a destination from the live suggestions, or clear the destination field.");
       setDestinationPickerOpen(true);
       return;
@@ -1293,7 +1295,7 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
               <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
               <input value={destinationName}
                 onFocus={() => setDestinationPickerOpen(true)}
-                onChange={e => { setDestinationName(e.target.value); setSelectedDestination(null); setDestinationPickerOpen(true); }}
+                onChange={e => { setDestinationName(e.target.value); setSelectedDestination(null); setImportedContext(null); setDestinationPickerOpen(true); }}
                 onKeyDown={e => { if (e.key === "Escape") setDestinationPickerOpen(false); }}
                 autoComplete="off"
                 placeholder="Search live destinations…"
@@ -1307,6 +1309,7 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
                       onClick={() => {
                         setDestinationName(destination.name);
                         setSelectedDestination(destination);
+                        setImportedContext({ type: "destination", id: destination.id, title: destination.name, slug: destination.slug || null, image: destination.image || destination.imageUrl || null, country: destination.country || null });
                         setDestinationPickerOpen(false);
                         if (!subject.trim()) setSubject(`Question about ${destination.name}`);
                       }}
