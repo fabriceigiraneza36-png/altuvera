@@ -95,6 +95,11 @@ const normConv = (c) => ({
   bookingNumber:  c.booking_number  || c.bookingNumber,
   lastMessage:    c.last_message    || c.lastMessage,
   lastMessageAt:  c.last_message_at || c.lastMessageAt,
+  lastMessageSenderType: c.last_message_sender_type || c.lastMessageSenderType || null,
+  lastMessageSenderId: c.last_message_sender_id ?? c.lastMessageSenderId ?? null,
+  lastMessageSenderName: c.last_message_sender_name || c.lastMessageSenderName || null,
+  lastMessageSenderUsername: c.last_message_sender_username || c.lastMessageSenderUsername || null,
+  lastMessageSenderAvatar: c.last_message_sender_avatar || c.lastMessageSenderAvatar || null,
   unreadUser:     parseInt(c.unread_user || c.unreadUser || 0, 10),
   unreadAdmin:    parseInt(c.unread_admin || c.unreadAdmin || 0, 10),
   createdAt:      c.created_at      || c.createdAt,
@@ -107,6 +112,7 @@ const normMsg = (m) => ({
   senderType:     m.sender_type     || m.senderType,
   senderId:       m.sender_id       || m.senderId,
   senderName:     m.sender_name     || m.senderName,
+  senderUsername: m.sender_username || m.senderUsername || m.username || null,
   senderEmail:    m.sender_email    || m.senderEmail,
   senderAvatar:   m.sender_avatar || m.senderAvatar || m.sender_avatar_url || m.senderAvatarUrl || m.avatar_url || m.avatarUrl || m.profile_picture_url || m.profilePictureUrl || m.profile_picture || m.profilePicture || m.user_avatar || m.userAvatar || m.avatar || null,
   body:           m.body,
@@ -294,6 +300,11 @@ export function useConversations() {
                 ...c,
                 lastMessage: msg.body?.slice(0, 120) || c.lastMessage,
                 lastMessageAt: msg.createdAt || c.lastMessageAt,
+                lastMessageSenderType: msg.senderType || c.lastMessageSenderType,
+                lastMessageSenderId: msg.senderId ?? c.lastMessageSenderId,
+                lastMessageSenderName: msg.senderName || c.lastMessageSenderName,
+                lastMessageSenderUsername: msg.senderUsername || c.lastMessageSenderUsername,
+                lastMessageSenderAvatar: msg.senderAvatar || c.lastMessageSenderAvatar,
                 unreadUser:
                   msg.senderType === "admin" && String(msg.conversationId) !== String(activeIdRef.current)
                     ? (c.unreadUser || 0) + 1
@@ -379,6 +390,11 @@ export function useConversations() {
               ...c,
               lastMessage: msg.body?.slice(0, 120) || c.lastMessage,
               lastMessageAt: msg.createdAt || c.lastMessageAt,
+              lastMessageSenderType: msg.senderType || c.lastMessageSenderType,
+              lastMessageSenderId: msg.senderId ?? c.lastMessageSenderId,
+              lastMessageSenderName: msg.senderName || c.lastMessageSenderName,
+              lastMessageSenderUsername: msg.senderUsername || c.lastMessageSenderUsername,
+              lastMessageSenderAvatar: msg.senderAvatar || c.lastMessageSenderAvatar,
               unreadUser: cid === String(activeIdRef.current) ? 0 : (c.unreadUser || 0) + (msg.senderType === "admin" ? 1 : 0),
             }
           : c
@@ -669,7 +685,16 @@ export function useConversations() {
         setConversations((prev) =>
           prev.map((c) =>
             c.id === conversationId
-              ? { ...c, lastMessage: body.slice(0, 120), lastMessageAt: new Date().toISOString() }
+              ? {
+                  ...c,
+                  lastMessage: body.slice(0, 120),
+                  lastMessageAt: saved.createdAt || new Date().toISOString(),
+                  lastMessageSenderType: saved.senderType || "user",
+                  lastMessageSenderId: saved.senderId ?? getCurrentUserId(),
+                  lastMessageSenderName: saved.senderName || c.lastMessageSenderName,
+                  lastMessageSenderUsername: saved.senderUsername || c.lastMessageSenderUsername,
+                  lastMessageSenderAvatar: saved.senderAvatar || c.lastMessageSenderAvatar,
+                }
               : c,
           ),
         );
