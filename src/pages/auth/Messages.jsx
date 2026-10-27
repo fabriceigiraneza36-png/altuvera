@@ -1413,9 +1413,13 @@ export default function Messages() {
     recycleWarningSeconds,
     dismissRecycleWarning,
     requestKeepConversation,
+    restoreChoice,
+    resolveRestoreChoice,
   } = useConversations();
 
   const [recycleRequestBusy, setRecycleRequestBusy] = useState(false);
+  const [restoreChoiceBusy, setRestoreChoiceBusy] = useState(false);
+  const [restoreChoiceError, setRestoreChoiceError] = useState("");
   const [recycleRequestError, setRecycleRequestError] = useState("");
   const [recycleRequestFeedback, setRecycleRequestFeedback] = useState("");
   useEffect(() => {
@@ -1434,6 +1438,20 @@ export default function Messages() {
       setRecycleRequestError(error.message || "Your request could not be sent. Try again before the timer ends.");
     } finally {
       setRecycleRequestBusy(false);
+    }
+  };
+
+  const handleRestoreChoice = async (choice) => {
+    if (!restoreChoice?.conversationId || restoreChoiceBusy) return;
+    setRestoreChoiceBusy(true);
+    setRestoreChoiceError("");
+    try {
+      const result = await resolveRestoreChoice(choice);
+      setRecycleRequestFeedback(result.message || "Your choice has been saved.");
+    } catch (error) {
+      setRestoreChoiceError(error.message || "Your choice could not be saved. Please try again.");
+    } finally {
+      setRestoreChoiceBusy(false);
     }
   };
 
@@ -2480,6 +2498,37 @@ export default function Messages() {
                 className="mt-3 w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">
                 Dismiss reminder
               </button>
+            </div>
+          </section>
+        </div>,
+        document.body
+      )}
+      {restoreChoice && createPortal(
+        <div className="fixed inset-0 z-[10002] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+             role="presentation">
+          <section role="dialog" aria-modal="true" aria-labelledby="restore-choice-title"
+            className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/30">
+            <div className="flex items-start gap-3 border-b border-emerald-100 bg-emerald-50 px-5 py-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800"><MessageSquare size={20}/></div>
+              <div className="min-w-0 flex-1">
+                <h2 id="restore-choice-title" className="text-base font-extrabold text-slate-900">Choose which personal conversation to keep</h2>
+                <p className="mt-1 text-xs leading-relaxed text-slate-600">An admin approved sending a restored conversation to you, but you already have another personal chat.</p>
+              </div>
+            </div>
+            <div className="px-5 py-5">
+              <p className="text-sm font-bold text-slate-800">{restoreChoice.title || "Restored personal conversation"}</p>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600">Choose one option. Keeping the restored conversation moves your current personal chat into the admin Recycle Bin at your request. Rejecting it returns only the restored conversation to the Recycle Bin and keeps your current chat unchanged.</p>
+              {restoreChoiceError && <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{restoreChoiceError}</p>}
+              <button type="button" disabled={restoreChoiceBusy} onClick={() => handleRestoreChoice("keep_restored")}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">
+                {restoreChoiceBusy ? <RefreshCw size={16} className="animate-spin"/> : <MessageSquare size={16}/>}
+                Keep restored conversation
+              </button>
+              <button type="button" disabled={restoreChoiceBusy} onClick={() => handleRestoreChoice("reject_restored")}
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                Reject restored conversation
+              </button>
+              <p className="mt-3 text-center text-[10px] leading-relaxed text-slate-400">This choice is applied immediately and is not posted as a notification-history item.</p>
             </div>
           </section>
         </div>,
