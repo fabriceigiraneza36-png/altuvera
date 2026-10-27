@@ -87,6 +87,9 @@ const normConv = (c) => ({
   subject:        c.subject,
   groupId:        c.group_id ?? c.groupId ?? null,
   groupName:      c.group_name || c.groupName || null,
+  createdByAdminId: c.created_by_admin_id ?? c.createdByAdminId ?? null,
+  groupCreatedBy: c.group_created_by ?? c.groupCreatedBy ?? null,
+  recycleDeadline: c.recycle_deadline ?? c.recycleDeadline ?? null,
   channel:         c.channel || null,
   metadata:        c.metadata || {},
   conversationType: c.conversation_type || c.conversationType || (c.group_id ? "group" : "direct"),
@@ -154,8 +157,19 @@ export function useConversations() {
   const [connected, setConnected] = useState(false);
   const [adminOnline, setAdminOnline] = useState(false);
   const [adminPresence, setAdminPresence] = useState({ active: false, activeSince: null, lastSeenAt: null });
+  const [recycleWarning, setRecycleWarning] = useState(null);
+  const [recycleClock, setRecycleClock] = useState(() => Date.now());
 
   useEffect(() => { activeIdRef.current = activeId }, [activeId]);
+
+  const recycleWarningSeconds = recycleWarning?.deadlineAt
+    ? Math.max(0, Math.ceil((new Date(recycleWarning.deadlineAt).getTime() - recycleClock) / 1000))
+    : 0;
+  useEffect(() => {
+    if (!recycleWarning) return undefined;
+    const timer = window.setInterval(() => setRecycleClock(Date.now()), 250);
+    return () => window.clearInterval(timer);
+  }, [recycleWarning]);
 
   const emitTyping = useCallback(
     (conversationId, isTyping) => {
@@ -413,19 +427,32 @@ export function useConversations() {
     };
     s.on("msg:group-message", onGroupMessage);
 
-    s.on("msg:conversation-deleted", ({ conversationId } = {}) => {
+    const onRecycleWarning = (payload = {}) => {
+      if (payload.conversationId == null) return;
+      setRecycleClock(Date.now());
+      setRecycleWarning({ ...payload, conversationId: String(payload.conversationId) });
+    };
+    const onRecycleCancelled = (payload = {}) => {
+      setRecycleWarning((prev) => prev && String(prev.conversationId) === String(payload.conversationId) ? null : prev);
+    };
+    const onConversationRecycled = ({ conversationId } = {}) => {
       if (conversationId == null) return;
-      const deletedId = String(conversationId);
-      setConversations((prev) => prev.filter((conversation) => String(conversation.id) !== deletedId));
-      if (deletedId === String(activeIdRef.current)) {
+      const recycledId = String(conversationId);
+      setConversations((prev) => prev.filter((conversation) => String(conversation.id) !== recycledId));
+      setRecycleWarning((prev) => prev && String(prev.conversationId) === recycledId ? null : prev);
+      if (recycledId === String(activeIdRef.current)) {
         activeIdRef.current = null;
         setActiveId(null);
         setActiveConversation(null);
         setMessages([]);
-        notifyMessage("Conversation removed", "Your direct conversation was removed. Any group conversations you belong to remain available in Messages.", `altuvera-conversation-deleted-${deletedId}`);
       }
+      // Transient system event: update the inbox without creating a notification record.
       fetchConversations();
-    });
+    };
+    s.on("msg:conversation-recycle-warning", onRecycleWarning);
+    s.on("msg:recycle-cancelled", onRecycleCancelled);
+    s.on("msg:conversation-recycled", onConversationRecycled);
+    s.on("msg:conversation-deleted", onConversationRecycled);
 
     s.on("msg:groups-updated", ({ groupId } = {}) => {
       if (groupId) s.emit("msg:join-group", { groupId });
@@ -441,7 +468,10 @@ export function useConversations() {
       s.off("msg:message-highlighted", applyMessageMutation);
       s.off("msg:group-message", onGroupMessage);
       s.off("msg:groups-updated");
-      s.off("msg:conversation-deleted");
+      s.off("msg:conversation-deleted", onConversationRecycled);
+      s.off("msg:conversation-recycle-warning", onRecycleWarning);
+      s.off("msg:recycle-cancelled", onRecycleCancelled);
+      s.off("msg:conversation-recycled", onConversationRecycled);
       s.disconnect();
     };
   }, [fetchConversations]);
@@ -709,6 +739,20 @@ export function useConversations() {
     [],
   );
 
+  const dismissRecycleWarning = useCallback(() => setRecycleWarning(null), []);
+
+  const requestKeepConversation = useCallback(async (conversationId) => {
+    if (!conversationId) throw new Error("Conversation details are missing. Please refresh and try again.");
+    const res = await authFetch(`${API_BASE}/messages/conversations/${encodeURIComponent(conversationId)}/recycle-cancel`, {
+      method: "POST", body: JSON.stringify({}),
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok || !payload.success) throw new Error(payload.message || "Your request could not be sent.");
+    setRecycleWarning((prev) => prev && String(prev.conversationId) === String(conversationId) ? null : prev);
+    await fetchConversations();
+    return payload;
+  }, [fetchConversations]);
+
   const mutateMessage = useCallback(async (conversationId, messageId, url, options = {}) => {
     const res = await authFetch(
       API_BASE + "/messages/conversations/" + conversationId + "/messages/" + messageId + (url || ""),
@@ -777,5 +821,9 @@ export function useConversations() {
     connected,
     adminOnline,
     adminPresence,
+    recycleWarning,
+    recycleWarningSeconds,
+    dismissRecycleWarning,
+    requestKeepConversation,
   };
 }
