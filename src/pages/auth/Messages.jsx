@@ -869,7 +869,9 @@ const MsgBubble = React.memo(function MsgBubble({
   const isDeleted = Boolean(message.deleted);
   const isEditing = String(editingId) === String(message.id);
   const destinationName = message.metadata?.destinationName || message.metadata?.destination_name || null;
-  const relatedResource = message.metadata?.relatedResource || message.metadata?.related_resource || null;
+  const relatedResource = message.metadata?.relatedResource || message.metadata?.related_resource || message.metadata?.resource || null;
+  const relatedResourceTitle = relatedResource?.title || relatedResource?.name || null;
+  const relatedResourceImage = relatedResource?.image || relatedResource?.imageUrl || relatedResource?.image_url || null;
   const relatedResourcePath = relatedResource?.type === "package" && (relatedResource.slug || relatedResource.id) ? `/packages/${relatedResource.slug || relatedResource.id}`
     : relatedResource?.type === "destination" && (relatedResource.slug || relatedResource.id) ? `/destination/${relatedResource.slug || relatedResource.id}`
     : relatedResource?.type === "country" && (relatedResource.slug || relatedResource.title) ? `/country/${relatedResource.slug || encodeURIComponent(relatedResource.title)}`
@@ -1028,24 +1030,19 @@ const MsgBubble = React.memo(function MsgBubble({
                   <MapPin size={12}/> Destination · {destinationName}
                 </span>
               )}
-              {!isDeleted && relatedResource?.title && (
+              {!isDeleted && relatedResourceTitle && (
                 <div className={"mb-2 flex items-center gap-2 rounded-xl border px-2.5 py-2 " + (mine ? "border-white/20 bg-white/10" : "border-emerald-100 bg-emerald-50")}>
-                  {relatedResource.image && <img src={relatedResource.image} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" loading="lazy" />}
+                  {relatedResourceImage && <img src={relatedResourceImage} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" loading="lazy" />}
                   <div className="min-w-0 flex-1">
                     <span className={"block text-[9px] font-extrabold uppercase tracking-wider " + (mine ? "text-emerald-50" : "text-emerald-700")}>Imported {relatedResource.type || "item"}</span>
-                    {relatedResourcePath ? <Link to={relatedResourcePath} className={"block truncate text-[11px] font-bold underline underline-offset-2 " + (mine ? "text-white" : "text-slate-800")}>{relatedResource.title}</Link>
-                      : <span className={"block truncate text-[11px] font-bold " + (mine ? "text-white" : "text-slate-800")}>{relatedResource.title}</span>}
+                    {relatedResourcePath ? <Link to={relatedResourcePath} className={"block truncate text-[11px] font-bold underline underline-offset-2 " + (mine ? "text-white" : "text-slate-800")}>{relatedResourceTitle}</Link>
+                      : <span className={"block truncate text-[11px] font-bold " + (mine ? "text-white" : "text-slate-800")}>{relatedResourceTitle}</span>}
                   </div>
                 </div>
               )}
               {!isDeleted && message.metadata?.bookingNumber && (
                 <span className={`mb-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${mine ? "bg-white/15 text-white" : "bg-emerald-50 text-emerald-800"}`}>
                   <MessageSquare size={12}/> Booking #{message.metadata.bookingNumber}{message.metadata.booking?.status ? ` · ${message.metadata.booking.status}` : ""}
-                </span>
-              )}
-              {!isDeleted && message.metadata?.resource?.name && (
-                <span className={`mb-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${mine ? "bg-white/15 text-white" : "bg-slate-100 text-slate-700"}`}>
-                  <Search size={12}/> {message.metadata.resource.type || "Resource"} · {message.metadata.resource.name}
                 </span>
               )}
               {!isDeleted && (message.msgType === "itinerary" || message.metadata?.kind === "itinerary") ? (
@@ -1825,7 +1822,7 @@ export default function Messages() {
     setDraft(""); setReplyToId(null); setAtBottom(true);
     const contextMetadata = isResourceSupport && (bookingContext || selectedResource) ? {
       ...(bookingContext ? { bookingId: bookingContext.id } : selectedResource?.type === "itinerary" && selectedResource?.bookingId ? { bookingId: selectedResource.bookingId } : {}),
-      ...(selectedResource ? { resource: { type: selectedResource.type, id: selectedResource.id, name: selectedResource.name } } : {}),
+      ...(selectedResource ? { resource: { type: selectedResource.type, id: selectedResource.id, name: selectedResource.name, slug: selectedResource.slug || null, imageUrl: selectedResource.imageUrl || null, country: selectedResource.country || null } } : {}),
     } : null;
     await sendMessage(activeId, text, replyToId, contextMetadata);
     if (contextMetadata) setSelectedResource(null);
@@ -2227,10 +2224,12 @@ export default function Messages() {
                     <div className="grid grid-cols-[minmax(0,110px)_1fr] gap-2">
                       <select value={resourceType} onChange={e=>{setResourceType(e.target.value);setSelectedResource(null);setResourceQuery("");}} aria-label="Resource type" className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
                         <option value="destination">Destinations</option>
+                        <option value="country">Countries</option>
                         <option value="package">Packages</option>
+                        <option value="story">Stories</option>
                         <option value="itinerary">My itineraries</option>
                       </select>
-                      <input value={resourceQuery} onChange={e=>setResourceQuery(e.target.value)} placeholder="Search live records…" aria-label="Search live destinations, packages, and itineraries" className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-400"/>
+                      <input value={resourceQuery} onChange={e=>setResourceQuery(e.target.value)} placeholder="Search live records…" aria-label="Search live destinations, countries, packages, stories, and itineraries" className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-400"/>
                     </div>
                     {(resourceSearchBusy || resourceSearchError || resourceResults.length > 0) && (
                       <div className="max-h-32 overflow-y-auto rounded-xl border border-slate-200 bg-white">
