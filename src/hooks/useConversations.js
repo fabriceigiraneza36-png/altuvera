@@ -172,6 +172,14 @@ export function useConversations() {
     return () => window.clearInterval(timer);
   }, [recycleWarning]);
 
+  useEffect(() => {
+    if (!recycleWarning || recycleWarningSeconds > 0) return undefined;
+    const timer = window.setTimeout(() => setRecycleWarning((prev) =>
+      prev && String(prev.conversationId) === String(recycleWarning.conversationId) ? null : prev
+    ), 900);
+    return () => window.clearTimeout(timer);
+  }, [recycleWarning, recycleWarningSeconds]);
+
   const emitTyping = useCallback(
     (conversationId, isTyping) => {
       const s = socketRef.current;
