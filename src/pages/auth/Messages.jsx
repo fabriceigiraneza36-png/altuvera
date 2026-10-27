@@ -1105,10 +1105,11 @@ const MsgBubble = React.memo(function MsgBubble({
    NEW CONVERSATION MODAL
 ══════════════════════════════════════════════════════════════════════════ */
 
-function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConversation = () => {} }) {
-  const [subject, setSubject] = useState("");
-  const [inquiryType, setInquiryType] = useState("general");
-  const [relatedReference, setRelatedReference] = useState("");
+function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConversation = () => {}, initialContext = null }) {
+  const [subject, setSubject] = useState(initialContext?.title ? `Question about ${initialContext.title}` : "");
+  const [inquiryType, setInquiryType] = useState(initialContext?.type || "general");
+  const [relatedReference, setRelatedReference] = useState(initialContext?.title || "");
+  const [importedContext, setImportedContext] = useState(initialContext);
   const inquiryConfig = {
     general: { label: "General question", subject: "General enquiry", referenceLabel: "Related details", referenceHint: "Optional details", placeholder: "Tell us how we can help…" },
     booking: { label: "Booking", subject: "Booking enquiry", referenceLabel: "Booking reference", referenceHint: "Booking number or reference", placeholder: "Ask about your booking, dates, status, guests, or changes…" },
@@ -1118,9 +1119,9 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
     post: { label: "Post or article", subject: "Post enquiry", referenceLabel: "Post title or link", referenceHint: "Post title or URL", placeholder: "Ask about a post, its recommendations, or a place mentioned…" },
   };
   const activeInquiry = inquiryConfig[inquiryType] || inquiryConfig.general;
-  const [destinationName, setDestinationName] = useState("");
+  const [destinationName, setDestinationName] = useState(initialContext?.type === "destination" ? (initialContext.title || "") : "");
   const [destinationOptions, setDestinationOptions] = useState([]);
-  const [selectedDestination, setSelectedDestination] = useState(null);
+  const [selectedDestination, setSelectedDestination] = useState(initialContext?.type === "destination" && initialContext.id ? { id: initialContext.id, name: initialContext.title, country: initialContext.country || "" } : null);
   const [destinationPickerOpen, setDestinationPickerOpen] = useState(false);
   const [body,     setBody]     = useState("");
   const [creating, setCreating] = useState(false);
@@ -1182,7 +1183,7 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
           firstMessage: body.trim(),
           destinationName: (inquiryType === "destination" ? (validDestination?.name || relatedReference.trim()) : validDestination?.name) || null,
           destinationId: validDestination?.id || null,
-          metadata: { inquiryType, inquiryLabel: activeInquiry.label, relatedReference: relatedReference.trim() || null, ...(validDestination ? { destinationName: validDestination.name, destinationId: validDestination.id } : {}) },
+          metadata: { inquiryType, inquiryLabel: activeInquiry.label, relatedReference: relatedReference.trim() || null, ...(validDestination ? { destinationName: validDestination.name, destinationId: validDestination.id } : {}), ...(importedContext ? { relatedResource: importedContext } : {}) },
           kind: inquiryType,
         }),
       });
@@ -1238,7 +1239,7 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Inquiry type</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {Object.entries(inquiryConfig).map(([value, config]) => (
-                <button key={value} type="button" onClick={() => { setInquiryType(value); setSubject(current => !current || Object.values(inquiryConfig).some(item => item.subject === current) ? config.subject : current); setRelatedReference(""); }} aria-pressed={inquiryType === value}
+                <button key={value} type="button" onClick={() => { setInquiryType(value); setImportedContext(current => current?.type === value ? current : null); setSubject(current => !current || Object.values(inquiryConfig).some(item => item.subject === current) ? config.subject : current); setRelatedReference(""); if (value !== "destination") { setDestinationName(""); setSelectedDestination(null); } }} aria-pressed={inquiryType === value}
                   className={"rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition " + (inquiryType === value ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-100" : "border-slate-200 bg-white text-slate-600 hover:border-emerald-300")}>
                   {config.label}
                 </button>
@@ -1246,6 +1247,18 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
             </div>
             <p className="mt-2 text-[11px] text-slate-500">Choose a category so the support team can handle your inquiry in the right context.</p>
           </div>
+
+          {importedContext && (
+            <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+              {importedContext.image && <img src={importedContext.image} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" />}
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Imported into this conversation</p>
+                <p className="mt-1 truncate text-sm font-extrabold text-slate-800">{importedContext.title}</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{importedContext.type === "package" ? "Package enquiry" : importedContext.type === "country" ? "Country travel enquiry" : importedContext.type === "post" ? "Story discussion" : "Destination enquiry"} · The team will see this item as context.</p>
+                <button type="button" onClick={() => { setImportedContext(null); setRelatedReference(""); if (inquiryType === "destination") { setDestinationName(""); setSelectedDestination(null); } }} className="mt-2 text-[11px] font-bold text-emerald-800 underline">Remove item</button>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
@@ -1388,6 +1401,14 @@ export default function Messages() {
   }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedConversationId = searchParams.get("conversationId");
+  const requestedNewConversation = searchParams.get("newConversation") === "1";
+  const initialContext = useMemo(() => {
+    if (!requestedNewConversation) return null;
+    const type = searchParams.get("inquiryType") || "general";
+    const title = searchParams.get("resourceTitle") || searchParams.get("destinationName") || "";
+    if (!title) return null;
+    return { type, id: searchParams.get("resourceId") || null, title, slug: searchParams.get("resourceSlug") || null, image: searchParams.get("resourceImage") || null, country: searchParams.get("country") || null, url: searchParams.get("resourceUrl") || null };
+  }, [requestedNewConversation, searchParams]);
   const chatPreferencesKey = `altuvera:chat-preferences:${getAccountChatKey()}`;
   const [chatPrefs, setChatPrefs] = useState(() => {
     try {
@@ -1570,13 +1591,14 @@ export default function Messages() {
   const groupConversations = useMemo(() => conversations.filter(isGroupConversation), [conversations, isGroupConversation]);
 
   useEffect(() => {
+    if (requestedNewConversation) { setShowNewChat(true); return; }
     if (loading || error) return;
     const hasPrivate = privateConversations.length > 0;
     const previous = previousHasPrivateConversationRef.current;
     previousHasPrivateConversationRef.current = hasPrivate;
     if (!hasPrivate && previous !== false) setShowNewChat(true);
     if (hasPrivate) setShowNewChat(false);
-  }, [loading, error, privateConversations]);
+  }, [loading, error, privateConversations, requestedNewConversation]);
 
   const visibleConversations = useMemo(() => {
     const query = conversationSearch.trim().toLocaleLowerCase();
@@ -2433,12 +2455,13 @@ export default function Messages() {
             )}
           </div>
         </div>
-        {showNewChat && !loading && !error && privateConversations.length === 0 && (
+        {showNewChat && !loading && !error && (
           <NewConvModal
             groupConversations={groupConversations}
             onOpenConversation={id => { setShowNewChat(false); openConversation(id); }}
             onClose={() => setShowNewChat(false)}
-            onCreated={handleNewConvCreated}
+            onCreated={(conversation) => { setShowNewChat(false); setSearchParams({}, { replace: true }); handleNewConvCreated(conversation); }}
+            initialContext={initialContext}
           />
         )}
       </DashboardLayout>
