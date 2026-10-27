@@ -272,11 +272,11 @@ export default function PackageDetail() {
     else if (Number.isInteger(adults) && adults >= 1 && adults + children > 500)
       next.children = "The total number of travelers cannot exceed 500.";
     if (form.travel_date && form.travel_date < todayDate)
-      next.travel_date = "Departure date cannot be in the past.";
+      next.travel_date = "Arrival date cannot be in the past.";
     if (form.end_date && form.end_date < todayDate)
-      next.end_date = "Return date cannot be in the past.";
+      next.end_date = "Departure date cannot be in the past.";
     if (form.travel_date && form.end_date && form.end_date < form.travel_date)
-      next.end_date = "Return date must be on or after the departure date.";
+      next.end_date = "Departure date must be on or after the arrival date.";
     if (needsPhone && !form.guest_phone.trim())
       next.guest_phone = "A phone number is required for this contact method.";
     return next;
@@ -464,10 +464,10 @@ export default function PackageDetail() {
           <div className="pkg-section">
             <div className="pkg-section-title"><span>02</span><div><b>Travel plans</b><small>Dates and group size</small></div></div>
             <div className="pkg-three">
-              <Field label="Departure" error={errors.travel_date}>
+              <Field label="Arrival" error={errors.travel_date}>
                 <input type="date" min={todayDate} value={form.travel_date} onChange={(e) => update("travel_date", e.target.value)} />
               </Field>
-              <Field label="Return" error={errors.end_date}>
+              <Field label="Departure" error={errors.end_date}>
                 <input type="date" min={todayDate} value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
               </Field>
               <Field label="Adults" required error={errors.adults}>
@@ -568,7 +568,7 @@ const CSS = `
 .pkg-section{padding:25px 30px;border-bottom:1px solid #e7f4ec}.pkg-section:last-of-type{border-bottom:0}
 .pkg-section-title{display:flex;gap:12px;align-items:center;margin-bottom:20px}.pkg-section-title>span{width:30px;height:30px;border-radius:10px;background:#ecfdf5;color:#047857;display:grid;place-items:center;font-size:11px;font-weight:800}.pkg-section-title b{display:block;color:#12372a;font-size:14px}.pkg-section-title small{display:block;color:#94a3b8;font-size:11px;margin-top:3px}
 .pkg-two,.pkg-three{display:grid;grid-template-columns:1fr 1fr;gap:14px}.pkg-three{grid-template-columns:1fr 1fr 1fr}.pkg-field{margin-bottom:15px}.pkg-field>label,.pkg-fieldset>legend{display:block;font-size:11px;font-weight:800;color:#334e42;margin-bottom:7px}.pkg-field>label span{color:#ef4444;margin-left:3px}
-.pkg-field input,.pkg-field textarea{width:100%;box-sizing:border-box;border:1px solid #d9ebe1;background:#fbfefc;border-radius:13px;padding:12px 13px;outline:0;color:#17352a;font:500 13px "Plus Jakarta Sans",sans-serif;transition:.2s}.pkg-field input:focus,.pkg-field textarea:focus{border-color:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,.09);background:white}.pkg-field textarea{resize:vertical;line-height:1.6}
+.pkg-field input,.pkg-field textarea{width:100%;box-sizing:border-box;border:1px solid #d9ebe1;background:#fbfefc;border-radius:13px;padding:12px 13px;outline:0;color:#17352a;font:500 13px "Plus Jakarta Sans",sans-serif;transition:.2s}.pkg-field input:focus,.pkg-field textarea:focus{border-color:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,.09);background:white}.pkg-field input[type="date"]{min-height:46px;padding:10px 12px;color-scheme:light;font-variant-numeric:tabular-nums;cursor:pointer}.pkg-field input[type="date"]::-webkit-calendar-picker-indicator{padding:6px;border-radius:8px;background-color:#ecfdf5;cursor:pointer;opacity:.95}.pkg-field input[type="date"]::-webkit-datetime-edit{padding:0 2px}.pkg-field textarea{resize:vertical;line-height:1.6}
 .pkg-hint{display:block;color:#94a3b8;font-size:10px;line-height:1.5;margin-top:5px}.pkg-error{display:block;color:#dc2626;font-size:10px;margin-top:5px}
 .pkg-fieldset{border:0;padding:0;margin:0 0 18px}.pkg-choice-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pkg-choice{display:flex;align-items:center;gap:9px;border:1px solid #dceee5;border-radius:12px;padding:11px 12px;cursor:pointer;font-size:12px;font-weight:600;color:#53675f;background:#fbfefc;transition:.18s}.pkg-choice:hover,.pkg-choice.active{border-color:#6ee7b7;background:#ecfdf5;color:#047857}.pkg-choice input{accent-color:#059669}
 .pkg-country{position:relative}.pkg-country>label{display:none}.pkg-country-trigger{width:100%;min-height:44px;display:flex;align-items:center;gap:9px;border:1px solid #d9ebe1;background:#fbfefc;border-radius:13px;padding:9px 12px;color:#53675f;font:500 13px "Plus Jakarta Sans";cursor:pointer;text-align:left}.pkg-country-trigger span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pkg-country-trigger svg.rotate{transform:rotate(180deg)}.pkg-country-trigger.is-open{border-color:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,.09)}
