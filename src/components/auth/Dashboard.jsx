@@ -1233,7 +1233,7 @@ export default function UserDashboard() {
     const message = String(notification.message || "");
     return type.includes("booking") || type.includes("itinerary") ||
       category === "booking" || category === "itinerary" ||
-      /\\bbooking\\b|\\breservation\\b|\\bitinerary\\b|\\btrip request\\b/i.test(title + " " + message);
+      /\bbooking\b|\breservation\b|\bitinerary\b|\btrip request\b/i.test(title + " " + message);
   };
 
   const getDashboardActivityTarget = (notification = {}) => {
