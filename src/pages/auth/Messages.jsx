@@ -1409,7 +1409,33 @@ export default function Messages() {
     editMessage, unsendMessage, toggleMessageFlag, reactToMessage,
     adminTyping, typingConvs, emitTyping, socketRef, connected, adminOnline,
     adminPresence,
+    recycleWarning,
+    recycleWarningSeconds,
+    dismissRecycleWarning,
+    requestKeepConversation,
   } = useConversations();
+
+  const [recycleRequestBusy, setRecycleRequestBusy] = useState(false);
+  const [recycleRequestError, setRecycleRequestError] = useState("");
+  const [recycleRequestFeedback, setRecycleRequestFeedback] = useState("");
+  useEffect(() => {
+    if (!recycleRequestFeedback) return undefined;
+    const timer = window.setTimeout(() => setRecycleRequestFeedback(""), 4500);
+    return () => window.clearTimeout(timer);
+  }, [recycleRequestFeedback]);
+  const handleKeepPersonalConversation = async () => {
+    if (!recycleWarning?.conversationId || recycleRequestBusy) return;
+    setRecycleRequestBusy(true);
+    setRecycleRequestError("");
+    try {
+      const result = await requestKeepConversation(recycleWarning.conversationId);
+      setRecycleRequestFeedback(result.message || "Your request was sent to the Altuvera admin.");
+    } catch (error) {
+      setRecycleRequestError(error.message || "Your request could not be sent. Try again before the timer ends.");
+    } finally {
+      setRecycleRequestBusy(false);
+    }
+  };
 
   const [bookingReference, setBookingReference] = useState("");
   const [bookingContext, setBookingContext] = useState(null);
@@ -2398,6 +2424,73 @@ export default function Messages() {
           />
         )}
       </DashboardLayout>
+      {recycleWarning && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
+             role="presentation"
+             onMouseDown={(event) => { if (event.target === event.currentTarget) dismissRecycleWarning(); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="conversation-recycle-title"
+            className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/30">
+            <div className="flex items-start gap-3 border-b border-amber-100 bg-amber-50 px-5 py-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800">
+                <MessageSquare size={21}/>
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 id="conversation-recycle-title" className="text-base font-extrabold text-slate-900">
+                  Conversation scheduled for removal
+                </h2>
+                <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                  Altuvera admin {recycleWarning.requestedByName ? `(${recycleWarning.requestedByName}) ` : ""}has requested to move this conversation to the Recycle Bin.
+                </p>
+              </div>
+              <button type="button" onClick={dismissRecycleWarning} aria-label="Dismiss reminder"
+                className="rounded-xl p-2 text-slate-400 transition hover:bg-white hover:text-slate-700">
+                <X size={17}/>
+              </button>
+            </div>
+            <div className="px-5 py-5">
+              <p className="text-sm font-bold text-slate-800">{recycleWarning.title || (recycleWarning.groupId ? "Group conversation" : "Personal chat with Altuvera")}</p>
+              <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Time remaining</p>
+                  <p className="mt-0.5 text-xs text-slate-500">This reminder closes automatically.</p>
+                </div>
+                <span aria-live="polite" className={`min-w-[72px] rounded-xl px-3 py-2 text-center text-lg font-black tabular-nums ${recycleWarningSeconds <= 5 ? "bg-rose-100 text-rose-700" : "bg-white text-slate-900 border border-slate-200"}`}>
+                  {recycleWarningSeconds}s
+                </span>
+              </div>
+              {recycleWarning.canRequestKeep ? (
+                <>
+                  <p className="mt-4 text-xs leading-relaxed text-slate-600">
+                    For this personal conversation, you can ask the admin to keep it. If you submit the request before the countdown ends, the system will cancel the recycle action. This is a live-only request and is not saved in notification history.
+                  </p>
+                  {recycleRequestError && <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{recycleRequestError}</p>}
+                  <button type="button" onClick={handleKeepPersonalConversation}
+                    disabled={recycleRequestBusy || recycleWarningSeconds <= 0}
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">
+                    {recycleRequestBusy ? <RefreshCw size={16} className="animate-spin"/> : <MessageSquare size={16}/>}
+                    {recycleRequestBusy ? "Sending request…" : "Ask admin to keep this conversation"}
+                  </button>
+                </>
+              ) : (
+                <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs leading-relaxed text-slate-600">
+                  This is a group conversation. It will be removed from every member’s conversation list when the timer ends. You may dismiss this reminder; the countdown will continue.
+                </p>
+              )}
+              <button type="button" onClick={dismissRecycleWarning}
+                className="mt-3 w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">
+                Dismiss reminder
+              </button>
+            </div>
+          </section>
+        </div>,
+        document.body
+      )}
+      {recycleRequestFeedback && createPortal(
+        <div role="status" className="fixed bottom-5 left-1/2 z-[10001] w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold text-emerald-800 shadow-xl">
+          {recycleRequestFeedback}
+        </div>,
+        document.body
+      )}
     </>
   );
 }
