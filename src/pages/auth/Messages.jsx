@@ -88,6 +88,64 @@ const fmtRelative = (d) => {
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
+const getPreviewCurrentUserId = () => {
+  try {
+    const token = getToken();
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=")));
+    return decoded.id ?? decoded.userId ?? decoded.user_id ?? decoded.sub ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const GENERIC_PREVIEW_NAMES = new Set([
+  "admin", "administrator", "super admin", "altuvera support",
+  "user", "end user", "guest", "guest user", "traveler", "traveller",
+  "visitor", "unknown member", "deleted user",
+]);
+const getRealPreviewName = (...values) => {
+  for (const value of values) {
+    const name = String(value ?? "").trim();
+    if (name && !GENERIC_PREVIEW_NAMES.has(name.toLowerCase().replace(/\s+/g, " "))) return name;
+  }
+  return "";
+};
+const ADMIN_PREVIEW_TYPES = new Set(["admin", "super_admin", "superadmin", "administrator", "moderator", "editor", "support", "staff", "agent"]);
+
+const getConversationLastMessagePreview = (conv, currentUserId) => {
+  const body = String(conv.lastMessage || "").trim();
+  if (!body) return "No messages yet";
+
+  const senderType = String(conv.lastMessageSenderType || conv.last_message_sender_type || "")
+    .trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const senderId = conv.lastMessageSenderId ?? conv.last_message_sender_id;
+  const isGroup = conv.conversationType === "group" || Boolean(conv.groupId ?? conv.group_id);
+  const senderName = getRealPreviewName(
+    conv.lastMessageSenderName, conv.last_message_sender_name,
+    conv.lastMessageSenderUsername, conv.last_message_sender_username,
+  );
+  const senderUsername = getRealPreviewName(
+    conv.lastMessageSenderUsername, conv.last_message_sender_username,
+  );
+
+  if (ADMIN_PREVIEW_TYPES.has(senderType)) {
+    return (senderName || "Altuvera") + ": " + body;
+  }
+
+  if (["user", "traveler"].includes(senderType)) {
+    const isCurrentUser = currentUserId != null && senderId != null
+      ? String(currentUserId) === String(senderId)
+      : !isGroup;
+    if (isCurrentUser) return "You: " + body;
+    return (senderName || senderUsername || "Member") + ": " + body;
+  }
+
+  return (senderName || senderUsername || "Altuvera") + ": " + body;
+};
+
 const isToday = (d) => {
   const n = new Date();
   return d.getDate()===n.getDate() && d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear();
@@ -701,8 +759,9 @@ function ScrollToBottomBtn({ visible, onClick, composerVisible = true }) {
    CONVERSATION ROW
 ══════════════════════════════════════════════════════════════════════════ */
 
-const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping }) {
+const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping, currentUserId }) {
   const isGroup = conv.conversationType === "group" || Boolean(conv.groupId);
+  const latestMessagePreview = getConversationLastMessagePreview(conv, currentUserId);
   const title    = isGroup ? (conv.groupName || conv.subject || "Group conversation")
     : conv.conversationType === "personal" ? "Personal chat with Altuvera"
     : conv.conversationType === "resource_support" ? "Bookings & travel help" : conv.subject ||
@@ -767,7 +826,7 @@ const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping }
           ) : (
             <p className={`text-[11px] truncate mb-1 leading-snug
                            ${hasUnread ? "text-slate-600 font-medium" : "text-slate-400"}`}>
-              {conv.lastMessage || "No messages yet"}
+              {latestMessagePreview}
             </p>
           )}
 
@@ -1923,6 +1982,7 @@ export default function Messages() {
                       active={c.id === activeId}
                       onSelect={openConversation}
                       isTyping={typingConvs.has(String(c.id))}
+                      currentUserId={getPreviewCurrentUserId()}
                     />
                   </div>
                 ))
