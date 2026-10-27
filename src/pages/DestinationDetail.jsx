@@ -23,6 +23,7 @@ import {
   Share2,
   Heart,
   BookmarkCheck,
+  MessageCircle,
 } from "lucide-react";
 import { useDestination } from "../hooks/useDestinations";
 import "./DestinationDetail.css";
@@ -517,6 +518,9 @@ export default function DestinationDetail() {
               <div className="d-hero__ctas" aria-label="Destination actions">
                 <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${encodeURIComponent(destination.slug || target)}`)}>
                   <Calendar size={18} /> Book This Destination
+                </button>
+                <button className="d-btn d-btn--outline d-btn--lg" onClick={() => navigate(`/messages?newConversation=1&inquiryType=destination&resourceId=${encodeURIComponent(destination.id || "")}&resourceTitle=${encodeURIComponent(destination.name || "")}&resourceSlug=${encodeURIComponent(destination.slug || target || "")}&resourceImage=${encodeURIComponent(heroImage || "")}`)}>
+                  <MessageCircle size={17} /> Ask Our Team
                 </button>
                 <button type="button" className="d-hero-tool d-hero-tool--share" onClick={shareDestination}>
                   <Share2 size={17} /> <span>{shareState}</span>
