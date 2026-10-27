@@ -50,6 +50,31 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
         image.src = url;
       });
 
+      const makeFadedBackground = (sourceData, opacity = 0.15) => new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = 1400;
+            canvas.height = Math.round(1400 * pageHeight / pageWidth);
+            const context = canvas.getContext("2d");
+            if (!context) return reject(new Error("Canvas unavailable"));
+            context.fillStyle = "#f7fff9";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            const sourceWidth = image.naturalWidth || image.width;
+            const sourceHeight = image.naturalHeight || image.height;
+            const scale = Math.max(canvas.width / sourceWidth, canvas.height / sourceHeight);
+            const width = sourceWidth * scale;
+            const height = sourceHeight * scale;
+            context.globalAlpha = opacity;
+            context.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+            resolve(canvas.toDataURL("image/png"));
+          } catch (error) { reject(error); }
+        };
+        image.onerror = reject;
+        image.src = sourceData;
+      });
+
       const pickDestinationImage = (record) => {
         if (!record || typeof record !== "object") return "";
         const galleryImage = Array.isArray(record.gallery) ? record.gallery.find(Boolean) : null;
@@ -88,15 +113,27 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
 
       let logoData = null;
       let destinationImageData = null;
+      let destinationBackgroundData = null;
       try { logoData = await imageToDataUrl(new URL("/altuvera.png", window.location.origin).href); } catch { /* keep the PDF usable if the logo cannot load */ }
       if (destinationImageUrl) {
         try { destinationImageData = await imageToDataUrl(new URL(destinationImageUrl, window.location.origin).href, contentWidth / 48); }
         catch { /* a cross-origin image without CORS should not prevent PDF downloads */ }
       }
+      if (itinerary?.backgroundMode === "destination" && destinationImageData) {
+        try { destinationBackgroundData = await makeFadedBackground(destinationImageData); }
+        catch { /* Keep the standard white background if an image cannot be processed safely. */ }
+      }
+
+      const drawPageBackground = () => {
+        if (!destinationBackgroundData) return;
+        pdf.addImage(destinationBackgroundData, "PNG", 0, 0, pageWidth, pageHeight, "altuvera-itinerary-background", "FAST");
+      };
+      drawPageBackground();
 
       const addPageIfNeeded = (height = 8) => {
         if (y + height > pageHeight - 17) {
           pdf.addPage();
+          drawPageBackground();
           y = 18;
         }
       };
