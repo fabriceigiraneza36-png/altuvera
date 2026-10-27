@@ -875,7 +875,7 @@ const MsgBubble = React.memo(function MsgBubble({
   const relatedResourcePath = relatedResource?.type === "package" && (relatedResource.slug || relatedResource.id) ? `/packages/${relatedResource.slug || relatedResource.id}`
     : relatedResource?.type === "destination" && (relatedResource.slug || relatedResource.id) ? `/destination/${relatedResource.slug || relatedResource.id}`
     : relatedResource?.type === "country" && (relatedResource.slug || relatedResource.title) ? `/country/${relatedResource.slug || encodeURIComponent(relatedResource.title)}`
-    : relatedResource?.type === "post" && (relatedResource.slug || relatedResource.id) ? `/post/${relatedResource.slug || relatedResource.id}` : null;
+    : (relatedResource?.type === "post" || relatedResource?.type === "story") && (relatedResource.slug || relatedResource.id) ? `/post/${relatedResource.slug || relatedResource.id}` : null;
 
   useLayoutEffect(() => {
     if (!menuOpen) return undefined;
