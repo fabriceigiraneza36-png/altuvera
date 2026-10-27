@@ -97,8 +97,8 @@ const formatBookingValue = (value) => {
 };
 
 const getBookingDetailFields = (booking = {}) => {
-  const travelDate = booking.travel_date || booking.trip_date || booking.departure_date;
-  const returnDate = booking.return_date || booking.end_date;
+  const travelDate = booking.travel_date || booking.arrival_date || booking.trip_date || booking.departure_date;
+  const returnDate = booking.end_date || booking.return_date || booking.departure_date;
   const guestCount = booking.number_of_travelers ?? booking.travelers_count ?? booking.guests ?? booking.number_of_guests ?? booking.total_travelers;
   const adults = booking.number_of_adults ?? booking.adults;
   const children = booking.number_of_children ?? booking.children;
@@ -110,8 +110,8 @@ const getBookingDetailFields = (booking = {}) => {
     ["Destination", booking.destination_name || booking.destination || booking.package_title || booking.package_name || "—"],
     ["Country", booking.country_name || booking.country || "—"],
     ["Service", booking.service_name || booking.service || booking.attraction_name || booking.activity_name || "—"],
-    ["Travel Date", travelDate ? fmtFull(travelDate) : "—"],
-    ["Return Date", returnDate ? fmtFull(returnDate) : "—"],
+    ["Arrival", travelDate ? fmtFull(travelDate) : "—"],
+    ["Departure", returnDate ? fmtFull(returnDate) : "—"],
     ["Guests", guestCount ? String(guestCount) : "—"],
     ["Adults", adults ? String(adults) : "—"],
     ["Children", children ? String(children) : "—"],
@@ -946,7 +946,7 @@ function ItineraryPanel({ booking, onApprove, onChangeRequest }) {
         ))}
       </div>
 
-      <div style={{display:"flex",justifyContent:"flex-end",marginTop:12}}><ItineraryDownloadButton booking={booking} itinerary={itinerary}/></div>
+      {booking?.status?.toLowerCase() === "confirmed" && <div style={{display:"flex",justifyContent:"flex-end",marginTop:12}}><ItineraryDownloadButton booking={booking} itinerary={itinerary}/></div>}
 
       {(itinerary.inclusions?.length || itinerary.essentials?.length) ? (
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginTop:10}}>
