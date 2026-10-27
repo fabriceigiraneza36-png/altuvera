@@ -158,6 +158,7 @@ export function useConversations() {
   const [adminOnline, setAdminOnline] = useState(false);
   const [adminPresence, setAdminPresence] = useState({ active: false, activeSince: null, lastSeenAt: null });
   const [recycleWarning, setRecycleWarning] = useState(null);
+  const [restoreChoice, setRestoreChoice] = useState(null);
   const [recycleClock, setRecycleClock] = useState(() => Date.now());
 
   useEffect(() => { activeIdRef.current = activeId }, [activeId]);
@@ -224,7 +225,14 @@ export function useConversations() {
         : Array.isArray(data?.results) ? data.results
         : null;
       if (!rows) throw new Error("The inbox response was unexpected. Please refresh to try again.");
-      setConversations(rows.map(normConv));
+      const normalizedRows = rows.map(normConv);
+      setConversations(normalizedRows);
+      const pendingRestore = normalizedRows.find((conversation) => conversation.metadata?.restoreChoicePending);
+      setRestoreChoice(pendingRestore ? {
+        conversationId: String(pendingRestore.id),
+        existingConversationId: String(pendingRestore.metadata?.restoreChoiceExistingConversationId || ""),
+        title: pendingRestore.subject || "Restored personal conversation",
+      } : null);
     } catch (err) {
       setError(err.message || "Failed to load conversations.");
     } finally {
@@ -352,6 +360,17 @@ export function useConversations() {
       }
     });
 
+    s.on("msg:conversation-restore-choice", (payload = {}) => {
+      if (!payload.restoredConversationId) return;
+      setRestoreChoice({
+        conversationId: String(payload.restoredConversationId),
+        existingConversationId: String(payload.existingConversationId || ""),
+        title: payload.title || "Restored personal conversation",
+      });
+      fetchConversations();
+    });
+    s.on("msg:conversation-restored", () => fetchConversations());
+
     s.on("msg:conversation-updated", (conv) => {
       if (!conv) return;
       setConversations((prev) =>
@@ -472,6 +491,8 @@ export function useConversations() {
       s.off("msg:conversation-recycle-warning", onRecycleWarning);
       s.off("msg:recycle-cancelled", onRecycleCancelled);
       s.off("msg:conversation-recycled", onConversationRecycled);
+      s.off("msg:conversation-restore-choice");
+      s.off("msg:conversation-restored");
       s.disconnect();
     };
   }, [fetchConversations]);
@@ -739,6 +760,19 @@ export function useConversations() {
     [],
   );
 
+  const resolveRestoreChoice = useCallback(async (choice) => {
+    if (!restoreChoice?.conversationId) throw new Error("There is no pending restore choice.");
+    if (!["keep_restored", "reject_restored"].includes(choice)) throw new Error("Choose one of the available options.");
+    const res = await authFetch(API_BASE + "/messages/conversations/" + encodeURIComponent(restoreChoice.conversationId) + "/restore-choice", {
+      method: "POST", body: JSON.stringify({ choice }),
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok || !payload.success) throw new Error(payload.message || "Could not save your choice.");
+    setRestoreChoice(null);
+    await fetchConversations();
+    return payload;
+  }, [restoreChoice, fetchConversations]);
+
   const dismissRecycleWarning = useCallback(() => setRecycleWarning(null), []);
 
   const requestKeepConversation = useCallback(async (conversationId) => {
@@ -823,6 +857,8 @@ export function useConversations() {
     adminPresence,
     recycleWarning,
     recycleWarningSeconds,
+    restoreChoice,
+    resolveRestoreChoice,
     dismissRecycleWarning,
     requestKeepConversation,
   };
