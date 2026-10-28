@@ -65,6 +65,18 @@ const authFetch = (url, opts = {}) =>
     },
   });
 
+const getResourceImageUrl = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+  try {
+    const backendOrigin = API_BASE.endsWith("/api") ? API_BASE.slice(0, -4) : API_BASE;
+    return new URL(raw, `${backendOrigin}/`).toString();
+  } catch {
+    return raw;
+  }
+};
+
 const fmtShort = (d) =>
   d ? new Date(d).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "";
 
@@ -1034,7 +1046,7 @@ const MsgBubble = React.memo(function MsgBubble({
                 <div className={"mb-2 flex items-center gap-2 rounded-xl border px-2.5 py-2 " + (mine ? "border-white/20 bg-white/10" : "border-emerald-100 bg-emerald-50")}>
                   {relatedResourceImage && <img src={relatedResourceImage} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" loading="lazy" />}
                   <div className="min-w-0 flex-1">
-                    <span className={"block text-[9px] font-extrabold uppercase tracking-wider " + (mine ? "text-emerald-50" : "text-emerald-700")}>Imported {relatedResource.type || "item"}</span>
+                    <span className={"block text-[9px] font-extrabold uppercase tracking-wider " + (mine ? "text-emerald-50" : "text-emerald-700")}>Subject · {relatedResource.type || "travel item"}</span>
                     {relatedResourcePath ? <Link to={relatedResourcePath} className={"block truncate text-[11px] font-bold underline underline-offset-2 " + (mine ? "text-white" : "text-slate-800")}>{relatedResourceTitle}</Link>
                       : <span className={"block truncate text-[11px] font-bold " + (mine ? "text-white" : "text-slate-800")}>{relatedResourceTitle}</span>}
                   </div>
@@ -1503,6 +1515,14 @@ export default function Messages() {
   const [resourceSearchBusy, setResourceSearchBusy] = useState(false);
   const [resourceSearchError, setResourceSearchError] = useState("");
   const [selectedResource, setSelectedResource] = useState(null);
+  const [showResourcePicker, setShowResourcePicker] = useState(false);
+
+  const closeResourcePicker = useCallback(() => {
+    setShowResourcePicker(false);
+    setResourceQuery("");
+    setResourceResults([]);
+    setResourceSearchError("");
+  }, []);
 
   const isResourceSupport = activeConversation?.conversationType === "resource_support" || activeConversation?.channel === "booking_support";
 
@@ -1556,9 +1576,20 @@ export default function Messages() {
       setResourceType("destination");
       setResourceQuery("");
       setResourceResults([]);
+      setResourceSearchError("");
       setSelectedResource(null);
+      setShowResourcePicker(false);
     }
   }, [isResourceSupport]);
+
+  useEffect(() => {
+    if (!showResourcePicker) return undefined;
+    const handleEscape = (event) => {
+      if (event.key === "Escape") closeResourcePicker();
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [showResourcePicker, closeResourcePicker]);
 
   useEffect(() => { injectMsgStyles(); }, []);
 
@@ -2224,30 +2255,7 @@ export default function Messages() {
                         {bookingContext.itineraryEmailStatus === "failed" && bookingContext.itineraryEmailError && <p className="mt-1 text-[10px] text-rose-700">{bookingContext.itineraryEmailError}</p>}
                       </div>
                     )}
-                    <div className="grid grid-cols-[minmax(0,110px)_1fr] gap-2">
-                      <select value={resourceType} onChange={e=>{setResourceType(e.target.value);setSelectedResource(null);setResourceQuery("");}} aria-label="Resource type" className="rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
-                        <option value="destination">Destinations</option>
-                        <option value="country">Countries</option>
-                        <option value="package">Packages</option>
-                        <option value="story">Stories</option>
-                        <option value="itinerary">My itineraries</option>
-                      </select>
-                      <input value={resourceQuery} onChange={e=>setResourceQuery(e.target.value)} placeholder="Search live records…" aria-label="Search live destinations, countries, packages, stories, and itineraries" className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-400"/>
-                    </div>
-                    {(resourceSearchBusy || resourceSearchError || resourceResults.length > 0) && (
-                      <div className="max-h-32 overflow-y-auto rounded-xl border border-slate-200 bg-white">
-                        {resourceSearchBusy && <p className="px-3 py-2 text-[10px] text-slate-500">Searching live records…</p>}
-                        {resourceSearchError && <p className="px-3 py-2 text-[10px] text-rose-600">{resourceSearchError}</p>}
-                        {resourceResults.map(item=><button type="button" key={`${item.type}:${item.id}`} onClick={()=>{setSelectedResource(item);setResourceQuery(item.name);setResourceResults([]);}} className="block w-full border-b border-slate-100 px-3 py-2 text-left last:border-0 hover:bg-emerald-50">
-                          <span className="block truncate text-[11px] font-bold text-slate-800">{item.name}</span>
-                          <span className="block truncate text-[10px] text-slate-500">{item.country || item.destination || item.bookingNumber || item.description || item.status || item.type}</span>
-                        </button>)}
-                      </div>
-                    )}
-                    {selectedResource && <div className="flex items-center justify-between gap-2 rounded-lg bg-white border border-emerald-200 px-3 py-2 text-[10px]">
-                      <span className="min-w-0 truncate text-emerald-800"><b>Attached:</b> {selectedResource.type} · {selectedResource.name}</span>
-                      <button type="button" onClick={()=>setSelectedResource(null)} aria-label="Remove selected resource" className="shrink-0 text-slate-500 hover:text-rose-600"><X size={13}/></button>
-                    </div>}
+
                   </section>
                 )}
 
@@ -2384,8 +2392,43 @@ export default function Messages() {
                     </div>
                   )}
 
+                  {isResourceSupport && selectedResource && (
+                    <div className="mb-2 flex min-w-0 items-center gap-2 rounded-xl border border-emerald-200 bg-white px-2.5 py-2 shadow-sm">
+                      {(["destination", "country"].includes(selectedResource.type)) && (
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-emerald-50 text-emerald-700">
+                          {(selectedResource.imageUrl || selectedResource.image_url) ? (
+                            <img src={getResourceImageUrl(selectedResource.imageUrl || selectedResource.image_url)} alt="" className="h-full w-full object-cover" loading="lazy"/>
+                          ) : <MapPin size={16}/>}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <span className="block text-[9px] font-extrabold uppercase tracking-[0.12em] text-emerald-700">Message subject</span>
+                        <span className="block truncate text-xs font-bold text-slate-900" title={selectedResource.name}>{selectedResource.name}</span>
+                        <span className="block text-[10px] capitalize text-slate-500">{selectedResource.type}</span>
+                      </div>
+                      <button type="button" onClick={() => setSelectedResource(null)} aria-label="Remove selected subject" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600">
+                        <X size={14}/>
+                      </button>
+                    </div>
+                  )}
+
                   {/* Input row */}
                   <div className="msg-composer-row relative flex items-end gap-2 rounded-2xl p-1.5">
+                    {isResourceSupport && (
+                      <button type="button"
+                        onClick={() => {
+                          setResourceType(selectedResource?.type || "destination");
+                          setResourceQuery("");
+                          setResourceResults([]);
+                          setResourceSearchError("");
+                          setShowResourcePicker(true);
+                        }}
+                        aria-label="Attach a destination, country or package"
+                        title="Attach destination, country or package"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                        <Plus size={17}/>
+                      </button>
+                    )}
                     {/* Emoji toggle */}
                     <div className="relative flex-shrink-0">
                       <button
@@ -2484,6 +2527,96 @@ export default function Messages() {
           />
         )}
       </DashboardLayout>
+      {isResourceSupport && showResourcePicker && createPortal(
+        <div
+          className="fixed inset-0 z-[11000] flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-5"
+          role="presentation"
+          onClick={(event) => { if (event.target === event.currentTarget) closeResourcePicker(); }}
+        >
+          <section role="dialog" aria-modal="true" aria-labelledby="resource-picker-title"
+            className="flex max-h-[min(82dvh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-2xl shadow-slate-950/25 sm:rounded-3xl">
+            <header className="flex items-start gap-3 border-b border-slate-100 bg-gradient-to-r from-white to-emerald-50/70 px-4 py-3.5 sm:px-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800"><Plus size={19}/></div>
+              <div className="min-w-0 flex-1">
+                <h2 id="resource-picker-title" className="text-sm font-extrabold text-slate-900 sm:text-base">Attach a travel item</h2>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">Choose a destination, country or package to make your message specific.</p>
+              </div>
+              <button type="button" onClick={closeResourcePicker} aria-label="Close item picker"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"><X size={17}/></button>
+            </header>
+
+            <div className="space-y-3 px-4 pb-3 pt-3 sm:px-5">
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Travel item type">
+                {[
+                  { value: "destination", label: "Destinations" },
+                  { value: "country", label: "Countries" },
+                  { value: "package", label: "Packages" },
+                ].map((type) => (
+                  <button key={type.value} type="button" role="tab" aria-selected={resourceType === type.value}
+                    onClick={() => {
+                      setResourceType(type.value);
+                      setResourceQuery("");
+                      setResourceResults([]);
+                      setResourceSearchError("");
+                    }}
+                    className={`min-w-0 rounded-lg px-1.5 py-2 text-[10px] font-extrabold transition sm:px-3 sm:text-xs ${resourceType === type.value ? "bg-white text-emerald-800 shadow-sm ring-1 ring-slate-200/70" : "text-slate-500 hover:text-slate-800"}`}>
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+              <label className="relative block">
+                <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                <input value={resourceQuery} onChange={(event) => setResourceQuery(event.target.value)} type="search"
+                  placeholder={resourceType === "package" ? "Search package titles…" : resourceType === "country" ? "Search country names…" : "Search destination names…"}
+                  aria-label={`Search ${resourceType}s`}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-500/10"/>
+              </label>
+            </div>
+
+            <div className="min-h-[120px] flex-1 overflow-y-auto overscroll-contain px-4 pb-4 sm:px-5">
+              {resourceSearchBusy && <div className="flex items-center justify-center gap-2 py-8 text-xs font-semibold text-emerald-700" role="status"><RefreshCw size={14} className="animate-spin"/> Searching {resourceType}s…</div>}
+              {resourceSearchError && <p role="alert" className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-2.5 text-xs text-rose-700">{resourceSearchError}</p>}
+              {!resourceSearchBusy && !resourceSearchError && resourceQuery.trim().length < 2 && (
+                <div className="flex flex-col items-center justify-center py-7 text-center">
+                  <Search size={20} className="mb-2 text-slate-300"/>
+                  <p className="text-xs font-semibold text-slate-600">Search by name</p>
+                  <p className="mt-1 max-w-xs text-[10px] leading-relaxed text-slate-400">Enter at least two characters to find a listed {resourceType}.</p>
+                </div>
+              )}
+              {!resourceSearchBusy && !resourceSearchError && resourceQuery.trim().length >= 2 && resourceResults.length === 0 && (
+                <div className="py-7 text-center text-xs text-slate-500">No matching {resourceType}s found. Try another name.</div>
+              )}
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {resourceResults.map((item) => {
+                  const itemName = String(item.name || item.title || "").trim();
+                  const itemImage = resourceType !== "package" ? getResourceImageUrl(item.imageUrl || item.image_url || item.image) : "";
+                  if (!itemName) return null;
+                  return (
+                    <button key={`${item.type || resourceType}:${item.id}`} type="button"
+                      onClick={() => {
+                        setSelectedResource({ ...item, type: resourceType, name: itemName, slug: item.slug || null, imageUrl: item.imageUrl || item.image_url || null });
+                        closeResourcePicker();
+                      }}
+                      className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-2.5 text-left transition hover:border-emerald-300 hover:bg-emerald-50/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                      {resourceType !== "package" && (
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-emerald-50 text-emerald-700">
+                          {itemImage ? <img src={itemImage} alt="" className="h-full w-full object-cover" loading="lazy"/> : <MapPin size={17}/>}
+                        </div>
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-extrabold text-slate-900" title={itemName}>{itemName}</span>
+                        {resourceType === "package" && <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-wider text-emerald-700">Package title</span>}
+                      </span>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700"><Plus size={13}/></span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        </div>,
+        document.body
+      )}
       {recycleWarning && createPortal(
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
              role="presentation"
