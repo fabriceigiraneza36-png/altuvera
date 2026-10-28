@@ -445,7 +445,10 @@ export function useConversations() {
       const messageKey = String(msg.id);
       if (processedGroupMessagesRef.current.has(messageKey)) return;
       processedGroupMessagesRef.current.add(messageKey);
-      if (processedGroupMessagesRef.current.size > 500) processedGroupMessagesRef.current.clear();
+      if (processedGroupMessagesRef.current.size > 500) {
+        processedGroupMessagesRef.current.clear();
+        processedGroupMessagesRef.current.add(messageKey);
+      }
 
       const currentUserId = getCurrentUserId();
       const isOwnMessage = currentUserId != null && msg.senderId != null
