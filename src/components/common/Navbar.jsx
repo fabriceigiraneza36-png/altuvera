@@ -3,6 +3,16 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  UserRound as AccountUserIcon,
+  CalendarDays as AccountBookingsIcon,
+  Heart as AccountWishlistIcon,
+  Settings2 as AccountSettingsIcon,
+  LayoutDashboard as AccountDashboardIcon,
+  ChevronRight as AccountChevronRightIcon,
+  LogOut as AccountLogoutIcon,
+  X as AccountCloseIcon,
+} from "lucide-react";
+import {
   FiHeart,
   FiUser,
   FiLogOut,
@@ -576,15 +586,15 @@ const Navbar = () => {
 
   const userMenuItems = useMemo(() => {
     const items = [
-      { to: "/profile", icon: FiUser, label: "Profile" },
-      { to: "/my-bookings", icon: FiCalendar, label: "Your Bookings" },
-      { to: "/wishlist", icon: FiHeart, label: "Wishlist" },
-      { to: "/settings", icon: FiSettings, label: "Your Settings" },
+      { to: "/profile", icon: AccountUserIcon, label: "Profile" },
+      { to: "/my-bookings", icon: AccountBookingsIcon, label: "Your Bookings" },
+      { to: "/wishlist", icon: AccountWishlistIcon, label: "Wishlist" },
+      { to: "/settings", icon: AccountSettingsIcon, label: "Your Settings" },
     ];
     if (user?.role === "admin" || user?.role === "manager")
       items.push({
         to: "/admin/dashboard",
-        icon: FiSettings,
+        icon: AccountDashboardIcon,
         label: "Admin Dashboard",
       });
     return items;
@@ -1100,14 +1110,16 @@ const Navbar = () => {
                       style={{ "--mi": mi }}
                       onClick={() => setUserMenuOpen(false)}
                     >
-                      <m.icon size={16} /> {m.label}
+                      <span className="nav__user-drop-icon"><m.icon size={17} strokeWidth={1.9} /></span>
+                      <span className="nav__user-drop-label">{m.label}</span>
+                      <AccountChevronRightIcon size={16} strokeWidth={1.8} className="nav__user-drop-arrow" />
                     </Link>
                   ))}
                   <button
                     className="nav__user-drop-out"
                     onClick={handleLogout}
                   >
-                    <FiLogOut size={16} /> Sign Out
+                    <AccountLogoutIcon size={17} strokeWidth={1.9} /> Sign Out
                   </button>
                 </div>
               </div>
@@ -1343,7 +1355,7 @@ const Navbar = () => {
                         <div className="mm__account-modal-top">
                           <span className="mm__account-modal-kicker">YOUR ACCOUNT</span>
                           <button type="button" className="mm__account-modal-close" onClick={() => setMobileAccountOpen(false)} aria-label="Close account menu">
-                            <FiX size={21} />
+                            <AccountCloseIcon size={21} strokeWidth={1.9} />
                           </button>
                         </div>
                         <div className="mm__account-hero">
@@ -1371,14 +1383,14 @@ const Navbar = () => {
                               style={{ "--account-i": mi }}
                               onClick={() => { setIsMobileMenuOpen(false); setMobileAccountOpen(false); }}
                             >
-                              <span className="mm__account-modal-icon"><m.icon size={19} /></span>
+                              <span className="mm__account-modal-icon"><m.icon size={19} strokeWidth={1.9} /></span>
                               <span>{m.label}</span>
                               <FiChevronRight size={17} className="mm__account-modal-arrow" />
                             </Link>
                           ))}
                         </div>
                         <button className="mm__account-modal-signout" onClick={() => { setMobileAccountOpen(false); handleLogout(); }}>
-                          <FiLogOut size={18} /> Sign Out
+                          <AccountLogoutIcon size={18} strokeWidth={1.9} /> Sign Out
                         </button>
                         <p className="mm__account-modal-foot">Your journeys, all in one place.</p>
                       </motion.section>
