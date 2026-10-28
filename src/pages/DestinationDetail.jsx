@@ -23,6 +23,7 @@ import {
   Share2,
   Heart,
   BookmarkCheck,
+  MessageCircle,
 } from "lucide-react";
 import { useDestination } from "../hooks/useDestinations";
 import "./DestinationDetail.css";
