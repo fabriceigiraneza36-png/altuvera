@@ -693,7 +693,9 @@ const CSS = `
 @keyframes dc-share-panel-in { from { opacity:0; transform:translateY(12px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
 .dc-share-overlay { position:fixed; inset:0; z-index:10050; box-sizing:border-box; display:grid; place-items:center; padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom)); background:rgba(3,20,13,.64); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); animation:dc-share-fade-in .18s ease both; font-family:'Inter',system-ui,sans-serif; }
 .dc-share-dialog { box-sizing:border-box; width:min(100%,620px); max-height:min(90dvh,780px); overflow-y:auto; scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y; padding:clamp(18px,3.8vw,28px); border-radius:26px; border:1px solid rgba(255,255,255,.8); background:linear-gradient(155deg,#fff 0%,#f8fffb 68%,#f1fbf5 100%); color:#102a20; box-shadow:0 30px 100px rgba(0,0,0,.34),inset 0 1px 0 #fff; animation:dc-share-panel-in .25s cubic-bezier(.22,1,.36,1) both; }
-.dc-share-dialog::-webkit-scrollbar { display:none; width:0; height:0; }\n.dc-share-overlay { overflow:hidden; }\n.dc-share-grabber { display:none; }
+.dc-share-dialog::-webkit-scrollbar { display:none; width:0; height:0; }
+.dc-share-overlay { overflow:hidden; }
+.dc-share-grabber { display:none; }
 .dc-share-header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; }
 .dc-share-header-copy { min-width:0; }
 .dc-share-eyebrow { display:flex; align-items:center; gap:6px; color:#047857; font-size:10px; line-height:1.2; font-weight:800; letter-spacing:.14em; }
@@ -724,12 +726,20 @@ const CSS = `
 .dc-share-link-icon { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border-radius:11px; color:#047857; background:#d9fbe8; }
 .dc-share-link-value { min-width:0; flex:1; }
 .dc-share-link-value small { display:block; margin-bottom:3px; color:#64756b; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
-.dc-share-link-value span { display:block; overflow:hidden; color:#2f5a46; font-size:10.5px; text-overflow:ellipsis; white-space:nowrap; }
+.dc-share-link-value a { display:block; overflow:hidden; color:#2f5a46; font-size:10.5px; text-overflow:ellipsis; white-space:nowrap; text-decoration:none; border-radius:3px; } .dc-share-link-value a:hover { color:#047857; text-decoration:underline; } .dc-share-link-value a:focus-visible { outline:2px solid #059669; outline-offset:2px; }
 .dc-share-copy-btn { display:flex; align-items:center; justify-content:center; gap:5px; flex:0 0 auto; min-height:36px; padding:0 10px; border:1px solid #b6e6ca; border-radius:10px; color:#047857; background:#fff; font:800 10px/1 'Inter',sans-serif; cursor:pointer; transition:background .2s,color .2s; }
 .dc-share-copy-btn:hover { background:#047857; color:#fff; }
 .dc-share-native { display:flex; align-items:center; gap:12px; width:100%; min-height:62px; margin-top:12px; padding:10px 14px; border:0; border-radius:15px; color:#fff; background:linear-gradient(110deg,#064e3b,#047857); box-shadow:0 7px 20px rgba(6,78,59,.18); text-align:left; cursor:pointer; transition:transform .2s,box-shadow .2s; }
 .dc-share-native:hover { transform:translateY(-1px); box-shadow:0 10px 24px rgba(6,78,59,.24); }
 .dc-share-native>svg:first-child { flex:0 0 22px; } .dc-share-native>span { display:flex; flex:1; min-width:0; flex-direction:column; gap:4px; } .dc-share-native strong { font-size:12px; font-weight:800; } .dc-share-native small { color:rgba(255,255,255,.72); font-size:10px; font-weight:500; } .dc-share-native-arrow { opacity:.75; }
+.dc-share-copy-caption { box-sizing:border-box; display:flex; align-items:center; gap:11px; width:100%; min-height:54px; margin-top:9px; padding:10px 14px; border:1px solid #dcece2; border-radius:14px; color:#155e41; background:rgba(255,255,255,.92); text-align:left; font-family:inherit; cursor:pointer; transition:border-color .2s,background .2s,transform .2s,box-shadow .2s; }
+.dc-share-copy-caption:hover,.dc-share-copy-caption:focus-visible { border-color:#86d6a9; background:#fff; box-shadow:0 5px 16px rgba(6,78,59,.07); outline:none; }
+.dc-share-copy-caption:active { transform:scale(.99); }
+.dc-share-copy-caption>svg { flex:0 0 18px; color:#047857; }
+.dc-share-copy-caption>span { display:flex; flex:1; min-width:0; flex-direction:column; gap:3px; }
+.dc-share-copy-caption strong { font-size:11.5px; font-weight:800; }
+.dc-share-copy-caption small { color:#728176; font-size:10px; font-weight:500; line-height:1.35; }
+.dc-share-copy-caption:focus-visible { outline:2px solid #059669; outline-offset:2px; }
 .dc-share-feedback { margin:12px 0 0; padding:9px 11px; border:1px solid #bbf7d0; border-radius:11px; color:#166534; background:#f0fdf4; font-size:11px; line-height:1.45; }
 .dc-share-footnote { margin:12px 0 0; color:#9aa8a0; font-size:9.5px; text-align:center; line-height:1.4; }
 @media(max-width:520px) {
@@ -746,7 +756,7 @@ const CSS = `
  .dc-share-link-box { gap:7px; padding:8px; } .dc-share-link-icon { flex-basis:30px; width:30px; height:30px; } .dc-share-copy-btn { min-height:34px; padding:0 8px; }
 }
 @media(max-width:350px) { .dc-share-dialog { padding-inline:11px; } .dc-share-app-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } .dc-share-preview-image,.dc-share-preview-placeholder { width:62px; height:62px; flex-basis:62px; } .dc-share-header h2 { font-size:21px; } }
-@media(prefers-reduced-motion:reduce) { .dc-share-overlay,.dc-share-dialog { animation:none!important; } .dc-share-close,.dc-share-app,.dc-share-copy-btn,.dc-share-native { transition:none!important; } }
+@media(prefers-reduced-motion:reduce) { .dc-share-overlay,.dc-share-dialog { animation:none!important; } .dc-share-close,.dc-share-app,.dc-share-copy-btn,.dc-share-native,.dc-share-copy-caption { transition:none!important; } }
 
 `;
 
@@ -1475,6 +1485,7 @@ const blurb =
     : "https://www.altuverasafaris.com/destinations";
   const shareTitle = `Discover ${name} with Altuvera Safaris`;
   const shareMessage = `${name}${locationStr ? ` — ${locationStr}` : ""}\n${blurb || "Discover this East African experience with Altuvera Safaris."}`;
+  const shareTextWithLink = `${shareMessage}\n\nExplore this destination with Altuvera Safaris:\n${shareUrl}`;
 
   const showShareFeedback = useCallback((message) => {
     setShareFeedback(message);
@@ -1516,7 +1527,32 @@ const blurb =
     }
   }, [shareUrl, showShareFeedback]);
 
-  // Link-first sharing: many mobile share targets discard text when a file is attached.
+  // Keep link-first sharing reliable, and include the same caption/link when a photo is attached.
+  const handleCopyShareCaption = useCallback(async (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareTextWithLink);
+      } else {
+        const field = document.createElement("textarea");
+        field.value = shareTextWithLink;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        field.style.pointerEvents = "none";
+        document.body.appendChild(field);
+        field.select();
+        const copiedToClipboard = document.execCommand("copy");
+        field.remove();
+        if (!copiedToClipboard) throw new Error("Clipboard access unavailable");
+      }
+      showShareFeedback("Caption and destination link copied. Paste them into the post or message after attaching the photo.");
+    } catch {
+      showShareFeedback("Copying was blocked. Use the destination-link Copy button, or select the caption and copy it manually.");
+    }
+  }, [shareTextWithLink, showShareFeedback]);
+
   const handleNativeShare = useCallback(async (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -1524,32 +1560,38 @@ const blurb =
       showShareFeedback("Your browser does not offer a system share sheet. Choose an app above or copy the link.");
       return;
     }
-    const textWithLink = `${shareMessage}\n\nExplore this destination with Altuvera Safaris: ${shareUrl}`;
     try {
-      await navigator.share({ title: shareTitle, text: textWithLink, url: shareUrl });
-      setShareModalOpen(false);
-      setShareFeedback("");
+      await navigator.share({ title: shareTitle, text: shareTextWithLink, url: shareUrl });
+      showShareFeedback("Destination details and link shared.");
     } catch (error) {
-      if (error?.name !== "AbortError") showShareFeedback("The share sheet could not complete this action. Try Copy link or choose another app.");
+      if (error?.name !== "AbortError") showShareFeedback("The share sheet could not complete this action. Try Copy link or Copy caption + link.");
     }
-  }, [shareTitle, shareMessage, shareUrl, showShareFeedback]);
+  }, [shareTitle, shareTextWithLink, shareUrl, showShareFeedback]);
 
-  // Photo sharing is separate because some social apps strip links from image shares.
   const handlePhotoShare = useCallback(async (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     if (!shareImageFile || typeof navigator === "undefined" || typeof navigator.share !== "function" ||
         typeof navigator.canShare !== "function" || !navigator.canShare({ files: [shareImageFile] })) {
-      showShareFeedback("Photo sharing isn't supported here. Use Share link & details or Copy link instead.");
+      showShareFeedback("Photo sharing isn't supported here. Use Share link & details or Copy caption + link instead.");
       return;
     }
-    try {
-      await navigator.share({ title: shareTitle, files: [shareImageFile] });
-      showShareFeedback("Photo shared. If the app didn't include a link, use Copy link to add the destination URL to your caption.");
-    } catch (error) {
-      if (error?.name !== "AbortError") showShareFeedback("Couldn't share the photo. Try Share link & details instead.");
+    let captionCopied = false;
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(shareTextWithLink);
+        captionCopied = true;
+      } catch { /* The image can still be shared if clipboard access is unavailable. */ }
     }
-  }, [shareTitle, shareImageFile, showShareFeedback]);
+    try {
+      await navigator.share({ title: shareTitle, text: shareTextWithLink, url: shareUrl, files: [shareImageFile] });
+      showShareFeedback(captionCopied
+        ? "Photo share completed. The caption and destination link are copied too—paste them into the post if your app doesn't add them automatically."
+        : "Photo share completed. Some apps drop captions on image shares; use “Copy caption + link” to add the destination URL.");
+    } catch (error) {
+      if (error?.name !== "AbortError") showShareFeedback("Couldn't share the photo. Try Share link & details or Copy caption + link instead.");
+    }
+  }, [shareTitle, shareTextWithLink, shareUrl, shareImageFile, showShareFeedback]);
 
   /* ── render ── */
   return (
@@ -1865,23 +1907,27 @@ const blurb =
           </div>
           <div className="dc-share-link-box">
             <span className="dc-share-link-icon"><FiLink size={16} /></span>
-            <div className="dc-share-link-value"><small>Destination link</small><span>{shareUrl}</span></div>
+            <div className="dc-share-link-value"><small>Destination link · tap to open</small><a href={shareUrl} title={shareUrl} target="_blank" rel="noopener noreferrer">{shareUrl}</a></div>
             <button type="button" className="dc-share-copy-btn" onClick={handleCopyShareLink} aria-label="Copy destination link">
               {copied ? <FiCheck size={17} /> : <FiCopy size={17} />}<span>{copied ? "Copied" : "Copy"}</span>
             </button>
           </div>
           {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-            <button type="button" className="dc-share-native" onClick={handleNativeShare} disabled={shareImageStatus === "loading"}>
-              {shareImageStatus === "loading" ? <FiCamera size={18} /> : <FiLink size={18} />}
+            <button type="button" className="dc-share-native" onClick={handleNativeShare}>
+              <FiLink size={18} />
               <span>
-                <strong>{shareImageStatus === "loading" ? "Preparing destination photo…" : "Share link & details"}</strong>
-                <small>{shareImageStatus === "loading" ? "Getting the destination image ready to attach" : "Send the destination URL and caption through your device"}</small>
+                <strong>Share link & details</strong>
+                <small>Send the destination URL and caption through your device</small>
               </span>
               <FiChevronRight size={18} className="dc-share-native-arrow" />
             </button>
           )}
+          <button type="button" className="dc-share-copy-caption" onClick={handleCopyShareCaption}>
+            <FiCopy size={17} aria-hidden="true" />
+            <span><strong>Copy caption + destination link</strong><small>Paste it into a post or message after attaching the photo.</small></span>
+          </button>
           {shareFeedback && <p className="dc-share-feedback" role="status" aria-live="polite">{shareFeedback}</p>}
-          <p className="dc-share-footnote">Share link & details sends the destination URL. Photo sharing is separate because some apps drop links when an image is attached.</p>
+          <p className="dc-share-footnote">Photo shares include the link when the receiving app supports it. If an app drops the caption, paste the copied caption and destination URL into the post.</p>
         </section>
       </div>,
       document.body
