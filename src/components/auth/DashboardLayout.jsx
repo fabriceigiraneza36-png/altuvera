@@ -56,8 +56,10 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           border-right: 1px solid #e2e8f0;
           padding: 24px 16px; display: flex; flex-direction: column;
           position: sticky; top: 80px; height: calc(100vh - 80px);
-          overflow-y: auto; z-index: 10; transition: transform 0.3s ease;
+          overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none;
+          overscroll-behavior: contain; z-index: 10; transition: transform 0.3s ease;
         }
+        .dashboard-sidebar::-webkit-scrollbar { display: none; width: 0; height: 0; }
         .dashboard-user-card {
           text-align: center; margin-bottom: 24px;
           padding-bottom: 20px; border-bottom: 1px solid #f1f5f9;
