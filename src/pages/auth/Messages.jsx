@@ -891,11 +891,11 @@ const MsgBubble = React.memo(function MsgBubble({
   const isPending = String(message.id).startsWith("tmp-");
   const isDeleted = Boolean(message.deleted);
   const isEditing = String(editingId) === String(message.id);
-  const normalizedSenderType = String(message.senderType || "").trim().toLowerCase().replace(/[\\s-]+/g, "_");
+  const normalizedSenderType = String(message.senderType || "").trim().toLowerCase().replace(/[ -]+/g, "_");
   const isAdminSender = ADMIN_PREVIEW_TYPES.has(normalizedSenderType);
   const senderDisplayName = getRealPreviewName(message.senderName, message.senderUsername) || (isAdminSender ? "Altuvera Team" : "Group member");
   const senderAvatarUrl = message.senderAvatar || message.senderAvatarUrl || message.sender_user_avatar || message.avatarUrl || null;
-  const senderInitials = senderDisplayName.trim().split(/\\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "GM";
+  const senderInitials = senderDisplayName.trim().split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "GM";
   const isGroupPeer = isGroupConversation && !mine && !isAdminSender;
   const destinationName = message.metadata?.destinationName || message.metadata?.destination_name || null;
   const relatedResource = message.metadata?.relatedResource || message.metadata?.related_resource || message.metadata?.resource || null;
