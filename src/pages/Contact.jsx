@@ -1,16 +1,17 @@
 // src/pages/Contact.jsx
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, useInView, useScroll, useTransform, motion } from "framer-motion";
 import {
-  FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiMessageSquare,
-  FiCheckCircle, FiUser, FiAlertCircle, FiChevronDown, FiUsers,
-  FiGlobe, FiArrowRight, FiArrowLeft, FiHelpCircle,
-  FiShield, FiExternalLink, FiCalendar,
-} from "react-icons/fi";
+  Mail as FiMail, Phone as FiPhone, MapPin as FiMapPin, Clock3 as FiClock,
+  Send as FiSend, MessageCircle as FiMessageSquare, CircleCheck as FiCheckCircle,
+  UserRound as FiUser, CircleAlert as FiAlertCircle, ChevronDown as FiChevronDown,
+  Users as FiUsers, Globe2 as FiGlobe, ArrowRight as FiArrowRight,
+  ArrowLeft as FiArrowLeft, CircleHelp as FiHelpCircle, ShieldCheck as FiShield,
+  ExternalLink as FiExternalLink, CalendarDays as FiCalendar, Sparkles as FiSparkles,
+} from "lucide-react";
 import {
   FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaWhatsapp, FaTiktok,
 } from "react-icons/fa";
-import { RiSendPlaneFill } from "react-icons/ri";
 import SEO from "../components/common/SEO";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { sendMessage } from "../utils/sendMessage";
@@ -135,6 +136,29 @@ const STEP_CONFIG = [
   { label: "Your Message", icon: FiMessageSquare },
 ];
 
+const FORM_BUBBLES = Array.from({ length: 15 }, (_, index) => ({
+  id: index + 1,
+  left: `${(index * 37 + 7) % 100}%`,
+  top: `${(index * 29 + 9) % 100}%`,
+  size: 18 + (index % 5) * 13,
+  delay: `${-(index * 0.73).toFixed(2)}s`,
+  duration: `${13 + (index % 6) * 3}s`,
+  opacity: 0.14 + (index % 4) * 0.045,
+}));
+
+const FormBubbleLayer = React.memo(function FormBubbleLayer() {
+  return (
+    <div className="ct-form-bubble-layer" aria-hidden="true">
+      {FORM_BUBBLES.map((bubble) => (
+        <span key={bubble.id} className={`ct-form-bubble ct-form-bubble--${(bubble.id % 4) + 1}`}
+          style={{ left:bubble.left, top:bubble.top, width:bubble.size, height:bubble.size,
+            opacity:bubble.opacity, animationDelay:bubble.delay, animationDuration:bubble.duration }} />
+      ))}
+    </div>
+  );
+});
+
+
 /* ═══════════════════════════════════════════════════
    SUB-COMPONENTS
 ═══════════════════════════════════════════════════ */
@@ -234,7 +258,6 @@ const FormTextarea = React.memo(({ name, label, placeholder, required, maxLength
   const hasErr = touched && error;
   const isOk = touched && !error && value;
   const chars = value?.length || 0;
-  const pct = (chars / maxLength) * 100;
   return (
     <div className="ct-field ct-field--full">
       <label className="ct-label" htmlFor={`ct-${name}`}>
@@ -286,7 +309,6 @@ const Contact = () => {
   const [direction, setDirection] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitProgress, setSubmitProgress] = useState(0);
   const [submittedEmail, setSubmittedEmail] = useState("");
 
   const [faqs, setFaqs] = useState([]);
@@ -408,8 +430,8 @@ const Contact = () => {
     let hasErr = false;
     STEP_FIELDS.forEach((_, i) => { if (!validateStep(i)) hasErr = true; });
     if (hasErr) return;
-    setSubmitting(true); setSubmitProgress(0); setErrors(p => ({ ...p, submit: "" }));
-    const tick = setInterval(() => setSubmitProgress(p => Math.min(p + 10, 88)), 100);
+    setSubmitting(true);
+    setErrors(p => ({ ...p, submit: "" }));
     try {
       const destinationNames = selectedDestinations.map((item) => item.name || item.title).filter(Boolean);
       const res = await sendMessage({
@@ -421,12 +443,10 @@ const Contact = () => {
       });
       if (res?.error) throw new Error(res.error);
       setSubmittedEmail(form.email);
-      setSubmitProgress(100);
-      setTimeout(() => { if (mounted.current) setSubmitted(true); }, 250);
+      if (mounted.current) setSubmitted(true);
     } catch (err) {
       setErrors(p => ({ ...p, submit: err?.message || "Something went wrong. Please try again." }));
     } finally {
-      clearInterval(tick);
       if (mounted.current) setSubmitting(false);
     }
   }, [form, validateStep, selectedDestinations, destinationInquiry]);
@@ -434,14 +454,9 @@ const Contact = () => {
   const resetForm = useCallback(() => {
     setSubmitted(false); setStep(0); setDirection(1); setForm(INIT_FORM);
     setSelectedDestinations([]); setDestinationQuery(""); setDestinationInquiry(false);
-    setTouched({}); setErrors({}); setSubmitProgress(0); setSubmittedEmail("");
+    setTouched({}); setErrors({}); setSubmittedEmail("");
     autoFilled.current = false;
   }, []);
-
-  const completion = useMemo(() => {
-    const req = ["name", "email", "subject", "message"];
-    return Math.round(req.filter(k => form[k]?.trim()).length / req.length * 100);
-  }, [form]);
 
   const slideVariants = {
     enter: d => ({ opacity: 0, x: d * 40 }),
