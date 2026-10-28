@@ -2594,7 +2594,7 @@ export default function Messages() {
                   return (
                     <button key={`${item.type || resourceType}:${item.id}`} type="button"
                       onClick={() => {
-                        setSelectedResource({ ...item, type: resourceType, name: itemName, slug: item.slug || null, imageUrl: item.imageUrl || item.image_url || null });
+                        setSelectedResource({ ...item, type: resourceType, name: itemName, slug: item.slug || null, imageUrl: getResourceImageUrl(item.imageUrl || item.image_url || item.image) || null });
                         closeResourcePicker();
                       }}
                       className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-2.5 text-left transition hover:border-emerald-300 hover:bg-emerald-50/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
