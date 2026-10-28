@@ -1,5 +1,5 @@
 // src/components/destinations/DestinationCard.jsx
-import { useState, useEffect, useCallback, memo, useRef } from "react";
+import { useState, useEffect, useCallback, memo, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import {
@@ -717,9 +717,9 @@ const CSS = `
 .dc-share-app:hover,.dc-share-app:focus-visible { transform:translateY(-2px); border-color:#a7f3d0; background:#fff; box-shadow:0 7px 18px rgba(6,78,59,.09); outline:none; }
 .dc-share-app:active { transform:scale(.97); }
 .dc-share-app:disabled { opacity:.58; cursor:wait; transform:none; box-shadow:none; }
-.dc-share-app-icon { width:43px; height:43px; display:grid; place-items:center; border-radius:14px; color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 4px 10px rgba(15,23,42,.1); }
+.dc-share-app-icon { width:43px; height:43px; display:grid; place-items:center; border-radius:14px; color:#fff; background:#fff; box-shadow:0 5px 14px rgba(15,23,42,.09),inset 0 0 0 1px rgba(15,23,42,.045); overflow:hidden; } .dc-share-app-icon img { width:25px; height:25px; object-fit:contain; display:block; } .dc-share-app-icon:has(img:not([style*="display: none"])) > svg,.dc-share-app-icon:has(img:not([style*="display: none"])) > b { display:none; }
 .dc-share-app-icon b { font-family:Arial,sans-serif; font-size:27px; font-weight:800; line-height:1; }
-.dc-share-app-icon--whatsapp { background:#25d366; } .dc-share-app-icon--facebook { background:#1877f2; } .dc-share-app-icon--telegram { background:linear-gradient(135deg,#31a8e0,#1686c7); } .dc-share-app-icon--x { background:#111827; } .dc-share-app-icon--linkedin { background:#0a66c2; } .dc-share-app-icon--email { background:linear-gradient(135deg,#f97316,#ea580c); } .dc-share-app-icon--instagram { background:linear-gradient(135deg,#f9ce34 0%,#ee2a7b 48%,#6228d7 100%); } .dc-share-app-icon--sms { background:linear-gradient(135deg,#64748b,#334155); } .dc-share-app-icon--copy { background:linear-gradient(135deg,#10b981,#047857); } .dc-share-app-icon--copy.is-copied { background:#047857; }
+.dc-share-app-icon--whatsapp,.dc-share-app-icon--facebook,.dc-share-app-icon--telegram,.dc-share-app-icon--x,.dc-share-app-icon--linkedin,.dc-share-app-icon--email,.dc-share-app-icon--instagram { background:linear-gradient(145deg,#fff,#f8fafc); } .dc-share-app-icon--sms { background:linear-gradient(135deg,#e2f5eb,#c7ecd8); color:#087443; } .dc-share-app-icon--copy { background:linear-gradient(135deg,#d1fae5,#a7f3d0); color:#047857; } .dc-share-app-icon--copy.is-copied { background:#047857; color:#fff; }
 .dc-share-link-box { display:flex; align-items:center; gap:10px; min-width:0; margin-top:17px; padding:10px 11px; border:1px solid #dbece2; border-radius:15px; background:rgba(240,253,244,.72); }
 .dc-share-link-icon { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border-radius:11px; color:#047857; background:#d9fbe8; }
 .dc-share-link-value { min-width:0; flex:1; }
@@ -1157,7 +1157,7 @@ const DestinationCard = memo(function DestinationCard({
         if (!cancelled) {
           setShareImageFile(null);
           setShareImageStatus("error");
-          setShareFeedback("The destination photo could not be prepared for attachment here. The link and details are still ready to share.");
+          // Photo preparation is optional; never surface a card-level error for a browser/CORS limitation.
         }
       }
     };
@@ -1828,28 +1828,28 @@ const blurb =
           <div className="dc-share-section-head"><strong>Share using</strong><span>Choose an app</span></div>
           <div className="dc-share-app-grid">
             <a className="dc-share-app" href={`https://wa.me/?text=${encodeURIComponent(`${shareMessage}\n${shareUrl}`)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
-              <span className="dc-share-app-icon dc-share-app-icon--whatsapp"><FiMessageCircle size={23} /></span><span>WhatsApp</span>
+              <span className="dc-share-app-icon dc-share-app-icon--whatsapp"><img src="https://cdn.simpleicons.org/whatsapp/25D366" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiMessageCircle size={23} /></span><span>WhatsApp</span>
             </a>
             <a className="dc-share-app" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareMessage)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
-              <span className="dc-share-app-icon dc-share-app-icon--facebook"><b>f</b></span><span>Facebook</span>
+              <span className="dc-share-app-icon dc-share-app-icon--facebook"><img src="https://cdn.simpleicons.org/facebook/0866FF" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>f</b></span><span>Facebook</span>
             </a>
             <a className="dc-share-app" href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareMessage)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
-              <span className="dc-share-app-icon dc-share-app-icon--telegram"><FiSend size={22} /></span><span>Telegram</span>
+              <span className="dc-share-app-icon dc-share-app-icon--telegram"><img src="https://cdn.simpleicons.org/telegram/26A5E4" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiSend size={22} /></span><span>Telegram</span>
             </a>
             <a className="dc-share-app" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
-              <span className="dc-share-app-icon dc-share-app-icon--x"><b>𝕏</b></span><span>X</span>
+              <span className="dc-share-app-icon dc-share-app-icon--x"><img src="https://cdn.simpleicons.org/x/000000" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>𝕏</b></span><span>X</span>
             </a>
             <button type="button" className="dc-share-app" onClick={handleNativeShare} disabled={shareImageStatus === "loading"} aria-label="Share destination photo and details using your device's apps">
-              <span className="dc-share-app-icon dc-share-app-icon--instagram"><FiCamera size={22} /></span><span>Instagram / more</span>
+              <span className="dc-share-app-icon dc-share-app-icon--instagram"><img src="https://cdn.simpleicons.org/instagram/E4405F" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiCamera size={22} /></span><span>Instagram / more</span>
             </button>
             <a className="dc-share-app" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
-              <span className="dc-share-app-icon dc-share-app-icon--linkedin"><b>in</b></span><span>LinkedIn</span>
+              <span className="dc-share-app-icon dc-share-app-icon--linkedin"><img src="https://cdn.simpleicons.org/linkedin/0A66C2" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>in</b></span><span>LinkedIn</span>
             </a>
             <a className="dc-share-app" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareMessage}\n\n${shareUrl}`)}`} onClick={() => setShareModalOpen(false)}>
-              <span className="dc-share-app-icon dc-share-app-icon--email"><FiMail size={22} /></span><span>Email</span>
+              <span className="dc-share-app-icon dc-share-app-icon--email"><img src="https://cdn.simpleicons.org/gmail/EA4335" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiMail size={22} /></span><span>Email</span>
             </a>
             <a className="dc-share-app" href={`sms:?body=${encodeURIComponent(`${shareMessage}\n${shareUrl}`)}`} onClick={() => setShareModalOpen(false)}>
-              <span className="dc-share-app-icon dc-share-app-icon--sms"><FiMessageCircle size={22} /></span><span>Messages</span>
+              <span className="dc-share-app-icon dc-share-app-icon--sms"><img src="https://cdn.simpleicons.org/googlemessages/0B57D0" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiMessageCircle size={22} /></span><span>Messages</span>
             </a>
             <button type="button" className="dc-share-app" onClick={handleCopyShareLink}>
               <span className={`dc-share-app-icon dc-share-app-icon--copy${copied ? " is-copied" : ""}`}>{copied ? <FiCheck size={22} /> : <FiCopy size={21} />}</span><span>{copied ? "Copied" : "Copy link"}</span>
