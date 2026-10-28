@@ -467,6 +467,7 @@ const Contact = () => {
           style={{ backgroundImage: "url(https://i.pinimg.com/736x/bb/ca/d1/bbcad1c07136f38bfc47257f8b38cf2a.jpg)", y: heroY }}
           initial={{ scale: 1.1 }} animate={{ scale: 1 }} transition={{ duration: 10, ease: "easeOut" }} />
         <div className="ct-hero-overlay" />
+        <div className="ct-hero-fog" aria-hidden="true"><span className="ct-hero-fog__layer ct-hero-fog__layer--one" /><span className="ct-hero-fog__layer ct-hero-fog__layer--two" /><span className="ct-hero-fog__ground" /></div>
 
         <div className="ct-hero-decor" aria-hidden="true">
           {[
@@ -1207,6 +1208,55 @@ html{scroll-behavior:smooth}
 }
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+/* Premium responsive contact refresh */
+.ct-page{background:#f7faf8;color:#172a22;overflow:clip}
+.ct-hero{height:clamp(610px,86svh,860px);min-height:610px;isolation:isolate;background:#073f2d}
+.ct-hero-bg{inset:-4%;filter:brightness(.68) saturate(.9);background-position:center 46%;will-change:transform}
+.ct-hero-overlay{background:linear-gradient(90deg,rgba(4,35,24,.76),rgba(4,48,32,.48) 52%,rgba(4,45,30,.22)),linear-gradient(0deg,rgba(4,37,25,.46),transparent 58%)}
+.ct-hero-content{width:min(calc(100% - 40px),1180px);padding:clamp(70px,10vw,140px) 0 100px}
+.ct-hero-h1{max-width:850px;text-wrap:balance;letter-spacing:-.045em;line-height:1.02;font-size:clamp(42px,6.5vw,82px)}
+.ct-hero-fog{position:absolute;z-index:2;pointer-events:none;inset:auto 0 -1px;height:clamp(120px,20vw,260px);overflow:hidden}
+.ct-hero-fog__layer,.ct-hero-fog__ground{position:absolute;inset:0;display:block}
+.ct-hero-fog__layer--one{background:radial-gradient(ellipse at 12% 100%,#fff,rgba(255,255,255,.65) 23%,transparent 63%),radial-gradient(ellipse at 58% 112%,rgba(255,255,255,.92),rgba(255,255,255,.54) 31%,transparent 68%);filter:blur(20px);animation:ct-fog-drift 13s ease-in-out infinite alternate}
+.ct-hero-fog__layer--two{background:radial-gradient(ellipse at 85% 100%,#f9fdfa,rgba(249,253,250,.65) 25%,transparent 66%),radial-gradient(ellipse at 38% 115%,rgba(255,255,255,.72),transparent 62%);filter:blur(28px);animation:ct-fog-drift 17s ease-in-out infinite alternate-reverse}
+.ct-hero-fog__ground{top:62%;background:linear-gradient(180deg,transparent,#f7faf8 92%)}
+@keyframes ct-fog-drift{from{translate:-1.5% 0;scale:1}to{translate:2% -3%;scale:1.06}}
+.ct-section{padding:clamp(52px,7vw,92px) clamp(16px,3.6vw,42px)}.ct-container{max-width:1200px}
+.ct-section-header{margin-bottom:clamp(26px,4vw,46px)}.ct-h2{font-size:clamp(29px,4vw,46px);letter-spacing:-.035em;line-height:1.08;margin-bottom:12px}
+.ct-subtitle{font-size:clamp(14px,1.25vw,16px);line-height:1.8;max-width:570px}
+.ct-grid-main{grid-template-columns:minmax(280px,.88fr) minmax(0,1.35fr);gap:clamp(22px,3.2vw,44px);align-items:stretch}
+.ct-info-col{gap:15px}.ct-info-title{font-size:clamp(23px,2.3vw,30px)}.ct-info-desc{font-size:14px;line-height:1.8}
+.ct-cards-stack{gap:10px}.ct-contact-card{padding:16px;gap:14px;border-radius:17px;border-color:#e5eee8;box-shadow:0 4px 16px rgba(19,54,36,.035);transition:transform .22s,box-shadow .22s,border-color .22s}
+.ct-contact-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(19,54,36,.09);border-color:#c9e5d4}
+.ct-cc-icon{width:44px;height:44px;border-radius:14px;box-shadow:none}.ct-cc-title{font-size:14px}.ct-cc-line{font-size:13px;line-height:1.65}
+.ct-social-box{padding:16px;border-radius:17px;border-color:#e5eee8}.ct-social-link{width:40px;height:40px;border-radius:12px;transition:transform .18s,background .18s,box-shadow .18s}
+.ct-social-link:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(6,78,59,.18)}
+.ct-form-card{padding:clamp(22px,3vw,38px);border-radius:25px;border:1px solid #e1ece5;box-shadow:0 18px 54px rgba(19,54,36,.07),0 2px 8px rgba(19,54,36,.025);background:rgba(255,255,255,.98)}
+.ct-form-card::before{height:3px;animation-duration:9s}.ct-progress{margin-bottom:20px}.ct-progress-top{margin-bottom:8px}
+.ct-progress-track{height:5px;border-radius:8px;background:#e8f0eb}.ct-progress-fill{border-radius:8px}
+.ct-step-tabs{margin-bottom:25px;padding:12px 15px;border-radius:16px;background:#f7faf8;border-color:#e7efe9;gap:10px}
+.ct-step-tab{gap:10px;padding:4px;border-radius:11px}.ct-step-tab-dot{width:37px;height:37px;border-width:1px}
+.ct-step-tab-name{font-size:13px}.ct-step-content{min-height:230px}.ct-step-hdr{margin-bottom:20px}
+.ct-step-hdr h4{font-size:clamp(21px,2vw,25px);margin-bottom:6px}.ct-step-hdr p{font-size:14px;line-height:1.7}
+.ct-form-grid{gap:2px 18px}.ct-field{margin-bottom:16px}.ct-label{font-size:12px;font-weight:700;gap:6px;margin-bottom:7px;color:#34483c}
+.ct-input,.ct-select{min-height:49px;padding:13px 40px 13px 14px;border-radius:13px;border-width:1px;background:#f8fbf9;font-size:14px}
+.ct-focused .ct-input,.ct-focused .ct-select{border-color:#0a8b5c;box-shadow:0 0 0 4px rgba(8,127,88,.09)}
+.ct-textarea{min-height:145px;padding:14px 14px 40px;border-radius:13px;border-width:1px;background:#f8fbf9;font-size:14px;line-height:1.65}
+.ct-focused .ct-textarea{box-shadow:0 0 0 4px rgba(8,127,88,.09)}
+.ct-optional-section{margin-top:12px;padding:15px;border-radius:15px;background:#f7faf8;border-color:#dce9e0}
+.ct-submit{min-height:52px;border-radius:14px;font-size:14px;box-shadow:0 8px 22px rgba(6,78,59,.2);transition:transform .2s,box-shadow .2s,filter .2s}
+.ct-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 13px 28px rgba(6,78,59,.27)}
+.ct-form-nav{margin-top:22px;padding-top:18px;gap:12px}.ct-nav-back,.ct-nav-next{min-height:46px;border-radius:12px;padding:11px 18px;transition:transform .18s,box-shadow .18s}
+.ct-nav-back:hover,.ct-nav-next:hover{transform:translateY(-1px)}.ct-privacy-note{font-size:11px;margin-top:12px;line-height:1.6;text-align:center}
+.ct-channels-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.ct-channel-card{padding:26px 18px;border-radius:20px;border-color:#e6eee8;box-shadow:0 5px 20px rgba(19,54,36,.035)}
+.ct-channel-card:hover{transform:translateY(-5px);box-shadow:0 16px 34px rgba(19,54,36,.09)}.ct-ch-icon{width:52px;height:52px;border-radius:16px}
+.ct-faq-toggle,.ct-faq-item{border-color:#e5eee8;box-shadow:0 5px 20px rgba(19,54,36,.035)}.ct-faq-toggle{border-radius:20px;padding:22px}
+.ct-faq-item{border-radius:15px}.ct-faq-trigger{padding:17px}.ct-faq-answer{font-size:14px;line-height:1.8;padding-top:13px}
+@media(max-width:1023px){.ct-grid-main{grid-template-columns:1fr;gap:26px}.ct-info-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px}.ct-info-title,.ct-info-desc{grid-column:1/-1}.ct-cards-stack{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ct-social-box{grid-column:1/-1}}
+@media(max-width:767px){.ct-hero{height:82svh;min-height:580px;max-height:780px}.ct-hero-content{width:calc(100% - 36px);padding:92px 0 120px}.ct-hero-h1{font-size:clamp(39px,10vw,64px);line-height:1.04}.ct-section{padding:54px 18px}.ct-info-col{display:flex;gap:12px}.ct-cards-stack{display:grid;grid-template-columns:1fr;gap:10px}.ct-form-card{padding:20px 17px;border-radius:21px}.ct-step-tabs{gap:7px;padding:9px;justify-content:space-between}.ct-step-tab{min-width:0;gap:7px}.ct-step-tab-dot{width:32px;height:32px}.ct-step-content{min-height:0}.ct-form-grid{grid-template-columns:1fr;gap:0}.ct-input,.ct-select{min-height:49px;font-size:16px}.ct-textarea{font-size:16px;min-height:140px}.ct-form-nav{flex-direction:row;align-items:stretch}.ct-nav-back,.ct-nav-next{width:auto;flex:1;justify-content:center}.ct-channels-grid{grid-template-columns:1fr;gap:12px}.ct-channel-card{display:grid;grid-template-columns:48px minmax(0,1fr) 26px;gap:12px;text-align:left;align-items:center;padding:15px}.ct-ch-icon{grid-row:span 3;margin:0}.ct-ch-name,.ct-ch-sub,.ct-ch-detail{grid-column:2;margin:0;min-width:0;overflow-wrap:anywhere}.ct-ch-arrow{grid-column:3;grid-row:1/4;margin:0}.ct-faq-toggle{padding:16px;border-radius:16px}.ct-faq-toggle__title{font-size:17px}.ct-faq-trigger{padding:14px 12px;gap:8px}.ct-faq-answer{padding-left:48px;padding-right:14px}}
+@media(max-width:420px){.ct-hero{min-height:540px;height:76svh}.ct-hero-content{width:calc(100% - 30px)}.ct-hero-h1{font-size:clamp(36px,10.5vw,48px)}.ct-step-tab{padding:3px;gap:5px}.ct-step-tab-name{font-size:10.5px}.ct-step-tab-dot{width:27px;height:27px}.ct-form-card{padding:17px 13px}.ct-form-nav{gap:8px}.ct-nav-back,.ct-nav-next{padding:11px 10px}.ct-channel-card{grid-template-columns:42px minmax(0,1fr) 22px;gap:9px}.ct-ch-icon{width:42px;height:42px}}
+@media(prefers-reduced-motion:reduce){.ct-hero-fog__layer,.ct-contact-card,.ct-social-link,.ct-channel-card,.ct-submit,.ct-btn{animation:none!important;transition:none!important}}
+
 `;
 
 export default Contact;
