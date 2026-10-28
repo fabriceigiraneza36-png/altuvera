@@ -2016,7 +2016,14 @@ export default function Messages() {
             <span className="truncate">Your conversations</span>
             {connected && <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"/>Live</span>}
           </div>
-          <div className="msg-page-nav-actions flex shrink-0 items-center gap-2">
+          <div className="msg-page-nav-actions flex shrink-0 items-center gap-1.5 sm:gap-2">
+            {!sidebarOpen && !showMobile && (
+              <button type="button" onClick={() => setSidebarOpen(true)}
+                className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-200 bg-white text-emerald-800 shadow-md shadow-slate-900/5 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-50 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                aria-label="Open conversation sidebar" title="Open conversation sidebar">
+                <PanelLeftOpen size={17} strokeWidth={2.2}/>
+              </button>
+            )}
             <Link to="/" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700">
               <ArrowLeft size={14}/> <span>Homepage</span>
             </Link>
@@ -2225,11 +2232,6 @@ export default function Messages() {
               <>
                 {/* ── FIXED CHAT HEADER ── */}
                 <div className="msg-chat-head px-3 sm:px-5 py-2.5 sm:py-3 flex items-center gap-2.5 sm:gap-3 shadow-sm">
-                  {!sidebarOpen && !showMobile && (
-                    <button type="button" onClick={() => setSidebarOpen(true)}
-                      className="hidden md:flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                      aria-label="Show conversations" title="Show conversations"><PanelLeftOpen size={17}/></button>
-                  )}
                   <button onClick={() => { returnedToInboxRef.current = true; setSearchParams({}, { replace: true }); openConversation(null); }} aria-label="Back to conversations"
                     className="md:hidden flex h-9 w-8 -ml-1 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"><ArrowLeft size={18}/></button>
 

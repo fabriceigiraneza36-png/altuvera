@@ -59,7 +59,9 @@ const Loader = () => {
     };
   }, []);
 
-  // Faster actual loading progress
+  // Give the wordmark its full reveal time. Progress can reach 75 quickly,
+  // but never races past it before the last letter finishes animating.
+  const loaderStartedAtRef = useRef(Date.now());
   useEffect(() => {
     progressIntervalRef.current = setInterval(() => {
       setProgress((prev) => {
@@ -68,42 +70,40 @@ const Loader = () => {
           return 100;
         }
 
-        if (prev < 35) {
-          return Math.min(100, prev + 8 + Math.random() * 8);
+        const elapsed = Date.now() - loaderStartedAtRef.current;
+        if (elapsed < 1220) {
+          if (prev >= 75) return 75;
+          if (prev < 35) return Math.min(75, prev + 8 + Math.random() * 8);
+          return Math.min(75, prev + 5 + Math.random() * 5);
         }
-        if (prev < 70) {
-          return Math.min(100, prev + 5 + Math.random() * 5);
-        }
-        if (prev < 92) {
-          return Math.min(100, prev + 2 + Math.random() * 3);
-        }
-        return Math.min(100, prev + 1 + Math.random() * 1.5);
+
+        // Once every letter has finished, glide through the final quarter
+        // rather than jumping straight to 100 on fast-loading pages.
+        return Math.min(100, prev + (prev < 90 ? 8 : 5));
       });
     }, 120);
 
     return () => clearInterval(progressIntervalRef.current);
   }, []);
 
-  // Real-time visible percentage counting
+  // Smoothly count the visible percentage up to the progress target.
   useEffect(() => {
     displayIntervalRef.current = setInterval(() => {
       setDisplayProgress((prev) => {
-        if (prev < progress) {
-          return prev + 1;
-        }
+        if (prev < progress) return Math.min(progress, prev + 1);
 
         if (progress === 100 && prev >= 100) {
           clearInterval(displayIntervalRef.current);
           setTimeout(() => {
             setIsExiting(true);
-            setTimeout(() => setIsVisible(false), 850);
-          }, 120);
+            setTimeout(() => setIsVisible(false), 420);
+          }, 80);
           return 100;
         }
 
         return prev;
       });
-    }, 18);
+    }, 16);
 
     return () => clearInterval(displayIntervalRef.current);
   }, [progress]);
