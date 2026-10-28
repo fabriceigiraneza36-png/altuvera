@@ -222,16 +222,13 @@ const S = {
   },
 
   quickLinks: {
-    display: "flex", gap: 9, marginTop: 12, padding: "2px 2px 8px",
-    overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory",
-    WebkitOverflowScrolling: "touch", scrollbarWidth: "thin",
+    display: "block", position: "relative", width: "100%", marginTop: 10,
+    padding: "3px 0 5px", overflow: "hidden",
   },
   quickLink: {
-    display: "flex", alignItems: "center", gap: 8, minWidth: 0,
-    padding: "10px 11px", borderRadius: 12, border: "1px solid #dbece4",
-    background: "#fbfefc", color: "#166534", textDecoration: "none",
-    fontSize: "0.78rem", fontWeight: 750, transition: "all .18s ease",
-    flex: "0 0 auto", minWidth: 138, scrollSnapAlign: "start",
+    boxSizing: "border-box", display: "flex", alignItems: "center", gap: 7,
+    padding: "8px 10px", borderRadius: 11, flex: "0 0 auto",
+    minWidth: 126, maxWidth: 148, minHeight: 40,
   },
 };
 
@@ -241,10 +238,20 @@ const KEYFRAMES = `
   .cg-bubble { animation:cgBubbleDrift 7s ease-in-out infinite; }
   .cg-bubble--slow { animation-duration:9s; animation-delay:-2s; }
   .cg-profile-photo { width:100%; height:100%; object-fit:cover; display:block; opacity:.94; }
-  .cg-quick-links::-webkit-scrollbar { height:4px; }
-  .cg-quick-links::-webkit-scrollbar-thumb { background:#c7e5d4; border-radius:99px; }
-  @media (max-width: 520px) { .cg-modal { max-height:min(90dvh,720px)!important; border-radius:20px!important; } .cg-top { padding:22px 18px 18px!important; } .cg-body { padding:14px 16px 16px!important; } .cg-profile { width:68px!important;height:68px!important; } .cg-tips { gap:7px!important;margin-bottom:10px!important; } .cg-tip { padding:8px 10px!important; } .cg-cta { margin-bottom:10px!important; } }
-  @media (prefers-reduced-motion: reduce) { .cg-profile { animation:none!important; } }
+  @keyframes cgQuickMarquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+  .cg-quick-links { position:relative; display:block; width:100%; margin-top:10px; padding:3px 0 5px; overflow:hidden; }
+  .cg-marquee-track { display:flex; width:max-content; will-change:transform; animation:cgQuickMarquee 25s linear infinite; }
+  .cg-marquee-group { display:flex; flex:0 0 auto; align-items:center; gap:8px; padding-right:8px; }
+  .cg-quick-link { box-sizing:border-box; display:flex; align-items:center; gap:7px; min-width:126px; max-width:148px; min-height:40px; padding:8px 10px; border:1px solid #dbece4; border-radius:11px; background:#fbfefc; color:#166534; text-decoration:none; font-size:.74rem; font-weight:750; box-shadow:0 2px 8px rgba(6,78,59,.04); transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease; }
+  .cg-quick-icon { display:grid; place-items:center; flex:0 0 25px; width:25px; height:25px; border-radius:8px; background:#ecfdf5; color:#047857; transition:background .18s ease,color .18s ease; }
+  .cg-quick-label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cg-quick-link:hover { transform:translateY(-2px); background:#ecfdf5; border-color:#86efac; box-shadow:0 6px 14px rgba(5,150,105,.12); }
+  .cg-quick-link:hover .cg-quick-icon { background:#047857; color:#fff; }
+  .cg-quick-link:focus-visible { transform:translateY(-2px); background:#ecfdf5; border-color:#059669; outline:2px solid #34d399; outline-offset:2px; box-shadow:0 6px 14px rgba(5,150,105,.12); }
+  .cg-quick-link:focus-visible .cg-quick-icon { background:#047857; color:#fff; }
+  .cg-quick-links:hover .cg-marquee-track,.cg-quick-links:focus-within .cg-marquee-track { animation-play-state:paused; }
+  @media (max-width: 520px) { .cg-modal { max-height:min(90dvh,720px)!important; border-radius:20px!important; } .cg-top { padding:22px 18px 18px!important; } .cg-body { padding:14px 16px 16px!important; } .cg-profile { width:68px!important;height:68px!important; } .cg-tips { gap:7px!important;margin-bottom:10px!important; } .cg-tip { padding:8px 10px!important; } .cg-cta { margin-bottom:8px!important; } .cg-quick-link { min-width:122px; } }
+  @media (prefers-reduced-motion: reduce) { .cg-profile { animation:none!important; } .cg-marquee-track { animation:none!important; transform:none!important; width:auto; } .cg-marquee-group[aria-hidden="true"] { display:none!important; } .cg-quick-links { overflow-x:auto!important; scrollbar-width:none; } .cg-quick-links::-webkit-scrollbar { display:none; } }
 `;
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -582,16 +589,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                     </p>
                   )}
 
-                  <nav aria-label="Quick links" className="cg-quick-links" style={S.quickLinks}>
-                    {(cfg.quickLinks || []).map(({ icon: LinkIcon, label, href }) => (
-                      <a key={href} href={href} style={S.quickLink}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "#ecfdf5"; e.currentTarget.style.borderColor = "#86efac"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "#fbfefc"; e.currentTarget.style.borderColor = "#dbece4"; }}>
-                        <LinkIcon size={15} aria-hidden="true" />
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
-                      </a>
-                    ))}
-                  </nav>
+
 
                   {/* CTA */}
                   <motion.button
@@ -607,6 +605,33 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                     {cfg.cta}
                     <ArrowRight size={18} />
                   </motion.button>
+
+                  <nav aria-label="Quick actions" className="cg-quick-links" style={S.quickLinks}>
+                    <div className="cg-marquee-track">
+                      {[false, true].map((isDuplicate) => (
+                        <div
+                          key={isDuplicate ? "duplicate" : "primary"}
+                          className="cg-marquee-group"
+                          aria-hidden={isDuplicate ? "true" : undefined}
+                        >
+                          {(cfg.quickLinks || []).map(({ icon: LinkIcon, label, href }) => (
+                            <a
+                              key={href}
+                              href={href}
+                              className="cg-quick-link"
+                              style={S.quickLink}
+                              tabIndex={isDuplicate ? -1 : undefined}
+                              aria-label={label}
+                              onClick={() => handleClose()}
+                            >
+                              <span className="cg-quick-icon"><LinkIcon size={15} aria-hidden="true" /></span>
+                              <span className="cg-quick-label">{label}</span>
+                            </a>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </nav>
 
                     </>)}
                 </div>

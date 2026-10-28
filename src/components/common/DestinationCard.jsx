@@ -1499,6 +1499,11 @@ const blurb =
     setShareModalOpen(true);
   }, []);
 
+  // Allow the browser/app share navigation to start before closing this portal.
+  const handleShareLinkLaunch = useCallback(() => {
+    window.setTimeout(() => setShareModalOpen(false), 650);
+  }, []);
+
   const handleCopyShareLink = useCallback(async (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -1561,7 +1566,7 @@ const blurb =
       return;
     }
     try {
-      await navigator.share({ title: shareTitle, text: shareTextWithLink, url: shareUrl });
+      await navigator.share({ title: shareTitle, text: shareMessage, url: shareUrl });
       showShareFeedback("Destination details and link shared.");
     } catch (error) {
       if (error?.name !== "AbortError") showShareFeedback("The share sheet could not complete this action. Try Copy link or Copy caption + link.");
@@ -1577,11 +1582,11 @@ const blurb =
       return;
     }
     try {
-      // For operating-system share targets, send only the image and destination URL.
-      // Do not auto-copy or attach the long caption: link previews can already show the
-      // destination card and the extra text becomes a duplicated, oversized message.
-      await navigator.share({ title: shareTitle, url: shareUrl, files: [shareImageFile] });
-      showShareFeedback("Photo share completed. The image and destination link were sent without the extra caption text. Use “Copy caption + link” only when you need to paste a caption manually.");
+      // Android share targets may ignore the separate "url" field when a file is attached.
+      // Send the URL as the *only* text so the link can accompany the image without the
+      // long destination description being duplicated in the recipient's conversation.
+      await navigator.share({ title: shareTitle, text: shareUrl, url: shareUrl, files: [shareImageFile] });
+      showShareFeedback("Photo share completed. The image and destination URL were sent without the long caption. If your app still drops links on image shares, use Share link & details.");
     } catch (error) {
       if (error?.name !== "AbortError") {
         showShareFeedback("Couldn't share the photo. Try Share link & details, or copy the caption manually if needed.");
@@ -1873,28 +1878,28 @@ const blurb =
           </div>
           <div className="dc-share-section-head"><strong>Share using</strong><span>Choose an app</span></div>
           <div className="dc-share-app-grid">
-            <a className="dc-share-app" href={`https://wa.me/?text=${encodeURIComponent(`${shareMessage}\n${shareUrl}`)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+            <a className="dc-share-app" href={`https://wa.me/?text=${encodeURIComponent(`${shareMessage}\n${shareUrl}`)}`} target="_blank" rel="noopener noreferrer" onClick={handleShareLinkLaunch}>
               <span className="dc-share-app-icon dc-share-app-icon--whatsapp"><img src="https://cdn.simpleicons.org/whatsapp/25D366" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiMessageCircle size={23} /></span><span>WhatsApp</span>
             </a>
-            <a className="dc-share-app" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareMessage)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+            <a className="dc-share-app" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareMessage)}`} target="_blank" rel="noopener noreferrer" onClick={handleShareLinkLaunch}>
               <span className="dc-share-app-icon dc-share-app-icon--facebook"><img src="https://cdn.simpleicons.org/facebook/0866FF" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>f</b></span><span>Facebook</span>
             </a>
-            <a className="dc-share-app" href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareMessage)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+            <a className="dc-share-app" href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareMessage)}`} target="_blank" rel="noopener noreferrer" onClick={handleShareLinkLaunch}>
               <span className="dc-share-app-icon dc-share-app-icon--telegram"><img src="https://cdn.simpleicons.org/telegram/26A5E4" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiSend size={22} /></span><span>Telegram</span>
             </a>
-            <a className="dc-share-app" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+            <a className="dc-share-app" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={handleShareLinkLaunch}>
               <span className="dc-share-app-icon dc-share-app-icon--x"><img src="https://cdn.simpleicons.org/x/000000" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>𝕏</b></span><span>X</span>
             </a>
             <button type="button" className="dc-share-app" onClick={handlePhotoShare} disabled={shareImageStatus === "loading" || !shareImageFile} aria-label="Share destination photo using your device's apps">
               <span className="dc-share-app-icon dc-share-app-icon--instagram"><img src="https://cdn.simpleicons.org/instagram/E4405F" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiCamera size={22} /></span><span>Share photo</span>
             </button>
-            <a className="dc-share-app" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+            <a className="dc-share-app" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={handleShareLinkLaunch}>
               <span className="dc-share-app-icon dc-share-app-icon--linkedin"><img src="https://cdn.simpleicons.org/linkedin/0A66C2" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>in</b></span><span>LinkedIn</span>
             </a>
-            <a className="dc-share-app" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareMessage}\n\n${shareUrl}`)}`} onClick={() => setShareModalOpen(false)}>
+            <a className="dc-share-app" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareMessage}\n\n${shareUrl}`)}`} onClick={handleShareLinkLaunch}>
               <span className="dc-share-app-icon dc-share-app-icon--email"><img src="https://cdn.simpleicons.org/gmail/EA4335" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiMail size={22} /></span><span>Email</span>
             </a>
-            <a className="dc-share-app" href={`sms:?body=${encodeURIComponent(`${shareMessage}\n${shareUrl}`)}`} onClick={() => setShareModalOpen(false)}>
+            <a className="dc-share-app" href={`sms:?body=${encodeURIComponent(`${shareMessage}\n${shareUrl}`)}`} onClick={handleShareLinkLaunch}>
               <span className="dc-share-app-icon dc-share-app-icon--sms"><img src="https://cdn.simpleicons.org/googlemessages/0B57D0" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiMessageCircle size={22} /></span><span>Messages</span>
             </a>
             <button type="button" className="dc-share-app" onClick={handleCopyShareLink}>
