@@ -29,6 +29,7 @@ import "./DestinationDetail.css";
 import AltuveraLoader from "../components/common/AltuveraLoader";
 import CommentsCarousel from "./CommentsCarousel";
 import RatingPanel from "../components/common/RatingPanel";
+import InlineCommentComposer from "../components/common/InlineCommentComposer";
 import { useWishlist } from "../context/WishlistContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.altuverasafaris.com";
@@ -232,6 +233,7 @@ export default function DestinationDetail() {
   const lastTapRef = useRef(0);
   const [saved, setSaved] = useState(false);
   const [shareState, setShareState] = useState("Share");
+  const [otherDetailsOpen, setOtherDetailsOpen] = useState(false);
 
   const gallery = useMemo(
     () =>
@@ -901,6 +903,39 @@ export default function DestinationDetail() {
             </div>
           </section>
         )}
+        <section className="d-sec d-sec--soft d-other-details">
+          <div className="d-wrap d-other-details__wrap">
+            <button
+              type="button"
+              className="d-other-details__toggle"
+              onClick={() => setOtherDetailsOpen((open) => !open)}
+              aria-expanded={otherDetailsOpen}
+              aria-controls="dd-other-details-panel"
+            >
+              <span className="d-other-details__toggle-icon"><MessageCircle size={19} aria-hidden="true" /></span>
+              <span className="d-other-details__toggle-copy">
+                <strong>Other details</strong>
+                <small>Helpful notes and the traveller community</small>
+              </span>
+              <ChevronDown className={otherDetailsOpen ? "d-other-details__chevron is-open" : "d-other-details__chevron"} size={20} aria-hidden="true" />
+            </button>
+            <div id="dd-other-details-panel" className={otherDetailsOpen ? "d-other-details__panel is-open" : "d-other-details__panel"} aria-hidden={!otherDetailsOpen}>
+              <div className="d-other-details__panel-clip">
+                <div className="d-other-details__panel-inner">
+                  <p className="d-other-details__intro">
+                    Have you visited {destination.name}? Share a useful tip, a memorable moment, or something you wish you had known before your trip. Your comment is saved to Altuvera’s admin panel.
+                  </p>
+                  <InlineCommentComposer
+                    resourceId={destination?.numericId || destination?.id || destination?._id}
+                    resourceType="destination"
+                    resourceName={destination.name || "this destination"}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="d-final-cta">
           <div className="d-final-cta__media">
             <img src={heroImage} alt="" loading="lazy" />
@@ -923,7 +958,7 @@ export default function DestinationDetail() {
             </Reveal>
           </div>
         </section>
-        <CommentsCarousel destination={destination} entityType="destination" />
+        <CommentsCarousel destination={destination} entityType="destination" showFloatingButton={false} />
       </div>
 
       {lightboxIndex !== null && attractionGalleryImages.length > 0 && (
