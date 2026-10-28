@@ -23,7 +23,7 @@ function CommentCard({ comment }) {
   );
 }
 
-export default function CommentsCarousel({ destination, entityType = "destination" }) {
+export default function CommentsCarousel({ destination, entityType = "destination", showFloatingButton = true }) {
   const destinationId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
   const { comments, loading, error, createComment, refetch, removeComment } = useDestinationComments(destinationId, entityType);
   const { isAuthenticated = false, openModal, user } = useUserAuth() || {};
@@ -206,7 +206,7 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
         </section>
       )}
 
-      {fabVisible && !alreadyCommented && (
+      {showFloatingButton && fabVisible && !alreadyCommented && (
         <button type="button" className="dc-comment-fab" onClick={openCommentModal}
           aria-label={"Add a comment about " + (destination?.name || "this destination")} title="Share your experience">
           <MessageCircle size={22} /><span>Share your experience</span>
