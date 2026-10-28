@@ -111,17 +111,34 @@ export default function TeamPortraitCarousel() {
     };
     const pause = () => { paused = true; };
     const resume = () => { paused = false; last = 0; };
+    let touchResumeTimer = null;
+    const onTouchStart = () => {
+      paused = true;
+      if (touchResumeTimer) window.clearTimeout(touchResumeTimer);
+    };
+    const onTouchEnd = () => {
+      if (touchResumeTimer) window.clearTimeout(touchResumeTimer);
+      touchResumeTimer = window.setTimeout(() => {
+        paused = false;
+        last = 0;
+      }, 1400);
+    };
     viewport.addEventListener('pointerenter', pause);
     viewport.addEventListener('pointerleave', resume);
     viewport.addEventListener('focusin', pause);
     viewport.addEventListener('focusout', resume);
+    viewport.addEventListener('touchstart', onTouchStart, { passive: true });
+    viewport.addEventListener('touchend', onTouchEnd, { passive: true });
     frame = window.requestAnimationFrame(tick);
     return () => {
       window.cancelAnimationFrame(frame);
+      if (touchResumeTimer) window.clearTimeout(touchResumeTimer);
       viewport.removeEventListener('pointerenter', pause);
       viewport.removeEventListener('pointerleave', resume);
       viewport.removeEventListener('focusin', pause);
       viewport.removeEventListener('focusout', resume);
+      viewport.removeEventListener('touchstart', onTouchStart);
+      viewport.removeEventListener('touchend', onTouchEnd);
     };
   }, [members, shouldMarquee]);
 
@@ -176,7 +193,7 @@ export default function TeamPortraitCarousel() {
             {repeated.map((member,index)=>(
               <a className={openingMember === member.id ? "about-team-person is-opening" : "about-team-person"} href={"/team?member=" + encodeURIComponent(String(member.id)) + "&memberName=" + encodeURIComponent(member.name)} key={String(member.id) + "-" + index} aria-label={"Meet " + member.name + ", " + member.role + ". Open team page"} onClick={(event)=>{event.preventDefault();if(openingMember!==null)return;setOpeningMember(member.id);const destination="/team?member="+encodeURIComponent(String(member.id))+"&memberName="+encodeURIComponent(member.name);openingTimer.current=window.setTimeout(()=>navigate(destination),320);}}>
                 <span className="about-team-portrait-shell"><span className="about-team-portrait">
-                  {member.image ? <img src={member.image} alt={member.name} loading="lazy" onError={(event)=>{event.currentTarget.style.display='none';}}/> : member.name.trim().split(/\\s+/).slice(0,2).map((part)=>part[0]).join('').toUpperCase()}
+                  {member.image ? <img src={member.image} alt={member.name} loading="lazy" onError={(event)=>{event.currentTarget.style.display='none';}}/> : member.name.trim().split(/\s+/).slice(0,2).map((part)=>part[0]).join('').toUpperCase()}
                 </span></span>
                 <span className="about-team-name">{member.name}</span>
               </a>
