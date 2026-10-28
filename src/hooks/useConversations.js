@@ -120,13 +120,13 @@ const normConv = (c) => ({
 
 const normMsg = (m) => ({
   id:             m.id,
-  conversationId: m.conversation_id || m.conversationId,
+  conversationId: m.conversation_id ?? m.conversationId,
   senderType:     m.sender_type     || m.senderType,
-  senderId:       m.sender_id       || m.senderId,
-  senderName:     m.sender_user_full_name || m.sender_full_name || m.sender_name || m.senderName || null,
-  senderUsername: m.sender_user_username || m.sender_username || m.senderUsername || m.username || null,
+  senderId:       m.sender_id       ?? m.senderId ?? null,
+  senderName:     m.sender_user_full_name || m.sender_full_name || m.senderName || m.sender_name || null,
+  senderUsername: m.sender_user_username || m.senderUsername || m.sender_username || m.username || null,
   senderEmail:    m.sender_email    || m.senderEmail,
-  senderAvatar:   m.sender_user_avatar || m.sender_avatar || m.senderAvatar || m.sender_avatar_url || m.senderAvatarUrl || m.avatar_url || m.avatarUrl || m.profile_picture_url || m.profilePictureUrl || m.profile_picture || m.profilePicture || m.user_avatar || m.userAvatar || m.avatar || null,
+  senderAvatar:   m.sender_user_avatar || m.senderAvatar || m.sender_avatar || m.sender_avatar_url || m.senderAvatarUrl || m.avatar_url || m.avatarUrl || m.profile_picture_url || m.profilePictureUrl || m.profile_picture || m.profilePicture || m.user_avatar || m.userAvatar || m.avatar || null,
   body:           m.body,
   msgType:        m.msg_type        || m.msgType || "text",
   isRead:         m.is_read         ?? m.isRead ?? false,
@@ -139,6 +139,58 @@ const normMsg = (m) => ({
   createdAt:      m.created_at || m.createdAt,
   updatedAt:      m.updated_at || m.updatedAt,
 });
+
+/* Keep partial socket events from erasing group identity or sender profile
+   details previously loaded from the conversation API. */
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value || {}, key);
+
+const mergeConversation = (previous, raw) => {
+  const incoming = normConv(raw || {});
+  const next = { ...(previous || {}), ...incoming };
+  const groupIdProvided = hasOwn(raw, "group_id") || hasOwn(raw, "groupId");
+  const groupNameProvided = hasOwn(raw, "group_name") || hasOwn(raw, "groupName");
+  const typeProvided = hasOwn(raw, "conversation_type") || hasOwn(raw, "conversationType");
+  const metadataProvided = hasOwn(raw, "metadata");
+
+  next.groupId = groupIdProvided
+    ? (raw.group_id ?? raw.groupId ?? null)
+    : (previous?.groupId ?? incoming.groupId ?? null);
+  next.groupName = groupNameProvided
+    ? (raw.group_name ?? raw.groupName ?? null)
+    : (previous?.groupName ?? incoming.groupName ?? null);
+  next.conversationType = typeProvided
+    ? (raw.conversation_type || raw.conversationType || (next.groupId ? "group" : "direct"))
+    : (next.groupId ? "group" : (previous?.conversationType || incoming.conversationType || "direct"));
+  next.metadata = metadataProvided
+    ? (incoming.metadata || {})
+    : (previous?.metadata || incoming.metadata || {});
+  if (previous?.subject && !hasOwn(raw, "subject")) next.subject = previous.subject;
+  if (previous?.status && !hasOwn(raw, "status")) next.status = previous.status;
+  if (previous?.priority && !hasOwn(raw, "priority")) next.priority = previous.priority;
+  return next;
+};
+
+const mergeMessage = (previous, raw) => {
+  const incoming = normMsg(raw || {});
+  if (!previous) return incoming;
+  return {
+    ...previous,
+    ...incoming,
+    senderId: incoming.senderId ?? previous.senderId ?? null,
+    senderName: incoming.senderName || previous.senderName || null,
+    senderUsername: incoming.senderUsername || previous.senderUsername || null,
+    senderAvatar: incoming.senderAvatar || previous.senderAvatar || null,
+    senderEmail: incoming.senderEmail || previous.senderEmail || null,
+    senderType: incoming.senderType || previous.senderType,
+    metadata: {
+      ...(previous.metadata || {}),
+      ...(incoming.metadata || {}),
+    },
+    reactions: Object.keys(incoming.reactions || {}).length
+      ? incoming.reactions
+      : (previous.reactions || {}),
+  };
+};
 
 /* ═══════════════════════════════════════════════════════════════════════
     HOOK
@@ -327,8 +379,9 @@ export function useConversations() {
       ));
     });
 
-    s.on("msg:message", (msg) => {
-      if (!msg) return;
+    s.on("msg:message", (rawMessage) => {
+      if (!rawMessage) return;
+      const msg = normMsg(rawMessage);
       // An admin may create the user's first conversation while this portal is
       // already open. Refresh immediately so the default-selection effect can
       // open that conversation without waiting for the 15-second poll.
@@ -342,15 +395,20 @@ export function useConversations() {
         );
       }
       setMessages((prev) => {
-        if (prev.some((m) => String(m.id) === String(msg.id))) return prev;
         const cid = String(msg.conversationId);
         if (cid !== String(activeIdRef.current)) return prev;
+        const existingIndex = prev.findIndex((m) => String(m.id) === String(msg.id));
+        if (existingIndex >= 0) {
+          const next = [...prev];
+          next[existingIndex] = mergeMessage(prev[existingIndex], msg);
+          return next;
+        }
         const optimisticIndex = prev.findIndex(
           (m) => String(m.id).startsWith("tmp-") && m.senderType === msg.senderType && m.body === msg.body,
         );
         if (optimisticIndex >= 0) {
           const next = [...prev];
-          next[optimisticIndex] = msg;
+          next[optimisticIndex] = mergeMessage(prev[optimisticIndex], msg);
           return next;
         }
         return [...prev, msg];
@@ -414,10 +472,10 @@ export function useConversations() {
     s.on("msg:conversation-updated", (conv) => {
       if (!conv) return;
       setConversations((prev) =>
-        prev.map((c) => (String(c.id) === String(conv.id) ? { ...c, ...normConv(conv) } : c))
+        prev.map((c) => (String(c.id) === String(conv.id) ? mergeConversation(c, conv) : c))
       );
       if (String(conv.id) === String(activeIdRef.current)) {
-        setActiveConversation((prev) => prev ? { ...prev, ...normConv(conv) } : prev);
+        setActiveConversation((prev) => prev ? mergeConversation(prev, conv) : prev);
       }
     });
 
@@ -431,7 +489,7 @@ export function useConversations() {
     const applyMessageMutation = (raw) => {
       const msg = normMsg(raw);
       if (!msg?.id) return;
-      setMessages((prev) => prev.map((m) => String(m.id) === String(msg.id) ? { ...m, ...msg } : m));
+      setMessages((prev) => prev.map((m) => String(m.id) === String(msg.id) ? mergeMessage(m, msg) : m));
     };
     s.on("msg:message-edited", applyMessageMutation);
     s.on("msg:message-deleted", applyMessageMutation);
@@ -502,7 +560,13 @@ export function useConversations() {
       });
 
       if (isActiveConversation) {
-        setMessages((prev) => prev.some((m) => String(m.id) === String(msg.id)) ? prev : [...prev, msg]);
+        setMessages((prev) => {
+          const index = prev.findIndex((m) => String(m.id) === String(msg.id));
+          if (index < 0) return [...prev, msg];
+          const next = [...prev];
+          next[index] = mergeMessage(prev[index], msg);
+          return next;
+        });
       }
     };
     s.on("msg:group-message", onGroupMessage);
@@ -646,7 +710,16 @@ export function useConversations() {
             : [];
       const conv = normConv(thread);
       setActiveConversation(conv);
-      setMessages(threadMessages.map(normMsg));
+      // Clear stale enriched profiles only when opening a different thread; within
+      // this thread the merge helpers keep identity if partial realtime events land.
+      setMessages((previous) => {
+        const fresh = threadMessages.map(normMsg);
+        const byId = new Map(previous.map((message) => [String(message.id), message]));
+        return fresh.map((message) => byId.has(String(message.id))
+          ? mergeMessage(byId.get(String(message.id)), message)
+          : message
+        );
+      });
       setHasMoreMessages(Boolean(payload.data?.hasMoreMessages ?? thread.hasMoreMessages ?? payload.hasMoreMessages));
 
       authFetch(`${API_BASE}/messages/conversations/${encodeURIComponent(id)}/read`, {
