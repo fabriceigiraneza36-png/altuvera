@@ -908,6 +908,8 @@ const PAGE_CSS = `
   .ex-testi__card { padding: 24px; }
   .ex-testi__avatar-wrap { width: 72px; height: 72px; }
 }
+.ex-dest-grid__dots { display: none; }
+
 @media (max-width: 540px) {
   .ex-dest-grid {
     display: flex;
@@ -922,6 +924,23 @@ const PAGE_CSS = `
   .ex-dest-grid__card {
     flex: 0 0 min(84vw, 360px);
     scroll-snap-align: start;
+    transition: transform .38s cubic-bezier(.22,1,.36,1), opacity .38s ease, filter .38s ease;
+  }
+  .ex-dest-grid__card:not(.is-active) { opacity: .74; transform: scale(.96); filter: saturate(.82); }
+  .ex-dest-grid__card.is-active { opacity: 1; transform: scale(1); filter: none; position: relative; z-index: 2; }
+  .ex-dest-grid__dots {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    max-width: 100%; margin: 12px auto 0; padding: 3px 8px 8px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .ex-dest-grid__dots::-webkit-scrollbar { display: none; }
+  .ex-dest-grid__dot {
+    width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px;
+    flex: 0 0 auto; cursor: pointer; background: #cde8d7;
+    transition: width .3s ease, background .3s ease, box-shadow .3s ease;
+  }
+  .ex-dest-grid__dot--active {
+    width: 24px; background: #15803d; box-shadow: 0 2px 8px rgba(21,128,61,.24);
   }
   .ex-showcard { min-height: 360px; }
   .ex-videocard { min-height: 320px; }
@@ -1320,6 +1339,77 @@ const TRUST_ITEMS = [
   },
 ];
 
+function ExploreDestinationRail({ destinations }) {
+  const trackRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [destinations.length]);
+
+  const handleScroll = useCallback(() => {
+    if (typeof window === "undefined" || window.innerWidth > 540) return;
+    const track = trackRef.current;
+    if (!track) return;
+    const trackLeft = track.getBoundingClientRect().left;
+    const cards = [...track.querySelectorAll("[data-explore-destination-index]")];
+    if (!cards.length) return;
+    let nearest = 0;
+    let distance = Infinity;
+    cards.forEach((card) => {
+      const d = Math.abs(card.getBoundingClientRect().left - trackLeft);
+      if (d < distance) { distance = d; nearest = Number(card.dataset.exploreDestinationIndex); }
+    });
+    setActiveIndex((current) => current === nearest ? current : nearest);
+  }, []);
+
+  const goTo = useCallback((index) => {
+    const next = Math.max(0, Math.min(index, destinations.length - 1));
+    setActiveIndex(next);
+    if (typeof window !== "undefined" && window.innerWidth <= 540) {
+      trackRef.current
+        ?.querySelector('[data-explore-destination-index="' + next + '"]')
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+    }
+  }, [destinations.length]);
+
+  return (
+    <>
+      <div
+        ref={trackRef}
+        onScroll={handleScroll}
+        className="ex-dest-grid"
+        role="region"
+        aria-label="Featured East Africa destinations"
+      >
+        {destinations.map((dest, i) => (
+          <div
+            key={dest.id || dest.slug || i}
+            data-explore-destination-index={i}
+            className={"ex-dest-grid__card" + (i === activeIndex ? " is-active" : "")}
+            style={{ animationDelay: (Math.min(i, 5) * 0.06) + "s" }}
+          >
+            <DestinationCard destination={dest} priority={i < 4} />
+          </div>
+        ))}
+      </div>
+
+      <div className="ex-dest-grid__dots" role="group" aria-label="Choose a destination">
+        {destinations.map((dest, i) => (
+          <button
+            key={dest.id || dest.slug || i}
+            type="button"
+            className={"ex-dest-grid__dot" + (i === activeIndex ? " ex-dest-grid__dot--active" : "")}
+            onClick={() => goTo(i)}
+            aria-label={"Show " + (dest.name || dest.title || "destination " + (i + 1))}
+            aria-current={i === activeIndex ? "true" : undefined}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════
    MAIN PAGE
 ═══════════════════════════════════════════════════════════ */
@@ -1495,13 +1585,7 @@ export default function Explore() {
               </div>
             ) : (
               <>
-                <div className="ex-dest-grid">
-                  {destinations.map((dest, i) => (
-                    <div key={dest.id} className="ex-dest-grid__card" style={{ animationDelay: `${Math.min(i, 5) * 0.06}s` }}>
-                      <DestinationCard destination={dest} priority={i < 4} />
-                    </div>
-                  ))}
-                </div>
+                <ExploreDestinationRail destinations={destinations} />
 
                 <div className="ex-dest-cta">
                   <Link to="/destinations" className="ex-cta__btn-primary" style={{ display: 'inline-flex' }}>

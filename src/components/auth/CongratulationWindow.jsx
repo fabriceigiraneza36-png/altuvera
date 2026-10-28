@@ -221,17 +221,6 @@ const S = {
     marginBottom:   16,
   },
 
-  /* Progress dots */
-  dotsWrap: {
-    display:        "flex",
-    alignItems:     "center",
-    justifyContent: "center",
-    gap:            6,
-  },
-  dot: (active) => ({
-    width: active ? 20 : 7, height: 7, borderRadius: 99,
-    background: active ? "#059669" : "#e2e8f0", transition: "all 0.3s",
-  }),
   quickLinks: {
     display: "flex", gap: 9, marginTop: 12, padding: "2px 2px 8px",
     overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory",
@@ -309,7 +298,6 @@ const CONTENT = {
 
 export default function CongratulationWindow({ isVisible, type, user, onClose }) {
   const confettiFiredRef = useRef(false);
-  const [activeStep, setActiveStep] = useState(1);
   const [showSecurityPrompt, setShowSecurityPrompt] = useState(false);
 
   useEffect(() => {
@@ -404,16 +392,6 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
 
     const timer = setTimeout(fire, 160);
     return () => clearTimeout(timer);
-  }, [isVisible]);
-
-  /* ── Dot animation ── */
-  useEffect(() => {
-    if (!isVisible) return;
-    const interval = setInterval(
-      () => setActiveStep((p) => (p + 1) % 3),
-      900,
-    );
-    return () => clearInterval(interval);
   }, [isVisible]);
 
   const handleClose = () => {
@@ -629,18 +607,6 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                     {cfg.cta}
                     <ArrowRight size={18} />
                   </motion.button>
-
-                  {/* Animated dots */}
-                  <motion.div
-                    style={S.dotsWrap}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.85 }}
-                  >
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} style={S.dot(i === activeStep)} />
-                    ))}
-                  </motion.div>
 
                     </>)}
                 </div>

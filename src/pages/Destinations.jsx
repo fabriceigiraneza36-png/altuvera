@@ -712,6 +712,11 @@ const CSS = `
 }
 .dv-slider__item {
   flex: 0 0 clamp(260px,30vw,360px); min-width: 0;
+  transition: transform .38s cubic-bezier(.22,1,.36,1), opacity .38s ease, filter .38s ease;
+}
+.dv-slider__item--active {
+  position: relative; z-index: 1; transform: translateY(-3px) scale(1.01);
+  opacity: 1; filter: drop-shadow(0 8px 20px rgba(5,150,105,.11));
 }
 @media (max-width: 639px) {
   .dv-slider__viewport {
@@ -730,6 +735,8 @@ const CSS = `
     flex-basis: min(84vw, 360px) !important;
     scroll-snap-align: start;
   }
+  .dv-slider__item:not(.dv-slider__item--active) { opacity: .72; transform: scale(.96); }
+  .dv-slider__item--active { opacity: 1; transform: scale(1); } 
 }
 .dv-arrow {
   width: 46px; height: 46px; border-radius: 50%;
@@ -863,6 +870,118 @@ const CSS = `
   .dv-country-card:not(.dv-in-view) .dv-country-card__btn {
     opacity: 1; transform: none; filter: none;
   }
+}
+
+/* Full-screen destination discovery hero with distinct slide transitions. */
+.dv-hero { isolation:isolate; }
+.dv-hero__slide--on { z-index:3; }
+.dv-hero__slide--exit { opacity:1; z-index:2; pointer-events:none; animation-duration:1.2s; animation-timing-function:cubic-bezier(.22,1,.36,1); animation-fill-mode:forwards; }
+.dv-hero__slide--anim-0.dv-hero__slide--on { animation:dv-slide-enter-0 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-1.dv-hero__slide--on { animation:dv-slide-enter-1 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-2.dv-hero__slide--on { animation:dv-slide-enter-2 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-3.dv-hero__slide--on { animation:dv-slide-enter-3 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-4.dv-hero__slide--on { animation:dv-slide-enter-4 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-5.dv-hero__slide--on { animation:dv-slide-enter-5 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-6.dv-hero__slide--on { animation:dv-slide-enter-6 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-7.dv-hero__slide--on { animation:dv-slide-enter-7 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-8.dv-hero__slide--on { animation:dv-slide-enter-8 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-9.dv-hero__slide--on { animation:dv-slide-enter-9 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-0.dv-hero__slide--exit { animation-name:dv-slide-exit-0; }
+.dv-hero__slide--anim-1.dv-hero__slide--exit { animation-name:dv-slide-exit-1; }
+.dv-hero__slide--anim-2.dv-hero__slide--exit { animation-name:dv-slide-exit-2; }
+.dv-hero__slide--anim-3.dv-hero__slide--exit { animation-name:dv-slide-exit-3; }
+.dv-hero__slide--anim-4.dv-hero__slide--exit { animation-name:dv-slide-exit-4; }
+.dv-hero__slide--anim-5.dv-hero__slide--exit { animation-name:dv-slide-exit-5; }
+.dv-hero__slide--anim-6.dv-hero__slide--exit { animation-name:dv-slide-exit-6; }
+.dv-hero__slide--anim-7.dv-hero__slide--exit { animation-name:dv-slide-exit-7; }
+.dv-hero__slide--anim-8.dv-hero__slide--exit { animation-name:dv-slide-exit-8; }
+.dv-hero__slide--anim-9.dv-hero__slide--exit { animation-name:dv-slide-exit-9; }
+@keyframes dv-slide-enter-0 { from{opacity:0;transform:scale(1.12)} to{opacity:1;transform:scale(1)} }
+@keyframes dv-slide-exit-0 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(.94)} }
+@keyframes dv-slide-enter-1 { from{opacity:0;transform:translateX(7%) scale(1.04);clip-path:inset(0 0 0 12%)} to{opacity:1;transform:translateX(0) scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-1 { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-5%)} }
+@keyframes dv-slide-enter-2 { from{opacity:0;transform:translateY(5%) scale(1.03);clip-path:inset(12% 0 0)} to{opacity:1;transform:translateY(0) scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-2 { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-3%)} }
+@keyframes dv-slide-enter-3 { from{opacity:0;transform:translateX(-7%) scale(1.04);clip-path:inset(0 12% 0 0)} to{opacity:1;transform:translateX(0) scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-3 { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(5%)} }
+@keyframes dv-slide-enter-4 { from{opacity:0;transform:scale(1.16) rotate(.8deg);filter:blur(7px)} to{opacity:1;transform:scale(1) rotate(0);filter:blur(0)} }
+@keyframes dv-slide-exit-4 { from{opacity:1;filter:blur(0)} to{opacity:0;filter:blur(5px)} }
+@keyframes dv-slide-enter-5 { from{opacity:0;transform:scale(.94) rotate(-.6deg);clip-path:circle(30% at 50% 50%)} to{opacity:1;transform:scale(1) rotate(0);clip-path:circle(100% at 50% 50%)} }
+@keyframes dv-slide-exit-5 { from{opacity:1;clip-path:circle(100% at 50% 50%)} to{opacity:0;clip-path:circle(20% at 50% 50%)} }
+@keyframes dv-slide-enter-6 { from{opacity:0;transform:translateY(-5%) scale(1.04)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes dv-slide-exit-6 { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(4%)} }
+@keyframes dv-slide-enter-7 { from{opacity:0;transform:translateX(6%) scale(1.08);filter:saturate(.5)} to{opacity:1;transform:translateX(0) scale(1);filter:saturate(1)} }
+@keyframes dv-slide-exit-7 { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-6%)} }
+@keyframes dv-slide-enter-8 { from{opacity:0;transform:scale(1.1);clip-path:inset(0 0 18%)} to{opacity:1;transform:scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-8 { from{opacity:1;clip-path:inset(0)} to{opacity:0;clip-path:inset(0 0 20%)} }
+@keyframes dv-slide-enter-9 { from{opacity:0;transform:scale(.96) translateY(2%);filter:brightness(.65)} to{opacity:1;transform:scale(1) translateY(0);filter:brightness(1)} }
+@keyframes dv-slide-exit-9 { from{opacity:1;filter:brightness(1)} to{opacity:0;filter:brightness(.7)} }
+.dv-hero__dots { max-width:min(92vw,680px); overflow-x:auto; scrollbar-width:none; }
+.dv-hero__dots::-webkit-scrollbar { display:none; }
+
+.dv-hero__slide--anim-10.dv-hero__slide--on { animation:dv-slide-enter-10 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-11.dv-hero__slide--on { animation:dv-slide-enter-11 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-12.dv-hero__slide--on { animation:dv-slide-enter-12 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-13.dv-hero__slide--on { animation:dv-slide-enter-13 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-10.dv-hero__slide--exit { animation-name:dv-slide-exit-10; }
+.dv-hero__slide--anim-11.dv-hero__slide--exit { animation-name:dv-slide-exit-11; }
+.dv-hero__slide--anim-12.dv-hero__slide--exit { animation-name:dv-slide-exit-12; }
+.dv-hero__slide--anim-13.dv-hero__slide--exit { animation-name:dv-slide-exit-13; }
+@keyframes dv-slide-enter-10 { from{opacity:0;transform:perspective(900px) rotateY(9deg) scale(1.05);filter:brightness(.7)} to{opacity:1;transform:perspective(900px) rotateY(0) scale(1);filter:brightness(1)} }
+@keyframes dv-slide-exit-10 { from{opacity:1;transform:perspective(900px) rotateY(0)} to{opacity:0;transform:perspective(900px) rotateY(-8deg)} }
+@keyframes dv-slide-enter-11 { from{opacity:0;transform:scale(1.13) translateY(-2%);clip-path:polygon(0 0,100% 0,100% 70%,0 100%)} to{opacity:1;transform:scale(1) translateY(0);clip-path:polygon(0 0,100% 0,100% 100%,0 100%)} }
+@keyframes dv-slide-exit-11 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(.97) translateY(3%)} }
+@keyframes dv-slide-enter-12 { from{opacity:0;transform:translateX(0) scale(1.12);clip-path:inset(0 50% 0 50%)} to{opacity:1;transform:translateX(0) scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-12 { from{opacity:1;clip-path:inset(0)} to{opacity:0;clip-path:inset(0 50% 0 50%)} }
+@keyframes dv-slide-enter-13 { from{opacity:0;transform:scale(.92) translateX(-3%);filter:blur(10px) saturate(.65)} to{opacity:1;transform:scale(1) translateX(0);filter:blur(0) saturate(1)} }
+@keyframes dv-slide-exit-13 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(1.06) translateX(3%)} }
+
+/* Final viewport-height override comes after responsive size presets. */
+.dv-hero {
+  height: 99vh !important;
+  height: 99svh !important;
+  min-height: 0 !important;
+  isolation: isolate;
+}
+.dv-hero__fog-bottom {
+  height: 34% !important;
+  z-index: 5 !important;
+  mix-blend-mode: normal !important;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0) 0%,
+      rgba(238,255,246,.08) 24%,
+      rgba(235,253,243,.24) 48%,
+      rgba(245,255,249,.72) 78%,
+      #fff 100%) !important;
+  pointer-events: none;
+}
+.dv-hero__ov-bottom {
+  background: linear-gradient(180deg,
+    rgba(2,44,34,.30) 0%,
+    rgba(2,44,34,.15) 45%,
+    rgba(2,44,34,.38) 72%,
+    rgba(2,44,34,.48) 82%,
+    rgba(2,44,34,.08) 100%) !important;
+}
+.dv-hero__scroll {
+  bottom: max(18px, env(safe-area-inset-bottom));
+  gap: 9px;
+  animation: dv-fade-up .9s var(--dv-ease) .6s forwards, dv-scroll-float 2.1s ease-in-out 1.5s infinite;
+}
+.dv-hero__scroll-line { height: 30px; }
+.dv-hero__scroll-icon { width: 19px; height: 19px; animation: dv-scroll-bounce 1.5s ease-in-out infinite; }
+@keyframes dv-scroll-float {
+  0%,100% { transform: translate(-50%,0); }
+  50% { transform: translate(-50%,-5px); }
+}
+@media(max-width:767px) {
+  .dv-hero { height: 99vh !important; height: 99svh !important; }
+  .dv-hero__body { padding-top: max(74px, calc(env(safe-area-inset-top) + 60px)); padding-bottom: 100px; }
+  .dv-hero__scroll { bottom: max(14px, env(safe-area-inset-bottom)); }
+}
+@media(prefers-reduced-motion:reduce){
+ .dv-hero__slide--on,.dv-hero__slide--exit,.dv-hero__slide--on img,.dv-hero__scroll { animation:none!important; transition:opacity .2s ease!important; }
 }
 `;
 
@@ -1191,11 +1310,12 @@ function PopularSlideshow() {
   const { data, loading } = usePopularDestinations(14);
   const [idx, setIdx]     = useState(0);
   const [visible, setVisible] = useState(3);
+  const viewportRef = useRef(null);
 
   useEffect(() => {
     const update = () => {
       if (typeof window === 'undefined') return;
-      if (window.innerWidth < 540) setVisible(1);
+      if (window.innerWidth < 640) setVisible(1);
       else if (window.innerWidth < 900) setVisible(2);
       else setVisible(3);
     };
@@ -1205,6 +1325,36 @@ function PopularSlideshow() {
   }, []);
 
   const maxIdx = Math.max(0, data.length - visible);
+
+  useEffect(() => {
+    setIdx((current) => Math.min(current, maxIdx));
+  }, [maxIdx]);
+
+  const goToIndex = useCallback((target) => {
+    const next = Math.max(0, Math.min(Math.trunc(target), maxIdx));
+    setIdx(next);
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      viewportRef.current
+        ?.querySelector('[data-popular-index="' + next + '"]')
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+    }
+  }, [maxIdx]);
+
+  const handleSwipeScroll = useCallback(() => {
+    if (typeof window === "undefined" || window.innerWidth >= 640) return;
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const viewportLeft = viewport.getBoundingClientRect().left;
+    const items = [...viewport.querySelectorAll("[data-popular-index]")];
+    if (!items.length) return;
+    let nearest = 0;
+    let distance = Infinity;
+    items.forEach((item) => {
+      const d = Math.abs(item.getBoundingClientRect().left - viewportLeft);
+      if (d < distance) { distance = d; nearest = Number(item.dataset.popularIndex); }
+    });
+    setIdx((current) => current === nearest ? current : nearest);
+  }, []);
   const itemW  = 'clamp(260px,30vw,360px)';
   const gap    = 'clamp(14px,2vw,22px)';
 
@@ -1246,7 +1396,7 @@ function PopularSlideshow() {
             <div className="dv-slider__controls">
               <button
                 className="dv-arrow"
-                onClick={() => setIdx(p => Math.max(0, p - 1))}
+                onClick={() => goToIndex(idx - 1)}
                 disabled={idx === 0}
                 aria-label="Previous"
               >
@@ -1254,7 +1404,7 @@ function PopularSlideshow() {
               </button>
               <button
                 className="dv-arrow"
-                onClick={() => setIdx(p => Math.min(maxIdx, p + 1))}
+                onClick={() => goToIndex(idx + 1)}
                 disabled={idx >= maxIdx}
                 aria-label="Next"
               >
@@ -1264,13 +1414,13 @@ function PopularSlideshow() {
           </div>
         </AnimatedSection>
 
-        <div className="dv-slider__viewport">
+        <div ref={viewportRef} onScroll={handleSwipeScroll} className="dv-slider__viewport">
           <div
             className="dv-slider__track"
             style={{ transform: `translateX(calc(-${idx} * (${itemW} + ${gap})))` }}
           >
             {data.map((dest, i) => (
-              <div key={dest.id} className="dv-slider__item" style={{ flex: `0 0 ${itemW}` }}>
+              <div key={dest.id || dest.slug || i} data-popular-index={i} className={`dv-slider__item${i === idx ? ' dv-slider__item--active' : ''}`} style={{ flex: `0 0 ${itemW}` }}>
                 <DestinationCard destination={dest} priority={i < 3} />
               </div>
             ))}
@@ -1283,120 +1433,8 @@ function PopularSlideshow() {
               <button
                 key={i}
                 className={`dv-slider__dot${i === idx ? ' dv-slider__dot--on' : ''}`}
-                onClick={() => setIdx(i)}
-                aria-label={`Slide ${i + 1}
-/* Full-screen destination discovery hero with distinct slide transitions. */
-.dv-hero { isolation:isolate; }
-.dv-hero__slide--on { z-index:3; }
-.dv-hero__slide--exit { opacity:1; z-index:2; pointer-events:none; animation-duration:1.2s; animation-timing-function:cubic-bezier(.22,1,.36,1); animation-fill-mode:forwards; }
-.dv-hero__slide--anim-0.dv-hero__slide--on { animation:dv-slide-enter-0 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-1.dv-hero__slide--on { animation:dv-slide-enter-1 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-2.dv-hero__slide--on { animation:dv-slide-enter-2 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-3.dv-hero__slide--on { animation:dv-slide-enter-3 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-4.dv-hero__slide--on { animation:dv-slide-enter-4 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-5.dv-hero__slide--on { animation:dv-slide-enter-5 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-6.dv-hero__slide--on { animation:dv-slide-enter-6 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-7.dv-hero__slide--on { animation:dv-slide-enter-7 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-8.dv-hero__slide--on { animation:dv-slide-enter-8 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-9.dv-hero__slide--on { animation:dv-slide-enter-9 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-0.dv-hero__slide--exit { animation-name:dv-slide-exit-0; }
-.dv-hero__slide--anim-1.dv-hero__slide--exit { animation-name:dv-slide-exit-1; }
-.dv-hero__slide--anim-2.dv-hero__slide--exit { animation-name:dv-slide-exit-2; }
-.dv-hero__slide--anim-3.dv-hero__slide--exit { animation-name:dv-slide-exit-3; }
-.dv-hero__slide--anim-4.dv-hero__slide--exit { animation-name:dv-slide-exit-4; }
-.dv-hero__slide--anim-5.dv-hero__slide--exit { animation-name:dv-slide-exit-5; }
-.dv-hero__slide--anim-6.dv-hero__slide--exit { animation-name:dv-slide-exit-6; }
-.dv-hero__slide--anim-7.dv-hero__slide--exit { animation-name:dv-slide-exit-7; }
-.dv-hero__slide--anim-8.dv-hero__slide--exit { animation-name:dv-slide-exit-8; }
-.dv-hero__slide--anim-9.dv-hero__slide--exit { animation-name:dv-slide-exit-9; }
-@keyframes dv-slide-enter-0 { from{opacity:0;transform:scale(1.12)} to{opacity:1;transform:scale(1)} }
-@keyframes dv-slide-exit-0 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(.94)} }
-@keyframes dv-slide-enter-1 { from{opacity:0;transform:translateX(7%) scale(1.04);clip-path:inset(0 0 0 12%)} to{opacity:1;transform:translateX(0) scale(1);clip-path:inset(0)} }
-@keyframes dv-slide-exit-1 { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-5%)} }
-@keyframes dv-slide-enter-2 { from{opacity:0;transform:translateY(5%) scale(1.03);clip-path:inset(12% 0 0)} to{opacity:1;transform:translateY(0) scale(1);clip-path:inset(0)} }
-@keyframes dv-slide-exit-2 { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-3%)} }
-@keyframes dv-slide-enter-3 { from{opacity:0;transform:translateX(-7%) scale(1.04);clip-path:inset(0 12% 0 0)} to{opacity:1;transform:translateX(0) scale(1);clip-path:inset(0)} }
-@keyframes dv-slide-exit-3 { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(5%)} }
-@keyframes dv-slide-enter-4 { from{opacity:0;transform:scale(1.16) rotate(.8deg);filter:blur(7px)} to{opacity:1;transform:scale(1) rotate(0);filter:blur(0)} }
-@keyframes dv-slide-exit-4 { from{opacity:1;filter:blur(0)} to{opacity:0;filter:blur(5px)} }
-@keyframes dv-slide-enter-5 { from{opacity:0;transform:scale(.94) rotate(-.6deg);clip-path:circle(30% at 50% 50%)} to{opacity:1;transform:scale(1) rotate(0);clip-path:circle(100% at 50% 50%)} }
-@keyframes dv-slide-exit-5 { from{opacity:1;clip-path:circle(100% at 50% 50%)} to{opacity:0;clip-path:circle(20% at 50% 50%)} }
-@keyframes dv-slide-enter-6 { from{opacity:0;transform:translateY(-5%) scale(1.04)} to{opacity:1;transform:translateY(0) scale(1)} }
-@keyframes dv-slide-exit-6 { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(4%)} }
-@keyframes dv-slide-enter-7 { from{opacity:0;transform:translateX(6%) scale(1.08);filter:saturate(.5)} to{opacity:1;transform:translateX(0) scale(1);filter:saturate(1)} }
-@keyframes dv-slide-exit-7 { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-6%)} }
-@keyframes dv-slide-enter-8 { from{opacity:0;transform:scale(1.1);clip-path:inset(0 0 18%)} to{opacity:1;transform:scale(1);clip-path:inset(0)} }
-@keyframes dv-slide-exit-8 { from{opacity:1;clip-path:inset(0)} to{opacity:0;clip-path:inset(0 0 20%)} }
-@keyframes dv-slide-enter-9 { from{opacity:0;transform:scale(.96) translateY(2%);filter:brightness(.65)} to{opacity:1;transform:scale(1) translateY(0);filter:brightness(1)} }
-@keyframes dv-slide-exit-9 { from{opacity:1;filter:brightness(1)} to{opacity:0;filter:brightness(.7)} }
-.dv-hero__dots { max-width:min(92vw,680px); overflow-x:auto; scrollbar-width:none; }
-.dv-hero__dots::-webkit-scrollbar { display:none; }
-
-.dv-hero__slide--anim-10.dv-hero__slide--on { animation:dv-slide-enter-10 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-11.dv-hero__slide--on { animation:dv-slide-enter-11 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-12.dv-hero__slide--on { animation:dv-slide-enter-12 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-13.dv-hero__slide--on { animation:dv-slide-enter-13 1.25s cubic-bezier(.22,1,.36,1) both; }
-.dv-hero__slide--anim-10.dv-hero__slide--exit { animation-name:dv-slide-exit-10; }
-.dv-hero__slide--anim-11.dv-hero__slide--exit { animation-name:dv-slide-exit-11; }
-.dv-hero__slide--anim-12.dv-hero__slide--exit { animation-name:dv-slide-exit-12; }
-.dv-hero__slide--anim-13.dv-hero__slide--exit { animation-name:dv-slide-exit-13; }
-@keyframes dv-slide-enter-10 { from{opacity:0;transform:perspective(900px) rotateY(9deg) scale(1.05);filter:brightness(.7)} to{opacity:1;transform:perspective(900px) rotateY(0) scale(1);filter:brightness(1)} }
-@keyframes dv-slide-exit-10 { from{opacity:1;transform:perspective(900px) rotateY(0)} to{opacity:0;transform:perspective(900px) rotateY(-8deg)} }
-@keyframes dv-slide-enter-11 { from{opacity:0;transform:scale(1.13) translateY(-2%);clip-path:polygon(0 0,100% 0,100% 70%,0 100%)} to{opacity:1;transform:scale(1) translateY(0);clip-path:polygon(0 0,100% 0,100% 100%,0 100%)} }
-@keyframes dv-slide-exit-11 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(.97) translateY(3%)} }
-@keyframes dv-slide-enter-12 { from{opacity:0;transform:translateX(0) scale(1.12);clip-path:inset(0 50% 0 50%)} to{opacity:1;transform:translateX(0) scale(1);clip-path:inset(0)} }
-@keyframes dv-slide-exit-12 { from{opacity:1;clip-path:inset(0)} to{opacity:0;clip-path:inset(0 50% 0 50%)} }
-@keyframes dv-slide-enter-13 { from{opacity:0;transform:scale(.92) translateX(-3%);filter:blur(10px) saturate(.65)} to{opacity:1;transform:scale(1) translateX(0);filter:blur(0) saturate(1)} }
-@keyframes dv-slide-exit-13 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(1.06) translateX(3%)} }
-
-/* Final viewport-height override comes after responsive size presets. */
-.dv-hero {
-  height: 99vh !important;
-  height: 99svh !important;
-  min-height: 0 !important;
-  isolation: isolate;
-}
-.dv-hero__fog-bottom {
-  height: 34% !important;
-  z-index: 5 !important;
-  mix-blend-mode: normal !important;
-  background:
-    linear-gradient(180deg,
-      rgba(255,255,255,0) 0%,
-      rgba(238,255,246,.08) 24%,
-      rgba(235,253,243,.24) 48%,
-      rgba(245,255,249,.72) 78%,
-      #fff 100%) !important;
-  pointer-events: none;
-}
-.dv-hero__ov-bottom {
-  background: linear-gradient(180deg,
-    rgba(2,44,34,.30) 0%,
-    rgba(2,44,34,.15) 45%,
-    rgba(2,44,34,.38) 72%,
-    rgba(2,44,34,.48) 82%,
-    rgba(2,44,34,.08) 100%) !important;
-}
-.dv-hero__scroll {
-  bottom: max(18px, env(safe-area-inset-bottom));
-  gap: 9px;
-  animation: dv-fade-up .9s var(--dv-ease) .6s forwards, dv-scroll-float 2.1s ease-in-out 1.5s infinite;
-}
-.dv-hero__scroll-line { height: 30px; }
-.dv-hero__scroll-icon { width: 19px; height: 19px; animation: dv-scroll-bounce 1.5s ease-in-out infinite; }
-@keyframes dv-scroll-float {
-  0%,100% { transform: translate(-50%,0); }
-  50% { transform: translate(-50%,-5px); }
-}
-@media(max-width:767px) {
-  .dv-hero { height: 99vh !important; height: 99svh !important; }
-  .dv-hero__body { padding-top: max(74px, calc(env(safe-area-inset-top) + 60px)); padding-bottom: 100px; }
-  .dv-hero__scroll { bottom: max(14px, env(safe-area-inset-bottom)); }
-}
-@media(prefers-reduced-motion:reduce){
- .dv-hero__slide--on,.dv-hero__slide--exit,.dv-hero__slide--on img,.dv-hero__scroll { animation:none!important; transition:opacity .2s ease!important; }
-}
-`}
+                onClick={() => goToIndex(i)}
+                aria-label={`Go to destination slide ${i + 1} of ${maxIdx + 1}`} aria-current={i === idx ? "true" : undefined}
               />
             ))}
           </div>

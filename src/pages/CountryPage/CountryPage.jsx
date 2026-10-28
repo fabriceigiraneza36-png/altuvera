@@ -1124,7 +1124,7 @@ function HeroSection({ country, navigate }) {
 
       {images.length > 1 && (
         <div className="cp-hero__dots">
-          {images.map((_, i) => <span key={i} className={`cp-hero__dot${i === active ? " cp-hero__dot--on" : ""}`} />)}
+          {images.map((_, i) => <button type="button" key={i} className={`cp-hero__dot${i === active ? " cp-hero__dot--on" : ""}`} onClick={() => { setActive(i); setAnimKey((key) => key + 1); }} aria-label={`Show ${country.name} image ${i + 1}`} aria-current={i === active ? "true" : undefined} style={{ padding: 0, border: 0, cursor: "pointer" }} />)}
         </div>
       )}
       {images.length > 1 && (
@@ -1205,13 +1205,15 @@ function DestinationsSection({ country, allDests, destsLoading }) {
   const onScroll = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
-    const center = track.scrollLeft + track.clientWidth / 2;
+    const trackBounds = track.getBoundingClientRect();
+    const center = trackBounds.left + track.clientWidth / 2;
     const cards = [...track.querySelectorAll("[data-destination-index]")];
     if (!cards.length) return;
     let nearest = 0;
     let distance = Infinity;
     cards.forEach((card) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const bounds = card.getBoundingClientRect();
+      const cardCenter = bounds.left + bounds.width / 2;
       const d = Math.abs(cardCenter - center);
       if (d < distance) { distance = d; nearest = Number(card.dataset.destinationIndex); }
     });
@@ -1265,6 +1267,21 @@ function DestinationsSection({ country, allDests, destsLoading }) {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {!destsLoading && allDests.length > 1 && (
+          <div className="cp-destination-story-dots" role="group" aria-label={`Choose a destination in ${country.name}`} style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 7, flexWrap: "wrap", maxWidth: "100%", marginTop: 8, padding: "0 8px" }}>
+            {allDests.map((dest, i) => (
+              <button
+                key={dest.id || dest.slug || i}
+                type="button"
+                aria-label={`Show ${dest.name || dest.title || ("destination " + (i + 1))}`}
+                aria-current={i === activeIndex ? "true" : undefined}
+                onClick={() => scrollTo(i)}
+                style={{ width: i === activeIndex ? 24 : 8, height: 8, borderRadius: 999, flex: "0 0 auto", border: 0, padding: 0, cursor: "pointer", background: i === activeIndex ? "#15803d" : "#cde8d7", boxShadow: i === activeIndex ? "0 2px 8px rgba(21,128,61,.24)" : "none", transition: "width .3s ease, background .3s ease, box-shadow .3s ease" }}
+              />
+            ))}
           </div>
         )}
       </div>
