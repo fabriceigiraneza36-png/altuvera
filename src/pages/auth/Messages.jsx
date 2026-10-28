@@ -127,6 +127,12 @@ const getRealPreviewName = (...values) => {
 };
 const ADMIN_PREVIEW_TYPES = new Set(["admin", "super_admin", "superadmin", "administrator", "moderator", "editor", "support", "staff", "agent"]);
 
+const isResourceSupportConversation = (item) =>
+  item?.conversationType === "resource_support" ||
+  item?.channel === "booking_support" ||
+  item?.metadata?.conversationType === "resource_support" ||
+  item?.metadata?.channel === "booking_support";
+
 const getConversationLastMessagePreview = (conv, currentUserId) => {
   const body = String(conv.lastMessage || "").trim();
   if (!body) return "No messages yet";
@@ -294,10 +300,12 @@ const MSG_STYLES = `
 }
 .msg-chat-head {
   flex-shrink: 0;
-  background: #ffffff;
+  background: rgba(255,255,255,.98);
   border-bottom: 1px solid #e2e8f0;
   z-index: 2;
+  font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
 }
+.msg-chat-title { font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif; letter-spacing: -.025em; }
 .msg-chat-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -1529,6 +1537,8 @@ export default function Messages() {
   const [resourceSearchError, setResourceSearchError] = useState("");
   const [selectedResource, setSelectedResource] = useState(null);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
+  // Retain the dedicated support thread ID across transient inbox payload updates.
+  const resourceSupportIdRef = useRef(null);
 
   const closeResourcePicker = useCallback(() => {
     setShowResourcePicker(false);
@@ -1537,15 +1547,28 @@ export default function Messages() {
     setResourceSearchError("");
   }, []);
 
-  const resourceSupportConversation = conversations.find(item =>
-    item.conversationType === "resource_support" || item.channel === "booking_support"
+  const resourceSupportConversation = conversations.find(isResourceSupportConversation);
+  const activeIsResourceSupport = isResourceSupportConversation(activeConversation);
+
+  useEffect(() => {
+    if (resourceSupportConversation?.id != null) {
+      resourceSupportIdRef.current = String(resourceSupportConversation.id);
+    } else if (activeIsResourceSupport && activeId != null) {
+      resourceSupportIdRef.current = String(activeId);
+    }
+  }, [resourceSupportConversation?.id, activeIsResourceSupport, activeId]);
+
+  // The inbox list and active-thread object can temporarily disagree while polling
+  // or reconnecting. Keep this action tied to the selected support-thread ID.
+  const isResourceSupport = Boolean(
+    activeId != null && (
+      activeIsResourceSupport ||
+      (resourceSupportConversation?.id != null &&
+        String(resourceSupportConversation.id) === String(activeId)) ||
+      (resourceSupportIdRef.current != null &&
+        String(resourceSupportIdRef.current) === String(activeId))
+    )
   );
-  const activeIsResourceSupport = activeConversation?.conversationType === "resource_support" || activeConversation?.channel === "booking_support";
-  const isResourceSupport = Boolean(activeIsResourceSupport || (
-    resourceSupportConversation?.id != null &&
-    activeId != null &&
-    String(resourceSupportConversation.id) === String(activeId)
-  ));
 
   const verifyBooking = useCallback(async () => {
     const reference = bookingReference.trim();
@@ -1685,9 +1708,13 @@ export default function Messages() {
   }, [conversations, conversationSearch, isGroupConversation]);
 
   const openResourceSupport = useCallback(() => {
-    const support = conversations.find(item => item.conversationType === "resource_support" || item.channel === "booking_support");
-    if (support?.id) openConversation(support.id);
-    else fetchConversations();
+    const support = conversations.find(isResourceSupportConversation);
+    if (support?.id) {
+      resourceSupportIdRef.current = String(support.id);
+      openConversation(support.id);
+    } else {
+      fetchConversations();
+    }
   }, [conversations, openConversation, fetchConversations]);
 
   useEffect(() => {
@@ -2197,58 +2224,38 @@ export default function Messages() {
             ) : (
               <>
                 {/* ── FIXED CHAT HEADER ── */}
-                <div className="msg-chat-head px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3 shadow-sm">
-                  {/* The desktop sidebar toggle sits in the header flow, never over chat content. */}
+                <div className="msg-chat-head px-3 sm:px-5 py-2.5 sm:py-3 flex items-center gap-2.5 sm:gap-3 shadow-sm">
                   {!sidebarOpen && !showMobile && (
                     <button type="button" onClick={() => setSidebarOpen(true)}
                       className="hidden md:flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                      aria-label="Show conversations" title="Show conversations">
-                      <PanelLeftOpen size={17}/>
-                    </button>
+                      aria-label="Show conversations" title="Show conversations"><PanelLeftOpen size={17}/></button>
                   )}
-                  {/* Back button — mobile */}
-                  <button onClick={() => { returnedToInboxRef.current = true; setSearchParams({}, { replace: true }); openConversation(null); }} aria-label="Back"
-                    className="md:hidden p-2 -ml-1 rounded-xl hover:bg-slate-100 transition
-                               text-slate-600 flex-shrink-0">
-                    <ArrowLeft size={18}/>
-                  </button>
+                  <button onClick={() => { returnedToInboxRef.current = true; setSearchParams({}, { replace: true }); openConversation(null); }} aria-label="Back to conversations"
+                    className="md:hidden flex h-9 w-8 -ml-1 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"><ArrowLeft size={18}/></button>
 
-                  {/* Icon */}
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700
-                                  flex items-center justify-center flex-shrink-0 shadow-sm">
-                    <MessageSquare size={16} className="text-white"/>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 text-white shadow-md shadow-emerald-900/15 ring-1 ring-emerald-700/10">
+                    <MessageSquare size={18} strokeWidth={2.2}/>
                   </div>
 
-                  {/* Title */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-slate-900 truncate leading-tight">
-                      {convTitle}
-                    </p>
-                    {activeConversation?.groupId && <span className="mt-1 inline-flex rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-extrabold tracking-wide text-violet-700 border border-violet-100">SHARED GROUP CONVERSATION</span>}
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-[11px] text-slate-400 truncate">
-                        <span className={adminPresence.active ? "text-emerald-600 font-semibold" : ""}>
-                          {adminPresence.active ? "Active " + fmtElapsed(adminPresence.activeSince, now) : "Altuvera Support"}
-                        </span>
-                        {activeConversation.bookingNumber &&
-                          <span className="font-mono ml-1">
-                            · #{activeConversation.bookingNumber}
-                          </span>
-                        }
-                      </p>
-                      {adminTyping && (
-                        <span className="text-[10px] text-emerald-600 font-semibold
-                                         animate-pulse flex-shrink-0">
-                          typing…
-                        </span>
-                      )}
+                  <div className="min-w-0 flex-1 py-0.5">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <h2 className="msg-chat-title min-w-0 truncate text-[14px] font-extrabold leading-tight tracking-tight text-slate-950 sm:text-[15px]">{convTitle}</h2>
+                      {activeConversation?.groupId && <span className="hidden shrink-0 rounded-full border border-violet-100 bg-violet-50 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-violet-700 sm:inline-flex">Shared group</span>}
+                    </div>
+                    <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200/80 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                        <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (adminPresence.active ? "bg-emerald-500 animate-pulse" : "bg-slate-300")}/>
+                        <span className="truncate">{adminPresence.active ? "Coordinator active · " + fmtElapsed(adminPresence.activeSince, now) : "Altuvera Support"}</span>
+                      </span>
+                      {activeConversation.bookingNumber && <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-800">Booking · #{activeConversation.bookingNumber}</span>}
+                      {adminTyping && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"/> typing…</span>}
                     </div>
                   </div>
 
-                  <ChatPreferencesPanel value={chatPrefs} onSave={saveChatPrefs} />
-
-                  {/* Status pill */}
-                  <StatusPill status={activeConversation.status || "open"} />
+                  <div className="ml-auto flex shrink-0 items-center gap-1.5">
+                    <ChatPreferencesPanel value={chatPrefs} onSave={saveChatPrefs}/>
+                    <StatusPill status={activeConversation.status || "open"}/>
+                  </div>
                 </div>
 
                 

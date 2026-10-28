@@ -19,7 +19,7 @@ import DestinationCard from "../components/common/DestinationCard";
 import { useCountry } from "../hooks/useCountries";
 import { useCountryDestinations } from "../hooks/useDestinations";
 import { getCountrySlug } from "../utils/countrySlugMap";
-import Loader from "../components/common/Loader";
+import AltuveraLoader from "../components/common/AltuveraLoader";
 
 /* ═══════════════════════════════════════════════════════
    STYLES
@@ -669,7 +669,7 @@ function CountryDestinationsPage() {
   const countryName = country?.name || countryId;
 
   if (countryLoading && !country) {
-    return <div className="cd-shell"><div style={{ textAlign: "center", padding: "120px 24px" }}><Loader /></div></div>;
+    return <AltuveraLoader title={`Discovering destinations in ${countryName}`} message={`We’re bringing together the landscapes, highlights and experiences waiting across ${countryName}.`} />;
   }
 
   if (countryError && !country) {

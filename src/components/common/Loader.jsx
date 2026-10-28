@@ -149,6 +149,7 @@ const Loader = () => {
       justifyContent: "center",
       textAlign: "center",
       width: "100%",
+      maxWidth: "760px",
       padding: "24px",
       opacity: isExiting ? 0 : 1,
       transform: isExiting ? "translateY(-14px) scale(0.99)" : "translateY(0) scale(1)",
@@ -160,60 +161,50 @@ const Loader = () => {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: "28px",
-      width: "200px",
-      height: "200px",
+      flexShrink: 0,
+      margin: 0,
+      width: "84px",
+      height: "84px",
     },
     logo: {
-      width: "118px",
-      height: "118px",
+      width: "76px",
+      height: "76px",
       objectFit: "contain",
       position: "relative",
       zIndex: 5,
-      animation: "logoFloat 4.8s cubic-bezier(0.37, 0, 0.63, 1) infinite",
-    },
-    logoRing: {
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      borderRadius: "50%",
-      border: "1px solid rgba(16, 185, 129, 0.16)",
-      animation: "ringExpand 4.2s cubic-bezier(0.22, 1, 0.36, 1) infinite",
-    },
-    logoHalo: {
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      width: "150px",
-      height: "150px",
-      transform: "translate(-50%, -50%)",
-      borderRadius: "50%",
-      background:
-        "radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.03) 38%, transparent 72%)",
-      filter: "blur(10px)",
+      animation: "logoFloat 3.8s cubic-bezier(0.37, 0, 0.63, 1) infinite",
     },
     text: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: "44px",
-      fontWeight: "700",
-      color: "#111111",
-      marginBottom: "10px",
-      letterSpacing: "-0.5px",
+      fontFamily: "'Plus Jakarta Sans', Inter, system-ui, sans-serif",
+      display: "flex",
+      alignItems: "center",
+      gap: "0.045em",
+      fontSize: "clamp(24px, 4vw, 36px)",
+      lineHeight: 1,
+      fontWeight: "800",
+      color: "#064e3b",
+      margin: "0 0 8px",
+      letterSpacing: "0.04em",
     },
     tagline: {
-      fontFamily: "'Dancing Script', cursive",
-      fontSize: "20px",
-      color: "#10B981",
-      marginBottom: "40px",
+      fontFamily: "'Plus Jakarta Sans', Inter, system-ui, sans-serif",
+      fontSize: "9px",
+      fontWeight: "800",
+      color: "#059669",
+      margin: 0,
+      letterSpacing: ".1em",
+      lineHeight: 1.5,
+      textTransform: "uppercase",
       opacity: 0.92,
+      maxWidth: "250px",
     },
     progressWrapper: {
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      width: "280px",
-      maxWidth: "85vw",
+      width: "300px",
+      maxWidth: "88vw",
+      marginTop: "44px",
     },
     progressContainer: {
       width: "100%",
@@ -240,11 +231,12 @@ const Loader = () => {
       animation: "shine 2.2s linear infinite",
     },
     loadingText: {
-      fontSize: "12px",
-      color: "#444444",
-      letterSpacing: "2.5px",
+      fontFamily: "'Plus Jakarta Sans', Inter, system-ui, sans-serif",
+      fontSize: "10px",
+      color: "#475569",
+      letterSpacing: "1.5px",
       textTransform: "uppercase",
-      fontWeight: "500",
+      fontWeight: "700",
       marginBottom: "8px",
       minHeight: "18px",
       textAlign: "center",
@@ -306,7 +298,20 @@ const Loader = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div
+      style={styles.container}
+      onPointerMove={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / Math.max(rect.width, 1) - 0.5;
+        const y = (event.clientY - rect.top) / Math.max(rect.height, 1) - 0.5;
+        event.currentTarget.style.setProperty("--bubble-parallax-x", String(x * 22) + "px");
+        event.currentTarget.style.setProperty("--bubble-parallax-y", String(y * 16) + "px");
+      }}
+      onPointerLeave={(event) => {
+        event.currentTarget.style.setProperty("--bubble-parallax-x", "0px");
+        event.currentTarget.style.setProperty("--bubble-parallax-y", "0px");
+      }}
+    >
       <style>
         {`
           @keyframes logoFloat {
@@ -465,49 +470,58 @@ const Loader = () => {
             }
           }
 
-          @media (max-width: 768px) {
-            .loader-title {
-              font-size: 34px !important;
-            }
-            .loader-tagline {
-              font-size: 17px !important;
-              margin-bottom: 34px !important;
-            }
-            .loader-logo-wrap {
-              width: 170px !important;
-              height: 170px !important;
-              margin-bottom: 22px !important;
-            }
-            .loader-logo {
-              width: 98px !important;
-              height: 98px !important;
-            }
-            .loader-progress {
-              width: 240px !important;
-            }
+          .loader-bubble-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            transform: translate3d(var(--bubble-parallax-x, 0px), var(--bubble-parallax-y, 0px), 0);
+            transition: transform .18s cubic-bezier(.22, 1, .36, 1);
+            will-change: transform;
           }
-
+          .loader-brand-lockup {
+            width: min(100%, 570px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            text-align: left;
+          }
+          .loader-brand-copy { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+          .loader-title { white-space: nowrap; }
+          .loader-brand-letter {
+            display: inline-block;
+            opacity: 0;
+            transform-origin: left center;
+            animation: loaderLetterReveal .68s cubic-bezier(.2,.8,.2,1) both;
+            will-change: transform, opacity, filter;
+          }
+          @keyframes loaderLetterReveal {
+            0% { opacity: 0; transform: translate3d(-17px, 0, 0) scale(.94); filter: blur(3px); }
+            65% { opacity: 1; filter: blur(0); }
+            100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+          }
+          @media (max-width: 768px) {
+            .loader-brand-lockup { gap: 14px; }
+            .loader-logo-wrap { width: 72px !important; height: 72px !important; }
+            .loader-logo { width: 68px !important; height: 68px !important; }
+            .loader-title { font-size: 27px !important; }
+            .loader-tagline { font-size: 8px !important; max-width: 210px; letter-spacing: .09em !important; }
+            .loader-progress { margin-top: 38px !important; width: 260px !important; }
+          }
           @media (max-width: 480px) {
-            .loader-title {
-              font-size: 28px !important;
+            .loader-brand-lockup { gap: 11px; width: 100%; }
+            .loader-logo-wrap { width: 58px !important; height: 58px !important; }
+            .loader-logo { width: 56px !important; height: 56px !important; }
+            .loader-title { font-size: 20px !important; letter-spacing: .035em !important; }
+            .loader-tagline { font-size: 7px !important; letter-spacing: .06em !important; max-width: 175px; }
+            .loader-progress { margin-top: 34px !important; width: 82vw !important; max-width: 280px !important; }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .loader-bubble-layer, .loader-bubble-layer *, .loader-brand-letter, .loader-logo, .loader-progress .progressShine {
+              animation: none !important; transition: none !important; filter: none !important;
             }
-            .loader-tagline {
-              font-size: 15px !important;
-              margin-bottom: 28px !important;
-            }
-            .loader-logo-wrap {
-              width: 145px !important;
-              height: 145px !important;
-              margin-bottom: 18px !important;
-            }
-            .loader-logo {
-              width: 84px !important;
-              height: 84px !important;
-            }
-            .loader-progress {
-              width: 82vw !important;
-              max-width: 260px !important;
-            }
+            .loader-brand-letter { opacity: 1 !important; transform: none !important; }
           }
         `}
       </style>
@@ -515,6 +529,7 @@ const Loader = () => {
       <div style={styles.whiteBase}></div>
       <div style={styles.ambientGlow}></div>
 
+      <div className="loader-bubble-layer" aria-hidden="true">
       {bubbles.map((bubble, index) => (
         <div
           key={bubble.id}
@@ -547,51 +562,33 @@ const Loader = () => {
           }}
         />
       ))}
+      </div>
 
       <div style={styles.content}>
-        <div style={styles.logoContainer} className="loader-logo-wrap">
-          <div style={styles.logoHalo}></div>
-
-          <div style={{ ...styles.logoRing, width: "150px", height: "150px" }}></div>
-          <div
-            style={{
-              ...styles.logoRing,
-              width: "188px",
-              height: "188px",
-              borderColor: "rgba(16, 185, 129, 0.11)",
-              animationDelay: "0.8s",
-            }}
-          ></div>
-          <div
-            style={{
-              ...styles.logoRing,
-              width: "224px",
-              height: "224px",
-              borderWidth: "1px",
-              borderColor: "rgba(16, 185, 129, 0.07)",
-              animationDelay: "1.6s",
-            }}
-          ></div>
-
-          <img
-            src={getBrandLogoUrl()}
-            alt="Altuvera"
-            style={styles.logo}
-            className="loader-logo"
-            onError={(e) => {
-              e.currentTarget.src = getBrandLogoUrl();
-              e.currentTarget.alt = 'Altuvera';
-            }}
-          />
+        <div className="loader-brand-lockup">
+          <div style={styles.logoContainer} className="loader-logo-wrap">
+            <img
+              src={getBrandLogoUrl()}
+              alt="Altuvera Safaris logo"
+              style={styles.logo}
+              className="loader-logo"
+              onError={(e) => {
+                e.currentTarget.src = getBrandLogoUrl();
+                e.currentTarget.alt = "Altuvera Safaris logo";
+              }}
+            />
+          </div>
+          <div className="loader-brand-copy">
+            <h1 style={styles.text} className="loader-title" aria-label="Altuvera">
+              {"ALTUVERA".split("").map((letter, index) => (
+                <span key={letter + "-" + index} aria-hidden="true" className="loader-brand-letter" style={{ animationDelay: (index * 68) + "ms" }}>{letter}</span>
+              ))}
+            </h1>
+            <p style={styles.tagline} className="loader-tagline">
+              True adventure in high places &amp; deep culture
+            </p>
+          </div>
         </div>
-
-        <h1 style={styles.text} className="loader-title">
-          Altuvera
-        </h1>
-
-        <p style={styles.tagline} className="loader-tagline">
-          True adventure in High Places & Deep Culture
-        </p>
 
         <div style={styles.progressWrapper} className="loader-progress">
           <div style={styles.progressContainer}>

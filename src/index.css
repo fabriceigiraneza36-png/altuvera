@@ -3,7 +3,7 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 /* 1. Google Fonts — must be before @import "tailwindcss" */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap");
 
 /* 2. Tailwind v4 — single import replaces base/components/utilities */
 @import "tailwindcss";
