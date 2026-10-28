@@ -1,5 +1,5 @@
 // src/components/destinations/DestinationCard.jsx
-import { useState, useEffect, useCallback, memo, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, memo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import {
@@ -1072,21 +1072,7 @@ const DestinationCard = memo(function DestinationCard({
   const [copied,    setCopied]    = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareFeedback, setShareFeedback] = useState("");
-  const [shareImageFile, setShareImageFile] = useState(null);
-  const [shareImageStatus, setShareImageStatus] = useState("idle");
   const shareFeedbackTimer = useRef(null);
-  const shareImageSource = useMemo(() => {
-    const toList = (value) => Array.isArray(value) ? value : value ? [value] : [];
-    const candidates = [
-      ...toList(destination?.heroImages), ...toList(destination?.hero_images),
-      ...toList(destination?.images), ...toList(destination?.gallery),
-      ...toList(destination?.image_urls), ...toList(destination?.imageUrls),
-      destination?.heroImage, destination?.hero_image, destination?.coverImageUrl,
-      destination?.cover_image_url, destination?.imageUrl, destination?.image_url,
-      destination?.image, destination?.thumbnailUrl, destination?.thumbnail_url,
-    ].map(getImageUrl).filter(Boolean);
-    return candidates[0] || "";
-  }, [destination]);
   const [showFavouriteIcon, setShowFavouriteIcon] = useState(false);
   const favouriteToastTimer = useRef(null);
   useEffect(() => () => {
@@ -1108,74 +1094,6 @@ const DestinationCard = memo(function DestinationCard({
     };
   }, [shareModalOpen]);
 
-  useEffect(() => {
-    if (!shareModalOpen) {
-      setShareImageFile(null);
-      setShareImageStatus("idle");
-      return undefined;
-    }
-    if (!shareImageSource) {
-      setShareImageFile(null);
-      setShareImageStatus("unavailable");
-      return undefined;
-    }
-
-    let cancelled = false;
-    const prepareShareImage = async () => {
-      setShareImageFile(null);
-      setShareImageStatus("loading");
-      try {
-        const response = await fetch(shareImageSource, { mode: "cors", credentials: "omit" });
-        if (!response.ok) throw new Error("Destination photo could not be downloaded");
-        const sourceBlob = await response.blob();
-        if (!sourceBlob.type.startsWith("image/")) throw new Error("Destination photo is not an image");
-
-        let outputBlob = sourceBlob;
-        if (typeof createImageBitmap === "function") {
-          let bitmap;
-          try {
-            bitmap = await createImageBitmap(sourceBlob);
-            const cropSize = Math.min(bitmap.width, bitmap.height);
-            const sx = Math.max(0, (bitmap.width - cropSize) / 2);
-            const sy = Math.max(0, (bitmap.height - cropSize) / 2);
-            const canvas = document.createElement("canvas");
-            canvas.width = 1200;
-            canvas.height = 1200;
-            const context = canvas.getContext("2d");
-            if (context) {
-              context.drawImage(bitmap, sx, sy, cropSize, cropSize, 0, 0, 1200, 1200);
-              const squarePhoto = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
-              if (squarePhoto) outputBlob = squarePhoto;
-            }
-          } finally {
-            bitmap?.close?.();
-          }
-        }
-
-        const safeName = String(destination?.slug || destination?.name || "destination")
-          .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 64) || "destination";
-        const mime = outputBlob.type || sourceBlob.type || "image/jpeg";
-        const extension = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : mime.includes("gif") ? "gif" : "jpg";
-        const file = new File([outputBlob], `altuvera-${safeName}.${extension}`, { type: mime });
-        const canShareFile = typeof navigator !== "undefined" &&
-          typeof navigator.canShare === "function" &&
-          navigator.canShare({ files: [file] });
-        if (!cancelled) {
-          setShareImageFile(canShareFile ? file : null);
-          setShareImageStatus(canShareFile ? "ready" : "unsupported");
-          if (!canShareFile) setShareFeedback("This browser cannot attach photos through its share sheet. You can still share the destination link and details.");
-        }
-      } catch {
-        if (!cancelled) {
-          setShareImageFile(null);
-          setShareImageStatus("error");
-          // Photo preparation is optional; never surface a card-level error for a browser/CORS limitation.
-        }
-      }
-    };
-    prepareShareImage();
-    return () => { cancelled = true; };
-  }, [shareModalOpen, shareImageSource, destination?.slug, destination?.name]);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
   const likeId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
   const ratingIdValue = destination?.numericId || destination?.id || destination?._id;
@@ -1575,26 +1493,24 @@ const blurb =
     }
   }, [shareTitle, shareTextWithLink, shareUrl, showShareFeedback]);
 
-  const handlePhotoShare = useCallback(async (event) => {
+  const handleInstagramLinkShare = useCallback(async (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
-    if (!shareImageFile || typeof navigator === "undefined" || typeof navigator.share !== "function" ||
-        typeof navigator.canShare !== "function" || !navigator.canShare({ files: [shareImageFile] })) {
-      showShareFeedback("Photo sharing isn't supported here. Use Share link & details or copy the caption manually if needed.");
+    if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
+      showShareFeedback("System sharing isn't available in this browser. Use Copy link, then paste the destination URL into Instagram.");
       return;
     }
     try {
-      // Android share targets may ignore the separate "url" field when a file is attached.
-      // Send the URL as the *only* text so the link can accompany the image without the
-      // long destination description being duplicated in the recipient's conversation.
-      await navigator.share({ title: shareTitle, text: shareUrl, url: shareUrl, files: [shareImageFile] });
-      showShareFeedback("Photo share completed. The image and destination URL were sent without the long caption. If your app still drops links on image shares, use Share link & details.");
+      // Important: share only the URL. Do not attach the destination photo or long caption.
+      // Instagram can then decide whether to render its own destination link preview.
+      await navigator.share({ title: shareTitle, url: shareUrl });
+      showShareFeedback("Destination link shared. Choose Instagram in the system share sheet. No image or long caption was attached; Instagram controls whether it displays a link preview.");
     } catch (error) {
       if (error?.name !== "AbortError") {
-        showShareFeedback("Couldn't share the photo. Try Share link & details, or copy the caption manually if needed.");
+        showShareFeedback("Couldn't open the system share sheet. Use Copy link to share this destination on Instagram.");
       }
     }
-  }, [shareTitle, shareUrl, shareImageFile, showShareFeedback]);
+  }, [shareTitle, shareUrl, showShareFeedback]);
 
   /* ── render ── */
   return (
@@ -1892,8 +1808,8 @@ const blurb =
             <a className="dc-share-app" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={handleShareLinkLaunch}>
               <span className="dc-share-app-icon dc-share-app-icon--x"><img src="https://cdn.simpleicons.org/x/000000" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>𝕏</b></span><span>X</span>
             </a>
-            <button type="button" className="dc-share-app" onClick={handlePhotoShare} disabled={shareImageStatus === "loading" || !shareImageFile} aria-label="Share destination photo using your device's apps">
-              <span className="dc-share-app-icon dc-share-app-icon--instagram"><img src="https://cdn.simpleicons.org/instagram/E4405F" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiCamera size={22} /></span><span>Share photo</span>
+            <button type="button" className="dc-share-app" onClick={handleInstagramLinkShare} aria-label="Share the destination link using the system share sheet for Instagram">
+              <span className="dc-share-app-icon dc-share-app-icon--instagram"><img src="https://cdn.simpleicons.org/instagram/E4405F" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiLink size={22} /></span><span>Instagram link</span>
             </button>
             <a className="dc-share-app" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={handleShareLinkLaunch}>
               <span className="dc-share-app-icon dc-share-app-icon--linkedin"><img src="https://cdn.simpleicons.org/linkedin/0A66C2" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>in</b></span><span>LinkedIn</span>
@@ -1930,7 +1846,7 @@ const blurb =
             <span><strong>Copy caption + destination link</strong><small>Paste it into a post or message after attaching the photo.</small></span>
           </button>
           {shareFeedback && <p className="dc-share-feedback" role="status" aria-live="polite">{shareFeedback}</p>}
-          <p className="dc-share-footnote">Photo shares include the link when the receiving app supports it. If an app drops the caption, paste the copied caption and destination URL into the post.</p>
+          <p className="dc-share-footnote">Sharing a destination link lets the receiving app decide whether to show a link preview image. Use Copy caption + destination link only when you want to add descriptive text manually.</p>
         </section>
       </div>,
       document.body
