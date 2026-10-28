@@ -1,16 +1,17 @@
 // src/pages/Contact.jsx
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, useInView, useScroll, useTransform, motion } from "framer-motion";
 import {
-  FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiMessageSquare,
-  FiCheckCircle, FiUser, FiAlertCircle, FiChevronDown, FiUsers,
-  FiGlobe, FiArrowRight, FiArrowLeft, FiHelpCircle,
-  FiShield, FiExternalLink, FiCalendar,
-} from "react-icons/fi";
+  Mail as FiMail, Phone as FiPhone, MapPin as FiMapPin, Clock3 as FiClock,
+  Send as FiSend, MessageCircle as FiMessageSquare, CircleCheck as FiCheckCircle,
+  UserRound as FiUser, CircleAlert as FiAlertCircle, ChevronDown as FiChevronDown,
+  Users as FiUsers, Globe2 as FiGlobe, ArrowRight as FiArrowRight,
+  ArrowLeft as FiArrowLeft, CircleHelp as FiHelpCircle, ShieldCheck as FiShield,
+  ExternalLink as FiExternalLink, CalendarDays as FiCalendar, Sparkles as FiSparkles,
+} from "lucide-react";
 import {
   FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaWhatsapp, FaTiktok,
 } from "react-icons/fa";
-import { RiSendPlaneFill } from "react-icons/ri";
 import SEO from "../components/common/SEO";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { sendMessage } from "../utils/sendMessage";
@@ -135,6 +136,29 @@ const STEP_CONFIG = [
   { label: "Your Message", icon: FiMessageSquare },
 ];
 
+const FORM_BUBBLES = Array.from({ length: 15 }, (_, index) => ({
+  id: index + 1,
+  left: `${(index * 37 + 7) % 100}%`,
+  top: `${(index * 29 + 9) % 100}%`,
+  size: 18 + (index % 5) * 13,
+  delay: `${-(index * 0.73).toFixed(2)}s`,
+  duration: `${13 + (index % 6) * 3}s`,
+  opacity: 0.14 + (index % 4) * 0.045,
+}));
+
+const FormBubbleLayer = React.memo(function FormBubbleLayer() {
+  return (
+    <div className="ct-form-bubble-layer" aria-hidden="true">
+      {FORM_BUBBLES.map((bubble) => (
+        <span key={bubble.id} className={`ct-form-bubble ct-form-bubble--${(bubble.id % 4) + 1}`}
+          style={{ left:bubble.left, top:bubble.top, width:bubble.size, height:bubble.size,
+            opacity:bubble.opacity, animationDelay:bubble.delay, animationDuration:bubble.duration }} />
+      ))}
+    </div>
+  );
+});
+
+
 /* ═══════════════════════════════════════════════════
    SUB-COMPONENTS
 ═══════════════════════════════════════════════════ */
@@ -234,7 +258,6 @@ const FormTextarea = React.memo(({ name, label, placeholder, required, maxLength
   const hasErr = touched && error;
   const isOk = touched && !error && value;
   const chars = value?.length || 0;
-  const pct = (chars / maxLength) * 100;
   return (
     <div className="ct-field ct-field--full">
       <label className="ct-label" htmlFor={`ct-${name}`}>
@@ -247,13 +270,7 @@ const FormTextarea = React.memo(({ name, label, placeholder, required, maxLength
           maxLength={maxLength} onChange={onChange}
           onFocus={() => setFocused(true)} onBlur={e => { setFocused(false); onBlur?.(e); }}
           className="ct-textarea" aria-invalid={!!hasErr} />
-        <div className="ct-char-bar">
-          <div className="ct-char-track">
-            <motion.div className="ct-char-fill" animate={{ width: `${pct}%` }}
-              style={{ background: pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : "#059669" }} />
-          </div>
-          <span className="ct-char-count" style={{ color: pct > 90 ? "#ef4444" : undefined }}>{chars}/{maxLength}</span>
-        </div>
+        <div className="ct-char-bar ct-char-bar--count-only"><span className="ct-char-count" aria-live="polite">{chars} / {maxLength} characters</span></div>
       </div>
       <AnimatePresence>
         {hasErr && (
@@ -286,7 +303,6 @@ const Contact = () => {
   const [direction, setDirection] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitProgress, setSubmitProgress] = useState(0);
   const [submittedEmail, setSubmittedEmail] = useState("");
 
   const [faqs, setFaqs] = useState([]);
@@ -408,8 +424,8 @@ const Contact = () => {
     let hasErr = false;
     STEP_FIELDS.forEach((_, i) => { if (!validateStep(i)) hasErr = true; });
     if (hasErr) return;
-    setSubmitting(true); setSubmitProgress(0); setErrors(p => ({ ...p, submit: "" }));
-    const tick = setInterval(() => setSubmitProgress(p => Math.min(p + 10, 88)), 100);
+    setSubmitting(true);
+    setErrors(p => ({ ...p, submit: "" }));
     try {
       const destinationNames = selectedDestinations.map((item) => item.name || item.title).filter(Boolean);
       const res = await sendMessage({
@@ -421,12 +437,10 @@ const Contact = () => {
       });
       if (res?.error) throw new Error(res.error);
       setSubmittedEmail(form.email);
-      setSubmitProgress(100);
-      setTimeout(() => { if (mounted.current) setSubmitted(true); }, 250);
+      if (mounted.current) setSubmitted(true);
     } catch (err) {
       setErrors(p => ({ ...p, submit: err?.message || "Something went wrong. Please try again." }));
     } finally {
-      clearInterval(tick);
       if (mounted.current) setSubmitting(false);
     }
   }, [form, validateStep, selectedDestinations, destinationInquiry]);
@@ -434,14 +448,9 @@ const Contact = () => {
   const resetForm = useCallback(() => {
     setSubmitted(false); setStep(0); setDirection(1); setForm(INIT_FORM);
     setSelectedDestinations([]); setDestinationQuery(""); setDestinationInquiry(false);
-    setTouched({}); setErrors({}); setSubmitProgress(0); setSubmittedEmail("");
+    setTouched({}); setErrors({}); setSubmittedEmail("");
     autoFilled.current = false;
   }, []);
-
-  const completion = useMemo(() => {
-    const req = ["name", "email", "subject", "message"];
-    return Math.round(req.filter(k => form[k]?.trim()).length / req.length * 100);
-  }, [form]);
 
   const slideVariants = {
     enter: d => ({ opacity: 0, x: d * 40 }),
@@ -484,6 +493,10 @@ const Contact = () => {
         </div>
 
         <motion.div className="ct-hero-content" style={{ opacity: heroOpacity }}>
+          <motion.div className="ct-hero-kicker" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.45 }}>
+            <span className="ct-hero-kicker-dot" />
+            TRUE ADVENTURE IN HIGH PLACES &amp; DEEP CULTURE
+          </motion.div>
           <motion.h1 className="ct-hero-h1"
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.65 }}>
@@ -573,29 +586,37 @@ const Contact = () => {
             <ScrollReveal direction="right" delay={0.1}>
               <AnimatePresence mode="wait">
                 {submitted ? (
-                  <motion.div key="done" className="ct-form-card"
-                    initial={{ opacity: 0, scale: 0.92, y: 14 }}
+                  <motion.div key="done" className="ct-form-card ct-form-card--success"
+                    role="status" aria-live="polite"
+                    initial={{ opacity: 0, scale: 0.96, y: 18 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4, ease: EASE.snappy }}>
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.34, ease: EASE.snappy }}>
+                    <FormBubbleLayer />
                     <div className="ct-success">
+                      <div className="ct-success-kicker"><FiSparkles size={14} /> MESSAGE RECEIVED</div>
                       <motion.div className="ct-success-circle"
-                        initial={{ scale: 0 }} animate={{ scale: 1 }}
-                        transition={{ delay: 0.12, duration: 0.45, ease: EASE.bounce }}>
-                        <FiCheckCircle size={44} color="#fff" />
+                        initial={{ scale: 0, rotate: -18 }} animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.08, duration: 0.48, ease: EASE.bounce }}>
+                        <FiCheckCircle size={40} strokeWidth={1.8} />
                       </motion.div>
                       <motion.h3 className="ct-success-h"
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-                        Message Sent Successfully
+                        Your message is on its way
                       </motion.h3>
                       <motion.p className="ct-success-p"
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
-                        Our safari experts will get back to you within 24 hours.
+                        Thank you for reaching out to Altuvera Safaris. Our team has received your message and will follow up as soon as possible.
                       </motion.p>
                       <motion.div className="ct-success-email"
-                        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-                        <small>Confirmation sent to</small>
-                        <strong>{submittedEmail}</strong>
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                        <span className="ct-success-email-icon"><FiMail size={17} /></span>
+                        <span className="ct-success-email-copy"><small>We’ll reply to</small><strong>{submittedEmail}</strong></span>
+                      </motion.div>
+                      <motion.div className="ct-success-next"
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}>
+                        <span className="ct-success-next-icon"><FiClock size={17} /></span>
+                        <span><strong>What happens next?</strong><small>A safari specialist will review your enquiry and contact you with helpful next steps.</small></span>
                       </motion.div>
                       <motion.div className="ct-success-btns"
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}>
@@ -611,17 +632,16 @@ const Contact = () => {
                 ) : (
                   <motion.form key="form" className="ct-form-card" onSubmit={handleSubmit} autoComplete="off" noValidate
                     initial={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.97 }}>
-                    {/* Progress */}
-                    <div className="ct-progress">
-                      <div className="ct-progress-top">
-                        <span className="ct-progress-label">Progress</span>
-                        <span className="ct-progress-pct">{completion}%</span>
+                    <FormBubbleLayer />
+                    <div className="ct-form-intro">
+                      <div>
+                        <span className="ct-form-eyebrow">LET’S GET ACQUAINTED</span>
+                        <h3>Tell us about your trip</h3>
+                        <p>A few details help us plan a more personal response.</p>
                       </div>
-                      <div className="ct-progress-track">
-                        <motion.div className="ct-progress-fill" animate={{ width: `${completion}%` }} transition={{ duration: 0.35 }} />
-                      </div>
+                      <span className="ct-form-intro-icon"><FiMessageSquare size={20} /></span>
                     </div>
-                    {/* Step tabs */}
+                    {/* Step navigation — no percentage or auto-filling progress bar. */}
                     <div className="ct-step-tabs">
                       {STEP_CONFIG.map((cfg, i) => {
                         const isActive = step === i;
@@ -753,10 +773,9 @@ const Contact = () => {
                                     <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
                                   </svg>
                                   Sending…
-                                  <div className="ct-submit-progress" style={{ width: `${submitProgress}%` }} />
                                 </>
                               ) : (
-                                <><RiSendPlaneFill size={16} /> Send Message</>
+                                <><FiSend size={16} /> Send Message</>
                               )}
                             </button>
                             <div className="ct-privacy-note">
@@ -1256,6 +1275,77 @@ html{scroll-behavior:smooth}
 @media(max-width:767px){.ct-hero{height:82svh;min-height:580px;max-height:780px}.ct-hero-content{width:calc(100% - 36px);padding:92px 0 120px}.ct-hero-h1{font-size:clamp(39px,10vw,64px);line-height:1.04}.ct-section{padding:54px 18px}.ct-info-col{display:flex;gap:12px}.ct-cards-stack{display:grid;grid-template-columns:1fr;gap:10px}.ct-form-card{padding:20px 17px;border-radius:21px}.ct-step-tabs{gap:7px;padding:9px;justify-content:space-between}.ct-step-tab{min-width:0;gap:7px}.ct-step-tab-dot{width:32px;height:32px}.ct-step-content{min-height:0}.ct-form-grid{grid-template-columns:1fr;gap:0}.ct-input,.ct-select{min-height:49px;font-size:16px}.ct-textarea{font-size:16px;min-height:140px}.ct-form-nav{flex-direction:row;align-items:stretch}.ct-nav-back,.ct-nav-next{width:auto;flex:1;justify-content:center}.ct-channels-grid{grid-template-columns:1fr;gap:12px}.ct-channel-card{display:grid;grid-template-columns:48px minmax(0,1fr) 26px;gap:12px;text-align:left;align-items:center;padding:15px}.ct-ch-icon{grid-row:span 3;margin:0}.ct-ch-name,.ct-ch-sub,.ct-ch-detail{grid-column:2;margin:0;min-width:0;overflow-wrap:anywhere}.ct-ch-arrow{grid-column:3;grid-row:1/4;margin:0}.ct-faq-toggle{padding:16px;border-radius:16px}.ct-faq-toggle__title{font-size:17px}.ct-faq-trigger{padding:14px 12px;gap:8px}.ct-faq-answer{padding-left:48px;padding-right:14px}}
 @media(max-width:420px){.ct-hero{min-height:540px;height:76svh}.ct-hero-content{width:calc(100% - 30px)}.ct-hero-h1{font-size:clamp(36px,10.5vw,48px)}.ct-step-tab{padding:3px;gap:5px}.ct-step-tab-name{font-size:10.5px}.ct-step-tab-dot{width:27px;height:27px}.ct-form-card{padding:17px 13px}.ct-form-nav{gap:8px}.ct-nav-back,.ct-nav-next{padding:11px 10px}.ct-channel-card{grid-template-columns:42px minmax(0,1fr) 22px;gap:9px}.ct-ch-icon{width:42px;height:42px}}
 @media(prefers-reduced-motion:reduce){.ct-hero-fog__layer,.ct-contact-card,.ct-social-link,.ct-channel-card,.ct-submit,.ct-btn{animation:none!important;transition:none!important}}
+
+
+/* Premium Altuvera Safaris contact refresh */
+.ct-page{--ct-forest:#064e3b;--ct-green:#087f58;--ct-emerald:#10b981;--ct-mint:#ecf8f0;--ct-ink:#14271f;--ct-muted:#64766d;--ct-border:#e0ebe4;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ct-ink);background:#f7faf8;overflow:clip}
+.ct-page button,.ct-page input,.ct-page select,.ct-page textarea{font:inherit}.ct-page a{-webkit-tap-highlight-color:transparent}
+.ct-hero{min-height:clamp(610px,84svh,860px);height:clamp(610px,84svh,860px);padding-top:clamp(60px,7vw,90px);isolation:isolate;position:relative;background:#073f2d;overflow:hidden}
+.ct-hero-bg{inset:-5%;background-position:center 43%;filter:brightness(.66) saturate(.86);transform:translateZ(0)}
+.ct-hero-overlay{background:linear-gradient(90deg,rgba(3,29,20,.8),rgba(4,50,32,.54) 52%,rgba(4,45,30,.2)),linear-gradient(0deg,rgba(5,50,34,.48),transparent 58%)}
+.ct-hero-content{width:min(calc(100% - 48px),1180px);max-width:1180px;padding:clamp(38px,6vw,92px) 0 clamp(110px,12vw,150px);text-align:left;margin-inline:auto}
+.ct-hero-kicker{display:inline-flex;align-items:center;justify-content:flex-start;gap:10px;margin:0 0 clamp(20px,2.8vw,32px);padding:9px 14px;border:1px solid rgba(220,255,237,.25);border-radius:999px;background:rgba(2,38,25,.27);color:rgba(242,255,248,.91);font-size:clamp(9px,.8vw,11px);letter-spacing:.16em;font-weight:800;line-height:1.3;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.ct-hero-kicker-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#6ee7b7;box-shadow:0 0 0 5px rgba(110,231,183,.12)}
+.ct-hero-h1{max-width:920px;font-family:"Playfair Display",Georgia,serif;font-size:clamp(44px,6.7vw,88px);font-weight:700;line-height:1.015;letter-spacing:-.045em;text-wrap:balance;margin:0 0 24px}
+.ct-hero-h1 em{background:linear-gradient(95deg,#a7f3d0,#6ee7b7 48%,#d1fae5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ct-hero-sub{max-width:570px;margin:0 0 30px;font-size:clamp(15px,1.45vw,18px);line-height:1.8;color:rgba(244,255,248,.84);font-weight:400}
+.ct-hero-actions{justify-content:flex-start;gap:12px}
+.ct-btn{min-height:48px;padding:13px 20px;gap:9px;border-radius:13px;font-size:13px;font-weight:750;letter-spacing:.005em;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease,background .2s ease,border-color .2s ease,color .2s ease}
+.ct-btn svg{flex:0 0 auto}.ct-btn--white{box-shadow:0 9px 26px rgba(0,0,0,.15)}.ct-btn--white:hover{transform:translateY(-3px);box-shadow:0 16px 35px rgba(0,0,0,.2)}.ct-btn--ghost{border:1px solid rgba(255,255,255,.33);background:rgba(255,255,255,.07);backdrop-filter:blur(9px)}.ct-btn--ghost:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.55)}
+.ct-scroll-hint{bottom:27px}.ct-scroll-mouse{width:24px;height:38px;border-color:rgba(255,255,255,.55);border-radius:99px}.ct-scroll-wheel{width:3px;height:7px;border-radius:4px;background:#fff}
+.ct-hero-fog{z-index:3;height:clamp(150px,19vw,260px);bottom:-1px}
+.ct-hero-fog__layer--one{background:radial-gradient(ellipse at 10% 105%,rgba(255,255,255,.98),rgba(255,255,255,.68) 24%,transparent 65%),radial-gradient(ellipse at 55% 110%,rgba(255,255,255,.94),rgba(255,255,255,.48) 33%,transparent 70%);filter:blur(21px);animation:ct-fog-drift 14s ease-in-out infinite alternate}
+.ct-hero-fog__layer--two{background:radial-gradient(ellipse at 88% 105%,rgba(247,252,249,.98),rgba(247,252,249,.64) 27%,transparent 67%),radial-gradient(ellipse at 35% 118%,rgba(255,255,255,.7),transparent 64%);filter:blur(30px);animation:ct-fog-drift 18s ease-in-out infinite alternate-reverse}
+.ct-hero-fog__ground{top:55%;background:linear-gradient(180deg,transparent,rgba(247,250,248,.84) 66%,#f7faf8 96%)}
+@keyframes ct-fog-drift{from{translate:-1.7% 0;scale:1}to{translate:2% -3%;scale:1.07}}
+.ct-section{padding:clamp(58px,7vw,100px) clamp(18px,4vw,48px)}.ct-section--mint{background:linear-gradient(180deg,#f7faf8,#f1f8f3)}.ct-section--white{background:#fff}
+.ct-container{width:100%;max-width:1220px;margin-inline:auto}.ct-container--md{max-width:1050px}.ct-container--sm{max-width:900px}
+.ct-section-header{max-width:760px;margin:0 auto clamp(30px,4.6vw,54px);text-align:center}
+.ct-h2{font-family:"Playfair Display",Georgia,serif;font-size:clamp(30px,4vw,48px);line-height:1.1;letter-spacing:-.035em;color:#152e22;margin-bottom:14px;text-wrap:balance}.ct-h2 em{color:#087f58;font-style:normal}
+.ct-subtitle{max-width:590px;margin-inline:auto;color:#66776d;font-size:clamp(14px,1.3vw,16px);line-height:1.8}
+.ct-grid-main{display:grid;grid-template-columns:minmax(280px,.82fr) minmax(0,1.18fr);gap:clamp(22px,3.8vw,54px);align-items:start}
+.ct-info-col{display:flex;flex-direction:column;gap:15px;min-width:0}.ct-info-title{font-family:"Playfair Display",Georgia,serif;font-size:clamp(24px,2.5vw,32px);line-height:1.14;letter-spacing:-.025em;color:#173729;margin:0}.ct-info-desc{font-size:14px;line-height:1.8;color:#66776d;max-width:480px;margin:0 0 3px}
+.ct-cards-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:11px}
+.ct-contact-card{display:flex;align-items:center;gap:14px;min-width:0;min-height:84px;padding:16px;border:1px solid #e4ece6;border-radius:18px;background:rgba(255,255,255,.91);box-shadow:0 5px 18px rgba(22,63,42,.035);text-decoration:none;color:inherit;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s}
+.ct-contact-card:hover,.ct-contact-card:focus-visible{transform:translateY(-3px);border-color:#c6e3d1;box-shadow:0 12px 28px rgba(22,63,42,.08);outline:none}
+.ct-cc-icon{width:46px;height:46px;flex:0 0 46px;border-radius:14px;background:linear-gradient(145deg,#0a7451,#07573d);display:grid;place-items:center;color:white;box-shadow:0 7px 16px rgba(6,78,59,.15);transition:transform .2s}.ct-contact-card:hover .ct-cc-icon{transform:translateY(-1px) scale(1.04)}
+.ct-cc-body{min-width:0;flex:1}.ct-cc-title{font-size:13px;font-weight:800;letter-spacing:.005em;color:#344a3c;margin-bottom:3px}.ct-cc-line{font-size:13px;line-height:1.65;color:#62766a;overflow-wrap:anywhere}.ct-cc-ext{color:#91a89a;flex:0 0 auto}
+.ct-social-box{padding:18px 17px;border:1px solid #e3ece6;border-radius:18px;background:rgba(255,255,255,.75)}.ct-social-title{font-size:12px;font-weight:800;letter-spacing:.04em;color:#344a3c;margin-bottom:13px}.ct-social-row{display:flex;flex-wrap:wrap;gap:9px}
+.ct-social-link{display:grid;place-items:center;width:41px;height:41px;border:1px solid #e3eee7;border-radius:13px;background:#fff;color:#087f58;transition:transform .18s ease,background .18s ease,color .18s ease,box-shadow .18s ease}.ct-social-link:hover,.ct-social-link:focus-visible{transform:translateY(-3px);background:#087f58;color:#fff;box-shadow:0 8px 18px rgba(6,78,59,.16);outline:none}
+.ct-form-card{position:relative;isolation:isolate;overflow:hidden;min-width:0;padding:clamp(22px,3.5vw,42px);border:1px solid rgba(214,231,220,.95);border-radius:clamp(22px,2.5vw,30px);background:rgba(255,255,255,.96);box-shadow:0 22px 60px rgba(16,58,36,.08),0 3px 12px rgba(16,58,36,.03),inset 0 1px 0 rgba(255,255,255,.9)}
+.ct-form-card::before{display:none!important;content:none!important}.ct-progress,.ct-progress-pct,.ct-progress-track,.ct-submit-progress,.ct-char-track,.ct-char-fill{display:none!important}
+.ct-form-bubble-layer{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;border-radius:inherit;contain:paint}
+.ct-form-bubble{position:absolute;display:block;border:1px solid rgba(16,185,129,.22);border-radius:50%;background:radial-gradient(circle at 30% 28%,rgba(255,255,255,.94),rgba(137,225,177,.12) 42%,rgba(16,185,129,.035) 72%,transparent);box-shadow:inset 0 0 12px rgba(255,255,255,.52),0 5px 20px rgba(8,127,88,.035);transform:translate3d(0,0,0);will-change:transform}
+.ct-form-bubble--1{animation-name:ct-form-float-one;animation-timing-function:ease-in-out;animation-iteration-count:infinite}.ct-form-bubble--2{animation-name:ct-form-float-two;animation-timing-function:ease-in-out;animation-iteration-count:infinite}.ct-form-bubble--3{animation-name:ct-form-float-three;animation-timing-function:ease-in-out;animation-iteration-count:infinite}.ct-form-bubble--4{animation-name:ct-form-float-four;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
+@keyframes ct-form-float-one{0%,100%{transform:translate3d(0,0,0) scale(.94)}50%{transform:translate3d(14px,-20px,0) scale(1.06)}}@keyframes ct-form-float-two{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-16px,-25px,0) scale(.9)}}@keyframes ct-form-float-three{0%,100%{transform:translate3d(0,0,0) scale(.95)}50%{transform:translate3d(7px,18px,0) scale(1.08)}}@keyframes ct-form-float-four{0%,100%{transform:translate3d(0,0,0) scale(1.02)}50%{transform:translate3d(-12px,15px,0) scale(.92)}}
+.ct-form-card>*:not(.ct-form-bubble-layer){position:relative;z-index:1}
+.ct-form-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:24px}.ct-form-eyebrow{display:block;font-size:10px;font-weight:850;letter-spacing:.16em;color:#087f58;margin-bottom:8px}.ct-form-intro h3{font-family:"Playfair Display",Georgia,serif;font-size:clamp(23px,2.5vw,30px);font-weight:700;line-height:1.16;letter-spacing:-.035em;color:#18392a;margin:0 0 7px}.ct-form-intro p{font-size:13px;line-height:1.7;color:#6e7f74;margin:0;max-width:390px}.ct-form-intro-icon{width:46px;height:46px;flex:0 0 46px;display:grid;place-items:center;border:1px solid #dcefe3;border-radius:15px;background:linear-gradient(145deg,#effaf3,#dff4e7);color:#087f58}
+.ct-step-tabs{margin-bottom:24px;padding:8px 10px;gap:8px;border:1px solid #e3ece6;border-radius:16px;background:rgba(247,251,248,.88)}.ct-step-tab{gap:9px;padding:5px 7px;border-radius:12px;opacity:.74;transition:opacity .18s,background .18s,transform .18s}.ct-step-tab:hover{opacity:1;background:#f0f8f3}.ct-step-tab--active,.ct-step-tab--done{opacity:1}.ct-step-tab--active{background:#edf8f1}.ct-step-tab-dot{width:35px;height:35px;font-size:14px;border:1px solid #dce8e0}.ct-step-tab--active .ct-step-tab-dot{background:linear-gradient(140deg,#09815a,#065f46);border-color:#087f58;box-shadow:0 4px 12px rgba(6,78,59,.18)}.ct-step-tab--done .ct-step-tab-dot{background:#087f58;border-color:#087f58}.ct-step-tab-num{font-size:9px;letter-spacing:.12em}.ct-step-tab-name{font-size:12px}.ct-step-tab-line{min-width:12px;opacity:.65;margin:0 1px}
+.ct-step-content{min-height:0}.ct-step-hdr{margin-bottom:20px}.ct-step-hdr h4{font-family:"Playfair Display",Georgia,serif;font-size:clamp(22px,2vw,27px);line-height:1.18;color:#193b2b;letter-spacing:-.03em}.ct-step-hdr p{margin-top:6px;color:#718176;font-size:13px;line-height:1.7}
+.ct-form-grid{gap:2px 16px}.ct-field{margin-bottom:17px;min-width:0}.ct-label{color:#354b3d;font-size:12px;font-weight:750;line-height:1.4;margin-bottom:8px}.ct-label-icon{color:#087f58;width:15px;height:15px;stroke-width:1.9}.ct-req{color:#0b9567}.ct-input-wrap{min-width:0}
+.ct-input,.ct-select,.ct-textarea{width:100%;min-width:0;border:1px solid #dce8e0;border-radius:13px;background:rgba(249,252,250,.94);color:#20392b;font-size:14px;transition:border-color .17s ease,box-shadow .17s ease,background .17s ease,transform .17s ease}.ct-input,.ct-select{min-height:50px;padding:13px 42px 13px 14px}.ct-input::placeholder,.ct-textarea::placeholder{color:#9aa99f}.ct-input:hover,.ct-select:hover,.ct-textarea:hover{border-color:#c4ddcd}.ct-focused .ct-input,.ct-focused .ct-select,.ct-focused .ct-textarea{border-color:#07865c;background:#fff;box-shadow:0 0 0 4px rgba(8,127,88,.085)}.ct-err .ct-input,.ct-err .ct-textarea{border-color:#e58a8a;background:#fffafa}.ct-ok .ct-input{border-color:#a7d9bb}
+.ct-err-msg{gap:6px;font-size:11px;font-weight:600;line-height:1.45;margin-top:6px}.ct-hint{font-size:11px;line-height:1.5;color:#839389;margin-top:5px}.ct-icon-r{right:12px}.ct-textarea{min-height:158px;padding:14px;line-height:1.75;resize:vertical}.ct-char-bar{display:flex;justify-content:flex-end;padding:5px 2px 0}.ct-char-count{font-size:10px;color:#8a9a90}
+.ct-optional-section{padding:17px;border:1px solid #e2ece5;border-radius:17px;background:rgba(246,250,247,.84);margin-top:14px}.ct-optional-label{font-size:10px;letter-spacing:.12em;color:#587165}.ct-destination-picker{padding:16px;border:1px solid #e1ece5;border-radius:16px;background:rgba(248,252,249,.92)}.ct-destination-picker-heading strong{font-size:13px;color:#124a34}.ct-destination-picker-heading p{font-size:12px;line-height:1.65}.ct-destination-toggle{font-size:11px}.ct-destination-search-wrap{min-height:46px;border-radius:12px;border-color:#dbe8df;background:#fff}.ct-destination-search-wrap input{font-size:14px;min-width:0}.ct-destination-results{border-radius:13px;box-shadow:0 12px 24px rgba(16,58,36,.1)}.ct-destination-results button{min-height:43px;transition:background .15s,color .15s}.ct-destination-results button:hover{background:#eef8f1;color:#087f58}.ct-destination-chips>span{border:1px solid #cde8d6;background:#edf8f1;color:#086a49;border-radius:999px}.ct-destination-chips button{width:23px;height:23px;border-radius:50%;transition:background .15s}.ct-destination-chips button:hover{background:#d1ecdb}
+.ct-server-err{padding:12px 14px;border-radius:13px;font-size:12px;line-height:1.6;margin:6px 0 12px}.ct-submit{min-height:53px;padding:14px 20px;gap:10px;border-radius:14px;background:linear-gradient(115deg,#075b40,#087f58 55%,#0b9867);box-shadow:0 9px 22px rgba(6,78,59,.19);font-size:14px;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease}.ct-submit::after{content:"";position:absolute;inset:0;transform:translateX(-110%);background:linear-gradient(105deg,transparent,rgba(255,255,255,.16),transparent);transition:transform .45s ease;pointer-events:none}.ct-submit:hover:not(:disabled)::after{transform:translateX(110%)}.ct-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 14px 28px rgba(6,78,59,.26)}.ct-submit:active:not(:disabled){transform:translateY(0) scale(.99)}.ct-submit:disabled{opacity:.76}.ct-privacy-note{margin-top:13px;font-size:10px;color:#7e9185;line-height:1.6}.ct-privacy-note svg{width:14px;height:14px;color:#087f58}
+.ct-form-nav{margin-top:22px;padding-top:17px;border-color:#e7eee9;gap:12px}.ct-nav-back,.ct-nav-next{min-height:46px;padding:11px 17px;border-radius:12px;font-size:12.5px;transition:transform .17s ease,box-shadow .17s ease,background .17s ease}.ct-nav-back{background:#f2f6f3;color:#465a4d}.ct-nav-back:hover{background:#e8f3eb;transform:translateY(-1px)}.ct-nav-next{background:linear-gradient(135deg,#087f58,#065f46);box-shadow:0 5px 14px rgba(6,78,59,.16)}.ct-nav-next:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(6,78,59,.22)}
+.ct-success{padding:clamp(24px,4vw,45px) clamp(3px,1vw,12px);text-align:center}.ct-success-kicker{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;margin:0 auto 20px;border:1px solid #d6eddf;border-radius:999px;background:#f0faf4;color:#087f58;font-size:9px;letter-spacing:.14em;font-weight:850}.ct-success-circle{width:88px;height:88px;margin:0 auto 21px;border:1px solid rgba(255,255,255,.85);background:linear-gradient(145deg,#0b9867,#066044);color:#fff;box-shadow:0 14px 32px rgba(6,78,59,.2),0 0 0 9px rgba(16,185,129,.08)}.ct-success-h{max-width:480px;margin:0 auto 10px;font-size:clamp(26px,3.2vw,36px);line-height:1.12;letter-spacing:-.04em;color:#18392a}.ct-success-p{max-width:430px;font-size:14px;line-height:1.8;margin:0 auto 22px;color:#65786b}
+.ct-success-email{display:flex;align-items:center;justify-content:flex-start;gap:13px;width:min(100%,430px);margin:0 auto 11px;padding:14px 15px;border:1px solid #d9ebe0;border-radius:16px;background:rgba(247,252,248,.9);text-align:left}.ct-success-email-icon{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:13px;background:#e3f5e9;color:#087f58}.ct-success-email-copy{min-width:0;display:flex;flex-direction:column;gap:3px}.ct-success-email small{font-size:11px;color:#75867a}.ct-success-email strong{font-size:13px;color:#194a34;overflow-wrap:anywhere}
+.ct-success-next{display:flex;align-items:flex-start;gap:12px;width:min(100%,430px);padding:14px 15px;margin:0 auto 25px;border:1px solid #e8eee9;border-radius:16px;background:rgba(255,255,255,.8);text-align:left}.ct-success-next-icon{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border-radius:11px;background:#f0f6f2;color:#47715b}.ct-success-next>span:last-child{display:flex;flex-direction:column;gap:4px;min-width:0}.ct-success-next strong{font-size:12px;color:#294737}.ct-success-next small{font-size:11px;line-height:1.65;color:#738379}.ct-success-btns{gap:10px}.ct-success-btns .ct-btn{min-height:46px}
+.ct-cta-section{position:relative;overflow:hidden;background:radial-gradient(ellipse at 15% 0%,rgba(110,231,183,.16),transparent 42%),linear-gradient(125deg,#073f2d,#065f46 55%,#087f58)}.ct-cta-section .ct-h2{font-size:clamp(30px,4vw,46px)}.ct-cta-section .ct-subtitle{line-height:1.8}.ct-cta-btns{gap:12px}
+.ct-channel-card{min-width:0;border:1px solid #e5eee8;border-radius:22px;background:#fff;box-shadow:0 6px 24px rgba(19,54,36,.045);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s}.ct-channel-card:hover,.ct-channel-card:focus-visible{transform:translateY(-5px);border-color:#c7e5d2;box-shadow:0 18px 38px rgba(19,54,36,.1);outline:none}.ct-ch-icon{width:52px;height:52px;border-radius:16px;font-size:22px;background:#edf8f1;color:#087f58}.ct-channel-card:hover .ct-ch-icon{background:#087f58;color:#fff}
+.ct-faq-toggle,.ct-faq-item{border-color:#e2ece5}.ct-faq-toggle{gap:12px;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}.ct-faq-toggle:hover{transform:translateY(-2px);border-color:#c9e6d4}.ct-faq-toggle__icon-wrap{background:linear-gradient(140deg,#0a825a,#075c42)}.ct-faq-question{font-size:clamp(13px,1.1vw,15px);line-height:1.5}.ct-faq-answer{line-height:1.8}.ct-page :focus-visible{outline:2px solid #10a875;outline-offset:3px}
+@media(min-width:1400px){.ct-container{max-width:1260px}.ct-grid-main{grid-template-columns:minmax(310px,.78fr) minmax(0,1.22fr);gap:56px}}
+@media(max-width:1023px){.ct-grid-main{grid-template-columns:minmax(0,1fr);gap:28px}.ct-info-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px}.ct-info-title,.ct-info-desc{grid-column:1/-1;max-width:720px}.ct-cards-stack{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ct-social-box{grid-column:1/-1}.ct-form-card{padding:clamp(22px,4vw,36px)}.ct-channel-card{padding:23px 15px}}
+@media(max-width:767px){
+.ct-hero{height:clamp(590px,82svh,780px);min-height:590px;max-height:790px;padding-top:56px}.ct-hero-content{width:calc(100% - 38px);padding:54px 0 122px;text-align:left}.ct-hero-kicker{max-width:100%;font-size:9px;letter-spacing:.1em;padding:8px 10px;gap:7px;margin-bottom:22px}.ct-hero-h1{font-size:clamp(41px,9.6vw,66px);line-height:1.04;margin-bottom:18px}.ct-hero-sub{font-size:15px;line-height:1.75;margin-bottom:25px;max-width:480px}.ct-hero-actions{display:grid;grid-template-columns:minmax(0,1fr);width:min(100%,330px);justify-content:stretch;gap:10px}.ct-btn{min-height:48px;width:100%;justify-content:center}.ct-hero-fog{height:clamp(130px,25vw,210px)}.ct-scroll-hint{bottom:22px}
+.ct-section{padding:58px 18px}.ct-section-header{text-align:left;margin:0 0 30px}.ct-section-header .ct-subtitle{margin:0;max-width:580px}.ct-h2{font-size:clamp(29px,7.7vw,40px);line-height:1.1}.ct-grid-main{gap:26px}.ct-info-col{display:flex;gap:13px}.ct-info-title{font-size:27px}.ct-info-desc{font-size:13.5px}.ct-cards-stack{grid-template-columns:minmax(0,1fr);gap:10px}.ct-contact-card{min-height:76px;padding:14px;border-radius:16px}.ct-cc-icon{width:43px;height:43px;flex-basis:43px;border-radius:13px}.ct-social-box{padding:15px}
+.ct-form-card{padding:22px 17px;border-radius:22px}.ct-form-intro{gap:10px;margin-bottom:20px}.ct-form-eyebrow{font-size:9px;letter-spacing:.13em}.ct-form-intro h3{font-size:25px}.ct-form-intro p{font-size:12px;line-height:1.65}.ct-form-intro-icon{width:40px;height:40px;flex-basis:40px;border-radius:13px}.ct-step-tabs{padding:7px;gap:5px;margin-bottom:22px}.ct-step-tab{flex:1;min-width:0;gap:7px;padding:5px;border:1px solid transparent}.ct-step-tab-dot{width:30px;height:30px;flex:0 0 30px}.ct-step-tab-meta{min-width:0;display:flex!important}.ct-step-tab-num{font-size:8px}.ct-step-tab-name{font-size:11px;white-space:normal}.ct-step-tab-line{min-width:7px}.ct-step-hdr{margin-bottom:17px}.ct-step-hdr h4{font-size:23px}.ct-step-hdr p{font-size:12.5px}.ct-form-grid{grid-template-columns:minmax(0,1fr);gap:0}.ct-field{margin-bottom:15px}.ct-input,.ct-select{min-height:50px;font-size:16px;padding:13px 42px 13px 13px}.ct-textarea{font-size:16px;min-height:150px}.ct-optional-section{padding:14px;border-radius:15px}.ct-destination-picker{padding:13px;border-radius:15px}.ct-destination-picker-heading{gap:11px}.ct-destination-toggle{width:100%;justify-content:flex-start}.ct-destination-search-wrap input{font-size:16px}
+.ct-form-nav{flex-direction:row;align-items:stretch;margin-top:20px;padding-top:15px}.ct-nav-back,.ct-nav-next{width:auto;flex:1;justify-content:center;padding:11px 10px}.ct-privacy-note{align-items:flex-start;text-align:center}.ct-success{padding:22px 0}.ct-success-circle{width:76px;height:76px;margin-bottom:20px}.ct-success-h{font-size:28px}.ct-success-p{font-size:13px}.ct-success-email,.ct-success-next{padding:12px}.ct-success-btns{flex-direction:column;align-items:stretch}.ct-success-btns .ct-btn{width:100%}
+.ct-channels-grid{grid-template-columns:minmax(0,1fr);gap:11px}.ct-channel-card{display:grid;grid-template-columns:47px minmax(0,1fr) 24px;gap:10px;align-items:center;text-align:left;padding:14px;border-radius:17px}.ct-ch-icon{grid-column:1;grid-row:1/4;width:45px;height:45px;margin:0;border-radius:14px}.ct-ch-name,.ct-ch-sub,.ct-ch-detail{grid-column:2;min-width:0;margin:0;overflow-wrap:anywhere}.ct-ch-name{font-size:14px}.ct-ch-sub{font-size:11px}.ct-ch-detail{font-size:12px}.ct-ch-arrow{grid-column:3;grid-row:1/4;margin:0}
+.ct-faq-toggle{padding:15px;border-radius:16px}.ct-faq-toggle__left{gap:11px;min-width:0}.ct-faq-toggle__icon-wrap{width:40px;height:40px;flex:0 0 40px}.ct-faq-toggle__title{font-size:16px}.ct-faq-toggle__sub{font-size:11px;line-height:1.45}.ct-faq-toggle__chevron{width:31px;height:31px;flex:0 0 31px}.ct-faq-trigger{padding:14px 11px;gap:9px}.ct-faq-answer{padding-left:46px;padding-right:13px;font-size:13px}.ct-cta-section .ct-h2{text-align:left}.ct-cta-content{text-align:left}.ct-cta-content .ct-subtitle{text-align:left;margin:0}.ct-cta-btns{display:grid;grid-template-columns:minmax(0,1fr);width:min(100%,330px);margin-top:22px}
+}
+@media(max-width:420px){.ct-hero{height:clamp(570px,80svh,690px);min-height:570px}.ct-hero-content{width:calc(100% - 30px);padding-top:48px}.ct-hero-h1{font-size:clamp(38px,10.2vw,46px);letter-spacing:-.04em}.ct-hero-kicker{font-size:8px;letter-spacing:.075em}.ct-section{padding:48px 14px}.ct-form-card{padding:19px 13px;border-radius:20px}.ct-form-intro h3{font-size:23px}.ct-form-intro-icon{display:none}.ct-step-tabs{gap:4px;padding:6px}.ct-step-tab{gap:5px;padding:4px 3px}.ct-step-tab-dot{width:27px;height:27px;flex-basis:27px}.ct-step-tab-num{display:none}.ct-step-tab-name{font-size:10.5px}.ct-form-nav{gap:8px}.ct-nav-back,.ct-nav-next{font-size:12px;padding:11px 8px}.ct-success-h{font-size:25px}.ct-success-email strong{font-size:12px}.ct-faq-toggle__sub{display:none}}
+@media(prefers-reduced-motion:reduce){.ct-form-bubble,.ct-hero-fog__layer,.ct-hero-orb{animation:none!important}.ct-contact-card,.ct-social-link,.ct-channel-card,.ct-submit,.ct-btn,.ct-step-tab,.ct-nav-back,.ct-nav-next{transition:none!important}}
 
 `;
 
