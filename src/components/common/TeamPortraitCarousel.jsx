@@ -44,10 +44,12 @@ export default function TeamPortraitCarousel() {
     return () => { controller.abort(); if (openingTimer.current) window.clearTimeout(openingTimer.current); };
   }, []);
 
-  const repeated = useMemo(() => members.length > 1 ? [...members, ...members, ...members] : members, [members]);
+  // Only use a looping marquee for genuinely large teams. Six or fewer portraits stay unique and static.
+  const shouldMarquee = members.length > 6;
+  const repeated = useMemo(() => shouldMarquee ? [...members, ...members, ...members] : members, [members, shouldMarquee]);
   useEffect(() => {
     const track = trackRef.current;
-    if (!track || members.length < 2) return undefined;
+    if (!track || !shouldMarquee) return undefined;
     let frame;
     let last = 0;
     let paused = false;
@@ -78,7 +80,7 @@ export default function TeamPortraitCarousel() {
       track.removeEventListener('focusin', pause);
       track.removeEventListener('focusout', resume);
     };
-  }, [members]);
+  }, [members, shouldMarquee]);
 
   if (!loading && members.length === 0) return null;
 
@@ -93,8 +95,10 @@ export default function TeamPortraitCarousel() {
         .about-team-strip-link{display:inline-flex;align-items:center;gap:5px;color:#047857;font-size:11px;font-weight:700;text-decoration:none;margin-top:7px}
         .about-team-strip-link:hover{color:#022c22}
         .about-team-strip-viewport{min-width:0;flex:1;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
+        .about-team-strip-viewport.is-static{overflow:visible;mask-image:none;-webkit-mask-image:none}
         .about-team-strip-track{display:flex;align-items:flex-start;gap:clamp(12px,2vw,22px);width:max-content;overflow-x:auto;scrollbar-width:none;padding:5px 8px 8px;overscroll-behavior-x:contain;touch-action:pan-x}
         .about-team-strip-track::-webkit-scrollbar{display:none}
+        .about-team-strip-track.is-static{width:100%;overflow:visible;flex-wrap:wrap;justify-content:flex-start;scrollbar-width:none;touch-action:auto}
         .about-team-person{display:flex;flex:0 0 auto;width:clamp(58px,6vw,76px);flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:#064e3b;outline-offset:4px}
         .about-team-portrait-shell{position:relative;isolation:isolate;overflow:hidden;width:clamp(58px,6vw,76px);height:clamp(58px,6vw,76px);padding:0;border-radius:50%;background:transparent;box-shadow:0 3px 12px #065f461c;transition:transform .28s cubic-bezier(.2,.8,.25,1.25),box-shadow .25s ease;flex:0 0 auto;box-sizing:border-box}
         .about-team-portrait-shell::before{content:'';position:absolute;z-index:3;inset:0;border-radius:50%;padding:3px;box-sizing:border-box;background:conic-gradient(from 0deg,#00e5a0 0deg,#b5ffdf 48deg,#10b981 92deg,#087f58 145deg,#73f6c3 205deg,#fff 246deg,#16c784 300deg,#00e5a0 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:aboutTeamBorderSpin 3.2s linear infinite;pointer-events:none;filter:drop-shadow(0 0 3px rgba(16,185,129,.2))}
@@ -118,11 +122,11 @@ export default function TeamPortraitCarousel() {
           </div>
           <a className="about-team-strip-link" href="/team" onClick={(event) => { event.preventDefault(); navigate('/team'); }}>View all <FiArrowRight size={13}/></a>
         </div>
-        <div className="about-team-strip-viewport">
-          <div className="about-team-strip-track" ref={trackRef} aria-label="Team members, select a portrait to view the full team">
+        <div className={shouldMarquee ? "about-team-strip-viewport" : "about-team-strip-viewport is-static"}>
+          <div className={shouldMarquee ? "about-team-strip-track" : "about-team-strip-track is-static"} ref={trackRef} aria-label="Team members, select a portrait to view the full team">
             {loading && Array.from({length:6},(_,i)=><div key={i} className="about-team-skeleton" aria-hidden="true"/>)}
             {repeated.map((member,index)=>(
-              <a className={openingMember === member.id ? "about-team-person is-opening" : "about-team-person"} href="/team" key={String(member.id) + "-" + index} aria-label={"Meet " + member.name + ", " + member.role + ". Open team page"} onClick={(event)=>{event.preventDefault();if(openingMember!==null)return;setOpeningMember(member.id);openingTimer.current=window.setTimeout(()=>navigate('/team'),320);}}>
+              <a className={openingMember === member.id ? "about-team-person is-opening" : "about-team-person"} href={"/team?member=" + encodeURIComponent(String(member.id)) + "&memberName=" + encodeURIComponent(member.name)} key={String(member.id) + "-" + index} aria-label={"Meet " + member.name + ", " + member.role + ". Open team page"} onClick={(event)=>{event.preventDefault();if(openingMember!==null)return;setOpeningMember(member.id);const destination="/team?member="+encodeURIComponent(String(member.id))+"&memberName="+encodeURIComponent(member.name);openingTimer.current=window.setTimeout(()=>navigate(destination),320);}}>
                 <span className="about-team-portrait-shell"><span className="about-team-portrait">
                   {member.image ? <img src={member.image} alt={member.name} loading="lazy" onError={(event)=>{event.currentTarget.style.display='none';}}/> : member.name.trim().split(/\\s+/).slice(0,2).map((part)=>part[0]).join('').toUpperCase()}
                 </span></span>
