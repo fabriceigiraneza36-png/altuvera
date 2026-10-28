@@ -27,6 +27,48 @@ import { useGallery } from '../hooks/useGallery';
 const ABOUT_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
 
+
+  /* Compact, coordinated dark-green finish for the lower About-page sections. */
+  .about-root .about-bottom-values {
+    padding: clamp(30px,4vw,48px) clamp(16px,3vw,32px) !important;
+    background: linear-gradient(135deg,#052e16 0%,#064e3b 58%,#065f46 100%) !important;
+  }
+  .about-root .about-bottom-values h3 { margin-bottom: 10px !important; }
+  .about-root .about-bottom-values p { margin-bottom: 0; }
+  .about-root .about-cta-section { padding-top: clamp(30px,4vw,50px) !important; padding-bottom: clamp(30px,4vw,50px) !important; }
+  .about-root .about-cta-section .about-contact-grid {
+    margin-top: 14px !important; gap: 10px !important;
+    grid-template-columns: repeat(auto-fit,minmax(min(100%,220px),1fr));
+  }
+  .about-root .about-cta-section .about-contact-card {
+    padding: 12px 14px !important; gap: 10px !important; min-width: 0;
+    background: rgba(255,255,255,0.065) !important;
+    border: 1px solid rgba(167,243,208,0.22) !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.12) !important;
+    color: #ecfdf5 !important; backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px); border-radius: 14px !important;
+  }
+  .about-root .about-cta-section .about-contact-card:hover {
+    background: rgba(167,243,208,0.12) !important;
+    border-color: rgba(167,243,208,0.48) !important; transform: translateY(-2px);
+  }
+  .about-root .about-cta-section .about-contact-icon {
+    width: 36px !important; height: 36px !important; border-radius: 10px !important;
+    background: rgba(167,243,208,0.12) !important; color: #a7f3d0 !important;
+  }
+  .about-root .about-cta-section .about-contact-label { color: #a7f3d0 !important; font-size: 10px; }
+  .about-root .about-cta-section .about-contact-val {
+    color: #f0fdf4 !important; font-size: clamp(12px,1vw,13.5px) !important; overflow-wrap: anywhere;
+  }
+  .about-root .about-cta-section .about-contact-grid + div { margin-top: 18px !important; gap: 10px !important; }
+  @media (max-width:640px) {
+    .about-root .about-bottom-values { padding: 26px 14px !important; }
+    .about-root .about-cta-section { padding: 28px 14px !important; }
+    .about-root .about-cta-section .about-contact-grid { grid-template-columns: 1fr; gap: 8px !important; }
+    .about-root .about-cta-section .about-contact-card { padding: 10px 12px !important; }
+    .about-root .about-cta-section .about-contact-grid + div { margin-top: 15px !important; }
+  }
+
   .about-root {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -1090,7 +1132,7 @@ const About = () => {
       {/* ══════════════════════════════════════════
           MISSION & VISION
       ══════════════════════════════════════════ */}
-      <section className="about-section" style={{ background: '#fff' }}>
+      <section className="about-section about-bottom-values" style={{ background: 'linear-gradient(135deg,#052e16 0%,#064e3b 58%,#065f46 100%)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{
             display: 'grid',
@@ -1099,13 +1141,14 @@ const About = () => {
           }}>
             <FadeInSection>
               <div style={{
-                background: 'linear-gradient(135deg,#059669,#047857)',
-                borderRadius: 24, padding: 'clamp(30px,4vw,42px)',
-                height: '100%', color: 'white',
+                background: 'rgba(255,255,255,0.065)',
+                borderRadius: 22, padding: 'clamp(22px,3vw,32px)',
+                height: '100%', color: 'white', border: '1px solid rgba(167,243,208,0.22)',
+                boxShadow: '0 12px 30px rgba(0,0,0,0.12)', backdropFilter: 'blur(8px)',
               }}>
                 <div style={{
-                  width: 56, height: 56,
-                  background: 'rgba(255,255,255,0.15)', borderRadius: 14,
+                  width: 48, height: 48,
+                  background: 'rgba(167,243,208,0.14)', borderRadius: 13,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   marginBottom: 24,
                 }}>
@@ -1127,12 +1170,12 @@ const About = () => {
 
             <FadeInSection delay={0.15}>
               <div style={{
-                background: 'white', borderRadius: 24, padding: 'clamp(30px,4vw,42px)',
-                height: '100%', border: '1px solid rgba(5,150,105,0.15)',
-                boxShadow: '0 12px 32px rgba(5,150,105,0.08)',
+                background: 'rgba(255,255,255,0.065)', borderRadius: 22, padding: 'clamp(22px,3vw,32px)',
+                height: '100%', color: 'white', border: '1px solid rgba(167,243,208,0.22)',
+                boxShadow: '0 12px 30px rgba(0,0,0,0.12)', backdropFilter: 'blur(8px)',
               }}>
                 <div style={{
-                  width: 56, height: 56, background: '#ECFDF5', borderRadius: 14,
+                  width: 48, height: 48, background: 'rgba(167,243,208,0.14)', borderRadius: 13,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   marginBottom: 24,
                 }}>
@@ -1140,12 +1183,12 @@ const About = () => {
                 </div>
                 <h3 style={{
                   fontSize: 'clamp(22px,2.8vw,28px)', fontWeight: 700, marginBottom: 16,
-                  color: '#064e3b', fontFamily: "'Playfair Display',serif",
+                  color: '#ecfdf5', fontFamily: "'Playfair Display',serif",
                 }}>
                   Our Vision
                 </h3>
                 <p style={{
-                  fontSize: 'clamp(15px,1.2vw,16.5px)', lineHeight: 1.8, color: '#374151',
+                  fontSize: 'clamp(14px,1.05vw,15.5px)', lineHeight: 1.75, color: 'rgba(236,253,245,0.86)',
                 }}>
                   A world where travel is a force for conservation, cultural preservation, and human transformation — where every journey leaves both traveler and destination better than before.
                 </p>
@@ -1161,9 +1204,9 @@ const About = () => {
       {/* ══════════════════════════════════════════
           CONTACT + CTA
       ══════════════════════════════════════════ */}
-      <section style={{
-        padding: 'clamp(56px,7vw,88px) clamp(16px,3vw,32px)',
-        background: 'linear-gradient(135deg,#065f46,#064e3b)',
+      <section className="about-cta-section" style={{
+        padding: 'clamp(30px,4vw,50px) clamp(16px,3vw,28px)',
+        background: 'linear-gradient(135deg,#047857 0%,#064e3b 60%,#052e16 100%)',
         position: 'relative', overflow: 'hidden',
       }}>
         <div style={{
@@ -1172,20 +1215,20 @@ const About = () => {
         }} />
 
         <div style={{
-          maxWidth: 1000, margin: '0 auto',
+          maxWidth: 920, margin: '0 auto',
           textAlign: 'center', position: 'relative', zIndex: 1,
         }}>
           <FadeInSection>
             <h2 style={{
-              fontSize: 'clamp(28px,4.5vw,42px)', fontWeight: 800, lineHeight: 1.15,
-              color: 'white', fontFamily: "'Playfair Display',serif", marginBottom: 18,
+              fontSize: 'clamp(24px,3.4vw,34px)', fontWeight: 800, lineHeight: 1.18,
+              color: 'white', fontFamily: "'Playfair Display',serif", marginBottom: 10,
             }}>
               Let's craft your African journey
             </h2>
             <p style={{
-              fontSize: 'clamp(15px,1.3vw,17px)', lineHeight: 1.8,
-              color: 'rgba(255,255,255,0.88)',
-              maxWidth: 640, margin: '0 auto 36px',
+              fontSize: 'clamp(13.5px,1.05vw,15px)', lineHeight: 1.7,
+              color: 'rgba(255,255,255,0.84)',
+              maxWidth: 600, margin: '0 auto 18px',
             }}>
               Reach us directly, or start planning your itinerary — we respond within 24 hours.
             </p>
@@ -1218,19 +1261,19 @@ const About = () => {
 
             <div style={{
               display: 'flex', gap: 14, justifyContent: 'center',
-              flexWrap: 'wrap', marginTop: 40,
+              flexWrap: 'wrap', marginTop: 20,
             }}>
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                <Button to="/booking" variant="secondary" size="large"
-                  style={{ background: 'white', color: '#065f46', border: 'none', fontWeight: 700 }}>
+                <Button to="/booking" variant="secondary" size="medium"
+                  style={{ background: 'linear-gradient(135deg,#a7f3d0,#6ee7b7)', color: '#064e3b', border: '1px solid rgba(167,243,208,0.55)', fontWeight: 700 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    Start Planning My Journey <ArrowRight size={18} />
+                    Start Planning My Journey <ArrowRight size={15} />
                   </span>
                 </Button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                <Button to="/contact" variant="outline" size="large"
-                  style={{ background: 'transparent', color: 'white', border: '2px solid rgba(255,255,255,0.5)' }}>
+                <Button to="/contact" variant="outline" size="medium"
+                  style={{ background: 'rgba(255,255,255,0.035)', color: 'white', border: '1px solid rgba(167,243,208,0.5)' }}>
                   Schedule a Consultation
                 </Button>
               </motion.div>
