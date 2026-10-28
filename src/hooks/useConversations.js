@@ -101,7 +101,7 @@ const normConv = (c) => ({
   recycleDeadline: c.recycle_deadline ?? c.recycleDeadline ?? null,
   channel:         c.channel || null,
   metadata:        c.metadata || {},
-  conversationType: c.conversation_type || c.conversationType || (c.group_id ? "group" : "direct"),
+  conversationType: c.conversation_type || c.conversationType || ((c.group_id ?? c.groupId) ? "group" : "direct"),
   status:         c.status          || "open",
   priority:       c.priority        || "normal",
   bookingNumber:  c.booking_number  || c.bookingNumber,
