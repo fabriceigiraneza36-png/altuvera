@@ -738,23 +738,30 @@ const CSS = `
   .dv-slider__item:not(.dv-slider__item--active) { opacity: .72; transform: scale(.96); }
   .dv-slider__item--active { opacity: 1; transform: scale(1); } 
 }
+.dv-slider__controls {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; width: 100%; margin: 14px 0 20px;
+}
 .dv-arrow {
-  width: 46px; height: 46px; border-radius: 50%;
-  border: 1.5px solid var(--dv-border);
-  background: var(--dv-surface);
-  display: grid; place-items: center;
-  color: var(--dv-text); cursor: pointer;
-  transition: all 0.3s var(--dv-ease);
+  min-width: 124px; height: 46px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid #d8e8df; background: linear-gradient(180deg,#fff 0%,#f7fcf9 100%);
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  color: #14532d; cursor: pointer; font: 700 12px/1 'Plus Jakarta Sans',system-ui,sans-serif;
+  box-shadow: 0 5px 18px rgba(15,23,42,.07),inset 0 1px 0 rgba(255,255,255,.9);
+  transition: background .25s ease,color .25s ease,border-color .25s ease,box-shadow .25s ease,transform .25s ease;
 }
 .dv-arrow:hover:not(:disabled) {
-  background: var(--dv-green); color: #fff;
-  border-color: var(--dv-green);
-  box-shadow: 0 6px 20px rgba(5,150,105,0.3);
-  transform: scale(1.08);
+  background: linear-gradient(135deg,#059669,#047857); color: #fff;
+  border-color: #059669; box-shadow: 0 8px 22px rgba(5,150,105,.24); transform: translateY(-2px);
 }
-.dv-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
-.dv-slider__controls {
-  display: flex; gap: 10px; flex-shrink: 0;
+.dv-arrow:active:not(:disabled) { transform: translateY(0) scale(.98); }
+.dv-arrow:focus-visible { outline: 3px solid rgba(16,185,129,.35); outline-offset: 3px; }
+.dv-arrow:disabled { opacity: .32; cursor: not-allowed; box-shadow: none; }
+.dv-arrow--previous { margin-right: auto; }
+.dv-arrow--next { margin-left: auto; }
+@media(max-width:480px) {
+  .dv-slider__controls { gap: 12px; margin: 10px 0 16px; }
+  .dv-arrow { min-width: 0; height: 42px; padding: 0 13px; gap: 6px; font-size: 11px; }
 }
 .dv-slider__dots {
   display: flex; justify-content: center;
@@ -1393,26 +1400,18 @@ function PopularSlideshow() {
                 destinations have captured hearts and created lifelong memories.
               </p>
             </div>
-            <div className="dv-slider__controls">
-              <button
-                className="dv-arrow"
-                onClick={() => goToIndex(idx - 1)}
-                disabled={idx === 0}
-                aria-label="Previous"
-              >
-                <FiChevronLeft size={20} />
-              </button>
-              <button
-                className="dv-arrow"
-                onClick={() => goToIndex(idx + 1)}
-                disabled={idx >= maxIdx}
-                aria-label="Next"
-              >
-                <FiChevronRight size={20} />
-              </button>
-            </div>
+
           </div>
         </AnimatedSection>
+
+        <div className="dv-slider__controls" role="group" aria-label="Popular destination navigation">
+          <button type="button" className="dv-arrow dv-arrow--previous" onClick={() => goToIndex(idx - 1)} disabled={idx === 0} aria-label="Previous destinations">
+            <FiChevronLeft size={19} aria-hidden="true" /><span>Previous</span>
+          </button>
+          <button type="button" className="dv-arrow dv-arrow--next" onClick={() => goToIndex(idx + 1)} disabled={idx >= maxIdx} aria-label="Next destinations">
+            <span>Next</span><FiChevronRight size={19} aria-hidden="true" />
+          </button>
+        </div>
 
         <div ref={viewportRef} onScroll={handleSwipeScroll} className="dv-slider__viewport">
           <div

@@ -1,6 +1,7 @@
 // src/components/destinations/DestinationCard.jsx
 import { useState, useEffect, useCallback, memo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
   FiMapPin,
   FiClock,
@@ -18,6 +19,13 @@ import {
   FiCompass,
   FiSun,
   FiCamera,
+  FiMail,
+  FiMessageCircle,
+  FiSend,
+  FiCopy,
+  FiX,
+  FiCheck,
+  FiLink,
 } from "react-icons/fi";
 import { useWishlist } from "../../hooks/useWishlist";
 import { API_URL, apiFetch } from "../../utils/apiBase";
@@ -679,6 +687,66 @@ const CSS = `
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Responsive destination-share sheet */
+@keyframes dc-share-fade-in { from { opacity:0; } to { opacity:1; } }
+@keyframes dc-share-panel-in { from { opacity:0; transform:translateY(12px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+.dc-share-overlay { position:fixed; inset:0; z-index:10050; box-sizing:border-box; display:grid; place-items:center; padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom)); background:rgba(3,20,13,.64); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); animation:dc-share-fade-in .18s ease both; font-family:'Inter',system-ui,sans-serif; }
+.dc-share-dialog { box-sizing:border-box; width:min(100%,620px); max-height:min(90dvh,780px); overflow-y:auto; overscroll-behavior:contain; padding:clamp(18px,3.8vw,28px); border-radius:26px; border:1px solid rgba(255,255,255,.8); background:linear-gradient(155deg,#fff 0%,#f8fffb 68%,#f1fbf5 100%); color:#102a20; box-shadow:0 30px 100px rgba(0,0,0,.34),inset 0 1px 0 #fff; animation:dc-share-panel-in .25s cubic-bezier(.22,1,.36,1) both; }
+.dc-share-grabber { display:none; }
+.dc-share-header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; }
+.dc-share-header-copy { min-width:0; }
+.dc-share-eyebrow { display:flex; align-items:center; gap:6px; color:#047857; font-size:10px; line-height:1.2; font-weight:800; letter-spacing:.14em; }
+.dc-share-header h2 { margin:7px 0 5px; color:#103b2b; font-family:'Playfair Display',Georgia,serif; font-size:clamp(22px,4vw,29px); line-height:1.18; letter-spacing:-.025em; }
+.dc-share-header p { margin:0; color:#718176; font-size:12.5px; line-height:1.5; }
+.dc-share-close { display:grid; place-items:center; flex:0 0 40px; width:40px; height:40px; border:1px solid #e0eee6; border-radius:14px; color:#355748; background:#fff; cursor:pointer; box-shadow:0 3px 10px rgba(15,23,42,.05); transition:background .2s,transform .2s,border-color .2s; }
+.dc-share-close:hover { background:#ecfdf5; border-color:#a7f3d0; transform:rotate(4deg); }
+.dc-share-preview { display:flex; align-items:center; gap:14px; min-width:0; padding:11px; margin-bottom:21px; border:1px solid #dfeee5; border-radius:18px; background:linear-gradient(110deg,#f2fcf6,#fff); box-shadow:0 5px 18px rgba(6,78,59,.045); }
+.dc-share-preview-image,.dc-share-preview-placeholder { width:82px; height:82px; flex:0 0 82px; border-radius:13px; object-fit:cover; background:linear-gradient(145deg,#064e3b,#10b981); }
+.dc-share-preview-placeholder { display:grid; place-items:center; color:#d1fae5; }
+.dc-share-preview-copy { min-width:0; }
+.dc-share-preview-copy>span { display:block; margin-bottom:4px; color:#059669; font-size:8.5px; font-weight:850; letter-spacing:.13em; }
+.dc-share-preview-copy strong { display:block; overflow:hidden; color:#163c2d; font-size:15px; line-height:1.3; text-overflow:ellipsis; white-space:nowrap; }
+.dc-share-preview-copy small { display:flex; align-items:center; gap:4px; margin-top:4px; color:#64756b; font-size:10.5px; line-height:1.35; overflow-wrap:anywhere; }
+.dc-share-preview-copy p { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin:5px 0 0; color:#748177; font-size:10.5px; line-height:1.45; }
+.dc-share-section-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin:0 2px 11px; }
+.dc-share-section-head strong { color:#173d2d; font-size:13px; font-weight:800; }
+.dc-share-section-head span { color:#94a3a0; font-size:10px; font-weight:600; }
+.dc-share-app-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.dc-share-app { min-width:0; min-height:96px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:11px 5px; border:1px solid #e4eee8; border-radius:15px; background:rgba(255,255,255,.88); color:#385447; text-align:center; text-decoration:none; font-family:inherit; font-size:10.5px; font-weight:750; cursor:pointer; transition:transform .2s,border-color .2s,background .2s,box-shadow .2s; }
+.dc-share-app:hover,.dc-share-app:focus-visible { transform:translateY(-2px); border-color:#a7f3d0; background:#fff; box-shadow:0 7px 18px rgba(6,78,59,.09); outline:none; }
+.dc-share-app:active { transform:scale(.97); }
+.dc-share-app-icon { width:43px; height:43px; display:grid; place-items:center; border-radius:14px; color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 4px 10px rgba(15,23,42,.1); }
+.dc-share-app-icon b { font-family:Arial,sans-serif; font-size:27px; font-weight:800; line-height:1; }
+.dc-share-app-icon--whatsapp { background:#25d366; } .dc-share-app-icon--facebook { background:#1877f2; } .dc-share-app-icon--telegram { background:linear-gradient(135deg,#31a8e0,#1686c7); } .dc-share-app-icon--x { background:#111827; } .dc-share-app-icon--linkedin { background:#0a66c2; } .dc-share-app-icon--email { background:linear-gradient(135deg,#f97316,#ea580c); } .dc-share-app-icon--sms { background:linear-gradient(135deg,#64748b,#334155); } .dc-share-app-icon--copy { background:linear-gradient(135deg,#10b981,#047857); } .dc-share-app-icon--copy.is-copied { background:#047857; }
+.dc-share-link-box { display:flex; align-items:center; gap:10px; min-width:0; margin-top:17px; padding:10px 11px; border:1px solid #dbece2; border-radius:15px; background:rgba(240,253,244,.72); }
+.dc-share-link-icon { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border-radius:11px; color:#047857; background:#d9fbe8; }
+.dc-share-link-value { min-width:0; flex:1; }
+.dc-share-link-value small { display:block; margin-bottom:3px; color:#64756b; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+.dc-share-link-value span { display:block; overflow:hidden; color:#2f5a46; font-size:10.5px; text-overflow:ellipsis; white-space:nowrap; }
+.dc-share-copy-btn { display:flex; align-items:center; justify-content:center; gap:5px; flex:0 0 auto; min-height:36px; padding:0 10px; border:1px solid #b6e6ca; border-radius:10px; color:#047857; background:#fff; font:800 10px/1 'Inter',sans-serif; cursor:pointer; transition:background .2s,color .2s; }
+.dc-share-copy-btn:hover { background:#047857; color:#fff; }
+.dc-share-native { display:flex; align-items:center; gap:12px; width:100%; min-height:62px; margin-top:12px; padding:10px 14px; border:0; border-radius:15px; color:#fff; background:linear-gradient(110deg,#064e3b,#047857); box-shadow:0 7px 20px rgba(6,78,59,.18); text-align:left; cursor:pointer; transition:transform .2s,box-shadow .2s; }
+.dc-share-native:hover { transform:translateY(-1px); box-shadow:0 10px 24px rgba(6,78,59,.24); }
+.dc-share-native>svg:first-child { flex:0 0 22px; } .dc-share-native>span { display:flex; flex:1; min-width:0; flex-direction:column; gap:4px; } .dc-share-native strong { font-size:12px; font-weight:800; } .dc-share-native small { color:rgba(255,255,255,.72); font-size:10px; font-weight:500; } .dc-share-native-arrow { opacity:.75; }
+.dc-share-feedback { margin:12px 0 0; padding:9px 11px; border:1px solid #bbf7d0; border-radius:11px; color:#166534; background:#f0fdf4; font-size:11px; line-height:1.45; }
+.dc-share-footnote { margin:12px 0 0; color:#9aa8a0; font-size:9.5px; text-align:center; line-height:1.4; }
+@media(max-width:520px) {
+ .dc-share-overlay { align-items:end; padding:0; padding-top:env(safe-area-inset-top); padding-bottom:0; }
+ .dc-share-dialog { width:100%; max-height:calc(91dvh - env(safe-area-inset-top)); padding:19px 16px max(18px,env(safe-area-inset-bottom)); border-radius:24px 24px 0 0; border-bottom:0; animation:dc-share-panel-in .24s cubic-bezier(.22,1,.36,1) both; }
+ .dc-share-grabber { display:block; width:38px; height:4px; margin:-7px auto 17px; border-radius:99px; background:#cbded2; }
+ .dc-share-header { margin-bottom:14px; } .dc-share-close { flex-basis:36px; width:36px; height:36px; border-radius:12px; }
+ .dc-share-preview { gap:11px; padding:9px; margin-bottom:17px; border-radius:15px; }
+ .dc-share-preview-image,.dc-share-preview-placeholder { width:70px; height:70px; flex-basis:70px; border-radius:11px; }
+ .dc-share-preview-copy strong { font-size:13.5px; } .dc-share-preview-copy p { font-size:10px; }
+ .dc-share-app-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
+ .dc-share-app { min-height:82px; gap:7px; padding:8px 2px; border-radius:12px; font-size:9.5px; }
+ .dc-share-app-icon { width:37px; height:37px; border-radius:12px; } .dc-share-app-icon b { font-size:24px; }
+ .dc-share-link-box { gap:7px; padding:8px; } .dc-share-link-icon { flex-basis:30px; width:30px; height:30px; } .dc-share-copy-btn { min-height:34px; padding:0 8px; }
+}
+@media(max-width:350px) { .dc-share-dialog { padding-inline:11px; } .dc-share-app-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } .dc-share-preview-image,.dc-share-preview-placeholder { width:62px; height:62px; flex-basis:62px; } .dc-share-header h2 { font-size:21px; } }
+@media(prefers-reduced-motion:reduce) { .dc-share-overlay,.dc-share-dialog { animation:none!important; } .dc-share-close,.dc-share-app,.dc-share-copy-btn,.dc-share-native { transition:none!important; } }
+
 `;
 
 /* ─────────────────────────────────────────────────────────────
@@ -989,11 +1057,29 @@ const DestinationCard = memo(function DestinationCard({
 
   const [heartAnim, setHeartAnim] = useState(false);
   const [copied,    setCopied]    = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState("");
+  const shareFeedbackTimer = useRef(null);
   const [showFavouriteIcon, setShowFavouriteIcon] = useState(false);
   const favouriteToastTimer = useRef(null);
   useEffect(() => () => {
     if (favouriteToastTimer.current) window.clearTimeout(favouriteToastTimer.current);
+    if (shareFeedbackTimer.current) window.clearTimeout(shareFeedbackTimer.current);
   }, []);
+
+  useEffect(() => {
+    if (!shareModalOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setShareModalOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [shareModalOpen]);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
   const likeId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
   const ratingIdValue = destination?.numericId || destination?.id || destination?._id;
@@ -1300,28 +1386,71 @@ const blurb =
     [destId, isLiked, toggleWishlist, onWishlistToggle],
   );
 
-  /* ── FIX: handleShare is now clean with no duplicate code inside ── */
-  const handleShare = useCallback(
-    async (e) => {
-      e.stopPropagation();
-      const url = `${window.location.origin}/destinations/${destId}`;
-      try {
-        if (navigator.share) {
-          await navigator.share({ title: name, url });
-        } else {
-          await navigator.clipboard.writeText(url);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2200);
-        }
-      } catch {
-        /* user cancelled or API unavailable */
+  const shareUrl = typeof window !== "undefined"
+    ? new URL(`/destinations/${encodeURIComponent(String(destId || ""))}`, window.location.origin).toString()
+    : "";
+  const shareTitle = `Discover ${name} with Altuvera Safaris`;
+  const shareMessage = `${name}${locationStr ? ` — ${locationStr}` : ""}\n${blurb || "Discover this East African experience with Altuvera Safaris."}`;
+
+  const showShareFeedback = useCallback((message) => {
+    setShareFeedback(message);
+    if (shareFeedbackTimer.current) window.clearTimeout(shareFeedbackTimer.current);
+    shareFeedbackTimer.current = window.setTimeout(() => setShareFeedback(""), 4500);
+  }, []);
+
+  const handleShare = useCallback((event) => {
+    event.stopPropagation();
+    setShareFeedback("");
+    setShareModalOpen(true);
+  }, []);
+
+  const handleCopyShareLink = useCallback(async (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const field = document.createElement("textarea");
+        field.value = shareUrl;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        field.style.pointerEvents = "none";
+        document.body.appendChild(field);
+        field.select();
+        const copiedToClipboard = document.execCommand("copy");
+        field.remove();
+        if (!copiedToClipboard) throw new Error("Clipboard access unavailable");
       }
-    },
-    [destId, name],
-  );
+      setCopied(true);
+      showShareFeedback("Link copied — it’s ready to paste anywhere.");
+      if (shareFeedbackTimer.current) window.clearTimeout(shareFeedbackTimer.current);
+      shareFeedbackTimer.current = window.setTimeout(() => setCopied(false), 2400);
+    } catch {
+      showShareFeedback("Copying was blocked by your browser. You can still select the link above and copy it.");
+    }
+  }, [shareUrl, showShareFeedback]);
+
+  const handleNativeShare = useCallback(async (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
+      showShareFeedback("Your browser does not offer a system share sheet. Choose an app above or copy the link.");
+      return;
+    }
+    try {
+      await navigator.share({ title: shareTitle, text: shareMessage, url: shareUrl });
+      setShareModalOpen(false);
+      setShareFeedback("");
+    } catch (error) {
+      if (error?.name !== "AbortError") showShareFeedback("The system share sheet could not be opened. Please choose an app above.");
+    }
+  }, [shareTitle, shareMessage, shareUrl, showShareFeedback]);
 
   /* ── render ── */
   return (
+    <>
     <article className={`dc-card${compact ? " dc-card--compact" : ""}`}>
 
       {/* ════ IMAGE SECTION ════ */}
@@ -1391,8 +1520,11 @@ const blurb =
 
             <div style={{ position: "relative" }}>
               <button
+                type="button"
                 onClick={handleShare}
-                aria-label="Share this destination"
+                aria-label={`Share ${name}`}
+                aria-haspopup="dialog"
+                aria-expanded={shareModalOpen}
                 className={[
                   "dc-action-btn",
                   copied ? "dc-action-btn--copied" : "",
@@ -1578,6 +1710,72 @@ const blurb =
         </div>
       )}
     </article>
+    {shareModalOpen && typeof document !== "undefined" && createPortal(
+      <div className="dc-share-overlay" role="presentation" onClick={(event) => { event.stopPropagation(); setShareModalOpen(false); }}>
+        <section className="dc-share-dialog" role="dialog" aria-modal="true" aria-labelledby={`dc-share-title-${destId || "destination"}`} onClick={(event) => event.stopPropagation()}>
+          <div className="dc-share-grabber" aria-hidden="true" />
+          <header className="dc-share-header">
+            <div className="dc-share-header-copy">
+              <span className="dc-share-eyebrow"><FiShare2 size={12} /> SHARE THE JOURNEY</span>
+              <h2 id={`dc-share-title-${destId || "destination"}`}>Share this destination</h2>
+              <p>Send a little East African inspiration to someone.</p>
+            </div>
+            <button type="button" className="dc-share-close" onClick={() => setShareModalOpen(false)} aria-label="Close share options"><FiX size={19} /></button>
+          </header>
+          <div className="dc-share-preview">
+            {cardImages[0] ? <img src={cardImages[0]} alt="" className="dc-share-preview-image" /> : <div className="dc-share-preview-placeholder"><FiCompass size={25} /></div>}
+            <div className="dc-share-preview-copy">
+              <span>ALTUVERA SAFARIS</span><strong>{name}</strong>
+              {locationStr && <small><FiMapPin size={12} /> {locationStr}</small>}
+              <p>{blurb || "A destination worth discovering, curated by Altuvera Safaris."}</p>
+            </div>
+          </div>
+          <div className="dc-share-section-head"><strong>Share using</strong><span>Choose an app</span></div>
+          <div className="dc-share-app-grid">
+            <a className="dc-share-app" href={`https://wa.me/?text=${encodeURIComponent(`${shareMessage}\n${shareUrl}`)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+              <span className="dc-share-app-icon dc-share-app-icon--whatsapp"><FiMessageCircle size={23} /></span><span>WhatsApp</span>
+            </a>
+            <a className="dc-share-app" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+              <span className="dc-share-app-icon dc-share-app-icon--facebook"><b>f</b></span><span>Facebook</span>
+            </a>
+            <a className="dc-share-app" href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareMessage)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+              <span className="dc-share-app-icon dc-share-app-icon--telegram"><FiSend size={22} /></span><span>Telegram</span>
+            </a>
+            <a className="dc-share-app" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+              <span className="dc-share-app-icon dc-share-app-icon--x"><b>𝕏</b></span><span>X</span>
+            </a>
+            <a className="dc-share-app" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+              <span className="dc-share-app-icon dc-share-app-icon--linkedin"><b>in</b></span><span>LinkedIn</span>
+            </a>
+            <a className="dc-share-app" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareMessage}\n\n${shareUrl}`)}`} onClick={() => setShareModalOpen(false)}>
+              <span className="dc-share-app-icon dc-share-app-icon--email"><FiMail size={22} /></span><span>Email</span>
+            </a>
+            <a className="dc-share-app" href={`sms:?body=${encodeURIComponent(`${shareMessage}\n${shareUrl}`)}`} onClick={() => setShareModalOpen(false)}>
+              <span className="dc-share-app-icon dc-share-app-icon--sms"><FiMessageCircle size={22} /></span><span>Messages</span>
+            </a>
+            <button type="button" className="dc-share-app" onClick={handleCopyShareLink}>
+              <span className={`dc-share-app-icon dc-share-app-icon--copy${copied ? " is-copied" : ""}`}>{copied ? <FiCheck size={22} /> : <FiCopy size={21} />}</span><span>{copied ? "Copied" : "Copy link"}</span>
+            </button>
+          </div>
+          <div className="dc-share-link-box">
+            <span className="dc-share-link-icon"><FiLink size={16} /></span>
+            <div className="dc-share-link-value"><small>Destination link</small><span>{shareUrl}</span></div>
+            <button type="button" className="dc-share-copy-btn" onClick={handleCopyShareLink} aria-label="Copy destination link">
+              {copied ? <FiCheck size={17} /> : <FiCopy size={17} />}<span>{copied ? "Copied" : "Copy"}</span>
+            </button>
+          </div>
+          {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+            <button type="button" className="dc-share-native" onClick={handleNativeShare}>
+              <FiShare2 size={18} /><span><strong>More apps & devices</strong><small>Open your device’s share sheet</small></span><FiChevronRight size={18} className="dc-share-native-arrow" />
+            </button>
+          )}
+          {shareFeedback && <p className="dc-share-feedback" role="status" aria-live="polite">{shareFeedback}</p>}
+          <p className="dc-share-footnote">A link to this destination will be included with your share.</p>
+        </section>
+      </div>,
+      document.body
+    )}
+    </>
   );
 });
 
