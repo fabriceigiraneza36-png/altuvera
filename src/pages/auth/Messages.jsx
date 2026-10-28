@@ -869,7 +869,7 @@ const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping, 
 const MsgBubble = React.memo(function MsgBubble({
   message, mine, replyTo, onReact, onReply, now,
   editingId, editText, setEditText, onStartEdit, onSaveEdit, onCancelEdit,
-  onUnsend, onPin, onHighlight,
+  onUnsend, onPin, onHighlight, isGroupConversation = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
@@ -891,6 +891,12 @@ const MsgBubble = React.memo(function MsgBubble({
   const isPending = String(message.id).startsWith("tmp-");
   const isDeleted = Boolean(message.deleted);
   const isEditing = String(editingId) === String(message.id);
+  const normalizedSenderType = String(message.senderType || "").trim().toLowerCase().replace(/[ -]+/g, "_");
+  const isAdminSender = ADMIN_PREVIEW_TYPES.has(normalizedSenderType);
+  const senderDisplayName = getRealPreviewName(message.senderName, message.senderUsername) || (isAdminSender ? "Altuvera Team" : "Group member");
+  const senderAvatarUrl = message.senderAvatar || message.senderAvatarUrl || message.sender_user_avatar || message.avatarUrl || null;
+  const senderInitials = senderDisplayName.trim().split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "GM";
+  const isGroupPeer = isGroupConversation && !mine && !isAdminSender;
   const destinationName = message.metadata?.destinationName || message.metadata?.destination_name || null;
   const relatedResource = message.metadata?.relatedResource || message.metadata?.related_resource || message.metadata?.resource || null;
   const relatedResourceTitle = relatedResource?.title || relatedResource?.name || null;
@@ -1027,10 +1033,27 @@ const MsgBubble = React.memo(function MsgBubble({
       onTouchCancel={() => { clearLongPress(); touchStartX.current = null; swipeOffsetX.current = 0; setSwipeOffset(0); }}
       onDoubleClick={() => { if (!isDeleted && !isPending) onReact(message.id, "❤️"); }}
       title="Swipe horizontally to reply on touch screens">
-      {!mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mr-2 self-end mb-6">A</div>}
+      {!mine && (
+        <div className="relative mr-2 mb-6 flex h-8 w-8 flex-shrink-0 self-end items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-emerald-700 to-emerald-950 text-[10px] font-extrabold text-white shadow-sm ring-1 ring-emerald-900/15">
+          <span aria-hidden="true">{isGroupPeer ? senderInitials : "A"}</span>
+          {isGroupPeer && senderAvatarUrl && (
+            <img
+              src={senderAvatarUrl}
+              alt={`${senderDisplayName} profile picture`}
+              loading="lazy"
+              className="absolute inset-0 h-full w-full rounded-full object-cover"
+              onError={(event) => { event.currentTarget.style.display = "none"; }}
+            />
+          )}
+        </div>
+      )}
 
       <div className={`flex flex-col ${mine ? "items-end" : "items-start"} max-w-[90%] sm:max-w-[72%]`}>
-        {!mine && <span className="text-[10px] font-bold text-emerald-700 mb-1 ml-1 uppercase tracking-wider">Altuvera Team</span>}
+        {!mine && (
+          isGroupPeer
+            ? <span className="mb-1 ml-1 max-w-full truncate text-[11px] font-bold leading-tight text-emerald-800">{senderDisplayName}</span>
+            : <span className="mb-1 ml-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Altuvera Team</span>
+        )}
 
         {replyTo && (
           <div className={`text-[11px] mb-1.5 max-w-full ${mine ? "self-end" : "self-start"}`}>
@@ -1993,6 +2016,8 @@ export default function Messages() {
   const replyMap   = useMemo(() => new Map(messages.map(m=>[String(m.id),m])), [messages]);
   const msgGroups  = useMemo(() => groupMessages(messages), [messages]);
   const replyMsg   = replyToId ? replyMap.get(String(replyToId)) : null;
+  const activeIsGroupConversation = activeConversation?.conversationType === "group" || Boolean(activeConversation?.groupId);
+  const currentUserIdForMessages = getPreviewCurrentUserId();
   const convTitle  = activeConversation?.subject
     || (activeConversation?.bookingNumber ? `Booking #${activeConversation.bookingNumber}` : null)
     || activeConversation?.guestName || "Conversation";
@@ -2321,7 +2346,10 @@ export default function Messages() {
                           <MsgBubble
                             key={item.key}
                             message={item.data}
-                            mine={item.data.senderType !== "admin"}
+                            mine={activeIsGroupConversation
+                              ? currentUserIdForMessages != null && item.data.senderId != null && String(currentUserIdForMessages) === String(item.data.senderId)
+                              : !ADMIN_PREVIEW_TYPES.has(String(item.data.senderType || "").trim().toLowerCase().replace(/[ -]+/g, "_"))}
+                            isGroupConversation={activeIsGroupConversation}
                             replyTo={item.data.replyToId
                               ? replyMap.get(String(item.data.replyToId))
                               : null
