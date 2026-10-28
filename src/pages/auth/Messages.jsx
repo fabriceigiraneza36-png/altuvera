@@ -2348,7 +2348,7 @@ export default function Messages() {
                             message={item.data}
                             mine={activeIsGroupConversation
                               ? currentUserIdForMessages != null && item.data.senderId != null && String(currentUserIdForMessages) === String(item.data.senderId)
-                              : !ADMIN_PREVIEW_TYPES.has(String(item.data.senderType || "").trim().toLowerCase().replace(/[\\s-]+/g, "_"))}
+                              : !ADMIN_PREVIEW_TYPES.has(String(item.data.senderType || "").trim().toLowerCase().replace(/[ -]+/g, "_"))}
                             isGroupConversation={activeIsGroupConversation}
                             replyTo={item.data.replyToId
                               ? replyMap.get(String(item.data.replyToId))
