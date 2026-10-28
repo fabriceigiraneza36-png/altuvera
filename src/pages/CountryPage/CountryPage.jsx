@@ -1228,12 +1228,7 @@ function DestinationsSection({ country, allDests, destsLoading }) {
             <h2 className="cp-title">Destinations in {country.name}</h2>
             <p className="cp-desc">Explore curated destinations across the country, with the same premium card experience used on Explore.</p>
           </div>
-          {allDests.length > 1 && (
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="button" className="cp-btn cp-btn--outline" onClick={() => scrollTo(activeIndex - 1)} aria-label="Previous destination"><FiChevronLeft size={18}/></button>
-              <button type="button" className="cp-btn cp-btn--outline" onClick={() => scrollTo(activeIndex + 1)} aria-label="Next destination"><FiChevronRight size={18}/></button>
-            </div>
-          )}
+
         </div>
 
         {destsLoading ? (
@@ -1245,6 +1240,29 @@ function DestinationsSection({ country, allDests, destsLoading }) {
             <Link to="/destinations" className="cp-btn cp-btn--outline">Browse All Destinations <FiArrowRight size={14}/></Link>
           </div>
         ) : (
+          <div className="cp-destination-carousel-wrap" style={{ position: "relative", minWidth: 0 }}>
+          {allDests.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="cp-dest-arr cp-dest-arr--left"
+                onClick={() => scrollTo(activeIndex - 1)}
+                disabled={activeIndex <= 0}
+                aria-label="Previous destination"
+                title="Previous destination"
+                style={{ position: "absolute", top: "50%", left: "4px", transform: "translateY(-50%)", zIndex: 8, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "1px solid rgba(21,128,61,.12)", cursor: activeIndex <= 0 ? "not-allowed" : "pointer", background: activeIndex <= 0 ? "rgba(255,255,255,.72)" : "rgba(255,255,255,.94)", backdropFilter: "blur(10px)", color: activeIndex <= 0 ? "#9ab9a4" : "#15803d", boxShadow: "0 4px 16px rgba(0,0,0,.12)", opacity: activeIndex <= 0 ? .55 : 1, transition: "all .25s cubic-bezier(.34,1.56,.64,1)" }}
+              ><FiChevronLeft size={21} /></button>
+              <button
+                type="button"
+                className="cp-dest-arr cp-dest-arr--right"
+                onClick={() => scrollTo(activeIndex + 1)}
+                disabled={activeIndex >= allDests.length - 1}
+                aria-label="Next destination"
+                title="Next destination"
+                style={{ position: "absolute", top: "50%", right: "4px", transform: "translateY(-50%)", zIndex: 8, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "1px solid rgba(21,128,61,.12)", cursor: activeIndex >= allDests.length - 1 ? "not-allowed" : "pointer", background: activeIndex >= allDests.length - 1 ? "rgba(255,255,255,.72)" : "rgba(255,255,255,.94)", backdropFilter: "blur(10px)", color: activeIndex >= allDests.length - 1 ? "#9ab9a4" : "#15803d", boxShadow: "0 4px 16px rgba(0,0,0,.12)", opacity: activeIndex >= allDests.length - 1 ? .55 : 1, transition: "all .25s cubic-bezier(.34,1.56,.64,1)" }}
+              ><FiChevronRight size={21} /></button>
+            </>
+          )}
           <div ref={trackRef} onScroll={onScroll} className="cp-destination-story-track" style={{
             display: "flex", gap: 18, overflowX: "auto", overflowY: "visible",
             scrollSnapType: "x mandatory", scrollPaddingInline: "calc(50% - 150px)",
@@ -1267,6 +1285,7 @@ function DestinationsSection({ country, allDests, destsLoading }) {
                 </div>
               );
             })}
+          </div>
           </div>
         )}
 
