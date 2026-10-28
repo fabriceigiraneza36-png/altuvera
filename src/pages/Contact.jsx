@@ -500,7 +500,7 @@ const Contact = () => {
           <motion.h1 className="ct-hero-h1"
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.65 }}>
-            Planning <br /><em>Safaris</em>
+            Connect with <br /><em>Altuvera</em>
           </motion.h1>
           <motion.p className="ct-hero-sub"
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
@@ -512,10 +512,10 @@ const Contact = () => {
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.48, duration: 0.55 }}>
             <a href="/booking" className="ct-btn ct-btn--white">
-              <FiCalendar size={14} /> Plan Your Safari
+              <FiCalendar size={14} /> Start Planning
             </a>
             <a href="tel:+250792352409" className="ct-btn ct-btn--ghost">
-              <FiPhone size={14} /> Call Us Now
+              <FiPhone size={14} /> Talk to Our Team
             </a>
           </motion.div>
 
