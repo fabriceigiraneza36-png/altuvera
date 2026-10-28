@@ -18,9 +18,13 @@ export function useDestinationComments(destinationId, resource = "destination") 
         const list = Array.isArray(data.data?.comments) ? data.data.comments : [];
         setComments(list.map((comment) => ({
           ...comment,
-          user: comment.user || (comment.userId ? {
-            name: comment.fullName || comment.authorName || "Anonymous",
-            avatar: comment.avatarUrl || null,
+          user: comment.user ? {
+            ...comment.user,
+            name: comment.user.name || comment.user.fullName || comment.user.full_name || comment.fullName || comment.authorName || "Anonymous",
+            avatar: comment.user.avatar || comment.user.avatarUrl || comment.user.avatar_url || comment.avatarUrl || null,
+          } : (comment.userId || comment.user_id ? {
+            name: comment.fullName || comment.full_name || comment.authorName || "Anonymous",
+            avatar: comment.avatarUrl || comment.avatar_url || null,
           } : null),
         })));
       } else {
