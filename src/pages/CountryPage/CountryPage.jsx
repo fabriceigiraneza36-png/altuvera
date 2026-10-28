@@ -1476,7 +1476,7 @@ function InfoSection({ country }) {
                   <div className="cp-contact__title">Still have questions?</div>
                   <div className="cp-contact__text">Our {name} specialists are happy to help.</div>
                 </div>
-                <Link to={`/messages?newConversation=1&inquiryType=country&resourceId=${encodeURIComponent(country.id || "")}&resourceTitle=${encodeURIComponent(country.name || "")}&resourceSlug=${encodeURIComponent(country.slug || getCountrySlug(country.name) || "")}&resourceImage=${encodeURIComponent(images?.[0] || "")}`} className="cp-btn cp-btn--primary" style={{ padding: "12px 24px", fontSize: 13 }}>
+                <Link to={`/messages?newConversation=1&inquiryType=country&resourceId=${encodeURIComponent(country.id || "")}&resourceTitle=${encodeURIComponent(country.name || "")}&resourceSlug=${encodeURIComponent(country.slug || getCountrySlug(country.name) || "")}&resourceImage=${encodeURIComponent(getGalleryImages(country)?.[0] || "")}`} className="cp-btn cp-btn--primary" style={{ padding: "12px 24px", fontSize: 13 }}>
                   <FiMessageCircle size={14} /> Discuss this country
                 </Link>
                 <Link to="/contact" className="cp-btn cp-btn--outline" style={{ padding: "12px 24px", fontSize: 13 }}>
