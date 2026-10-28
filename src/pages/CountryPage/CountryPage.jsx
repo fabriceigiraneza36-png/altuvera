@@ -1650,7 +1650,7 @@ export default function CountryPage() {
       <CountryAttractionsSection country={country} />
       <GallerySection country={country} />
       <InfoSection country={country} />
-      <CommentsCarousel destination={country} entityType="country" />
+      <CommentsCarousel destination={country} entityType="country" showFloatingButton={false} />
       <CtaSection country={country} />
     </div>
   );
