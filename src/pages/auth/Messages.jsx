@@ -357,7 +357,46 @@ const MSG_STYLES = `
 .msg-chat-head > * { min-width:0; }
 .msg-chat { position:relative; }
 .msg-chat .msg-scroll-layer { display:none !important; }
-.msg-bubble-wrap { touch-action:pan-y; will-change:transform; }
+.msg-bubble-wrap {
+  position:relative; touch-action:pan-y; will-change:transform;
+  contain:layout style;
+  transition:transform 280ms cubic-bezier(.22,.85,.28,1);
+}
+.msg-bubble-wrap[data-swiping="true"] { transition:none; }
+.msg-message-text {
+  position:relative; max-width:100%;
+  box-shadow:0 4px 15px rgba(15,23,42,.055),0 1px 2px rgba(15,23,42,.045);
+  transition:box-shadow .18s ease,filter .18s ease;
+  -webkit-font-smoothing:antialiased;
+}
+.msg-bubble-wrap:hover .msg-message-text {
+  box-shadow:0 7px 20px rgba(15,23,42,.075),0 2px 5px rgba(15,23,42,.04);
+}
+.msg-bubble-wrap .msg-message-text.bg-emerald-600 {
+  background-image:linear-gradient(145deg,#10a875 0%,#07865c 100%);
+  border:1px solid rgba(255,255,255,.12);
+}
+.msg-bubble-wrap .msg-message-text.bg-white {
+  border-color:rgba(148,163,184,.2);
+}
+.msg-swipe-reply-cue {
+  position:absolute; top:50%; z-index:1; display:grid; place-items:center;
+  width:32px; height:32px; margin-top:-16px; border-radius:50%;
+  color:#047857; background:rgba(255,255,255,.97);
+  border:1px solid rgba(16,185,129,.24);
+  box-shadow:0 5px 16px rgba(15,23,42,.12),0 0 0 4px rgba(16,185,129,.07);
+  pointer-events:none; transition:opacity .12s ease,transform .12s ease;
+}
+.msg-swipe-reply-cue--right { left:4px; }
+.msg-swipe-reply-cue--left { right:4px; }
+.msg-group-sender-label {
+  max-width:100%; margin:0 0 5px 2px;
+  color:#087f58; font-size:11px; line-height:1.2; font-weight:800;
+  letter-spacing:.005em; text-transform:none;
+}
+@media (prefers-reduced-motion:reduce) {
+  .msg-bubble-wrap,.msg-message-text,.msg-swipe-reply-cue { transition:none!important; }
+}
 /* Keep the conversation directly beneath the site navbar; no duplicated 80px spacer. */
 .dashboard-layout:has(.msg-layout) { padding-top:0 !important; min-height:0; }
 .dashboard-layout:has(.msg-layout) .dashboard-content { padding:0 !important; height:calc(100dvh - var(--site-nav-height, 80px)); }
@@ -1003,7 +1042,8 @@ const MsgBubble = React.memo(function MsgBubble({
     <div
       ref={bubbleRef}
       className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}
-      style={{ transform: swipeOffset ? `translateX(${swipeOffset}px)` : undefined, transition: touchStartX.current == null ? "transform 180ms cubic-bezier(.2,.8,.2,1)" : "none" }}
+      data-swiping={touchStartX.current != null && Math.abs(swipeOffset) > 6 ? "true" : "false"}
+      style={{ transform: swipeOffset ? `translate3d(${swipeOffset}px,0,0)` : "translate3d(0,0,0)" }}
       onTouchStart={event => {
         touchStartX.current = event.touches?.[0]?.clientX ?? null;
         swipeOffsetX.current = 0;
@@ -1023,16 +1063,46 @@ const MsgBubble = React.memo(function MsgBubble({
         const currentX = event.touches?.[0]?.clientX;
         if (currentX == null) return;
         const delta = currentX - touchStartX.current;
-        if (Math.abs(delta) > 8) { clearLongPress(); swipeOffsetX.current = Math.max(-12, Math.min(76, delta)); setSwipeOffset(swipeOffsetX.current); }
+        if (Math.abs(delta) > 8) {
+          clearLongPress();
+          // Rubber-band resistance keeps the gesture fluid without letting a
+          // bubble travel too far away from its natural position.
+          const resisted = delta * 0.86;
+          swipeOffsetX.current = Math.max(-68, Math.min(68, resisted));
+          setSwipeOffset(swipeOffsetX.current);
+        }
       }}
       onTouchEnd={() => {
         clearLongPress();
-        if (Math.abs(swipeOffsetX.current) > 48 && !swipeTriggered.current) { swipeTriggered.current = true; onReply(message.id); }
-        touchStartX.current = null; swipeOffsetX.current = 0; setSwipeOffset(0);
+        if (Math.abs(swipeOffsetX.current) > 48 && !swipeTriggered.current) {
+          swipeTriggered.current = true;
+          onReply(message.id);
+          if (navigator.vibrate) navigator.vibrate(8);
+        }
+        touchStartX.current = null;
+        swipeOffsetX.current = 0;
+        setSwipeOffset(0);
       }}
-      onTouchCancel={() => { clearLongPress(); touchStartX.current = null; swipeOffsetX.current = 0; setSwipeOffset(0); }}
+      onTouchCancel={() => {
+        clearLongPress();
+        touchStartX.current = null;
+        swipeOffsetX.current = 0;
+        setSwipeOffset(0);
+      }}
       onDoubleClick={() => { if (!isDeleted && !isPending) onReact(message.id, "❤️"); }}
       title="Swipe horizontally to reply on touch screens">
+      {Math.abs(swipeOffset) > 8 && !isDeleted && !isPending && (
+        <span
+          className={`msg-swipe-reply-cue ${swipeOffset >= 0 ? "msg-swipe-reply-cue--right" : "msg-swipe-reply-cue--left"}`}
+          style={{
+            opacity: Math.min(1, Math.abs(swipeOffset) / 40),
+            transform: `scale(${0.78 + Math.min(1, Math.abs(swipeOffset) / 64) * 0.22})`,
+          }}
+          aria-hidden="true"
+        >
+          <CornerUpLeft size={16} strokeWidth={2.2} />
+        </span>
+      )}
       {!mine && (
         <div className="relative mr-2 mb-6 flex h-8 w-8 flex-shrink-0 self-end items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-emerald-700 to-emerald-950 text-[10px] font-extrabold text-white shadow-sm ring-1 ring-emerald-900/15">
           <span aria-hidden="true">{isGroupPeer ? senderInitials : "A"}</span>
@@ -1051,7 +1121,7 @@ const MsgBubble = React.memo(function MsgBubble({
       <div className={`flex flex-col ${mine ? "items-end" : "items-start"} max-w-[90%] sm:max-w-[72%]`}>
         {!mine && (
           isGroupPeer
-            ? <span className="mb-1 ml-1 max-w-full truncate text-[11px] font-bold leading-tight text-emerald-800">{senderDisplayName}</span>
+            ? <span className="msg-group-sender-label block truncate">{senderDisplayName}</span>
             : <span className="mb-1 ml-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Altuvera Team</span>
         )}
 
