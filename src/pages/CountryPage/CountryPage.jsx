@@ -27,6 +27,7 @@ import { useCountry, useCountryDestinations } from "../../hooks/useCountries";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import CommentsCarousel from "../CommentsCarousel";
 import RatingPanel from "@components/common/RatingPanel";
+import InlineCommentComposer from "../../components/common/InlineCommentComposer";
 /* ═══════════════════════════════════════════════════════════
    CSS
 ═══════════════════════════════════════════════════════════ */
@@ -1438,7 +1439,7 @@ function InfoSection({ country }) {
   const faqs = useMemo(() => getFaqs(country), [country]);
   const name = country?.name || "this destination";
 
-  if (facts.length === 0 && details.length === 0 && faqs.length === 0) return null;
+  // Keep the expandable details panel available for the comment composer even when a country has sparse facts.
 
   const toggle = () => {
     if (!open) {
@@ -1521,6 +1522,12 @@ function InfoSection({ country }) {
               </div>
             </div>
           )}
+
+          <InlineCommentComposer
+            resourceId={country?.numericId || country?.id || country?._id}
+            resourceType="country"
+            resourceName={name}
+          />
         </div>
       </div>
     </section>
