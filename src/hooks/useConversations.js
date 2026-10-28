@@ -160,6 +160,7 @@ export function useConversations() {
   const socketRef = useRef(null);
   const activeIdRef = useRef(null);
   const conversationsRef = useRef([]);
+  const processedGroupMessagesRef = useRef(new Set());
   const openRequestRef = useRef(0);
   const typingTimerCache = useRef({});
   const [adminTyping, setAdminTyping] = useState(null);
@@ -441,12 +442,16 @@ export function useConversations() {
       const msg = normMsg(payload?.message || payload);
       const cid = String(payload?.conversationId || msg?.conversationId || "");
       if (!msg?.id || !cid) return;
+      const messageKey = String(msg.id);
+      if (processedGroupMessagesRef.current.has(messageKey)) return;
+      processedGroupMessagesRef.current.add(messageKey);
+      if (processedGroupMessagesRef.current.size > 500) processedGroupMessagesRef.current.clear();
 
       const currentUserId = getCurrentUserId();
       const isOwnMessage = currentUserId != null && msg.senderId != null
         && String(currentUserId) === String(msg.senderId);
       const isActiveConversation = cid === String(activeIdRef.current);
-      const senderType = String(msg.senderType || "").trim().toLowerCase().replace(/[\\s-]+/g, "_");
+      const senderType = String(msg.senderType || "").trim().toLowerCase().replace(/[ -]+/g, "_");
       const isAdminSender = ["admin", "super_admin", "superadmin", "administrator", "moderator", "editor", "support", "staff", "agent"].includes(senderType);
       const senderName = isAdminSender
         ? (msg.senderName || "Altuvera Team")
