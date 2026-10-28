@@ -96,7 +96,7 @@ export default function TeamPortraitCarousel() {
         .about-team-strip-link:hover{color:#022c22}
         .about-team-strip-viewport{min-width:0;flex:1;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
         .about-team-strip-viewport.is-static{overflow:visible;mask-image:none;-webkit-mask-image:none}
-        .about-team-strip-track{display:flex;align-items:flex-start;gap:clamp(12px,2vw,22px);width:max-content;overflow-x:auto;scrollbar-width:none;padding:5px 8px 8px;overscroll-behavior-x:contain;touch-action:pan-x}
+        .about-team-strip-track{display:flex;align-items:flex-start;gap:clamp(12px,2vw,22px);width:100%;min-width:0;overflow-x:auto;scrollbar-width:none;padding:5px 8px 8px;overscroll-behavior-x:contain;touch-action:pan-x}
         .about-team-strip-track::-webkit-scrollbar{display:none}
         .about-team-strip-track.is-static{width:100%;overflow:visible;flex-wrap:wrap;justify-content:flex-start;scrollbar-width:none;touch-action:auto}
         .about-team-person{display:flex;flex:0 0 auto;width:clamp(58px,6vw,76px);flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:#064e3b;outline-offset:4px}
