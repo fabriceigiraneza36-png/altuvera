@@ -13,6 +13,7 @@
 import React, {
   useState, useEffect, useCallback, useMemo, useRef,
 } from "react";
+import { useLocation } from "react-router-dom";
 import {
   FiArrowRight, FiLinkedin, FiMail, FiTwitter, FiInstagram,
   FiExternalLink, FiUsers, FiGlobe,
@@ -114,8 +115,10 @@ const getAssetUrl = (value) => {
     : raw;
 };
 
+const memberDomId = (value) => `team-member-${String(value ?? "unknown").trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "unknown"}`;
+
 const normalizeMember = (m = {}) => ({
-  id:            m.id,
+  id:            m.id || m._id || m.slug || m.name || m.full_name || "",
   name:          m.name || "",
   role:          m.role || "",
   department:    m.department || "",
@@ -627,20 +630,38 @@ const STYLES = `
 }
 
 .tm-card--clickable{cursor:zoom-in}
-.tm-photo-modal{position:fixed;inset:0;z-index:100500;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,20,13,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:tmModalFade .18s ease-out}
-.tm-photo-dialog{position:relative;width:min(100%,520px);max-height:min(92dvh,780px);overflow:auto;background:#fff;border:1px solid rgba(16,185,129,.18);border-radius:24px;box-shadow:0 28px 90px rgba(0,0,0,.28);padding:20px;animation:tmModalRise .24s cubic-bezier(.2,.8,.2,1)}
-.tm-photo-close{position:absolute;top:12px;right:12px;z-index:2;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:1px solid rgba(6,78,59,.14);background:rgba(255,255,255,.96);color:#064e3b;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.12);font-size:28px}
-.tm-photo-frame{width:min(100%,390px);aspect-ratio:1/1;margin:0 auto 18px;overflow:hidden;border-radius:18px;background:#ecfdf5;border:1px solid #d1fae5;display:grid;place-items:center}
-.tm-photo-frame img{display:block;width:100%;height:100%;object-fit:cover}
+.tm-photo-modal{position:fixed;inset:0;z-index:100500;display:flex;align-items:center;justify-content:center;padding:clamp(8px,2vw,18px);box-sizing:border-box;background:rgba(2,20,13,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:tmModalFade .18s ease-out}
+.tm-photo-dialog{--tm-photo-size:clamp(180px,38vh,320px);--tm-photo-size:clamp(180px,38dvh,320px);position:relative;isolation:isolate;width:min(100%,560px);height:min(88vh,760px);height:min(88dvh,760px);max-height:92vh;max-height:92dvh;min-height:min(300px,88vh);overflow:hidden;box-sizing:border-box;background:#fff;border:1px solid rgba(16,185,129,.2);border-radius:24px;box-shadow:0 28px 90px rgba(0,0,0,.28);padding:12px;animation:tmModalRise .24s cubic-bezier(.2,.8,.2,1)}
+.tm-photo-close{position:absolute;top:10px;right:10px;z-index:6;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid rgba(6,78,59,.14);background:rgba(255,255,255,.97);color:#064e3b;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.12);font-size:27px;line-height:1}
+.tm-photo-frame{position:absolute;top:12px;left:50%;z-index:4;transform:translateX(-50%);width:min(calc(100% - 32px),var(--tm-photo-size));height:var(--tm-photo-size);box-sizing:border-box;overflow:hidden;pointer-events:none;border-radius:18px;background:#ecfdf5;border:1px solid #d1fae5;display:grid;place-items:center;box-shadow:0 12px 30px rgba(2,44,34,.16)}
+.tm-photo-frame img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 28%}
 .tm-photo-placeholder{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#047857;font-size:13px}
-.tm-photo-name{margin:0;text-align:center;color:#052e16;font-size:clamp(21px,4vw,28px);font-weight:750;line-height:1.25}
-.tm-photo-role{margin:7px 0 0;text-align:center;color:#059669;font-size:14px;font-weight:650}
-.tm-photo-dept{display:table;margin:10px auto 0;padding:6px 11px;border-radius:999px;background:#ecfdf5;color:#065f46;font-size:12px;font-weight:650}
-.tm-photo-bio{margin:15px auto 0;max-width:440px;text-align:center;color:#64748b;font-size:14px;line-height:1.7;white-space:pre-wrap}
+.tm-photo-scroll{position:absolute;inset:0;z-index:1;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;padding:calc(var(--tm-photo-size) + 30px) 20px 24px;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.tm-photo-scroll::-webkit-scrollbar{display:none;width:0;height:0}
+.tm-photo-content{width:100%;max-width:470px;margin:0 auto}
+.tm-photo-kicker{display:flex;align-items:center;justify-content:center;gap:7px;margin:0 0 9px;color:#047857;font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+.tm-photo-name{margin:0;text-align:center;color:#052e16;font-size:clamp(22px,4vw,29px);font-weight:800;line-height:1.2;letter-spacing:-.025em;overflow-wrap:anywhere}
+.tm-photo-role{margin:8px 0 0;text-align:center;color:#059669;font-size:14px;font-weight:700;line-height:1.5}
+.tm-photo-dept{display:table;max-width:100%;box-sizing:border-box;margin:11px auto 0;padding:6px 12px;border-radius:999px;background:#ecfdf5;color:#065f46;font-size:11px;font-weight:750;text-align:center;overflow-wrap:anywhere}
+.tm-photo-section{margin:22px 0 0;padding-top:17px;border-top:1px solid #e3f4eb}
+.tm-photo-section-title{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:#064e3b;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.tm-photo-section-title svg{flex:0 0 auto;color:#059669}
+.tm-photo-bio{margin:0;color:#52665d;font-size:14px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}
+.tm-photo-empty-bio{margin:16px 0 0;text-align:center;color:#6b7280;font-size:13px;line-height:1.7}
+.tm-photo-stats{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:16px}
+.tm-photo-stat{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid #d9f1e5;border-radius:11px;background:#f7fdf9;color:#176448;font-size:12px;font-weight:650}
+.tm-photo-stat svg{flex:0 0 auto;color:#059669}
+.tm-photo-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.tm-photo-tag{max-width:100%;padding:7px 10px;border:1px solid #d8f0e4;border-radius:9px;background:#f5fcf8;color:#176448;font-size:12px;font-weight:600;overflow-wrap:anywhere}
+.tm-photo-links{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:18px}
+.tm-photo-link{display:inline-flex;align-items:center;justify-content:center;gap:7px;max-width:100%;padding:9px 12px;border:1px solid #d5eee2;border-radius:11px;background:#fff;color:#065f46;text-decoration:none;font-size:12px;font-weight:700;overflow-wrap:anywhere;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.tm-photo-link:hover,.tm-photo-link:focus-visible{background:#ecfdf5;border-color:#86efac;transform:translateY(-1px);outline:none}
+.tm-photo-link svg{flex:0 0 auto}
 @keyframes tmModalFade{from{opacity:0}to{opacity:1}}
 @keyframes tmModalRise{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-@media(max-width:480px){.tm-photo-modal{padding:14px}.tm-photo-dialog{padding:14px;border-radius:20px}.tm-photo-frame{width:min(100%,360px);border-radius:15px;margin-bottom:15px}.tm-photo-close{width:38px;height:38px;top:9px;right:9px}}
-@media(prefers-reduced-motion:reduce){.tm-photo-modal,.tm-photo-dialog{animation:none}}
+@media(max-width:480px){.tm-photo-dialog{--tm-photo-size:clamp(170px,34vh,260px);--tm-photo-size:clamp(170px,34dvh,260px);width:min(100%,520px);padding:9px;border-radius:20px}.tm-photo-frame{top:10px;width:min(calc(100% - 24px),var(--tm-photo-size));border-radius:15px}.tm-photo-scroll{padding:calc(var(--tm-photo-size) + 26px) 13px 18px}.tm-photo-close{width:36px;height:36px;top:8px;right:8px}.tm-photo-section{margin-top:18px;padding-top:14px}.tm-photo-bio{font-size:13px;line-height:1.75}.tm-photo-links{gap:7px}.tm-photo-link{padding:8px 10px}}
+@media(max-height:520px){.tm-photo-dialog{--tm-photo-size:clamp(145px,42vh,210px);height:92vh;min-height:0}.tm-photo-frame{width:min(calc(100% - 32px),var(--tm-photo-size))}.tm-photo-scroll{padding-top:calc(var(--tm-photo-size) + 24px)}}
+@media(prefers-reduced-motion:reduce){.tm-photo-modal,.tm-photo-dialog,.tm-photo-link{animation:none;transition:none}}
 `;
 let _injected = false;
 function injectStyles() {
@@ -739,7 +760,7 @@ function Card({ member, onView }) {
   const imageSrc = member.image_url;
 
   return (
-    <article className="tm-card tm-card--clickable" role="listitem" tabIndex={0} onClick={() => onView(member)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onView(member); } }} aria-label={`View ${member.name || "team member"} photo and profile`}>
+    <article id={memberDomId(member.id || member.name)} className="tm-card tm-card--clickable" role="listitem" tabIndex={0} onClick={() => onView(member)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onView(member); } }} aria-label={`View ${member.name || "team member"} photo and profile`}>
       <div className="tm-card-band" aria-hidden="true" />
 
       {member.is_featured && (
@@ -894,6 +915,7 @@ function Filters({ departments, active, onFilter, counts }) {
 ═══════════════════════════════════════════════════════════════════════════ */
 
 const TeamContent = ({ showHeading = true }) => {
+  const location = useLocation();
   const [members, setMembers] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [depts, setDepts] = useState([]);
@@ -901,6 +923,7 @@ const TeamContent = ({ showHeading = true }) => {
   const [error, setError] = useState(null);
   const [active, setActive] = useState("all");
   const [selectedMember, setSelectedMember] = useState(null);
+  const handledProfileRequest = useRef("");
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -963,6 +986,43 @@ const TeamContent = ({ showHeading = true }) => {
       mounted.current = false;
     };
   }, [load]);
+
+  // A portrait selected on About Us sends the exact member identity to this page.
+  // Center the corresponding card after it renders, and open the full modal on desktop.
+  useEffect(() => {
+    if (loading || error || members.length === 0) return undefined;
+    const params = new URLSearchParams(location.search);
+    const requestedId = params.get("member");
+    const requestedName = params.get("memberName");
+    if (!requestedId && !requestedName) return undefined;
+
+    const target = members.find((member) => requestedId && String(member.id) === requestedId)
+      || members.find((member) => requestedName && String(member.name || "").trim().toLowerCase() === requestedName.trim().toLowerCase());
+    if (!target) return undefined;
+
+    const requestKey = (requestedId || "") + "|" + (requestedName || "");
+    if (handledProfileRequest.current === requestKey) return undefined;
+    handledProfileRequest.current = requestKey;
+
+    setActive("all");
+    const desktop = typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
+    if (desktop) setSelectedMember(target);
+
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        const card = document.getElementById(memberDomId(target.id || target.name));
+        if (card) {
+          const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          card.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center", inline: "nearest" });
+        }
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+  }, [location.search, loading, error, members]);
 
   useEffect(() => {
     setFiltered(
@@ -1082,15 +1142,64 @@ const TeamContent = ({ showHeading = true }) => {
       </div>
       {selectedMember && (
         <div className="tm-photo-modal" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedMember(null); }}>
-          <section className="tm-photo-dialog" role="dialog" aria-modal="true" aria-label={`${selectedMember.name || "Team member"} profile photo`} onKeyDown={(event) => { if (event.key === "Escape") setSelectedMember(null); }}>
-            <button type="button" className="tm-photo-close" onClick={() => setSelectedMember(null)} aria-label="Close team photo">×</button>
+          <section className="tm-photo-dialog" role="dialog" aria-modal="true" aria-label={(selectedMember.name || "Team member") + " profile"} onKeyDown={(event) => { if (event.key === "Escape") setSelectedMember(null); }}>
+            <button type="button" className="tm-photo-close" onClick={() => setSelectedMember(null)} aria-label="Close team profile">×</button>
             <div className="tm-photo-frame">
-              {selectedMember.image_url ? <img src={selectedMember.image_url} alt={`${selectedMember.name || "Team member"} portrait`} /> : <div className="tm-photo-placeholder"><FiUsers size={38} /><span>Portrait unavailable</span></div>}
+              {selectedMember.image_url ? <img src={selectedMember.image_url} alt={(selectedMember.name || "Team member") + " portrait"} /> : <div className="tm-photo-placeholder"><FiUsers size={38} /><span>Portrait unavailable</span></div>}
             </div>
-            <h2 className="tm-photo-name">{selectedMember.name || "Team member"}</h2>
-            {selectedMember.role && <p className="tm-photo-role">{selectedMember.role}</p>}
-            {selectedMember.department && <span className="tm-photo-dept">{selectedMember.department}</span>}
-            {selectedMember.bio && <p className="tm-photo-bio">{selectedMember.bio}</p>}
+            <div className="tm-photo-scroll" tabIndex={0} aria-label={(selectedMember.name || "Team member") + " full profile details"}>
+              <div className="tm-photo-content">
+                <p className="tm-photo-kicker"><FiUsers size={13} /> The people behind the journey</p>
+                <h2 className="tm-photo-name">{selectedMember.name || "Team member"}</h2>
+                {selectedMember.role && <p className="tm-photo-role">{selectedMember.role}</p>}
+                {selectedMember.department && <span className="tm-photo-dept">{selectedMember.department}</span>}
+
+                {selectedMember.years_experience > 0 && (
+                  <div className="tm-photo-stats">
+                    <span className="tm-photo-stat"><FiCalendar size={14} /> {selectedMember.years_experience} {selectedMember.years_experience === 1 ? "year" : "years"} of experience</span>
+                  </div>
+                )}
+
+                {selectedMember.bio ? (
+                  <section className="tm-photo-section">
+                    <h3 className="tm-photo-section-title"><FiUsers size={14} /> About</h3>
+                    <p className="tm-photo-bio">{selectedMember.bio}</p>
+                  </section>
+                ) : (
+                  <p className="tm-photo-empty-bio">More about this team member will be added soon.</p>
+                )}
+
+                {selectedMember.expertise?.length > 0 && (
+                  <section className="tm-photo-section">
+                    <h3 className="tm-photo-section-title"><FiStar size={14} /> Expertise</h3>
+                    <div className="tm-photo-tags">
+                      {selectedMember.expertise.map((item, index) => <span className="tm-photo-tag" key={String(item) + "-" + index}>{item}</span>)}
+                    </div>
+                  </section>
+                )}
+
+                {selectedMember.languages?.length > 0 && (
+                  <section className="tm-photo-section">
+                    <h3 className="tm-photo-section-title"><FiGlobe size={14} /> Languages</h3>
+                    <div className="tm-photo-tags">
+                      {selectedMember.languages.map((item, index) => <span className="tm-photo-tag" key={String(item) + "-" + index}>{item}</span>)}
+                    </div>
+                  </section>
+                )}
+
+                {(selectedMember.email || selectedMember.phone || selectedMember.linkedin_url || selectedMember.twitter_url || selectedMember.instagram_url || selectedMember.facebook_url || selectedMember.website_url) && (
+                  <div className="tm-photo-links" aria-label="Contact and social links">
+                    {selectedMember.email && <a className="tm-photo-link" href={"mailto:" + selectedMember.email}><FiMail size={14} /> Email</a>}
+                    {selectedMember.phone && <a className="tm-photo-link" href={"tel:" + selectedMember.phone}><FiPhone size={14} /> Call</a>}
+                    {selectedMember.linkedin_url && <a className="tm-photo-link" href={selectedMember.linkedin_url} target="_blank" rel="noreferrer noopener"><FiLinkedin size={14} /> LinkedIn</a>}
+                    {selectedMember.twitter_url && <a className="tm-photo-link" href={selectedMember.twitter_url} target="_blank" rel="noreferrer noopener"><FiTwitter size={14} /> Twitter</a>}
+                    {selectedMember.instagram_url && <a className="tm-photo-link" href={selectedMember.instagram_url} target="_blank" rel="noreferrer noopener"><FiInstagram size={14} /> Instagram</a>}
+                    {selectedMember.facebook_url && <a className="tm-photo-link" href={selectedMember.facebook_url} target="_blank" rel="noreferrer noopener"><FiFacebook size={14} /> Facebook</a>}
+                    {selectedMember.website_url && <a className="tm-photo-link" href={selectedMember.website_url} target="_blank" rel="noreferrer noopener"><FiExternalLink size={14} /> Website</a>}
+                  </div>
+                )}
+              </div>
+            </div>
           </section>
         </div>
       )}
