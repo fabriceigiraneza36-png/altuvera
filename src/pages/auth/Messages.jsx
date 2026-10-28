@@ -869,6 +869,7 @@ const MsgBubble = React.memo(function MsgBubble({
   const actionMenuRef = useRef(null);
   const longPressTimerRef = useRef(null);
   const longPressTriggeredRef = useRef(false);
+  const openedFromLongPressRef = useRef(false);
   const touchStartX = useRef(null);
   const swipeOffsetX = useRef(0);
   const swipeTriggered = useRef(false);
@@ -891,61 +892,69 @@ const MsgBubble = React.memo(function MsgBubble({
 
   useLayoutEffect(() => {
     if (!menuOpen) return undefined;
+    const isMobileViewport = () => window.matchMedia("(max-width: 767px)").matches;
+
+    // On touch screens, move the bubble into a comfortable reading position first.
+    // The menu then stays below that same bubble instead of jumping to another side.
+    if (isMobileViewport() && openedFromLongPressRef.current) {
+      bubbleRef.current?.scrollIntoView({ block: "center", behavior: "auto" });
+      openedFromLongPressRef.current = false;
+    }
+
     const positionMenu = () => {
-      const anchor = window.matchMedia("(max-width: 767px)").matches ? bubbleRef.current : actionButtonRef.current;
+      const anchor = isMobileViewport() ? bubbleRef.current : actionButtonRef.current;
       const menu = actionMenuRef.current;
       if (!anchor || !menu) return;
+
       const margin = 10;
-      const gap = 6;
+      const gap = 7;
       const rect = anchor.getBoundingClientRect();
-      const width = Math.min(menu.offsetWidth || 208, window.innerWidth - margin * 2);
-      const isMobile = window.matchMedia("(max-width: 767px)").matches;
       const visualHeight = window.visualViewport?.height || window.innerHeight;
+      const visualWidth = window.visualViewport?.width || window.innerWidth;
+      const isMobile = isMobileViewport();
       const composer = isMobile ? document.querySelector(".msg-chat-foot") : null;
       const composerTop = composer ? composer.getBoundingClientRect().top : visualHeight;
-      const safeBottom = Math.max(margin + 60, Math.min(visualHeight - margin, composerTop - margin));
-      const roomBelow = Math.max(0, safeBottom - rect.bottom - 8);
-      const roomAbove = Math.max(0, rect.top - margin - 8);
-      const availableHeight = Math.max(80, visualHeight - margin * 2);
-      // Measure natural menu height, then use the side with more room if neither side fits.
-      const naturalHeight = menu.scrollHeight || menu.offsetHeight || 240;
-      const preferAbove = roomBelow < Math.min(naturalHeight, 220) && roomAbove > roomBelow;
-      const placeAbove = isMobile ? false
-        : (window.innerHeight - rect.bottom < Math.min(naturalHeight, 260) + gap && roomAbove > window.innerHeight - rect.bottom);
-      // On mobile the action sheet must always float immediately BELOW its own bubble.
-      // Portal rendering removes ancestor stacking/overflow contexts; the menu itself
-      // scrolls when the composer or viewport limits the available room.
-      const top = isMobile
-        ? Math.max(margin, rect.bottom + 8)
-        : placeAbove
-          ? Math.max(margin, rect.top - naturalHeight - gap)
-          : Math.min(window.innerHeight - naturalHeight - margin, rect.bottom + gap);
-      const sideSpace = isMobile ? Math.max(64, visualHeight - margin - top) : availableHeight;
-      const maxHeight = isMobile
-        ? Math.max(64, Math.min(availableHeight, sideSpace, Math.max(64, safeBottom - top)))
-        : availableHeight;
+      const safeBottom = Math.max(margin + 72, Math.min(visualHeight - margin, composerTop - margin));
+      const width = Math.min(isMobile ? 244 : 224, visualWidth - margin * 2);
+      const top = rect.bottom + gap;
+      const maxHeight = Math.max(96, Math.min(
+        isMobile ? 300 : visualHeight - margin * 2,
+        safeBottom - top
+      ));
+      // Keep the menu aligned to the same side of the anchor; clamp only horizontally.
       const preferredLeft = mine ? rect.right - width : rect.left;
-      const left = Math.max(margin, Math.min(window.innerWidth - width - margin, preferredLeft));
+      const left = Math.max(margin, Math.min(visualWidth - width - margin, preferredLeft));
       setMenuPosition({ top, left, width, maxHeight });
     };
+
     positionMenu();
     const frame = window.requestAnimationFrame(positionMenu);
-    window.addEventListener("resize", positionMenu);
-    window.addEventListener("scroll", positionMenu, true);
+    const onViewportChange = () => positionMenu();
+    window.addEventListener("resize", onViewportChange);
+    window.addEventListener("scroll", onViewportChange, true);
+    window.visualViewport?.addEventListener("resize", onViewportChange);
+    window.visualViewport?.addEventListener("scroll", onViewportChange);
     return () => {
       window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", positionMenu);
-      window.removeEventListener("scroll", positionMenu, true);
+      window.removeEventListener("resize", onViewportChange);
+      window.removeEventListener("scroll", onViewportChange, true);
+      window.visualViewport?.removeEventListener("resize", onViewportChange);
+      window.visualViewport?.removeEventListener("scroll", onViewportChange);
     };
   }, [menuOpen, mine]);
-
   useEffect(() => {
     if (!menuOpen) return undefined;
     const closeOnOutside = (event) => {
       if (actionMenuRef.current?.contains(event.target) || actionButtonRef.current?.contains(event.target)) return;
+      openedFromLongPressRef.current = false;
       setMenuOpen(false);
     };
-    const closeOnEscape = (event) => { if (event.key === "Escape") setMenuOpen(false); };
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") {
+        openedFromLongPressRef.current = false;
+        setMenuOpen(false);
+      }
+    };
     document.addEventListener("pointerdown", closeOnOutside, true);
     document.addEventListener("keydown", closeOnEscape);
     return () => {
@@ -987,6 +996,8 @@ const MsgBubble = React.memo(function MsgBubble({
         clearLongPress();
         longPressTimerRef.current = window.setTimeout(() => {
           longPressTriggeredRef.current = true;
+          openedFromLongPressRef.current = true;
+          setMenuPosition(null);
           setMenuOpen(true);
           if (navigator.vibrate) navigator.vibrate(12);
         }, 520);
@@ -1081,15 +1092,15 @@ const MsgBubble = React.memo(function MsgBubble({
                 <MoreHorizontal size={15}/>
               </button>
               {menuOpen && createPortal(
-                <div ref={actionMenuRef} style={{ position: "fixed", top: menuPosition?.top ?? 0, left: menuPosition?.left ?? 10, width: menuPosition?.width ?? "min(13rem, calc(100vw - 20px))", maxHeight: menuPosition?.maxHeight ?? "calc(100dvh - 20px)", overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", visibility: menuPosition ? "visible" : "hidden", zIndex: 2147483000, isolation: "isolate", touchAction: "pan-y" }} className="rounded-2xl border border-slate-200 bg-white shadow-2xl p-1.5">
-                  <button type="button" onClick={copyMessage} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><Copy size={17}/> Copy message</button>
-                  <button type="button" onClick={()=>{setMenuOpen(false);setReactionPickerOpen(true)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><Smile size={17}/> React</button>
-                  <button type="button" onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-emerald-50 active:bg-emerald-100"><CornerUpLeft size={17}/> Reply</button>
+                <div ref={actionMenuRef} style={{ position: "fixed", top: menuPosition?.top ?? 0, left: menuPosition?.left ?? 10, width: menuPosition?.width ?? "min(15.25rem, calc(100vw - 20px))", maxHeight: menuPosition?.maxHeight ?? "min(300px, calc(100dvh - 24px))", overflowY: "auto", overflowX: "hidden", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none", visibility: menuPosition ? "visible" : "hidden", zIndex: 2147483647, isolation: "isolate", touchAction: "pan-y", WebkitTransform: "translateZ(0)" }} className="msg-action-menu-scroll rounded-2xl border border-slate-200/90 bg-white/98 shadow-[0_18px_55px_rgba(15,23,42,0.24)] backdrop-blur-xl p-1.5">
+                  <button type="button" onClick={copyMessage} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-100"><Copy size={17}/> Copy message</button>
+                  <button type="button" onClick={()=>{setMenuOpen(false);setReactionPickerOpen(true)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-100"><Smile size={17}/> React</button>
+                  <button type="button" onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-100"><CornerUpLeft size={17}/> Reply</button>
                   {mine && <>
-                    <button type="button" onClick={()=>{onStartEdit(message);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-slate-50 active:bg-slate-100"><Edit3 size={17}/> Edit</button>
-                    <button type="button" onClick={()=>{onUnsend(message.id);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-rose-600 hover:bg-rose-50 active:bg-rose-100"><Undo2 size={17}/> Unsend</button>
+                    <button type="button" onClick={()=>{onStartEdit(message);setMenuOpen(false)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100"><Edit3 size={17}/> Edit</button>
+                    <button type="button" onClick={()=>{onUnsend(message.id);setMenuOpen(false)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-rose-600 transition-colors hover:bg-rose-50 active:bg-rose-100"><Undo2 size={17}/> Unsend</button>
                   </>}
-                  <button type="button" onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-slate-50 active:bg-slate-100"><Pin size={17}/> {message.isPinned ? "Unpin" : "Pin"}</button>
+                  <button type="button" onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100"><Pin size={17}/> {message.isPinned ? "Unpin" : "Pin"}</button>
                   <button type="button" onClick={()=>{onHighlight(message.id,!message.isHighlighted);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-amber-50 active:bg-amber-100"><Highlighter size={17}/> {message.isHighlighted ? "Remove highlight" : "Highlight"}</button>
                 </div>,
                 document.body
@@ -1524,7 +1535,15 @@ export default function Messages() {
     setResourceSearchError("");
   }, []);
 
-  const isResourceSupport = activeConversation?.conversationType === "resource_support" || activeConversation?.channel === "booking_support";
+  const resourceSupportConversation = conversations.find(item =>
+    item.conversationType === "resource_support" || item.channel === "booking_support"
+  );
+  const activeIsResourceSupport = activeConversation?.conversationType === "resource_support" || activeConversation?.channel === "booking_support";
+  const isResourceSupport = Boolean(activeIsResourceSupport || (
+    resourceSupportConversation?.id != null &&
+    activeId != null &&
+    String(resourceSupportConversation.id) === String(activeId)
+  ));
 
   const verifyBooking = useCallback(async () => {
     const reference = bookingReference.trim();
