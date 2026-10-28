@@ -56,22 +56,7 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
   const loopComments = visibleComments;
   const currentUserId = user?.id || user?._id || user?.userId || user?.uid;
 
-  useEffect(() => {
-    if (!destinationId || !Array.isArray(comments) || comments.length < 2) return;
-    const firstByAuthor = new Set();
-    const duplicates = [];
-    comments.forEach((comment) => {
-      const authorId = comment?.userId || comment?.user_id || comment?.user?.id || comment?.user?._id || comment?.authorId;
-      const commentId = comment?.id || comment?._id || comment?.commentId;
-      if (authorId == null || commentId == null) return;
-      const key = String(authorId);
-      if (firstByAuthor.has(key)) duplicates.push(String(commentId));
-      else firstByAuthor.add(key);
-    });
-    duplicates.forEach((commentId) => {
-      removeComment(destinationId, commentId).catch(() => {});
-    });
-  }, [comments, destinationId, removeComment]);
+  // Never delete visitor comments automatically in the public view; moderation belongs in admin.
   const alreadyCommented = useMemo(() => Boolean(currentUserId) && visibleComments.some((comment) => {
     const authorId = comment?.userId || comment?.user_id || comment?.user?.id || comment?.user?._id || comment?.authorId;
     return authorId != null && String(authorId) === String(currentUserId);
