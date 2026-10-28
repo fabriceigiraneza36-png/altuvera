@@ -3,10 +3,12 @@ import React, { useState } from "react";
 import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import {
-  FiUser, FiCalendar, FiHeart, FiSettings,
-  FiLogOut, FiMenu, FiX, FiBell,
-  FiStar, FiHome, FiMessageSquare, FiShield,
+  FiLogOut, FiMenu, FiX,
 } from "react-icons/fi";
+import {
+  LayoutDashboard, UserRound, CalendarDays, Heart, BellRing,
+  MessageCircle, Star, SlidersHorizontal, ShieldCheck, LogOut as AccountLogOut,
+} from "lucide-react";
 import AnimatedSection from "../common/AnimatedSection";
 import NotificationBell from "./NotificationBell";
 import { useNotifications } from "../../hooks/useNotifications";
@@ -22,16 +24,15 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
   const handleLogout = () => { logout(); navigate("/"); };
 
   const navLinks = [
-    { name: "Overview",       path: "/dashboard",      icon: <FiHome size={18} />        },
-    { name: "My Profile",     path: "/profile",        icon: <FiUser size={18} />        },
-    { name: "Bookings",       path: "/my-bookings",    icon: <FiCalendar size={18} />    },
-    { name: "Favourites",    path: "/wishlist",       icon: <FiHeart size={18} />       },
-    { name: "Notifications",  path: "/notifications",  icon: <FiBell size={18} />        },
-    { name: "Messages",       path: "/messages",       icon: <FiMessageSquare size={18} /> },
-
-    { name: "Reviews",        path: "/reviews",        icon: <FiStar size={18} />        },
-    { name: "Settings",       path: "/settings",       icon: <FiSettings size={18} />    },
-    { name: "Security & Recovery", path: "/account/security", icon: <FiShield size={18} /> },
+    { name: "Overview", path: "/dashboard", icon: <LayoutDashboard size={19} strokeWidth={1.9} /> },
+    { name: "My Profile", path: "/profile", icon: <UserRound size={19} strokeWidth={1.9} /> },
+    { name: "Bookings", path: "/my-bookings", icon: <CalendarDays size={19} strokeWidth={1.9} /> },
+    { name: "Favourites", path: "/wishlist", icon: <Heart size={19} strokeWidth={1.9} /> },
+    { name: "Notifications", path: "/notifications", icon: <BellRing size={19} strokeWidth={1.9} /> },
+    { name: "Messages", path: "/messages", icon: <MessageCircle size={19} strokeWidth={1.9} /> },
+    { name: "Reviews", path: "/reviews", icon: <Star size={19} strokeWidth={1.9} /> },
+    { name: "Settings", path: "/settings", icon: <SlidersHorizontal size={19} strokeWidth={1.9} /> },
+    { name: "Security & Recovery", path: "/account/security", icon: <ShieldCheck size={19} strokeWidth={1.9} /> },
   ];
 
   return (
@@ -75,20 +76,34 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           font-size: 17px; color: #0f172a; margin: 0 0 3px; font-weight: 700;
         }
         .dashboard-user-email { font-size: 12px; color: #94a3b8; margin: 0; }
-        .dashboard-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+        .dashboard-nav { display: flex; flex-direction: column; gap: 5px; flex: 1; }
         .dashboard-nav-link {
-          display: flex; align-items: center; gap: 10px;
-          padding: 11px 14px; border-radius: 10px; color: #475569;
-          font-size: 14px; font-weight: 500; text-decoration: none;
-          transition: all 0.18s ease; position: relative;
+          display: flex; align-items: center; gap: 11px;
+          padding: 8px 12px; border-radius: 13px; color: #475569;
+          font-size: 13px; font-weight: 620; text-decoration: none;
+          transition: background .16s ease, color .16s ease, transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease;
+          position: relative; outline-offset: 3px;
         }
+        .dashboard-nav-icon {
+          display:grid;place-items:center;flex:0 0 35px;width:35px;height:35px;
+          border:1px solid #e2f1e8;border-radius:12px;
+          background:linear-gradient(145deg,#f5fcf8,#e6f7ed);
+          color:#087f58;box-shadow:inset 0 1px 0 rgba(255,255,255,.95);
+          transition:transform .18s cubic-bezier(.2,.8,.2,1),background .18s ease,color .18s ease,box-shadow .18s ease;
+        }
+        .dashboard-nav-icon svg { display:block; }
         .dashboard-nav-link:hover {
-          background-color: #f1f5f9; color: #0f172a; transform: translateX(3px);
+          background-color: #f1faf5; color: #0b6848; transform: translateX(2px);
         }
+        .dashboard-nav-link:hover .dashboard-nav-icon { transform:translateY(-1px) scale(1.04); box-shadow:0 5px 12px rgba(5,150,105,.1); }
         .dashboard-nav-link.active {
-          background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-          color: #059669; font-weight: 700;
-          border-left: 3px solid #059669;
+          background: linear-gradient(110deg, #e9f9f0, #f6fcf8);
+          color: #056b4a; font-weight: 750;
+          box-shadow:inset 0 0 0 1px rgba(5,150,105,.075);
+        }
+        .dashboard-nav-link.active .dashboard-nav-icon {
+          color:#fff;background:linear-gradient(145deg,#10b981,#087f58);
+          border-color:transparent;box-shadow:0 5px 13px rgba(5,150,105,.22);
         }
         .dashboard-nav-link .nav-badge {
           margin-left: auto; background: #059669; color: #fff;
@@ -102,7 +117,9 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           cursor: pointer; width: 100%; text-align: left;
           transition: all 0.2s ease; margin-top: 8px;
         }
-        .dashboard-logout-btn:hover { background-color: #fef2f2; }
+        .dashboard-logout-btn:hover { background-color: #fff3f3; transform:translateX(2px); }
+        .dashboard-logout-btn svg { transition:transform .18s ease; }
+        .dashboard-logout-btn:hover svg { transform:translateX(-2px); }
         .dashboard-content {
           flex: 1 1 auto; padding: 36px 32px; max-width: 1100px;
           margin: 0 auto; width: 100%; min-width: 0; min-height: 0;
@@ -310,8 +327,8 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
               }
               onClick={() => setMobileMenuOpen(false)}
             >
-              {link.icon}
-              {link.name}
+              <span className="dashboard-nav-icon" aria-hidden="true">{link.icon}</span>
+              <span className="dashboard-nav-label">{link.name}</span>
               {link.name === "Notifications" && unreadCount > 0 && (
                 <span className="nav-badge">{unreadCount}</span>
               )}
@@ -322,7 +339,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           ))}
 
           <button className="dashboard-logout-btn" onClick={handleLogout}>
-            <FiLogOut size={18} /> Sign Out
+            <AccountLogOut size={18} strokeWidth={1.9} /> Sign Out
           </button>
         </nav>
 
