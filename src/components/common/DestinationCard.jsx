@@ -1573,25 +1573,21 @@ const blurb =
     event?.stopPropagation?.();
     if (!shareImageFile || typeof navigator === "undefined" || typeof navigator.share !== "function" ||
         typeof navigator.canShare !== "function" || !navigator.canShare({ files: [shareImageFile] })) {
-      showShareFeedback("Photo sharing isn't supported here. Use Share link & details or Copy caption + link instead.");
+      showShareFeedback("Photo sharing isn't supported here. Use Share link & details or copy the caption manually if needed.");
       return;
     }
-    let captionCopied = false;
-    if (navigator.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(shareTextWithLink);
-        captionCopied = true;
-      } catch { /* The image can still be shared if clipboard access is unavailable. */ }
-    }
     try {
-      await navigator.share({ title: shareTitle, text: shareTextWithLink, url: shareUrl, files: [shareImageFile] });
-      showShareFeedback(captionCopied
-        ? "Photo share completed. The caption and destination link are copied too—paste them into the post if your app doesn't add them automatically."
-        : "Photo share completed. Some apps drop captions on image shares; use “Copy caption + link” to add the destination URL.");
+      // For operating-system share targets, send only the image and destination URL.
+      // Do not auto-copy or attach the long caption: link previews can already show the
+      // destination card and the extra text becomes a duplicated, oversized message.
+      await navigator.share({ title: shareTitle, url: shareUrl, files: [shareImageFile] });
+      showShareFeedback("Photo share completed. The image and destination link were sent without the extra caption text. Use “Copy caption + link” only when you need to paste a caption manually.");
     } catch (error) {
-      if (error?.name !== "AbortError") showShareFeedback("Couldn't share the photo. Try Share link & details or Copy caption + link instead.");
+      if (error?.name !== "AbortError") {
+        showShareFeedback("Couldn't share the photo. Try Share link & details, or copy the caption manually if needed.");
+      }
     }
-  }, [shareTitle, shareTextWithLink, shareUrl, shareImageFile, showShareFeedback]);
+  }, [shareTitle, shareUrl, shareImageFile, showShareFeedback]);
 
   /* ── render ── */
   return (
