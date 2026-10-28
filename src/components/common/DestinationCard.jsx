@@ -692,8 +692,8 @@ const CSS = `
 @keyframes dc-share-fade-in { from { opacity:0; } to { opacity:1; } }
 @keyframes dc-share-panel-in { from { opacity:0; transform:translateY(12px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
 .dc-share-overlay { position:fixed; inset:0; z-index:10050; box-sizing:border-box; display:grid; place-items:center; padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom)); background:rgba(3,20,13,.64); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); animation:dc-share-fade-in .18s ease both; font-family:'Inter',system-ui,sans-serif; }
-.dc-share-dialog { box-sizing:border-box; width:min(100%,620px); max-height:min(90dvh,780px); overflow-y:auto; overscroll-behavior:contain; padding:clamp(18px,3.8vw,28px); border-radius:26px; border:1px solid rgba(255,255,255,.8); background:linear-gradient(155deg,#fff 0%,#f8fffb 68%,#f1fbf5 100%); color:#102a20; box-shadow:0 30px 100px rgba(0,0,0,.34),inset 0 1px 0 #fff; animation:dc-share-panel-in .25s cubic-bezier(.22,1,.36,1) both; }
-.dc-share-grabber { display:none; }
+.dc-share-dialog { box-sizing:border-box; width:min(100%,620px); max-height:min(90dvh,780px); overflow-y:auto; scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y; padding:clamp(18px,3.8vw,28px); border-radius:26px; border:1px solid rgba(255,255,255,.8); background:linear-gradient(155deg,#fff 0%,#f8fffb 68%,#f1fbf5 100%); color:#102a20; box-shadow:0 30px 100px rgba(0,0,0,.34),inset 0 1px 0 #fff; animation:dc-share-panel-in .25s cubic-bezier(.22,1,.36,1) both; }
+.dc-share-dialog::-webkit-scrollbar { display:none; width:0; height:0; }\n.dc-share-overlay { overflow:hidden; }\n.dc-share-grabber { display:none; }
 .dc-share-header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; }
 .dc-share-header-copy { min-width:0; }
 .dc-share-eyebrow { display:flex; align-items:center; gap:6px; color:#047857; font-size:10px; line-height:1.2; font-weight:800; letter-spacing:.14em; }
@@ -719,7 +719,7 @@ const CSS = `
 .dc-share-app:disabled { opacity:.58; cursor:wait; transform:none; box-shadow:none; }
 .dc-share-app-icon { width:43px; height:43px; display:grid; place-items:center; border-radius:14px; color:#fff; background:#fff; box-shadow:0 5px 14px rgba(15,23,42,.09),inset 0 0 0 1px rgba(15,23,42,.045); overflow:hidden; } .dc-share-app-icon img { width:25px; height:25px; object-fit:contain; display:block; } .dc-share-app-icon:has(img:not([style*="display: none"])) > svg,.dc-share-app-icon:has(img:not([style*="display: none"])) > b { display:none; }
 .dc-share-app-icon b { font-family:Arial,sans-serif; font-size:27px; font-weight:800; line-height:1; }
-.dc-share-app-icon--whatsapp,.dc-share-app-icon--facebook,.dc-share-app-icon--telegram,.dc-share-app-icon--x,.dc-share-app-icon--linkedin,.dc-share-app-icon--email,.dc-share-app-icon--instagram { background:linear-gradient(145deg,#fff,#f8fafc); } .dc-share-app-icon--sms { background:linear-gradient(135deg,#e2f5eb,#c7ecd8); color:#087443; } .dc-share-app-icon--copy { background:linear-gradient(135deg,#d1fae5,#a7f3d0); color:#047857; } .dc-share-app-icon--copy.is-copied { background:#047857; color:#fff; }
+.dc-share-app-icon--whatsapp,.dc-share-app-icon--facebook,.dc-share-app-icon--telegram,.dc-share-app-icon--x,.dc-share-app-icon--email,.dc-share-app-icon--instagram { background:linear-gradient(145deg,#fff,#f8fafc); } .dc-share-app-icon--linkedin { background:linear-gradient(145deg,#0a66c2,#004182); color:#fff; box-shadow:0 5px 14px rgba(10,102,194,.24),inset 0 0 0 1px rgba(255,255,255,.22); } .dc-share-app-icon--linkedin img { filter:brightness(0) invert(1); } .dc-share-app-icon--linkedin b { color:#fff; } .dc-share-app-icon--sms { background:linear-gradient(135deg,#e2f5eb,#c7ecd8); color:#087443; } .dc-share-app-icon--copy { background:linear-gradient(135deg,#d1fae5,#a7f3d0); color:#047857; } .dc-share-app-icon--copy.is-copied { background:#047857; color:#fff; }
 .dc-share-link-box { display:flex; align-items:center; gap:10px; min-width:0; margin-top:17px; padding:10px 11px; border:1px solid #dbece2; border-radius:15px; background:rgba(240,253,244,.72); }
 .dc-share-link-icon { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border-radius:11px; color:#047857; background:#d9fbe8; }
 .dc-share-link-value { min-width:0; flex:1; }
@@ -1516,6 +1516,7 @@ const blurb =
     }
   }, [shareUrl, showShareFeedback]);
 
+  // Link-first sharing: many mobile share targets discard text when a file is attached.
   const handleNativeShare = useCallback(async (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -1523,25 +1524,32 @@ const blurb =
       showShareFeedback("Your browser does not offer a system share sheet. Choose an app above or copy the link.");
       return;
     }
-    const supportsPhoto = Boolean(
-      shareImageFile &&
-      typeof navigator.canShare === "function" &&
-      navigator.canShare({ files: [shareImageFile] })
-    );
     const textWithLink = `${shareMessage}\n\nExplore this destination with Altuvera Safaris: ${shareUrl}`;
-    const shareData = supportsPhoto
-      ? { title: shareTitle, text: textWithLink, files: [shareImageFile] }
-      : { title: shareTitle, text: shareMessage, url: shareUrl };
     try {
-      await navigator.share(shareData);
+      await navigator.share({ title: shareTitle, text: textWithLink, url: shareUrl });
       setShareModalOpen(false);
       setShareFeedback("");
     } catch (error) {
-      if (error?.name !== "AbortError") {
-        showShareFeedback("The share sheet could not complete this action. Try Copy link or choose another app.");
-      }
+      if (error?.name !== "AbortError") showShareFeedback("The share sheet could not complete this action. Try Copy link or choose another app.");
     }
-  }, [shareTitle, shareMessage, shareUrl, shareImageFile, showShareFeedback]);
+  }, [shareTitle, shareMessage, shareUrl, showShareFeedback]);
+
+  // Photo sharing is separate because some social apps strip links from image shares.
+  const handlePhotoShare = useCallback(async (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!shareImageFile || typeof navigator === "undefined" || typeof navigator.share !== "function" ||
+        typeof navigator.canShare !== "function" || !navigator.canShare({ files: [shareImageFile] })) {
+      showShareFeedback("Photo sharing isn't supported here. Use Share link & details or Copy link instead.");
+      return;
+    }
+    try {
+      await navigator.share({ title: shareTitle, files: [shareImageFile] });
+      showShareFeedback("Photo shared. If the app didn't include a link, use Copy link to add the destination URL to your caption.");
+    } catch (error) {
+      if (error?.name !== "AbortError") showShareFeedback("Couldn't share the photo. Try Share link & details instead.");
+    }
+  }, [shareTitle, shareImageFile, showShareFeedback]);
 
   /* ── render ── */
   return (
@@ -1839,8 +1847,8 @@ const blurb =
             <a className="dc-share-app" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
               <span className="dc-share-app-icon dc-share-app-icon--x"><img src="https://cdn.simpleicons.org/x/000000" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>𝕏</b></span><span>X</span>
             </a>
-            <button type="button" className="dc-share-app" onClick={handleNativeShare} disabled={shareImageStatus === "loading"} aria-label="Share destination photo and details using your device's apps">
-              <span className="dc-share-app-icon dc-share-app-icon--instagram"><img src="https://cdn.simpleicons.org/instagram/E4405F" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiCamera size={22} /></span><span>Instagram / more</span>
+            <button type="button" className="dc-share-app" onClick={handlePhotoShare} disabled={shareImageStatus === "loading" || !shareImageFile} aria-label="Share destination photo using your device's apps">
+              <span className="dc-share-app-icon dc-share-app-icon--instagram"><img src="https://cdn.simpleicons.org/instagram/E4405F" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><FiCamera size={22} /></span><span>Share photo</span>
             </button>
             <a className="dc-share-app" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
               <span className="dc-share-app-icon dc-share-app-icon--linkedin"><img src="https://cdn.simpleicons.org/linkedin/0A66C2" alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} /><b>in</b></span><span>LinkedIn</span>
@@ -1864,16 +1872,16 @@ const blurb =
           </div>
           {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
             <button type="button" className="dc-share-native" onClick={handleNativeShare} disabled={shareImageStatus === "loading"}>
-              {shareImageStatus === "loading" ? <FiCamera size={18} /> : shareImageFile ? <FiShare2 size={18} /> : <FiLink size={18} />}
+              {shareImageStatus === "loading" ? <FiCamera size={18} /> : <FiLink size={18} />}
               <span>
-                <strong>{shareImageStatus === "loading" ? "Preparing destination photo…" : shareImageFile ? "Share photo & details" : "Share link & details"}</strong>
-                <small>{shareImageStatus === "loading" ? "Getting the destination image ready to attach" : shareImageFile ? "Attach the destination image, caption and link" : "Send the destination details through your device"}</small>
+                <strong>{shareImageStatus === "loading" ? "Preparing destination photo…" : "Share link & details"}</strong>
+                <small>{shareImageStatus === "loading" ? "Getting the destination image ready to attach" : "Send the destination URL and caption through your device"}</small>
               </span>
               <FiChevronRight size={18} className="dc-share-native-arrow" />
             </button>
           )}
           {shareFeedback && <p className="dc-share-feedback" role="status" aria-live="polite">{shareFeedback}</p>}
-          <p className="dc-share-footnote">A link to this destination will be included with your share.</p>
+          <p className="dc-share-footnote">Share link & details sends the destination URL. Photo sharing is separate because some apps drop links when an image is attached.</p>
         </section>
       </div>,
       document.body
