@@ -318,6 +318,8 @@ const MSG_STYLES = `
 .msg-chat-body::-webkit-scrollbar { width: 4px; }
 .msg-chat-body::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
 .msg-chat-body:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
+.msg-resource-picker-scroll { scrollbar-width:none; -ms-overflow-style:none; }
+.msg-resource-picker-scroll::-webkit-scrollbar { display:none; width:0; height:0; }
 .msg-chat-foot {
   flex-shrink: 0; width:100%; background:rgba(255,255,255,.97);
   border-top:1px solid #e2e8f0; z-index:2; box-sizing:border-box;
@@ -2194,10 +2196,16 @@ export default function Messages() {
               </div>
             ) : (
               <>
-                {!sidebarOpen && !showMobile && <button onClick={() => setSidebarOpen(true)} className="absolute left-3 top-3 z-30 w-9 h-9 rounded-xl bg-white border border-slate-200 shadow-sm text-slate-600 flex items-center justify-center hover:text-emerald-600" aria-label="Show conversations" title="Show conversations"><PanelLeftOpen size={17}/></button>}
-
                 {/* ── FIXED CHAT HEADER ── */}
-                <div className="msg-chat-head px-4 py-3 flex items-center gap-3 shadow-sm">
+                <div className="msg-chat-head px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3 shadow-sm">
+                  {/* The desktop sidebar toggle sits in the header flow, never over chat content. */}
+                  {!sidebarOpen && !showMobile && (
+                    <button type="button" onClick={() => setSidebarOpen(true)}
+                      className="hidden md:flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      aria-label="Show conversations" title="Show conversations">
+                      <PanelLeftOpen size={17}/>
+                    </button>
+                  )}
                   {/* Back button — mobile */}
                   <button onClick={() => { returnedToInboxRef.current = true; setSearchParams({}, { replace: true }); openConversation(null); }} aria-label="Back"
                     className="md:hidden p-2 -ml-1 rounded-xl hover:bg-slate-100 transition
@@ -2243,40 +2251,7 @@ export default function Messages() {
                   <StatusPill status={activeConversation.status || "open"} />
                 </div>
 
-                {isResourceSupport && (
-                  <section className="shrink-0 border-b border-emerald-100 bg-emerald-50/70 px-3 py-3 sm:px-4 space-y-3">
-                    <div className="flex items-start gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-white border border-emerald-100 flex items-center justify-center shrink-0"><FileText size={15} className="text-emerald-700"/></div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-extrabold text-slate-900">Booking & travel workspace</p>
-                        <p className="text-[10px] leading-relaxed text-slate-600">Verify your booking to share its live status with the coordinator. Search destinations, packages, and itineraries to ask specific questions.</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <input value={bookingReference} onChange={e=>{setBookingReference(e.target.value);setBookingLookupError("");}} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();verifyBooking();}}} placeholder="Booking ID or reference" aria-label="Booking ID or reference" className="min-w-0 flex-1 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-500"/>
-                      <button type="button" onClick={verifyBooking} disabled={bookingLookupBusy} className="shrink-0 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{bookingLookupBusy ? "Checking…" : "Verify"}</button>
-                    </div>
-                    {bookingLookupError && <p role="alert" className="text-[11px] text-rose-700">{bookingLookupError}</p>}
-                    {bookingContext && (
-                      <div className="rounded-xl border border-emerald-200 bg-white p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-extrabold text-slate-900">Booking #{bookingContext.bookingNumber || bookingContext.id}</p>
-                            <p className="mt-0.5 text-xs font-bold text-emerald-800">{bookingContext.destinationName || "Safari booking"}{bookingContext.countryName ? ` · ${bookingContext.countryName}` : ""}</p>
-                            <p className="mt-1 text-[10px] text-slate-500">{bookingContext.travelDate || "Flexible dates"}{bookingContext.returnDate ? ` → ${bookingContext.returnDate}` : ""} · {bookingContext.travelers || "—"} traveler(s)</p>
-                          </div>
-                          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-extrabold uppercase text-emerald-800">{bookingContext.status || "verified"}</span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
-                          <span>Itinerary: {String(bookingContext.itineraryStatus || "not_started").replaceAll("_"," ")}</span>
-                          <span>· Email: {bookingContext.itineraryEmailStatus || "not_sent"}</span>
-                        </div>
-                        {bookingContext.itineraryEmailStatus === "failed" && bookingContext.itineraryEmailError && <p className="mt-1 text-[10px] text-rose-700">{bookingContext.itineraryEmailError}</p>}
-                      </div>
-                    )}
-
-                  </section>
-                )}
+                
 
                 {/* ── SCROLLABLE MESSAGE BODY ── */}
                 {/*
@@ -2553,83 +2528,117 @@ export default function Messages() {
           onClick={(event) => { if (event.target === event.currentTarget) closeResourcePicker(); }}
         >
           <section role="dialog" aria-modal="true" aria-labelledby="resource-picker-title"
-            className="flex max-h-[min(82dvh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-2xl shadow-slate-950/25 sm:rounded-3xl">
-            <header className="flex items-start gap-3 border-b border-slate-100 bg-gradient-to-r from-white to-emerald-50/70 px-4 py-3.5 sm:px-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800"><Plus size={19}/></div>
+            className="flex max-h-[min(88dvh,760px)] min-h-0 w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-2xl shadow-slate-950/25 sm:rounded-3xl">
+            <header className="flex shrink-0 items-start gap-3 border-b border-slate-100 bg-gradient-to-r from-white to-emerald-50/70 px-4 py-3.5 sm:px-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800"><FileText size={19}/></div>
               <div className="min-w-0 flex-1">
-                <h2 id="resource-picker-title" className="text-sm font-extrabold text-slate-900 sm:text-base">Attach a travel item</h2>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">Choose a destination, country or package to make your message specific.</p>
+                <h2 id="resource-picker-title" className="text-sm font-extrabold text-slate-900 sm:text-base">Booking &amp; travel workspace</h2>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">Verify your booking to share its live status with the coordinator. Search destinations, packages, and itineraries to ask specific questions.</p>
               </div>
-              <button type="button" onClick={closeResourcePicker} aria-label="Close item picker"
+              <button type="button" onClick={closeResourcePicker} aria-label="Close booking and travel workspace"
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"><X size={17}/></button>
             </header>
 
-            <div className="space-y-3 px-4 pb-3 pt-3 sm:px-5">
-              <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Travel item type">
-                {[
-                  { value: "destination", label: "Destinations" },
-                  { value: "country", label: "Countries" },
-                  { value: "package", label: "Packages" },
-                ].map((type) => (
-                  <button key={type.value} type="button" role="tab" aria-selected={resourceType === type.value}
-                    onClick={() => {
-                      setResourceType(type.value);
-                      setResourceQuery("");
-                      setResourceResults([]);
-                      setResourceSearchError("");
-                    }}
-                    className={`min-w-0 rounded-lg px-1.5 py-2 text-[10px] font-extrabold transition sm:px-3 sm:text-xs ${resourceType === type.value ? "bg-white text-emerald-800 shadow-sm ring-1 ring-slate-200/70" : "text-slate-500 hover:text-slate-800"}`}>
-                    {type.label}
-                  </button>
-                ))}
-              </div>
-              <label className="relative block">
-                <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
-                <input value={resourceQuery} onChange={(event) => setResourceQuery(event.target.value)} type="search"
-                  placeholder={resourceType === "package" ? "Search package titles…" : resourceType === "country" ? "Search country names…" : "Search destination names…"}
-                  aria-label={`Search ${resourceType}s`}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-500/10"/>
-              </label>
-            </div>
-
-            <div className="min-h-[120px] flex-1 overflow-y-auto overscroll-contain px-4 pb-4 sm:px-5">
-              {resourceSearchBusy && <div className="flex items-center justify-center gap-2 py-8 text-xs font-semibold text-emerald-700" role="status"><RefreshCw size={14} className="animate-spin"/> Searching {resourceType}s…</div>}
-              {resourceSearchError && <p role="alert" className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-2.5 text-xs text-rose-700">{resourceSearchError}</p>}
-              {!resourceSearchBusy && !resourceSearchError && resourceQuery.trim().length < 2 && (
-                <div className="flex flex-col items-center justify-center py-7 text-center">
-                  <Search size={20} className="mb-2 text-slate-300"/>
-                  <p className="text-xs font-semibold text-slate-600">Search by name</p>
-                  <p className="mt-1 max-w-xs text-[10px] leading-relaxed text-slate-400">Enter at least two characters to find a listed {resourceType}.</p>
-                </div>
-              )}
-              {!resourceSearchBusy && !resourceSearchError && resourceQuery.trim().length >= 2 && resourceResults.length === 0 && (
-                <div className="py-7 text-center text-xs text-slate-500">No matching {resourceType}s found. Try another name.</div>
-              )}
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {resourceResults.map((item) => {
-                  const itemName = String(item.name || item.title || "").trim();
-                  const itemImage = resourceType !== "package" ? getResourceImageUrl(item.imageUrl || item.image_url || item.image) : "";
-                  if (!itemName) return null;
-                  return (
-                    <button key={`${item.type || resourceType}:${item.id}`} type="button"
-                      onClick={() => {
-                        setSelectedResource({ ...item, type: resourceType, name: itemName, slug: item.slug || null, imageUrl: getResourceImageUrl(item.imageUrl || item.image_url || item.image) || null });
-                        closeResourcePicker();
-                      }}
-                      className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-2.5 text-left transition hover:border-emerald-300 hover:bg-emerald-50/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                      {resourceType !== "package" && (
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-emerald-50 text-emerald-700">
-                          {itemImage ? <img src={itemImage} alt="" className="h-full w-full object-cover" loading="lazy"/> : <MapPin size={17}/>}
+            <div className="msg-resource-picker-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <div className="space-y-3 px-4 pb-3 pt-3 sm:px-5">
+                <section className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3">
+                  <div className="flex items-start gap-2">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-100 bg-white"><FileText size={15} className="text-emerald-700"/></div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-extrabold text-slate-900">Verify a booking</p>
+                      <p className="mt-0.5 text-[10px] leading-relaxed text-slate-600">Enter your booking ID or reference to share its current status with the coordinator.</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <input value={bookingReference} onChange={e=>{setBookingReference(e.target.value);setBookingLookupError("");}} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();verifyBooking();}}} placeholder="Booking ID or reference" aria-label="Booking ID or reference" className="min-w-0 flex-1 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"/>
+                    <button type="button" onClick={verifyBooking} disabled={bookingLookupBusy} className="shrink-0 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{bookingLookupBusy ? "Checking…" : "Verify"}</button>
+                  </div>
+                  {bookingLookupError && <p role="alert" className="mt-2 text-[11px] leading-relaxed text-rose-700">{bookingLookupError}</p>}
+                  {bookingContext && (
+                    <div className="mt-3 rounded-xl border border-emerald-200 bg-white p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-extrabold text-slate-900">Booking #{bookingContext.bookingNumber || bookingContext.id}</p>
+                          <p className="mt-0.5 text-xs font-bold text-emerald-800">{bookingContext.destinationName || "Safari booking"}{bookingContext.countryName ? ` · ${bookingContext.countryName}` : ""}</p>
+                          <p className="mt-1 text-[10px] text-slate-500">{bookingContext.travelDate || "Flexible dates"}{bookingContext.returnDate ? ` → ${bookingContext.returnDate}` : ""} · {bookingContext.travelers || "—"} traveler(s)</p>
                         </div>
-                      )}
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-extrabold text-slate-900" title={itemName}>{itemName}</span>
-                        {resourceType === "package" && <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-wider text-emerald-700">Package title</span>}
-                      </span>
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700"><Plus size={13}/></span>
+                        <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-extrabold uppercase text-emerald-800">{bookingContext.status || "verified"}</span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                        <span>Itinerary: {String(bookingContext.itineraryStatus || "not_started").replaceAll("_"," ")}</span>
+                        <span>· Email: {bookingContext.itineraryEmailStatus || "not_sent"}</span>
+                      </div>
+                      {bookingContext.itineraryEmailStatus === "failed" && bookingContext.itineraryEmailError && <p className="mt-1 break-words text-[10px] text-rose-700">{bookingContext.itineraryEmailError}</p>}
+                    </div>
+                  )}
+                </section>
+
+                <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Travel item type">
+                  {[
+                    { value: "destination", label: "Destinations" },
+                    { value: "country", label: "Countries" },
+                    { value: "package", label: "Packages" },
+                  ].map((type) => (
+                    <button key={type.value} type="button" role="tab" aria-selected={resourceType === type.value}
+                      onClick={() => {
+                        setResourceType(type.value);
+                        setResourceQuery("");
+                        setResourceResults([]);
+                        setResourceSearchError("");
+                      }}
+                      className={`min-w-0 rounded-lg px-1.5 py-2 text-[10px] font-extrabold transition sm:px-3 sm:text-xs ${resourceType === type.value ? "bg-white text-emerald-800 shadow-sm ring-1 ring-slate-200/70" : "text-slate-500 hover:text-slate-800"}`}>
+                      {type.label}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+                <label className="relative block">
+                  <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                  <input value={resourceQuery} onChange={(event) => setResourceQuery(event.target.value)} type="search"
+                    placeholder={resourceType === "package" ? "Search package titles…" : resourceType === "country" ? "Search country names…" : "Search destination names…"}
+                    aria-label={`Search ${resourceType}s`}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-500/10"/>
+                </label>
+              </div>
+
+              <div className="min-h-[120px] px-4 pb-4 sm:px-5">
+                {resourceSearchBusy && <div className="flex items-center justify-center gap-2 py-8 text-xs font-semibold text-emerald-700" role="status"><RefreshCw size={14} className="animate-spin"/> Searching {resourceType}s…</div>}
+                {resourceSearchError && <p role="alert" className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-2.5 text-xs text-rose-700">{resourceSearchError}</p>}
+                {!resourceSearchBusy && !resourceSearchError && resourceQuery.trim().length < 2 && (
+                  <div className="flex flex-col items-center justify-center py-7 text-center">
+                    <Search size={20} className="mb-2 text-slate-300"/>
+                    <p className="text-xs font-semibold text-slate-600">Search by name</p>
+                    <p className="mt-1 max-w-xs text-[10px] leading-relaxed text-slate-400">Enter at least two characters to find a listed {resourceType}.</p>
+                  </div>
+                )}
+                {!resourceSearchBusy && !resourceSearchError && resourceQuery.trim().length >= 2 && resourceResults.length === 0 && (
+                  <div className="py-7 text-center text-xs text-slate-500">No matching {resourceType}s found. Try another name.</div>
+                )}
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {resourceResults.map((item) => {
+                    const itemName = String(item.name || item.title || "").trim();
+                    const itemImage = resourceType !== "package" ? getResourceImageUrl(item.imageUrl || item.image_url || item.image) : "";
+                    if (!itemName) return null;
+                    return (
+                      <button key={`${item.type || resourceType}:${item.id}`} type="button"
+                        onClick={() => {
+                          setSelectedResource({ ...item, type: resourceType, name: itemName, slug: item.slug || null, imageUrl: getResourceImageUrl(item.imageUrl || item.image_url || item.image) || null });
+                          closeResourcePicker();
+                        }}
+                        className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-2.5 text-left transition hover:border-emerald-300 hover:bg-emerald-50/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                        {resourceType !== "package" && (
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-emerald-50 text-emerald-700">
+                            {itemImage ? <img src={itemImage} alt="" className="h-full w-full object-cover" loading="lazy"/> : <MapPin size={17}/>}
+                          </div>
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs font-extrabold text-slate-900" title={itemName}>{itemName}</span>
+                          {resourceType === "package" && <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-wider text-emerald-700">Package title</span>}
+                        </span>
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700"><Plus size={13}/></span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
