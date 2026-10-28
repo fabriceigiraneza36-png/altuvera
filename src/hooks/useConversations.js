@@ -42,8 +42,15 @@ const authFetch = (url, opts = {}) => {
 };
 
 /* ─── Serialise snake_case → camelCase ──────────────────────────────── */
+const notifiedGroupMessageTags = new Set();
+
 const notifyMessage = (title, body, tag, actionUrl = null) => {
   try {
+    if (String(tag || "").startsWith("altuvera-group-message-")) {
+      if (notifiedGroupMessageTags.has(tag)) return;
+      notifiedGroupMessageTags.add(tag);
+      if (notifiedGroupMessageTags.size > 500) notifiedGroupMessageTags.clear();
+    }
     if (typeof window === "undefined" || !("Notification" in window)) return;
     const show = () => {
       const notification = new Notification(title, {
@@ -73,7 +80,9 @@ const getCurrentUserId = () => {
     const token = getToken();
     const payload = token.split(".")[1];
     if (!payload) return null;
-    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))).id || null;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=")));
+    return decoded.id ?? decoded.userId ?? decoded.user_id ?? decoded.sub ?? null;
   } catch { return null; }
 };
 
@@ -114,10 +123,10 @@ const normMsg = (m) => ({
   conversationId: m.conversation_id || m.conversationId,
   senderType:     m.sender_type     || m.senderType,
   senderId:       m.sender_id       || m.senderId,
-  senderName:     m.sender_name     || m.senderName,
-  senderUsername: m.sender_username || m.senderUsername || m.username || null,
+  senderName:     m.sender_user_full_name || m.sender_full_name || m.sender_name || m.senderName || null,
+  senderUsername: m.sender_user_username || m.sender_username || m.senderUsername || m.username || null,
   senderEmail:    m.sender_email    || m.senderEmail,
-  senderAvatar:   m.sender_avatar || m.senderAvatar || m.sender_avatar_url || m.senderAvatarUrl || m.avatar_url || m.avatarUrl || m.profile_picture_url || m.profilePictureUrl || m.profile_picture || m.profilePicture || m.user_avatar || m.userAvatar || m.avatar || null,
+  senderAvatar:   m.sender_user_avatar || m.sender_avatar || m.senderAvatar || m.sender_avatar_url || m.senderAvatarUrl || m.avatar_url || m.avatarUrl || m.profile_picture_url || m.profilePictureUrl || m.profile_picture || m.profilePicture || m.user_avatar || m.userAvatar || m.avatar || null,
   body:           m.body,
   msgType:        m.msg_type        || m.msgType || "text",
   isRead:         m.is_read         ?? m.isRead ?? false,
@@ -150,6 +159,7 @@ export function useConversations() {
   const pollRef = useRef(null);
   const socketRef = useRef(null);
   const activeIdRef = useRef(null);
+  const conversationsRef = useRef([]);
   const openRequestRef = useRef(0);
   const typingTimerCache = useRef({});
   const [adminTyping, setAdminTyping] = useState(null);
@@ -162,6 +172,23 @@ export function useConversations() {
   const [recycleClock, setRecycleClock] = useState(() => Date.now());
 
   useEffect(() => { activeIdRef.current = activeId }, [activeId]);
+  useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
+
+  const joinGroupRooms = useCallback((rows = conversationsRef.current) => {
+    const socket = socketRef.current;
+    if (!socket?.connected || !Array.isArray(rows)) return;
+    const joined = new Set();
+    rows.forEach((conversation) => {
+      const groupId = conversation?.groupId ?? conversation?.group_id;
+      if (groupId == null || groupId === "" || joined.has(String(groupId))) return;
+      joined.add(String(groupId));
+      socket.emit("msg:join-group", { groupId }, (ack) => {
+        if (!ack?.success && import.meta.env.DEV) {
+          console.warn("[Messages] Could not join group room:", ack?.error || groupId);
+        }
+      });
+    });
+  }, []);
 
   const recycleWarningSeconds = recycleWarning?.deadlineAt
     ? Math.max(0, Math.ceil((new Date(recycleWarning.deadlineAt).getTime() - recycleClock) / 1000))
@@ -234,7 +261,9 @@ export function useConversations() {
         : null;
       if (!rows) throw new Error("The inbox response was unexpected. Please refresh to try again.");
       const normalizedRows = rows.map(normConv);
+      conversationsRef.current = normalizedRows;
       setConversations(normalizedRows);
+      joinGroupRooms(normalizedRows);
       const pendingRestore = normalizedRows.find((conversation) => conversation.metadata?.restoreChoicePending);
       setRestoreChoice(pendingRestore ? {
         conversationId: String(pendingRestore.id),
@@ -246,7 +275,7 @@ export function useConversations() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [joinGroupRooms]);
 
   /* ── Socket connection ── */
   useEffect(() => {
@@ -265,6 +294,8 @@ export function useConversations() {
       setConnected(true);
       const currentUserId = getCurrentUserId();
       if (currentUserId) s.emit("join:user", { userId: currentUserId });
+      // Subscribe to every group belonging to this account on initial connect and reconnect.
+      joinGroupRooms();
       s.emit("msg:inbox-open", { open: true });
       if (import.meta.env.DEV) console.info("[Socket] Connected:", s.id);
     });
@@ -411,11 +442,25 @@ export function useConversations() {
       const cid = String(payload?.conversationId || msg?.conversationId || "");
       if (!msg?.id || !cid) return;
 
-      if (msg.senderType === "admin" && cid !== String(activeIdRef.current)) {
+      const currentUserId = getCurrentUserId();
+      const isOwnMessage = currentUserId != null && msg.senderId != null
+        && String(currentUserId) === String(msg.senderId);
+      const isActiveConversation = cid === String(activeIdRef.current);
+      const senderType = String(msg.senderType || "").trim().toLowerCase().replace(/[\\s-]+/g, "_");
+      const isAdminSender = ["admin", "super_admin", "superadmin", "administrator", "moderator", "editor", "support", "staff", "agent"].includes(senderType);
+      const senderName = isAdminSender
+        ? (msg.senderName || "Altuvera Team")
+        : (msg.senderName || msg.senderUsername || "A group member");
+      const groupName = payload?.groupName || conversationsRef.current.find((c) => String(c.id) === cid)?.groupName || "Group conversation";
+
+      // Only notify other members, and identify the person who actually sent it.
+      // A message-specific tag prevents duplicate alerts when multiple portal
+      // components have their own socket listeners.
+      if (!isOwnMessage && !isActiveConversation) {
         notifyMessage(
-          payload?.groupName || "Altuvera group message",
-          msg.body?.slice(0, 160) || "You received a new group message.",
-          `altuvera-conversation-${cid}`,
+          `${senderName} · ${groupName}`,
+          msg.body?.slice(0, 160) || `New message from ${senderName}.`,
+          `altuvera-group-message-${msg.id}`,
           `/messages?conversationId=${encodeURIComponent(cid)}`,
         );
       }
@@ -436,7 +481,7 @@ export function useConversations() {
               lastMessageSenderName: msg.senderName || c.lastMessageSenderName,
               lastMessageSenderUsername: msg.senderUsername || c.lastMessageSenderUsername,
               lastMessageSenderAvatar: msg.senderAvatar || c.lastMessageSenderAvatar,
-              unreadUser: cid === String(activeIdRef.current) ? 0 : (c.unreadUser || 0) + (msg.senderType === "admin" ? 1 : 0),
+              unreadUser: isActiveConversation ? 0 : (c.unreadUser || 0) + (isOwnMessage ? 0 : 1),
             }
           : c
         );
@@ -448,7 +493,7 @@ export function useConversations() {
         return next;
       });
 
-      if (cid === String(activeIdRef.current)) {
+      if (isActiveConversation) {
         setMessages((prev) => prev.some((m) => String(m.id) === String(msg.id)) ? prev : [...prev, msg]);
       }
     };
@@ -503,7 +548,7 @@ export function useConversations() {
       s.off("msg:conversation-restored");
       s.disconnect();
     };
-  }, [fetchConversations]);
+  }, [fetchConversations, joinGroupRooms]);
 
 
   /* Initial load */
@@ -677,6 +722,7 @@ export function useConversations() {
         id:             `tmp-${Date.now()}`,
         conversationId,
         senderType:     "user",
+        senderId:       getCurrentUserId(),
         senderName:     "You",
         body:           body.trim(),
         isRead:         false,
