@@ -5,11 +5,22 @@
 
   "rewrites": [
     {
+      "source": "/destinations/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "[Ff]acebookexternalhit|[Ff]acebot|[Tt]witterbot|[Ll]inked[Ii]n[Bb]ot|[Ww]hats[Aa]pp|[Tt]elegram[Bb]ot|[Dd]iscord[Bb]ot|[Ss]lack[Bb]ot|[Pp]int[eE]rest|[Ss]kype[Uu]ri[Pp]review"
+        }
+      ],
+      "destination": "/api/share-preview?slug=:slug"
+    },
+    {
       "source": "/destinations-sitemap.xml",
       "destination": "https://api.altuverasafaris.com/api/seo/destinations-sitemap.xml"
     },
     {
-      "source": "/((?!assets|favicon|altuvera\\.png|site\\.webmanifest|sitemap\\.xml|rss\\.xml|robots\\.txt|_vercel).*)",
+      "source": "/((?!api|assets|favicon|altuvera\\.png|site\\.webmanifest|sitemap\\.xml|rss\\.xml|robots\\.txt|_vercel).*)",
       "destination": "/index.html"
     }
   ],

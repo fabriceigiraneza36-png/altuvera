@@ -716,9 +716,10 @@ const CSS = `
 .dc-share-app { min-width:0; min-height:96px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; padding:11px 5px; border:1px solid #e4eee8; border-radius:15px; background:rgba(255,255,255,.88); color:#385447; text-align:center; text-decoration:none; font-family:inherit; font-size:10.5px; font-weight:750; cursor:pointer; transition:transform .2s,border-color .2s,background .2s,box-shadow .2s; }
 .dc-share-app:hover,.dc-share-app:focus-visible { transform:translateY(-2px); border-color:#a7f3d0; background:#fff; box-shadow:0 7px 18px rgba(6,78,59,.09); outline:none; }
 .dc-share-app:active { transform:scale(.97); }
+.dc-share-app:disabled { opacity:.58; cursor:wait; transform:none; box-shadow:none; }
 .dc-share-app-icon { width:43px; height:43px; display:grid; place-items:center; border-radius:14px; color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 4px 10px rgba(15,23,42,.1); }
 .dc-share-app-icon b { font-family:Arial,sans-serif; font-size:27px; font-weight:800; line-height:1; }
-.dc-share-app-icon--whatsapp { background:#25d366; } .dc-share-app-icon--facebook { background:#1877f2; } .dc-share-app-icon--telegram { background:linear-gradient(135deg,#31a8e0,#1686c7); } .dc-share-app-icon--x { background:#111827; } .dc-share-app-icon--linkedin { background:#0a66c2; } .dc-share-app-icon--email { background:linear-gradient(135deg,#f97316,#ea580c); } .dc-share-app-icon--sms { background:linear-gradient(135deg,#64748b,#334155); } .dc-share-app-icon--copy { background:linear-gradient(135deg,#10b981,#047857); } .dc-share-app-icon--copy.is-copied { background:#047857; }
+.dc-share-app-icon--whatsapp { background:#25d366; } .dc-share-app-icon--facebook { background:#1877f2; } .dc-share-app-icon--telegram { background:linear-gradient(135deg,#31a8e0,#1686c7); } .dc-share-app-icon--x { background:#111827; } .dc-share-app-icon--linkedin { background:#0a66c2; } .dc-share-app-icon--email { background:linear-gradient(135deg,#f97316,#ea580c); } .dc-share-app-icon--instagram { background:linear-gradient(135deg,#f9ce34 0%,#ee2a7b 48%,#6228d7 100%); } .dc-share-app-icon--sms { background:linear-gradient(135deg,#64748b,#334155); } .dc-share-app-icon--copy { background:linear-gradient(135deg,#10b981,#047857); } .dc-share-app-icon--copy.is-copied { background:#047857; }
 .dc-share-link-box { display:flex; align-items:center; gap:10px; min-width:0; margin-top:17px; padding:10px 11px; border:1px solid #dbece2; border-radius:15px; background:rgba(240,253,244,.72); }
 .dc-share-link-icon { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border-radius:11px; color:#047857; background:#d9fbe8; }
 .dc-share-link-value { min-width:0; flex:1; }
@@ -1059,7 +1060,21 @@ const DestinationCard = memo(function DestinationCard({
   const [copied,    setCopied]    = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareFeedback, setShareFeedback] = useState("");
+  const [shareImageFile, setShareImageFile] = useState(null);
+  const [shareImageStatus, setShareImageStatus] = useState("idle");
   const shareFeedbackTimer = useRef(null);
+  const shareImageSource = useMemo(() => {
+    const toList = (value) => Array.isArray(value) ? value : value ? [value] : [];
+    const candidates = [
+      ...toList(destination?.heroImages), ...toList(destination?.hero_images),
+      ...toList(destination?.images), ...toList(destination?.gallery),
+      ...toList(destination?.image_urls), ...toList(destination?.imageUrls),
+      destination?.heroImage, destination?.hero_image, destination?.coverImageUrl,
+      destination?.cover_image_url, destination?.imageUrl, destination?.image_url,
+      destination?.image, destination?.thumbnailUrl, destination?.thumbnail_url,
+    ].map(getImageUrl).filter(Boolean);
+    return candidates[0] || "";
+  }, [destination]);
   const [showFavouriteIcon, setShowFavouriteIcon] = useState(false);
   const favouriteToastTimer = useRef(null);
   useEffect(() => () => {
@@ -1080,6 +1095,75 @@ const DestinationCard = memo(function DestinationCard({
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [shareModalOpen]);
+
+  useEffect(() => {
+    if (!shareModalOpen) {
+      setShareImageFile(null);
+      setShareImageStatus("idle");
+      return undefined;
+    }
+    if (!shareImageSource) {
+      setShareImageFile(null);
+      setShareImageStatus("unavailable");
+      return undefined;
+    }
+
+    let cancelled = false;
+    const prepareShareImage = async () => {
+      setShareImageFile(null);
+      setShareImageStatus("loading");
+      try {
+        const response = await fetch(shareImageSource, { mode: "cors", credentials: "omit" });
+        if (!response.ok) throw new Error("Destination photo could not be downloaded");
+        const sourceBlob = await response.blob();
+        if (!sourceBlob.type.startsWith("image/")) throw new Error("Destination photo is not an image");
+
+        let outputBlob = sourceBlob;
+        if (typeof createImageBitmap === "function") {
+          let bitmap;
+          try {
+            bitmap = await createImageBitmap(sourceBlob);
+            const cropSize = Math.min(bitmap.width, bitmap.height);
+            const sx = Math.max(0, (bitmap.width - cropSize) / 2);
+            const sy = Math.max(0, (bitmap.height - cropSize) / 2);
+            const canvas = document.createElement("canvas");
+            canvas.width = 1200;
+            canvas.height = 1200;
+            const context = canvas.getContext("2d");
+            if (context) {
+              context.drawImage(bitmap, sx, sy, cropSize, cropSize, 0, 0, 1200, 1200);
+              const squarePhoto = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+              if (squarePhoto) outputBlob = squarePhoto;
+            }
+          } finally {
+            bitmap?.close?.();
+          }
+        }
+
+        const safeName = String(destination?.slug || destination?.name || "destination")
+          .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 64) || "destination";
+        const mime = outputBlob.type || sourceBlob.type || "image/jpeg";
+        const extension = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : mime.includes("gif") ? "gif" : "jpg";
+        const file = new File([outputBlob], `altuvera-${safeName}.${extension}`, { type: mime });
+        const canShareFile = typeof navigator !== "undefined" &&
+          typeof navigator.canShare === "function" &&
+          navigator.canShare({ files: [file] });
+        if (!cancelled) {
+          setShareImageFile(canShareFile ? file : null);
+          setShareImageStatus(canShareFile ? "ready" : "unsupported");
+          if (!canShareFile) setShareFeedback("This browser cannot attach photos through its share sheet. You can still share the destination link and details.");
+        }
+      } catch {
+        if (!cancelled) {
+          setShareImageFile(null);
+          setShareImageStatus("error");
+          setShareFeedback("The destination photo could not be prepared for attachment here. The link and details are still ready to share.");
+        }
+      }
+    };
+    prepareShareImage();
+    return () => { cancelled = true; };
+  }, [shareModalOpen, shareImageSource, destination?.slug, destination?.name]);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
   const likeId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
   const ratingIdValue = destination?.numericId || destination?.id || destination?._id;
@@ -1386,9 +1470,9 @@ const blurb =
     [destId, isLiked, toggleWishlist, onWishlistToggle],
   );
 
-  const shareUrl = typeof window !== "undefined"
-    ? new URL(`/destinations/${encodeURIComponent(String(destId || ""))}`, window.location.origin).toString()
-    : "";
+  const shareUrl = destId
+    ? `https://www.altuverasafaris.com/destinations/${encodeURIComponent(String(destId))}`
+    : "https://www.altuverasafaris.com/destinations";
   const shareTitle = `Discover ${name} with Altuvera Safaris`;
   const shareMessage = `${name}${locationStr ? ` — ${locationStr}` : ""}\n${blurb || "Discover this East African experience with Altuvera Safaris."}`;
 
@@ -1439,14 +1523,25 @@ const blurb =
       showShareFeedback("Your browser does not offer a system share sheet. Choose an app above or copy the link.");
       return;
     }
+    const supportsPhoto = Boolean(
+      shareImageFile &&
+      typeof navigator.canShare === "function" &&
+      navigator.canShare({ files: [shareImageFile] })
+    );
+    const textWithLink = `${shareMessage}\n\nExplore this destination with Altuvera Safaris: ${shareUrl}`;
+    const shareData = supportsPhoto
+      ? { title: shareTitle, text: textWithLink, files: [shareImageFile] }
+      : { title: shareTitle, text: shareMessage, url: shareUrl };
     try {
-      await navigator.share({ title: shareTitle, text: shareMessage, url: shareUrl });
+      await navigator.share(shareData);
       setShareModalOpen(false);
       setShareFeedback("");
     } catch (error) {
-      if (error?.name !== "AbortError") showShareFeedback("The system share sheet could not be opened. Please choose an app above.");
+      if (error?.name !== "AbortError") {
+        showShareFeedback("The share sheet could not complete this action. Try Copy link or choose another app.");
+      }
     }
-  }, [shareTitle, shareMessage, shareUrl, showShareFeedback]);
+  }, [shareTitle, shareMessage, shareUrl, shareImageFile, showShareFeedback]);
 
   /* ── render ── */
   return (
@@ -1735,7 +1830,7 @@ const blurb =
             <a className="dc-share-app" href={`https://wa.me/?text=${encodeURIComponent(`${shareMessage}\n${shareUrl}`)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
               <span className="dc-share-app-icon dc-share-app-icon--whatsapp"><FiMessageCircle size={23} /></span><span>WhatsApp</span>
             </a>
-            <a className="dc-share-app" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
+            <a className="dc-share-app" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareMessage)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
               <span className="dc-share-app-icon dc-share-app-icon--facebook"><b>f</b></span><span>Facebook</span>
             </a>
             <a className="dc-share-app" href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareMessage)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
@@ -1744,6 +1839,9 @@ const blurb =
             <a className="dc-share-app" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
               <span className="dc-share-app-icon dc-share-app-icon--x"><b>𝕏</b></span><span>X</span>
             </a>
+            <button type="button" className="dc-share-app" onClick={handleNativeShare} disabled={shareImageStatus === "loading"} aria-label="Share destination photo and details using your device's apps">
+              <span className="dc-share-app-icon dc-share-app-icon--instagram"><FiCamera size={22} /></span><span>Instagram / more</span>
+            </button>
             <a className="dc-share-app" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" onClick={() => setShareModalOpen(false)}>
               <span className="dc-share-app-icon dc-share-app-icon--linkedin"><b>in</b></span><span>LinkedIn</span>
             </a>
@@ -1765,8 +1863,13 @@ const blurb =
             </button>
           </div>
           {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-            <button type="button" className="dc-share-native" onClick={handleNativeShare}>
-              <FiShare2 size={18} /><span><strong>More apps & devices</strong><small>Open your device’s share sheet</small></span><FiChevronRight size={18} className="dc-share-native-arrow" />
+            <button type="button" className="dc-share-native" onClick={handleNativeShare} disabled={shareImageStatus === "loading"}>
+              {shareImageStatus === "loading" ? <FiCamera size={18} /> : shareImageFile ? <FiShare2 size={18} /> : <FiLink size={18} />}
+              <span>
+                <strong>{shareImageStatus === "loading" ? "Preparing destination photo…" : shareImageFile ? "Share photo & details" : "Share link & details"}</strong>
+                <small>{shareImageStatus === "loading" ? "Getting the destination image ready to attach" : shareImageFile ? "Attach the destination image, caption and link" : "Send the destination details through your device"}</small>
+              </span>
+              <FiChevronRight size={18} className="dc-share-native-arrow" />
             </button>
           )}
           {shareFeedback && <p className="dc-share-feedback" role="status" aria-live="polite">{shareFeedback}</p>}
