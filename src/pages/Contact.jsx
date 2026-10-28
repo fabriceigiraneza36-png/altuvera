@@ -270,13 +270,7 @@ const FormTextarea = React.memo(({ name, label, placeholder, required, maxLength
           maxLength={maxLength} onChange={onChange}
           onFocus={() => setFocused(true)} onBlur={e => { setFocused(false); onBlur?.(e); }}
           className="ct-textarea" aria-invalid={!!hasErr} />
-        <div className="ct-char-bar">
-          <div className="ct-char-track">
-            <motion.div className="ct-char-fill" animate={{ width: `${pct}%` }}
-              style={{ background: pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : "#059669" }} />
-          </div>
-          <span className="ct-char-count" style={{ color: pct > 90 ? "#ef4444" : undefined }}>{chars}/{maxLength}</span>
-        </div>
+        <div className="ct-char-bar ct-char-bar--count-only"><span className="ct-char-count" aria-live="polite">{chars} / {maxLength} characters</span></div>
       </div>
       <AnimatePresence>
         {hasErr && (
@@ -499,6 +493,10 @@ const Contact = () => {
         </div>
 
         <motion.div className="ct-hero-content" style={{ opacity: heroOpacity }}>
+          <motion.div className="ct-hero-kicker" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.45 }}>
+            <span className="ct-hero-kicker-dot" />
+            TRUE ADVENTURE IN HIGH PLACES &amp; DEEP CULTURE
+          </motion.div>
           <motion.h1 className="ct-hero-h1"
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.65 }}>
@@ -588,29 +586,37 @@ const Contact = () => {
             <ScrollReveal direction="right" delay={0.1}>
               <AnimatePresence mode="wait">
                 {submitted ? (
-                  <motion.div key="done" className="ct-form-card"
-                    initial={{ opacity: 0, scale: 0.92, y: 14 }}
+                  <motion.div key="done" className="ct-form-card ct-form-card--success"
+                    role="status" aria-live="polite"
+                    initial={{ opacity: 0, scale: 0.96, y: 18 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4, ease: EASE.snappy }}>
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.34, ease: EASE.snappy }}>
+                    <FormBubbleLayer />
                     <div className="ct-success">
+                      <div className="ct-success-kicker"><FiSparkles size={14} /> MESSAGE RECEIVED</div>
                       <motion.div className="ct-success-circle"
-                        initial={{ scale: 0 }} animate={{ scale: 1 }}
-                        transition={{ delay: 0.12, duration: 0.45, ease: EASE.bounce }}>
-                        <FiCheckCircle size={44} color="#fff" />
+                        initial={{ scale: 0, rotate: -18 }} animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.08, duration: 0.48, ease: EASE.bounce }}>
+                        <FiCheckCircle size={40} strokeWidth={1.8} />
                       </motion.div>
                       <motion.h3 className="ct-success-h"
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-                        Message Sent Successfully
+                        Your message is on its way
                       </motion.h3>
                       <motion.p className="ct-success-p"
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
-                        Our safari experts will get back to you within 24 hours.
+                        Thank you for reaching out to Altuvera Safaris. Our team has received your message and will follow up as soon as possible.
                       </motion.p>
                       <motion.div className="ct-success-email"
-                        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-                        <small>Confirmation sent to</small>
-                        <strong>{submittedEmail}</strong>
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                        <span className="ct-success-email-icon"><FiMail size={17} /></span>
+                        <span className="ct-success-email-copy"><small>We’ll reply to</small><strong>{submittedEmail}</strong></span>
+                      </motion.div>
+                      <motion.div className="ct-success-next"
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}>
+                        <span className="ct-success-next-icon"><FiClock size={17} /></span>
+                        <span><strong>What happens next?</strong><small>A safari specialist will review your enquiry and contact you with helpful next steps.</small></span>
                       </motion.div>
                       <motion.div className="ct-success-btns"
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}>
@@ -626,17 +632,16 @@ const Contact = () => {
                 ) : (
                   <motion.form key="form" className="ct-form-card" onSubmit={handleSubmit} autoComplete="off" noValidate
                     initial={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.97 }}>
-                    {/* Progress */}
-                    <div className="ct-progress">
-                      <div className="ct-progress-top">
-                        <span className="ct-progress-label">Progress</span>
-                        <span className="ct-progress-pct">{completion}%</span>
+                    <FormBubbleLayer />
+                    <div className="ct-form-intro">
+                      <div>
+                        <span className="ct-form-eyebrow">LET’S GET ACQUAINTED</span>
+                        <h3>Tell us about your trip</h3>
+                        <p>A few details help us plan a more personal response.</p>
                       </div>
-                      <div className="ct-progress-track">
-                        <motion.div className="ct-progress-fill" animate={{ width: `${completion}%` }} transition={{ duration: 0.35 }} />
-                      </div>
+                      <span className="ct-form-intro-icon"><FiMessageSquare size={20} /></span>
                     </div>
-                    {/* Step tabs */}
+                    {/* Step navigation — no percentage or auto-filling progress bar. */}
                     <div className="ct-step-tabs">
                       {STEP_CONFIG.map((cfg, i) => {
                         const isActive = step === i;
@@ -768,10 +773,9 @@ const Contact = () => {
                                     <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
                                   </svg>
                                   Sending…
-                                  <div className="ct-submit-progress" style={{ width: `${submitProgress}%` }} />
                                 </>
                               ) : (
-                                <><RiSendPlaneFill size={16} /> Send Message</>
+                                <><FiSend size={16} /> Send Message</>
                               )}
                             </button>
                             <div className="ct-privacy-note">
