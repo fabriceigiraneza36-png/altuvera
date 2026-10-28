@@ -523,7 +523,9 @@ const CSS = `
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: auto;
+  /* Keep actions directly beneath the destination details instead of pinning
+     them to the bottom of a tall equal-height card. */
+  margin-top: 0;
 }
 
 .dc-btn-learn {
