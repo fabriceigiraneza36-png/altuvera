@@ -1,3 +1,6 @@
+export const BRAND_SUPPORT_EMAIL = "info@altuverasafaris.com";
+export const BRAND_SUPPORT_PHONE = "+250785751391";
+
 export const getSiteUrl = () => {
   const envUrl = import.meta?.env?.VITE_SITE_URL;
   const raw =
