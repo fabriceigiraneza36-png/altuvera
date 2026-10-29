@@ -46,7 +46,7 @@ export const BRAND_SOCIAL = {
 
 export const BRAND_META = {
   siteName: "Altuvera Safaris",
-  siteUrl: "https://altuvera.com",
+  siteUrl: "https://www.altuverasafaris.com",
   defaultImage: "/images/og-default.jpg",
   twitterHandle: "@altuverasafaris",
   locale: "en_US",
