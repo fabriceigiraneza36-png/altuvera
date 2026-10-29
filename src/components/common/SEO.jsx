@@ -2,7 +2,7 @@
 import { Helmet } from 'react-helmet-async';
 import { JsonLd } from 'react-schemaorg';
 import { WebSite, Organization, BreadcrumbList, ListItem } from 'schema-dts';
-import { withBrand } from '../../utils/seo';
+import { withBrand, BRAND_SUPPORT_EMAIL, BRAND_SUPPORT_PHONE } from '../../utils/seo';
 
 const SEO = ({
   title,
@@ -20,9 +20,9 @@ const SEO = ({
   section,
   tags,
 }) => {
-  const siteName = 'Altuvera';
+  const siteName = 'Altuvera Safaris';
   const defaultDescription = 'Explore authentic East African safari adventures with Altuvera. Plan gorilla trekking, cultural tours, and personalized itineraries across Rwanda, Tanzania, Uganda, and Ethiopia.';
-  const baseUrl = import.meta.env.VITE_APP_URL || 'https://altuverasafaris.com';
+  const baseUrl = (import.meta.env.VITE_APP_URL || 'https://www.altuverasafaris.com').replace(/\/+$/, '');
   const defaultImage = `${baseUrl}/altuvera.png`;
 
   const fullTitle = withBrand(title || siteName);
@@ -64,9 +64,11 @@ const SEO = ({
       url: baseUrl,
       logo: `${baseUrl}/logo.png`,
       description: defaultDescription,
+      email: BRAND_SUPPORT_EMAIL,
       contactPoint: {
         '@type': 'ContactPoint',
-        telephone: '+1-555-123-4567',
+        telephone: BRAND_SUPPORT_PHONE,
+        email: BRAND_SUPPORT_EMAIL,
         contactType: 'customer service',
         availableLanguage: 'English',
       },
