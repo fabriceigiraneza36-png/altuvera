@@ -604,7 +604,7 @@ const SocialButtons = ({
       aria-label={googleLoading ? "Connecting to Google" : "Continue with Google"}
       className="flex items-center justify-center gap-2.5 min-h-12 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-semibold hover:bg-emerald-50 hover:border-emerald-200 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-all duration-200"
     >
-      {googleLoading ? <Spinner /> : <FcGoogle className="w-5 h-5" />}
+      {googleLoading ? <Spinner /> : <FaGoogle className="w-5 h-5" aria-hidden="true" />}
       <span>{googleLoading ? "Connecting…" : "Google"}</span>
     </button>
     <button
