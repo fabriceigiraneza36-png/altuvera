@@ -2,28 +2,64 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { apiFetch } from "../utils/apiBase";
 
+const pickImageUrl = (value, depth = 0, seen = new Set()) => {
+  if (depth > 5 || value == null) return "";
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) {
+    for (const item of value) { const url = pickImageUrl(item, depth + 1, seen); if (url) return url; }
+    return "";
+  }
+  if (typeof value !== "object" || seen.has(value)) return "";
+  seen.add(value);
+  for (const key of ["url", "secure_url", "secureUrl", "image_url", "imageUrl", "src", "original_url", "originalUrl", "public_url", "file_url", "thumbnail_url", "thumbnailUrl", "image", "file", "asset"]) {
+    const url = pickImageUrl(value[key], depth + 1, seen);
+    if (url) return url;
+  }
+  return "";
+};
+
+const extractRows = (payload, preferredKeys = []) => {
+  let current = payload;
+  const seen = new Set();
+  for (let depth = 0; depth < 6; depth += 1) {
+    if (Array.isArray(current)) return current;
+    if (!current || typeof current !== "object" || seen.has(current)) return [];
+    seen.add(current);
+    const key = [...preferredKeys, "items", "results", "rows", "data"].find((name) => current[name] != null && current[name] !== current);
+    if (!key) return [];
+    current = current[key];
+  }
+  return Array.isArray(current) ? current : [];
+};
+
 /* ─── Normalise a raw backend gallery row ──────────────────────────────── */
-export const normaliseImage = (raw) => ({
-  id:              raw.id,
-  slug:            raw.slug            || String(raw.id),
-  title:           raw.title           || "Untitled",
-  description:     raw.description     || "",
-  src:             raw.image_url       || "",
-  thumb:           raw.thumbnail_url   || raw.image_url || "",
-  alt:             raw.alt_text        || raw.title     || "Gallery image",
-  category:        raw.category        || "other",
-  tags:            Array.isArray(raw.tags) ? raw.tags   : [],
-  location:        raw.location        || "",
-  countryName:     raw.country_name    || "",
-  destinationName: raw.destination_name|| "",
-  photographer:    raw.photographer    || "",
-  isFeatured:      raw.is_featured     || false,
-  viewCount:       raw.view_count      || 0,
-  width:           raw.width           || null,
-  height:          raw.height          || null,
-  blurhash:        raw.blurhash        || null,
-  createdAt:       raw.created_at      || null,
-});
+export const normaliseImage = (raw) => {
+  const src = pickImageUrl(typeof raw === "string" ? raw : raw?.image_url || raw?.imageUrl || raw?.url || raw?.src || raw?.image || raw?.secure_url);
+  const thumb = pickImageUrl(raw?.thumbnail_url || raw?.thumbnailUrl || raw?.thumb_url || raw?.thumb || raw?.preview_url) || src;
+  const item = raw && typeof raw === "object" ? raw : {};
+  return {
+    ...item,
+    id: item.id || item._id || src,
+    slug: item.slug || String(item.id || item._id || "gallery-image"),
+    title: item.title || item.caption || item.name || "Untitled",
+    description: item.description || "",
+    src,
+    thumb,
+    alt: item.alt_text || item.altText || item.alt || item.title || "Gallery image",
+    category: item.category || "other",
+    tags: Array.isArray(item.tags) ? item.tags : [],
+    location: item.location || "",
+    countryName: item.country_name || item.countryName || "",
+    destinationName: item.destination_name || item.destinationName || "",
+    photographer: item.photographer || item.credit || "",
+    isFeatured: Boolean(item.is_featured ?? item.isFeatured),
+    viewCount: item.view_count || item.viewCount || 0,
+    width: item.width || null,
+    height: item.height || null,
+    blurhash: item.blurhash || null,
+    createdAt: item.created_at || item.createdAt || null,
+  };
+};
 
 /* ─── Default query state ──────────────────────────────────────────────── */
 const DEFAULT_PARAMS = {
@@ -66,8 +102,8 @@ export function useGallery(initialParams = {}) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
-      const raw = json?.data || json || [];
-      setImages(Array.isArray(raw) ? raw.map(normaliseImage) : []);
+      const raw = extractRows(json, ["images", "gallery", "items", "results"]);
+      setImages(raw.map(normaliseImage).filter((image) => image.src));
       setPagination(json?.pagination || null);
     } catch (err) {
       if (err.name === "AbortError") return;
@@ -85,7 +121,7 @@ export function useGallery(initialParams = {}) {
       const res  = await apiFetch("/gallery/categories");
       if (!res.ok) return;
       const json = await res.json();
-      setCategories(json?.data || []);
+      setCategories(extractRows(json, ["categories", "items", "results"]));
     } catch { /* silent */ } finally {
       setCatLoading(false);
     }
@@ -97,7 +133,7 @@ export function useGallery(initialParams = {}) {
       const res  = await apiFetch("/gallery/tags");
       if (!res.ok) return;
       const json = await res.json();
-      setTags(json?.data || []);
+      setTags(extractRows(json, ["tags", "items", "results"]));
     } catch { /* silent */ }
   }, []);
 
