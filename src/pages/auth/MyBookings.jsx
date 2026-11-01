@@ -1500,6 +1500,32 @@ export default function MyBookings() {
       >
         <div style={S.root}>
 
+          {/* ── Bookings centre hero ──────────────────────────────────── */}
+          <motion.section
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            style={{ position: "relative", overflow: "hidden", borderRadius: 24, padding: "clamp(20px, 4vw, 30px)", color: "#fff", background: "linear-gradient(125deg,#064e3b 0%,#047857 55%,#10a37f 100%)", boxShadow: "0 16px 40px rgba(4,120,87,.18)" }}
+          >
+            <div aria-hidden="true" style={{ position: "absolute", width: 230, height: 230, borderRadius: "50%", border: "1px solid rgba(255,255,255,.13)", right: -65, top: -115, pointerEvents: "none" }} />
+            <div style={{ position: "relative", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 18 }}>
+              <div style={{ minWidth: 0, flex: "1 1 230px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <span style={{ display: "grid", placeItems: "center", width: 44, height: 44, borderRadius: 15, background: "rgba(255,255,255,.15)", border: "1px solid rgba(255,255,255,.18)" }}><Calendar size={23} /></span>
+                  <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "#a7f3d0" }}>Your journeys</span>
+                </div>
+                <h2 style={{ margin: "0 0 7px", fontSize: "clamp(24px,4vw,32px)", lineHeight: 1.15, letterSpacing: "-.035em", fontWeight: 850 }}>Bookings centre</h2>
+                <p style={{ margin: 0, maxWidth: 520, fontSize: 14, lineHeight: 1.65, color: "rgba(255,255,255,.82)" }}>Track every trip, check booking progress, and stay ready for your next adventure with Altuvera.</p>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {[{ label: "Total", value: bookings.length, icon: Bookmark }, { label: "Confirmed", value: bookings.filter(b => String(b.status || "").toLowerCase() === "confirmed").length, icon: CheckCheck }, { label: "Coming soon", value: upcomingB.length, icon: Plane }].map(item => (
+                  <div key={item.label} style={{ minWidth: 92, padding: "12px 15px", borderRadius: 15, background: "rgba(255,255,255,.12)", border: "1px solid rgba(255,255,255,.14)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 25, fontWeight: 850, lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}><item.icon size={17} />{item.value}</div>
+                    <div style={{ marginTop: 5, fontSize: 11, color: "rgba(255,255,255,.78)" }}>{item.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.section>
+
           {/* ── Stats ──────────────────────────────────────────────────── */}
           <div style={S.statsGrid}>
             {stats.map((s) => (
