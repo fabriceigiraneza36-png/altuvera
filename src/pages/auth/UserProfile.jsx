@@ -499,6 +499,38 @@ export default function UserProfile() {
     }
   }, [uploadAvatar, validateFile, showNotification]);
 
+  const handleUrlImage = useCallback(async () => {
+    if (uploading) return;
+    const entered = window.prompt("Paste a direct, publicly accessible image URL (https://…). The image link will be saved to your profile in the database.");
+    if (entered === null || !entered.trim()) return;
+    let url;
+    try {
+      url = new URL(entered.trim());
+      if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Use an HTTP or HTTPS image URL.");
+    } catch (err) {
+      showNotification("error", err.message || "Enter a valid image URL.");
+      return;
+    }
+    try {
+      setUploading(true);
+      const response = await fetch(url.href, { mode: "cors" });
+      if (!response.ok) throw new Error("Could not retrieve that image. Try a direct image URL.");
+      const blob = await response.blob();
+      if (!blob.type || !blob.type.startsWith("image/")) throw new Error("That URL did not return an image.");
+      if (blob.size > MAX_FILE_SIZE) throw new Error("Image must be 5 MB or smaller.");
+      const extension = (blob.type.split("/")[1] || "png").replace("jpeg", "jpg");
+      const file = new File([blob], "profile-image." + extension, { type: blob.type });
+      const validation = validateFile(file);
+      if (!validation.valid) throw new Error(validation.error);
+      await uploadAvatar(file);
+      showNotification("success", "Profile picture updated and its URL saved to your account.");
+    } catch (err) {
+      showNotification("error", err.message || "Could not use that URL. The image host may block browser access (CORS); try another direct image URL or select a file from your device.");
+    } finally {
+      setUploading(false);
+    }
+  }, [uploading, showNotification, validateFile, uploadAvatar]);
+
   const handleImageClick = useCallback(() => {
     if (!uploading) fileInputRef.current?.click();
   }, [uploading]);
@@ -583,6 +615,17 @@ export default function UserProfile() {
                 aria-label="Upload profile picture"
               >
                 {uploading ? <HiRefresh className="up-spin" /> : <HiCamera />}
+              </button>
+              <button
+                type="button"
+                className="up-camera-btn"
+                onClick={handleUrlImage}
+                disabled={uploading}
+                title="Use an image URL"
+                aria-label="Use an image URL"
+                style={{ left: "46px" }}
+              >
+                <HiLink />
               </button>
               <input
                 type="file"
