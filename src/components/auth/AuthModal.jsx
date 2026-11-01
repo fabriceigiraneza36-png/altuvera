@@ -276,7 +276,8 @@ const formatAuthError = (error, fallback = "Something went wrong. Please try aga
   if (/429|too many requests|rate.?limit|too many attempts/.test(lower)) return "There have been too many attempts. Please wait a little before trying again.";
   if (/already exists|already registered|email.*(taken|in use|registered)|duplicate.*email/.test(lower)) return "An account may already use this email. Try signing in or use the account-recovery option.";
   if (/invalid email|email.*invalid/.test(lower)) return "Check the email address and enter it in the format name@example.com.";
-  if (/expired|invalid.*(otp|verification|security) code|incorrect.*(otp|verification|security) code/.test(lower)) return "That verification code is invalid or expired. Check the code or request a new one.";
+  if (/expired/.test(lower)) return "That code has expired. Return to sign-in and request a new one.";
+  if (/invalid.*(otp|verification|security) code|incorrect.*(otp|verification|security) code/.test(lower)) return "That verification code is incorrect. Check it and try again."
   if (/not linked|not connected|no linked|provider.{0,30}(disabled|not configured|not linked|not connected)|account.{0,30}(not linked|not connected)/.test(lower)) return "That sign-in method is not connected to this Altuvera account. Use a method you have already set up, then review Account Security & Recovery to add or manage your sign-in options.";
   if (/not found|invalid credentials|unauthorized|authentication failed|incorrect.*(name|email)|user does not exist/.test(lower)) return "We couldn't verify those details. Check your email and full name, then try again.";
   if (message.length > 240 || /<\/?[a-z][^>]*>|\bat\s+[^\s]+\s*\(|typeerror|referenceerror|syntaxerror|unexpected token|unexpected end of json|cannot read properties|is not a function|internal server error|bad gateway/i.test(message)) return fallback;
@@ -1946,8 +1947,8 @@ export default function AuthModal() {
                         id="login-name" label="Full Name (optional)" icon={HiUser} refProp={nameInputRef}
                         value={form.fullName} onChange={(v) => set("fullName", v)}
                         onBlur={() => setNameTouched(true)} disabled={isBusy}
-                        placeholder="Your full name" autoComplete="name" required
-                        error={nameTouched && !nameOk ? "At least 2 characters required." : ""}
+                        placeholder="Optional" autoComplete="name"
+                        error={nameTouched && Boolean(form.fullName.trim()) && !nameOk ? "Enter at least 2 characters or leave this blank." : ""}
                         valid={nameTouched && nameOk}
                       />
                       <div className="flex justify-end mt-1.5">
