@@ -19,31 +19,38 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
   const navigate             = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const touchStartRef = useRef(null);
+  const [sidebarDragX, setSidebarDragX] = useState(null);
   const { tripAlerts, dismissTripAlert, unreadCount } = useNotifications();
 
-  // Touch gestures are shared by every page using DashboardLayout.
-  // Open only from the left screen edge; close with a leftward swipe while open.
+  // Follow the user's finger while dragging the mobile sidebar.
   const handleTouchStart = (event) => {
+    if (window.matchMedia("(min-width: 769px)").matches) return;
     const touch = event.touches?.[0];
-    if (!touch) return;
+    if (!touch || (!mobileMenuOpen && touch.clientX > 36)) return;
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    setSidebarDragX(0);
   };
-
+  const handleTouchMove = (event) => {
+    if (window.matchMedia("(min-width: 769px)").matches) return;
+    const touch = event.touches?.[0], start = touchStartRef.current;
+    if (!touch || !start) return;
+    const dx = touch.clientX - start.x, dy = touch.clientY - start.y;
+    if (Math.abs(dx) < Math.abs(dy) * 1.15) return;
+    const width = window.innerWidth || 360;
+    if (!mobileMenuOpen && dx > 0) setSidebarDragX(Math.max(0, Math.min(width, dx)));
+    else if (mobileMenuOpen && dx < 0) setSidebarDragX(Math.max(-width, Math.min(0, dx)));
+  };
   const handleTouchEnd = (event) => {
-    const start = touchStartRef.current;
+    const start = touchStartRef.current, touch = event.changedTouches?.[0];
     touchStartRef.current = null;
-    const touch = event.changedTouches?.[0];
-    if (!start || !touch || window.matchMedia("(min-width: 769px)").matches) return;
-
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
-
-    if (dx > 0 && start.x <= 36 && !mobileMenuOpen) {
-      setMobileMenuOpen(true);
-    } else if (dx < 0 && mobileMenuOpen) {
-      setMobileMenuOpen(false);
+    if (!start || !touch || window.matchMedia("(min-width: 769px)").matches) { setSidebarDragX(null); return; }
+    const dx = touch.clientX - start.x, dy = touch.clientY - start.y;
+    if (Math.abs(dx) > Math.abs(dy) * 1.15) {
+      const threshold = Math.min(72, (window.innerWidth || 360) * 0.18);
+      if (!mobileMenuOpen && start.x <= 36 && dx > threshold) setMobileMenuOpen(true);
+      else if (mobileMenuOpen && dx < -threshold) setMobileMenuOpen(false);
     }
+    setSidebarDragX(null);
   };
   const { unreadCount: unreadMessages } = useConversations();
 
@@ -297,7 +304,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
       />
 
       {/* Sidebar */}
-      <aside className={`dashboard-sidebar ${mobileMenuOpen ? "open" : ""}`}>
+      <aside className={`dashboard-sidebar ${mobileMenuOpen ? "open" : ""}`} style={sidebarDragX !== null ? { transform: mobileMenuOpen ? `translateX(${sidebarDragX}px)` : `translateX(calc(-100% + ${sidebarDragX}px))`, transition: "none", willChange: "transform" } : undefined}>
         <div className="dashboard-user-card">
           <div style={{ position: "relative", display: "inline-block" }}>
             {user?.avatar ? (
