@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#14532d">
+  <title>Copy verification code | Altuvera Safaris</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh; margin: 0; padding: 24px;
+      display: grid; place-items: center;
+      background: #f0fdf4; color: #0f1b0f;
+    }
+    main {
+      width: min(100%, 440px); padding: 32px 26px;
+      border: 1px solid #bbf7d0; border-radius: 22px;
+      background: #fff; box-shadow: 0 12px 42px rgba(22,163,74,.12);
+      text-align: center;
+    }
+    .brand { display: flex; justify-content: center; margin-bottom: 22px; }
+    .brand img { display: block; width: 148px; height: 72px; object-fit: contain; }
+    h1 { margin: 0 0 10px; font-size: 23px; line-height: 1.25; color: #14532d; }
+    .intro { margin: 0 auto 22px; color: #4a6b52; font-size: 14px; line-height: 1.65; }
+    .code {
+      width: 100%; margin: 0 0 16px; padding: 15px 12px;
+      border: 1px solid #bbf7d0; border-radius: 13px;
+      background: #f0fdf4; color: #15803d;
+      font: 800 30px/1.2 "Courier New", monospace;
+      letter-spacing: 7px; text-align: center;
+    }
+    button {
+      width: 100%; min-height: 48px; padding: 12px 20px;
+      border: 0; border-radius: 999px; cursor: pointer;
+      background: linear-gradient(135deg,#14532d 0%,#15803d 55%,#22c55e 100%);
+      color: #fff; font-size: 15px; font-weight: 700;
+    }
+    button:focus-visible, input:focus-visible { outline: 3px solid #86efac; outline-offset: 3px; }
+    .status { min-height: 22px; margin: 14px 0 0; color: #4a6b52; font-size: 13px; line-height: 1.5; }
+    .security { margin: 22px 0 0; padding-top: 18px; border-top: 1px solid #dcfce7; color: #6b8f72; font-size: 12px; line-height: 1.6; }
+    [hidden] { display: none !important; }
+    @media (max-width: 420px) { body { padding: 14px; } main { padding: 28px 20px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">
+      <img src="/altuvera.png" alt="Altuvera Safaris logo" width="148" height="72">
+    </div>
+    <h1>Copy your verification code</h1>
+    <p class="intro">Your secure Altuvera sign-in code is ready. Copy it and return to the sign-in screen to continue.</p>
+    <section id="copy-panel" hidden>
+      <input id="verification-code" class="code" type="text" readonly autocomplete="off" spellcheck="false" aria-label="Your six-digit verification code">
+      <button id="copy-button" type="button">Copy code</button>
+      <p id="copy-status" class="status" role="status" aria-live="polite"></p>
+    </section>
+    <p id="invalid-message" class="status" hidden>This copy link is missing or has expired. Return to your Altuvera email and use its latest Copy code link.</p>
+    <p class="security">This code expires in 10 minutes. Never share it with anyone, including someone claiming to be from Altuvera.</p>
+  </main>
+  <script>
+    (() => {
+      const panel = document.getElementById("copy-panel");
+      const input = document.getElementById("verification-code");
+      const button = document.getElementById("copy-button");
+      const status = document.getElementById("copy-status");
+      const invalid = document.getElementById("invalid-message");
+
+      let code = "";
+      try {
+        code = decodeURIComponent(window.location.hash.slice(1));
+      } catch {
+        code = "";
+      }
+
+      // Keep the one-time code out of the visible URL and browser history entry.
+      window.history.replaceState(null, "", window.location.pathname);
+
+      if (!/^\d{6}$/.test(code)) {
+        invalid.hidden = false;
+        return;
+      }
+
+      input.value = code;
+      panel.hidden = false;
+
+      const copyCode = async () => {
+        let copied = false;
+
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(code);
+            copied = true;
+          }
+        } catch {
+          copied = false;
+        }
+
+        if (!copied) {
+          input.focus();
+          input.select();
+          try {
+            copied = document.execCommand("copy");
+          } catch {
+            copied = false;
+          }
+        }
+
+        if (copied) {
+          button.textContent = "Copied";
+          status.textContent = "Code copied. Return to Altuvera and paste it into the verification field.";
+        } else {
+          button.textContent = "Copy code";
+          status.textContent = "Select the code above and copy it manually.";
+        }
+      };
+
+      button.addEventListener("click", copyCode);
+
+      // Try to honour the email button in one tap where the browser permits it.
+      // The visible button remains available whenever automatic clipboard access is denied.
+      copyCode();
+    })();
+  </script>
+</body>
+</html>
