@@ -673,7 +673,17 @@ export default function AuthModal() {
   const [code,            setCode]            = useState(emptyCode());
   const [factorCode, setFactorCode] = useState("");
   const [factorMethod, setFactorMethod] = useState("totp");
-  useEffect(() => { if (pendingFactorMethods.length && !pendingFactorMethods.includes(factorMethod)) setFactorMethod(pendingFactorMethods.includes("totp") ? "totp" : "recovery_code"); }, [pendingFactorMethods, factorMethod]);
+  useEffect(() => {
+    if (!pendingFactorMethods.length) return;
+    const nextMethod = pendingFactorMethods.includes(factorMethod)
+      ? factorMethod
+      : pendingFactorMethods.includes("totp")
+        ? "totp"
+        : pendingFactorMethods.includes("recovery_code")
+          ? "recovery_code"
+          : pendingFactorMethods[0];
+    if (nextMethod !== factorMethod) setFactorMethod(nextMethod);
+  }, [pendingFactorMethods, factorMethod]);
   const [resendTimer,     setResendTimer]     = useState(0);
   const [verifySource,    setVerifySource]    = useState("login");
   const [authMethod,      setAuthMethod]      = useState("email");
@@ -2366,12 +2376,16 @@ export default function AuthModal() {
                     <div className="flex flex-wrap gap-2">
                       {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");setError("");}} className="rounded-xl border px-3 py-2 text-sm"><HiShieldCheck className="mr-1 inline h-4 w-4" />Authenticator app</button> )}
                       {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");setError("");}} className="rounded-xl border px-3 py-2 text-sm"><HiShieldCheck className="mr-1 inline h-4 w-4" />Recovery code</button> )}
-                      <button type="button" onClick={() => { setFactorCode(""); setError(""); setShowAuthMethods(false); setModalView("login"); }} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">Skip passkey / back to sign in</button>
+                      <button type="button" onClick={() => { setFactorCode(""); setError(""); setShowAuthMethods(false); setModalView("login"); }} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">Use another sign-in method</button>
                     </div>
-                    <label htmlFor="login-factor-code" className="block text-sm font-medium">{factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}</label>
-                    <input id="login-factor-code" value={factorCode} onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg tracking-widest" placeholder={factorMethod === "totp" ? "000000" : "00000"} aria-invalid={Boolean(error)} aria-describedby={error ? "factor-code-error" : undefined} disabled={loading || !isOnline} />
-                    {error && <p id="factor-code-error" role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-                    <button type="submit" disabled={loading || !isOnline || factorCode.length !== (factorMethod === "totp" ? 6 : 5)} className="w-full rounded-xl bg-emerald-700 p-3 font-semibold text-white disabled:opacity-50">{loading ? "Verifying…" : "Verify and sign in"}</button>
+                    {(pendingFactorMethods.includes("totp") || pendingFactorMethods.includes("recovery_code")) && (
+                      <>
+                      <label htmlFor="login-factor-code" className="block text-sm font-medium">{factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}</label>
+                      <input id="login-factor-code" value={factorCode} onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg tracking-widest" placeholder={factorMethod === "totp" ? "000000" : "00000"} aria-invalid={Boolean(error)} aria-describedby={error ? "factor-code-error" : undefined} disabled={loading || !isOnline} />
+                      {error && <p id="factor-code-error" role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+                      <button type="submit" disabled={loading || !isOnline || factorCode.length !== (factorMethod === "totp" ? 6 : 5)} className="w-full rounded-xl bg-emerald-700 p-3 font-semibold text-white disabled:opacity-50">{loading ? "Verifying…" : "Verify and sign in"}</button>
+                      </>
+                    )}
                     <p className="text-xs text-gray-500">If you lose access to both methods, request account recovery after signing in on another trusted session or contact support.</p>
                   </form>
                 </div>
