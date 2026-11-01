@@ -384,13 +384,17 @@ const STYLES = `
   .g-story-slide {
     box-sizing:border-box; flex:0 0 var(--g-viewer-card-width); width:var(--g-viewer-card-width);
     height:240px; min-height:0; display:flex; align-items:stretch; justify-content:center;
-    scroll-snap-align:center; scroll-snap-stop:always; opacity:.7;
-    filter:brightness(.42) saturate(.62); transform:scale(.86);
-    transition:transform .48s cubic-bezier(.2,.8,.2,1), opacity .48s ease, filter .48s ease;
-    cursor:pointer; will-change:transform,opacity,filter;
+    scroll-snap-align:center; scroll-snap-stop:always; opacity:1;
+    transform:scale(.86);
+    transition:transform .48s cubic-bezier(.2,.8,.2,1);
+    cursor:pointer; will-change:transform;
+  }
+  .g-story-slide:not(.is-active) .g-story-image-shell::after {
+    content:""; position:absolute; z-index:1; inset:0; border-radius:inherit;
+    background:rgba(0,0,0,.5); pointer-events:none; transition:background .38s ease;
   }
   .g-story-slide.is-active {
-    opacity:1; filter:none; transform:scale(1.035); cursor:default; z-index:2;
+    transform:scale(1.035); cursor:default; z-index:2;
   }
   .g-story-image-shell {
     box-sizing:border-box; position:relative; width:100%; height:100%; min-width:0; min-height:0;
@@ -427,7 +431,7 @@ const STYLES = `
   .g-story-zoom-controls button:disabled { opacity:.35; cursor:not-allowed; }
   .g-story-zoom-level { min-width:38px; text-align:center; font-size:10px; font-weight:800; letter-spacing:.02em; }
   .g-story-caption {
-    position:absolute; left:0; right:0; bottom:0; padding:65px 24px 22px;
+    position:absolute; z-index:2; left:0; right:0; bottom:0; padding:65px 24px 22px;
     background:linear-gradient(transparent,rgba(0,0,0,.82)); pointer-events:none;
   }
   .g-story-caption h2 { margin:0 0 5px; font:700 clamp(18px,2vw,27px) 'Playfair Display',serif; }
