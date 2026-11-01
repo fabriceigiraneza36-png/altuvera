@@ -315,7 +315,17 @@ const STYLES = `
   .g-card {
     transition: all 0.38s var(--g-ease);
     cursor: pointer;
+    isolation:isolate;
+    background:#123b2e !important;
   }
+  .g-card-loading {
+    position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:linear-gradient(110deg,#123b2e 8%,#1c5b43 35%,#123b2e 62%);
+    background-size:220% 100%; animation:gShimmer 1.6s ease infinite;
+  }
+  .g-card .g-card-img { position:relative; z-index:1; width:100%; height:240px; object-fit:cover; }
+  .g-card .g-card-overlay { z-index:2; pointer-events:none; }
+  .g-card .g-card-actions, .g-card > div:not(.g-card-loading):not(.g-card-overlay) { z-index:3; }
   .g-card:hover { transform: translateY(-6px); }
   .g-card:hover .g-card-overlay { opacity: 1; }
   .g-card:hover .g-card-img { transform: scale(1.08); }
@@ -822,10 +832,10 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
       boxShadow: "var(--g-shadow-sm)", border: "1px solid #F3F4F6",
       animation: `gSlideUp 0.4s ease ${index * 0.04}s both`,
     }}>
-      {!loaded && <div className="g-shimmer" style={{ height: 240, position: "absolute", inset: 0, zIndex: 1 }} />}
+      {!loaded && <div className="g-card-loading" aria-hidden="true" />}
       <GalleryImage image={image} alt={image.alt} loading="lazy" onLoad={() => setLoaded(true)}
         onFailure={() => setLoaded(true)} className="g-card-img"
-        style={{ width: "100%", height: 240, objectFit: "cover", display: "block" }} />
+        style={{ position: "relative", zIndex: 1, width: "100%", height: 240, objectFit: "cover", objectPosition: "center", display: "block", background: "#123b2e" }} />
       <div className="g-card-overlay" />
       {image.isFeatured && (
         <div style={{ position: "absolute", top: 10, left: 10, zIndex: 3 }}>
@@ -1253,6 +1263,8 @@ export default function Gallery() {
         title="Gallery"
         subtitle="Explore images from every country and destination across East Africa"
         icon={<FiCamera size={32} />}
+        backgroundImage={allImages.find((image) => image.src)?.src || countryRows.map((row) => resolveGalleryImageUrl(row?.cover_image_url || row?.coverImageUrl || row?.image_url || row?.imageUrl || row?.hero_image_url || row?.heroImageUrl)).find(Boolean) || destinationRows.map((row) => resolveGalleryImageUrl(row?.cover_image_url || row?.coverImageUrl || row?.image_url || row?.imageUrl || row?.hero_image_url || row?.heroImageUrl)).find(Boolean) || ""}
+        overlay={true}
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Gallery" }]}
       />
       <section className="g-gallery-content">
