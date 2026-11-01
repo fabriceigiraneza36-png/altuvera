@@ -1,22 +1,23 @@
 import React, { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { BellRing, CalendarDays, Pencil, CheckCircle2, XCircle, Trash2, MapPinned, Globe2, FileText, Package, PartyPopper, AlertTriangle, Siren, Settings, MessageCircle, MessageSquareText, ShieldCheck, X, RefreshCw, CheckCheck, Wallet, CreditCard } from 'lucide-react'
 
 // ─── Type config ──────────────────────────────────────────────────────────────
 const TYPE_META = {
-  booking_created:   { icon: '📅', color: '#059669', label: 'Booking Created'    },
-  booking_updated:   { icon: '✏️', color: '#0ea5e9', label: 'Booking Updated'    },
-  booking_confirmed: { icon: '✅', color: '#16a34a', label: 'Booking Confirmed'  },
-  booking_cancelled: { icon: '❌', color: '#dc2626', label: 'Booking Cancelled'  },
-  booking_deleted:   { icon: '🗑️', color: '#7c3aed', label: 'Booking Removed'   },
-  new_destination:   { icon: '🗺️', color: '#0891b2', label: 'New Destination'   },
-  new_country:       { icon: '🌍', color: '#0891b2', label: 'New Country'        },
-  new_post:          { icon: '📝', color: '#7c3aed', label: 'New Blog Post'      },
-  new_package:       { icon: '📦', color: '#d97706', label: 'New Package'        },
-  promotion:         { icon: '🎉', color: '#db2777', label: 'Promotion'          },
-  warning:           { icon: '⚠️', color: '#f59e0b', label: 'Warning'            },
-  alert:             { icon: '🚨', color: '#dc2626', label: 'Alert'              },
-  system:            { icon: '⚙️', color: '#64748b', label: 'System'             },
-  general:           { icon: '💬', color: '#059669', label: 'Message'            },
+  booking_created:   { icon: CalendarDays, color: '#059669', label: 'Booking Created'    },
+  booking_updated:   { icon: Pencil, color: '#0ea5e9', label: 'Booking Updated'    },
+  booking_confirmed: { icon: CheckCircle2, color: '#16a34a', label: 'Booking Confirmed'  },
+  booking_cancelled: { icon: XCircle, color: '#dc2626', label: 'Booking Cancelled'  },
+  booking_deleted:   { icon: Trash2, color: '#7c3aed', label: 'Booking Removed'   },
+  new_destination:   { icon: MapPinned, color: '#0891b2', label: 'New Destination'   },
+  new_country:       { icon: Globe2, color: '#0891b2', label: 'New Country'        },
+  new_post:          { icon: FileText, color: '#7c3aed', label: 'New Blog Post'      },
+  new_package:       { icon: Package, color: '#d97706', label: 'New Package'        },
+  promotion:         { icon: PartyPopper, color: '#db2777', label: 'Promotion'          },
+  warning:           { icon: AlertTriangle, color: '#f59e0b', label: 'Warning'            },
+  alert:             { icon: Siren, color: '#dc2626', label: 'Alert'              },
+  system:            { icon: Settings, color: '#64748b', label: 'System'             },
+  general:           { icon: MessageCircle, color: '#059669', label: 'Message'            },
 }
 
 const formatAgo = (dateStr) => {
@@ -101,10 +102,11 @@ const NotifItem = ({
           display:      'flex',
           alignItems:   'center',
           justifyContent: 'center',
-          fontSize:     18,
           flexShrink:   0,
+          color: meta.color,
+          border: `1px solid ${meta.color}22`,
         }}>
-          {meta.icon}
+          <meta.icon size={18} strokeWidth={1.9} />
         </div>
 
         {/* Content */}
@@ -335,13 +337,16 @@ export default function NotificationPanel({
   return (
     <div style={{
       background:   '#fff',
-      borderRadius: 20,
-      boxShadow:    '0 20px 60px rgba(0,0,0,0.15)',
-      border:       '1px solid #e2e8f0',
+      borderRadius: 24,
+      boxShadow:    '0 24px 80px rgba(2,25,18,0.24)',
+      border:       '1px solid #dceee4',
       overflow:     'hidden',
       display:      'flex',
       flexDirection:'column',
-      maxHeight:    520,
+      flex:         '1 1 auto',
+      minHeight:    0,
+      height:       '100%',
+      maxHeight:    '100%',
     }}>
 
       {/* Header */}
@@ -354,7 +359,7 @@ export default function NotificationPanel({
         flexShrink:     0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 18 }}>🔔</span>
+          <span style={{display:'grid',placeItems:'center',width:40,height:40,borderRadius:14,background:'linear-gradient(145deg,#e9f8ef,#d5f0e0)',color:'#087f58',border:'1px solid #c5e8d4'}}><BellRing size={21} strokeWidth={1.9} /></span>
           <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
             Notifications
           </h3>
@@ -491,14 +496,17 @@ export default function NotificationPanel({
         display:     'flex',
         borderBottom:'1px solid #f1f5f9',
         flexShrink:  0,
-        padding:     '0 16px',
+        padding:     '0 12px',
+        overflowX:   'auto',
+        scrollbarWidth:'none',
       }}>
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             style={{
-              padding:      '10px 14px',
+              padding:      '13px 14px',
+              whiteSpace:   'nowrap',
               fontSize:     12,
               fontWeight:   tab === t.key ? 700 : 500,
               color:        tab === t.key ? '#059669' : '#64748b',
@@ -524,7 +532,7 @@ export default function NotificationPanel({
       </div>
 
       {/* List */}
-      <div style={{ overflowY: 'auto', flex: 1 }}>
+      <div style={{ overflowY: 'auto', overflowX:'hidden', flex: '1 1 auto', minHeight:0, overscrollBehavior:'contain', WebkitOverflowScrolling:'touch' }}>
         {loading && displayed.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
             <div style={{
@@ -540,7 +548,7 @@ export default function NotificationPanel({
             textAlign: 'center', padding: '40px 16px',
             color: '#94a3b8',
           }}>
-            <div style={{ fontSize: 36, marginBottom: 10 }}>🔔</div>
+            <div style={{ width:64,height:64,borderRadius:22,margin:'0 auto 14px',display:'grid',placeItems:'center',background:'linear-gradient(145deg,#effbf4,#dff4e8)',color:'#087f58',border:'1px solid #ccebd9' }}><BellRing size={28} strokeWidth={1.7} /></div>
             <p style={{ margin: 0, fontWeight: 600, color: '#374151' }}>
               All caught up!
             </p>
@@ -588,8 +596,8 @@ export default function NotificationPanel({
 
       {/* Footer */}
       {displayed.length > 0 && (
-        <div style={{
-          padding:      '10px 16px',
+        <div className="notification-panel-footer" style={{
+          padding:      '14px 18px max(14px, env(safe-area-inset-bottom))',
           borderTop:    '1px solid #f1f5f9',
           display:      'flex',
           justifyContent: 'space-between',
@@ -618,6 +626,7 @@ export default function NotificationPanel({
       )}
 
       <style>{`
+        @media (max-width:640px) { .notification-panel-footer { flex-wrap:wrap; gap:10px; } }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
