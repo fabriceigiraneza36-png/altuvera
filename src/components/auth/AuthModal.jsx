@@ -34,7 +34,7 @@ import {
   HiQuestionMarkCircle,
 } from "react-icons/hi";
 import { FiGithub, FiZap } from "react-icons/fi";
-import { FcGoogle } from "react-icons/fc";
+import { FaGoogle } from "react-icons/fa";
 import { MdVerified, MdOutlineSecurityUpdateGood } from "react-icons/md";
 import { RiShieldKeyholeLine } from "react-icons/ri";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -626,7 +626,7 @@ const SocialButtons = ({
 export default function AuthModal() {
   const {
     isModalOpen, modalView, setModalView, closeModal, openModal,
-    login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode,
+    login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode,
     pendingEmail, pendingVerification, clearPendingVerification, pendingFactorMethods, persistSession, setSessionPreference, updateProfile,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, promptGoogleAuth, startGithubAuth,
@@ -1786,15 +1786,53 @@ export default function AuthModal() {
               {isLogin && showAuthMethods && !forgotUsernameMode && (
                 <div className="am-viewIn am-auth-methods px-4 sm:px-6 py-5 sm:py-7">
                   <button type="button" onClick={() => { setShowAuthMethods(false); setError(""); setSuccess(""); }} className="am-method-back" aria-label="Return to email sign in"><HiArrowLeft className="w-4 h-4" /> Back to sign in</button>
-                  <div className="am-method-heading"><span className="am-method-heading__icon"><HiShieldCheck className="h-6 w-6" /></span><span className="am-method-heading__eyebrow">SECURE ACCESS</span><h2 id="auth-title">Choose how to sign in</h2><p>Continue with a sign-in method already connected to your account.</p></div>
-                  {error && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</div>}
-                  <div className="grid gap-3">
-                    <button type="button" disabled={isBusy || !isOnline || switchingView} onClick={() => { setShowAuthMethods(false); setAuthMethod("email"); setError("A passkey can only be used if you have already registered one on this account. Sign in with email or another connected method first; then add a passkey in Account Security & Recovery."); setSuccess(""); window.setTimeout(() => firstInputRef.current?.focus(), 80); }} className="am-method-option"><span className="am-method-icon"><RiShieldKeyholeLine className="h-5 w-5" /></span><span className="am-method-copy"><strong>Continue with a passkey</strong><small>Use a passkey already registered to this account</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
-                    <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGoogleAuth("signin")} className="am-method-option"><span className="am-method-icon"><FcGoogle className="h-5 w-5" /></span><span className="am-method-copy"><strong>Continue with Google</strong><small>Sign in with your Google account</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
-                    <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGithubAuth("signin")} className="am-method-option"><span className="am-method-icon"><FiGithub className="h-5 w-5" /></span><span className="am-method-copy"><strong>Continue with GitHub</strong><small>Use your GitHub account</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
-                    <button type="button" onClick={() => { setShowAuthMethods(false); setAuthMethod("email"); setError(""); setTimeout(() => firstInputRef.current?.focus(), 50); }} className="am-method-option"><span className="am-method-icon"><HiMail className="h-5 w-5" /></span><span className="am-method-copy"><strong>Email verification</strong><small>Receive a one-time verification code by email</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
+                  <div className="am-method-heading">
+                    <span className="am-method-heading__icon"><HiShieldCheck className="h-6 w-6" /></span>
+                    <span className="am-method-heading__eyebrow">ALTUVERA SECURE ACCESS</span>
+                    <h2 id="auth-title">Choose how to sign in</h2>
+                    <p>Use an account sign-in provider connected to your Altuvera profile.</p>
                   </div>
-                  <div className="am-method-security-note"><HiShieldCheck className="h-4 w-4" /><span>Only methods already connected to your Altuvera account can be used here. You can add a passkey or authenticator after signing in from Account Security & Recovery.</span></div>
+                  {error && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</div>}
+                  <div className="am-method-list">
+                    <button
+                      type="button"
+                      disabled={isBusy || !isOnline || switchingView}
+                      onClick={() => {
+                        setShowAuthMethods(false);
+                        setAuthMethod("email");
+                        setError("");
+                        setSuccess("Passkeys are a second verification step, not a standalone sign-in provider. Continue with your email first. After email verification, Altuvera will offer a passkey only when one is registered to this account. If it is not registered, use another available method, then add it from Account Security & Recovery.");
+                        window.setTimeout(() => firstInputRef.current?.focus(), 80);
+                      }}
+                      className="am-method-option am-method-option--passkey"
+                    >
+                      <span className="am-method-icon"><RiShieldKeyholeLine className="h-5 w-5" /></span>
+                      <span className="am-method-copy">
+                        <strong>Passkey verification</strong>
+                        <small>Available after email verification when this account has a saved passkey</small>
+                      </span>
+                      <HiArrowRight className="h-4 w-4 am-method-arrow" />
+                    </button>
+                    <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGoogleAuth("signin")} className="am-method-option am-method-option--google">
+                      <span className="am-method-icon"><FaGoogle className="h-5 w-5" aria-hidden="true" /></span>
+                      <span className="am-method-copy"><strong>Continue with Google</strong><small>Use the Google account connected to your profile</small></span>
+                      <HiArrowRight className="h-4 w-4 am-method-arrow" />
+                    </button>
+                    <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGithubAuth("signin")} className="am-method-option am-method-option--github">
+                      <span className="am-method-icon"><FiGithub className="h-5 w-5" aria-hidden="true" /></span>
+                      <span className="am-method-copy"><strong>Continue with GitHub</strong><small>Use your connected GitHub account</small></span>
+                      <HiArrowRight className="h-4 w-4 am-method-arrow" />
+                    </button>
+                    <button type="button" disabled={loading || !isOnline} onClick={() => { setShowAuthMethods(false); setAuthMethod("email"); setError(""); setSuccess(""); window.setTimeout(() => firstInputRef.current?.focus(), 60); }} className="am-method-option am-method-option--email">
+                      <span className="am-method-icon"><HiMail className="h-5 w-5" aria-hidden="true" /></span>
+                      <span className="am-method-copy"><strong>Continue with email</strong><small>Receive a one-time verification code in your inbox</small></span>
+                      <HiArrowRight className="h-4 w-4 am-method-arrow" />
+                    </button>
+                  </div>
+                  <div className="am-method-security-note">
+                    <HiShieldCheck className="h-4 w-4" />
+                    <span>Altuvera checks your enrolled security methods after the first sign-in step. An unavailable passkey will never be treated as an active method; you will be guided to use a configured method and add a passkey later from Account Security & Recovery.</span>
+                  </div>
                 </div>
               )}
 
@@ -2355,39 +2393,115 @@ export default function AuthModal() {
               )}
 
               {isFactor && (
-                <div className="am-viewIn">
-                  <div className="text-center mb-6">
-                    <HiShieldCheck className="mx-auto mb-3 h-10 w-10 text-emerald-700" />
-                    <h2 id="auth-title" className="text-xl font-extrabold text-gray-900">Verify it’s you</h2>
-                    <p className="mt-2 text-sm text-gray-600">Email verified. Complete your additional security check to sign in.</p>
+                <div className="am-viewIn am-factor-view">
+                  <div className="am-factor-heading">
+                    <span className="am-factor-heading__icon"><HiShieldCheck className="h-6 w-6" /></span>
+                    <span className="am-method-heading__eyebrow">SECOND-STEP VERIFICATION</span>
+                    <h2 id="auth-title">Verify it’s you</h2>
+                    <p>Email verified. Complete one of the security methods already enabled on your account.</p>
                   </div>
-                  <form className="space-y-4" onSubmit={async (e) => {
-                    e.preventDefault();
-                    if (!isOnline) { setError("You appear to be offline. Reconnect before verifying your sign-in."); return; }
-                    setLoading(true); setError("");
-                    try { await verifyLoginFactor(factorMethod, factorCode); setFactorCode(""); }
-                    catch (err) { setError(formatAuthError(err, "Verification failed.")); }
-                    finally { setLoading(false); }
-                  }}>
-                    {pendingFactorMethods.includes("passkey") && (
-                    <button type="button" disabled={loading || !isOnline} onClick={async()=>{if(!isOnline){setError("You appear to be offline. Reconnect before using a passkey.");return;}setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(formatAuthError(err, "Passkey verification failed. Try another verification method."));}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
-                    )}
-                    {!pendingFactorMethods.includes("passkey") && (<div className="am-factor-method-not-available"><span className="am-factor-method-not-available__icon"><RiShieldKeyholeLine className="h-5 w-5" /></span><span><strong>No passkey is registered for this account.</strong><small>Use your authenticator or recovery code below. After signing in, open Account Security & Recovery to add a passkey for future logins.</small></span></div>)}
-                    <div className="flex flex-wrap gap-2">
-                      {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");setError("");}} className="rounded-xl border px-3 py-2 text-sm"><HiShieldCheck className="mr-1 inline h-4 w-4" />Authenticator app</button> )}
-                      {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");setError("");}} className="rounded-xl border px-3 py-2 text-sm"><HiShieldCheck className="mr-1 inline h-4 w-4" />Recovery code</button> )}
-                      <button type="button" onClick={() => { setFactorCode(""); setError(""); setShowAuthMethods(false); setModalView("login"); }} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">Use another sign-in method</button>
+
+                  {pendingFactorMethods.includes("passkey") ? (
+                    <button
+                      type="button"
+                      disabled={loading || !isOnline}
+                      onClick={async () => {
+                        if (!isOnline) { setError("You appear to be offline. Reconnect before using a passkey."); return; }
+                        setLoading(true);
+                        setError("");
+                        try { await verifyLoginPasskey(); setFactorCode(""); }
+                        catch (err) { setError(formatAuthError(err, "Passkey verification failed. Try another enabled method.")); }
+                        finally { setLoading(false); }
+                      }}
+                      className="am-factor-passkey-button"
+                    >
+                      <RiShieldKeyholeLine className="h-5 w-5" />
+                      <span><strong>Continue with your passkey</strong><small>Use this device’s PIN, fingerprint, face recognition or security key</small></span>
+                      <HiArrowRight className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <div className="am-factor-method-not-available">
+                      <span className="am-factor-method-not-available__icon"><RiShieldKeyholeLine className="h-5 w-5" /></span>
+                      <span>
+                        <strong>No passkey is registered for this account.</strong>
+                        <small>Choose an enabled authenticator or recovery code below. After signing in, open Account Security & Recovery to register a passkey for future logins.</small>
+                      </span>
                     </div>
-                    {(pendingFactorMethods.includes("totp") || pendingFactorMethods.includes("recovery_code")) && (
-                      <>
-                      <label htmlFor="login-factor-code" className="block text-sm font-medium">{factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}</label>
-                      <input id="login-factor-code" value={factorCode} onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg tracking-widest" placeholder={factorMethod === "totp" ? "000000" : "00000"} aria-invalid={Boolean(error)} aria-describedby={error ? "factor-code-error" : undefined} disabled={loading || !isOnline} />
-                      {error && <p id="factor-code-error" role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-                      <button type="submit" disabled={loading || !isOnline || factorCode.length !== (factorMethod === "totp" ? 6 : 5)} className="w-full rounded-xl bg-emerald-700 p-3 font-semibold text-white disabled:opacity-50">{loading ? "Verifying…" : "Verify and sign in"}</button>
-                      </>
-                    )}
-                    <p className="text-xs text-gray-500">If you lose access to both methods, request account recovery after signing in on another trusted session or contact support.</p>
-                  </form>
+                  )}
+
+                  {(pendingFactorMethods.includes("totp") || pendingFactorMethods.includes("recovery_code")) && (
+                    <form className="am-factor-code-form" onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!isOnline) { setError("You appear to be offline. Reconnect before verifying your sign-in."); return; }
+                      setLoading(true);
+                      setError("");
+                      try { await verifyLoginFactor(factorMethod, factorCode); setFactorCode(""); }
+                      catch (err) { setError(formatAuthError(err, "Verification failed.")); }
+                      finally { setLoading(false); }
+                    }}>
+                      <div className="am-factor-method-switch" role="group" aria-label="Available verification methods">
+                        {pendingFactorMethods.includes("totp") && (
+                          <button
+                            type="button"
+                            aria-pressed={factorMethod === "totp"}
+                            onClick={() => { setFactorMethod("totp"); setFactorCode(""); setError(""); }}
+                            className={`am-factor-method-choice ${factorMethod === "totp" ? "is-active" : ""}`}
+                          >
+                            <HiShieldCheck className="h-4 w-4" /> Authenticator app
+                          </button>
+                        )}
+                        {pendingFactorMethods.includes("recovery_code") && (
+                          <button
+                            type="button"
+                            aria-pressed={factorMethod === "recovery_code"}
+                            onClick={() => { setFactorMethod("recovery_code"); setFactorCode(""); setError(""); }}
+                            className={`am-factor-method-choice ${factorMethod === "recovery_code" ? "is-active" : ""}`}
+                          >
+                            <HiLockClosed className="h-4 w-4" /> Recovery code
+                          </button>
+                        )}
+                      </div>
+                      <label htmlFor="login-factor-code" className="am-factor-code-label">
+                        {factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}
+                      </label>
+                      <input
+                        id="login-factor-code"
+                        value={factorCode}
+                        onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))}
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        className="am-factor-code-input"
+                        placeholder={factorMethod === "totp" ? "000000" : "00000"}
+                        aria-invalid={Boolean(error)}
+                        aria-describedby={error ? "factor-code-error" : undefined}
+                        disabled={loading || !isOnline}
+                      />
+                      {error && <p id="factor-code-error" role="alert" className="am-factor-error">{error}</p>}
+                      <button type="submit" disabled={loading || !isOnline || factorCode.length !== (factorMethod === "totp" ? 6 : 5)} className="am-factor-submit">
+                        {loading ? "Verifying…" : "Verify and sign in"}
+                        <HiArrowRight className="h-4 w-4" />
+                      </button>
+                    </form>
+                  )}
+
+                  {error && !pendingFactorMethods.includes("totp") && !pendingFactorMethods.includes("recovery_code") && (
+                    <p role="alert" className="am-factor-error">{error}</p>
+                  )}
+                  <button
+                    type="button"
+                    className="am-factor-use-other"
+                    onClick={() => {
+                      cancelPendingFactorChallenge();
+                      setFactorCode("");
+                      setError("");
+                      setSuccess("Your previous verification step was cancelled. Choose another sign-in provider to start again.");
+                      setShowAuthMethods(true);
+                      setModalView("login");
+                    }}
+                  >
+                    <HiArrowLeft className="h-4 w-4" /> Use another sign-in method
+                  </button>
+                  <p className="am-factor-recovery-note">Only enrolled methods are accepted for this step. If you have lost access to them, use the account recovery process or contact Altuvera support.</p>
                 </div>
               )}
 
