@@ -159,6 +159,24 @@ export default function NotificationPanel({
   onClose,
 }) {
   const [tab, setTab] = useState('all')
+  const categoryTouchRef = useRef(null)
+  const tabOrder = TABS.map(item => item.key)
+  const handleCategoryTouchStart = (event) => {
+    const touch = event.touches?.[0]
+    if (touch) categoryTouchRef.current = { x: touch.clientX, y: touch.clientY }
+  }
+  const handleCategoryTouchEnd = (event) => {
+    const start = categoryTouchRef.current
+    categoryTouchRef.current = null
+    const touch = event.changedTouches?.[0]
+    if (!start || !touch) return
+    const dx = touch.clientX - start.x
+    const dy = touch.clientY - start.y
+    if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.2) return
+    const index = tabOrder.indexOf(tab)
+    const next = dx < 0 ? Math.min(tabOrder.length - 1, index + 1) : Math.max(0, index - 1)
+    if (next !== index) setTab(tabOrder[next])
+  }
 
   const displayed =
     tab === 'all'     ? groupedNotifications.all     :
@@ -363,7 +381,7 @@ export default function NotificationPanel({
       </div>
 
       {/* List */}
-      <div style={{ overflowY: 'auto', overflowX:'hidden', flex: '1 1 auto', minHeight:0, overscrollBehavior:'contain', WebkitOverflowScrolling:'touch' }}>
+      <div onTouchStart={handleCategoryTouchStart} onTouchEnd={handleCategoryTouchEnd} style={{ overflowY: 'auto', overflowX:'hidden', flex: '1 1 auto', minHeight:0, overscrollBehavior:'contain', WebkitOverflowScrolling:'touch', touchAction:'pan-y' }}>
         {loading && displayed.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
             <div style={{
@@ -388,7 +406,8 @@ export default function NotificationPanel({
             </p>
           </div>
         ) : (
-          <AnimatePresence initial={false}>
+          <AnimatePresence initial={false} mode="wait">
+            <motion.div key={tab} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.18, ease: 'easeOut' }} style={{ minHeight: '100%' }}>
             {displayed.map(n => (
               <NotifItem
                 key={n.id}
@@ -397,6 +416,7 @@ export default function NotificationPanel({
                 onDelete={deleteOne}
               />
             ))}
+            </motion.div>
           </AnimatePresence>
         )}
 
