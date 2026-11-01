@@ -52,7 +52,8 @@ const imageObjectUrl = (value) => {
   if (!value || typeof value !== "object") return "";
   const nested = value.image && typeof value.image === "object" ? value.image : null;
   return String(
-    value.url || value.image_url || value.imageUrl || value.src || value.image ||
+    value.url || value.image_url || value.imageUrl || value.src ||
+    (typeof value.image === "string" ? value.image : "") ||
     value.original_url || value.originalUrl || nested?.url || nested?.image_url || nested?.imageUrl || ""
   ).trim();
 };
