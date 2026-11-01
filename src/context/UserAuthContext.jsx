@@ -1119,6 +1119,13 @@ export function UserAuthProvider({ children }) {
     setModalView("factor");
   }, []);
 
+  // Explicitly abandon an in-progress second-factor challenge before switching
+  // to a different sign-in provider. The challenge is never reused afterwards.
+  const cancelPendingFactorChallenge = useCallback(() => {
+    setPendingFactorChallenge("");
+    setPendingFactorMethods([]);
+  }, []);
+
   const verifyLoginFactor = useCallback(async (method, code) => {
     if (!pendingFactorChallenge) throw new Error("Your verification session expired. Please sign in again.");
     const data = await authFetch("/users/login/verify-factor", {
@@ -1893,7 +1900,7 @@ export function UserAuthProvider({ children }) {
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation, pendingVerification,
     openModal, closeModal, setModalView, persistPendingVerification, clearPendingVerification,
-    login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
+    login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,
@@ -1909,7 +1916,7 @@ export function UserAuthProvider({ children }) {
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation,
     openModal, closeModal, setModalView,
-    login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
+    login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,
