@@ -38,6 +38,141 @@ import SEO from "../components/common/SEO";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
 import { useGallery } from "../hooks/useGallery";
+import { useCountries } from "../hooks/useCountries";
+import { useDestinations } from "../hooks/useDestinations";
+
+const getRecordSlug = (record) => {
+  const value = record?.slug || record?.id || record?._id || record?.country_id || record?.destination_id || record?.name || record?.title || "item";
+  return String(value).trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+};
+
+const imageObjectUrl = (value) => {
+  if (typeof value === "string") return value.trim();
+  if (!value || typeof value !== "object") return "";
+  const nested = value.image && typeof value.image === "object" ? value.image : null;
+  return String(
+    value.url || value.image_url || value.imageUrl || value.src || value.image ||
+    value.original_url || value.originalUrl || nested?.url || nested?.image_url || nested?.imageUrl || ""
+  ).trim();
+};
+
+const readImageList = (value) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string" && value.trim().startsWith("[")) {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return value ? [value] : [];
+};
+
+const collectEntityGalleryImages = (records, type) => {
+  const rows = Array.isArray(records) ? records : [];
+  return rows.flatMap((record) => {
+    if (!record || typeof record !== "object") return [];
+    const name = record.name || record.title || (type === "country" ? "Country" : "Destination");
+    const slug = getRecordSlug(record);
+    const route = type === "country" ? "/country/" : "/destinations/";
+    const sourceLabel = type === "country" ? "View country" : "View destination";
+    const sourceUrl = slug ? route + encodeURIComponent(slug) : "";
+    const countryName = type === "country"
+      ? name
+      : record.countryName || record.country_name || record.country?.name || "";
+    const location = type === "country"
+      ? record.capital || record.region || record.name || ""
+      : record.location || record.nearestCity || record.nearest_city || countryName || "";
+    const arrayKeys = type === "country"
+      ? [
+          "hero_images", "heroImages", "hero_slides", "heroSlides",
+          "banner_images", "bannerImages", "banner_slides", "bannerSlides",
+          "cover_images", "coverImages", "cover_slides", "coverSlides",
+          "gallery", "gallery_images", "galleryImages", "images", "image_urls", "imageUrls", "photos",
+          "media",
+        ]
+      : [
+          "heroImages", "hero_images", "heroSlides", "hero_slides",
+          "bannerSlides", "banner_slides", "coverImages", "cover_images",
+          "gallery", "galleryImages", "gallery_images", "images",
+          "attractionImages", "attraction_images", "photos", "media",
+        ];
+    const singleKeys = type === "country"
+      ? ["cover_image_url", "coverImageUrl", "cover_image", "coverImage", "image_url", "imageUrl", "hero_image", "heroImage", "image"]
+      : ["coverImageUrl", "cover_image_url", "imageUrl", "image_url", "heroImage", "hero_image", "thumbnailUrl", "thumbnail_url", "image"];
+
+    const candidates = [];
+    const pushCandidate = (value, sourceField) => {
+      if (value && typeof value === "object" && !Array.isArray(value) && sourceField === "media") {
+        ["hero_images", "heroImages", "banner_images", "bannerImages", "gallery", "images", "photos"].forEach((key) => {
+          readImageList(value[key]).forEach((item) => candidates.push({ item, sourceField: "media." + key }));
+        });
+        return;
+      }
+      readImageList(value).forEach((item) => candidates.push({ item, sourceField }));
+    };
+
+    arrayKeys.forEach((key) => {
+      const value = record[key];
+      if (value != null) pushCandidate(value, key);
+    });
+    singleKeys.forEach((key) => {
+      const value = record[key];
+      if (value != null && !Array.isArray(value)) candidates.push({ item: value, sourceField: key });
+    });
+
+    const seen = new Set();
+    return candidates.flatMap(({ item, sourceField }, index) => {
+      const src = imageObjectUrl(item);
+      if (!src || seen.has(src)) return [];
+      seen.add(src);
+      const thumb = typeof item === "object"
+        ? item.thumbnail_url || item.thumbnailUrl || item.thumb || item.thumb_url || src
+        : src;
+      const title = typeof item === "object"
+        ? item.title || item.caption || item.name || (type === "country" ? name : name)
+        : "";
+      const sourceName = typeof item === "object" ? item.photographer || item.credit || "" : "";
+      return [{
+        id: "imported-" + type + "-" + slug + "-" + index + "-" + src,
+        slug,
+        title: title || name,
+        description: (typeof item === "object" && item.description) || record.description || "",
+        src,
+        thumb,
+        alt: (typeof item === "object" && (item.alt_text || item.altText || item.alt)) || (title ? title + " — " + name : name),
+        category: type === "country" ? "Country" : "Destination",
+        tags: [],
+        location,
+        countryName,
+        photographer: sourceName,
+        isFeatured: Boolean(record.is_featured || record.isFeatured),
+        viewCount: 0,
+        sourceUrl,
+        sourceLabel,
+        sourceName: name,
+        sourceType: type,
+        sourceField,
+      }];
+    });
+  });
+};
+
+const combineGallerySources = (galleryRows, countryRows, destinationRows) => {
+  const imported = [
+    ...collectEntityGalleryImages(countryRows, "country"),
+    ...collectEntityGalleryImages(destinationRows, "destination"),
+  ];
+  const merged = [...imported, ...(Array.isArray(galleryRows) ? galleryRows : [])];
+  const seen = new Set();
+  return merged.filter((image) => {
+    const src = String(image?.src || image?.image_url || "").trim();
+    if (!src || seen.has(src)) return false;
+    seen.add(src);
+    return true;
+  });
+};
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap');
@@ -789,13 +924,33 @@ const SnapScrollGallery = ({ images, onImageClick }) => {
 
 export default function Gallery() {
   const width = useWidth();
-  const { images, categories, tags, loading, error, pagination, params, updateParams, refetch } = useGallery();
+  const { images: savedGalleryImages, loading: galleryLoading, error: galleryError, refetch } = useGallery();
+  const { countries, loading: countriesLoading, error: countriesError } = useCountries({ limit: 500, page: 1 });
+  const { destinations, loading: destinationsLoading, error: destinationsError } = useDestinations({ limit: 500, page: 1, include: "gallery" });
   const [favorites, setFavorites] = useState(new Set());
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
 
+  const countryRows = useMemo(() => {
+    if (Array.isArray(countries)) return countries;
+    if (Array.isArray(countries?.data)) return countries.data;
+    if (Array.isArray(countries?.countries)) return countries.countries;
+    return [];
+  }, [countries]);
+
+  const allImages = useMemo(
+    () => combineGallerySources(savedGalleryImages, countryRows, destinations),
+    [savedGalleryImages, countryRows, destinations]
+  );
+
+  const loading = galleryLoading || countriesLoading || destinationsLoading;
+  const sourceErrors = [galleryError, countriesError, destinationsError].filter(Boolean);
+  const fatalError = !loading && allImages.length === 0 && sourceErrors.length > 0
+    ? sourceErrors.join(" · ")
+    : null;
 
   const handleOpenImage = (image) => {
-    const index = images.findIndex((img) => img.id === image.id);
+    const index = allImages.findIndex((img) => img.id === image.id);
+    if (index < 0) return;
     setSelectedImageIndex(index);
     document.body.style.overflow = "hidden";
   };
@@ -805,25 +960,27 @@ export default function Gallery() {
     document.body.style.overflow = "";
   };
 
-  const handlePrevImage = () => {
+  const handlePrevImage = useCallback(() => {
     setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : prev));
-  };
+  }, []);
 
-  const handleNextImage = () => {
-    setSelectedImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : prev));
-  };
+  const handleNextImage = useCallback(() => {
+    setSelectedImageIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : prev));
+  }, [allImages.length]);
 
   const handleFav = (id) => {
-    const newFavs = new Set(favorites);
-    if (newFavs.has(id)) newFavs.delete(id);
-    else newFavs.add(id);
-    setFavorites(newFavs);
+    setFavorites((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const isFav = (id) => favorites.has(id);
 
   const clearFilters = () => {
-    updateParams({ page: 1, limit: 24, sort: "featured", category: "", search: "", tag: "" });
+    refetch();
   };
 
   return (
@@ -831,58 +988,60 @@ export default function Gallery() {
       <style>{STYLES}</style>
       <SEO
         title="Gallery | Altuvera"
-        description="Explore stunning photography from Rwanda's most beautiful destinations"
+        description="Explore photography collected directly from Altuvera countries and destinations."
         image="/og-image.jpg"
       />
       <PageHeader
         title="Gallery"
-        subtitle="Discover the visual stories of Rwanda"
+        subtitle="Explore images from every country and destination across East Africa"
         icon={<FiCamera size={32} />}
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Gallery" }]}
       />
       <AnimatedSection animation="fadeInUp">
-        <div style={{ padding: "40px 24px", maxWidth: 1400, margin: "0 auto" }}>
-          {/* Stats */}
-          <div style={{
-            display: "flex", gap: 16, marginBottom: 40, flexWrap: "wrap",
-          }}>
-            <StatCard icon={<FiCamera size={18} />} value={images.length} label="Total Images" />
-            <StatCard icon={<FiStar size={18} />} value={images.filter((i) => i.isFeatured).length} label="Featured" />
+        <div className="g-gallery-page" style={{ padding: "32px clamp(14px,3vw,24px)", maxWidth: 1480, margin: "0 auto" }}>
+          <div className="g-gallery-intro">
+            <div>
+              <p className="g-gallery-eyebrow">Altuvera image collection</p>
+              <h2>Places worth remembering</h2>
+              <p>Images are collected live from country and destination records. They appear here without creating extra gallery database entries.</p>
+            </div>
+            <div className="g-gallery-source-counts">
+              <span><FiGlobe size={15} /> {countryRows.length} countries</span>
+              <span><FiMapPin size={15} /> {Array.isArray(destinations) ? destinations.length : 0} destinations</span>
+            </div>
+          </div>
+
+          <div className="g-gallery-stats">
+            <StatCard icon={<FiCamera size={18} />} value={allImages.length} label="Total Images" />
+            <StatCard icon={<FiImage size={18} />} value={allImages.filter((image) => image.sourceType === "country").length} label="Country Images" />
+            <StatCard icon={<FiMapPin size={18} />} value={allImages.filter((image) => image.sourceType === "destination").length} label="Destination Images" />
             <StatCard icon={<FiHeart size={18} />} value={favorites.size} label="Favorites" />
           </div>
 
-          {/* Snap scroll gallery */}
-          {!loading && !error && images.length > 0 && (
-            <SnapScrollGallery images={images} onImageClick={handleOpenImage} />
-          )}
-
-          {/* Loading */}
           {loading && (
             <div className="g-grid-4">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <SkeletonCard key={i} />
-              ))}
+              {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
           )}
 
-          {/* Error */}
-          {error && !loading && <ErrorState message={error} onRetry={refetch} />}
+          {fatalError && <ErrorState message={fatalError} onRetry={refetch} />}
 
-          {/* Empty */}
-          {!loading && !error && images.length === 0 && <EmptyState onClear={clearFilters} />}
+          {!loading && !fatalError && allImages.length === 0 && <EmptyState onClear={clearFilters} />}
 
-          {/* Main grid */}
-          {!loading && !error && images.length > 0 && (
+          {!loading && allImages.length > 0 && (
             <>
-              <h3 style={{
-                fontSize: 16, fontWeight: 700, color: "#111827", paddingLeft: 8, marginBottom: 16,
-              }}>
-                All Images
-              </h3>
+              <SnapScrollGallery images={allImages} onImageClick={handleOpenImage} />
+              <div className="g-gallery-grid-heading">
+                <div>
+                  <p>Explore the collection</p>
+                  <h3>All country & destination images</h3>
+                </div>
+                <span>{allImages.length.toLocaleString()} images</span>
+              </div>
               <div className="g-grid-4">
-                {images.map((image, index) => (
+                {allImages.map((image, index) => (
                   <GalleryCard
-                    key={image.id}
+                    key={image.id || image.src}
                     image={image}
                     index={index}
                     onOpen={handleOpenImage}
@@ -896,10 +1055,9 @@ export default function Gallery() {
         </div>
       </AnimatedSection>
 
-      {/* Fullscreen Modal */}
-      {selectedImageIndex !== null && (
+      {selectedImageIndex !== null && allImages[selectedImageIndex] && (
         <FullscreenModal
-          images={images}
+          images={allImages}
           selectedIndex={selectedImageIndex}
           onClose={handleCloseModal}
           onPrev={handlePrevImage}
