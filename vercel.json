@@ -20,7 +20,7 @@
       "destination": "https://api.altuverasafaris.com/api/seo/destinations-sitemap.xml"
     },
     {
-      "source": "/((?!api|assets|favicon|altuvera\\.png|site\\.webmanifest|sitemap\\.xml|rss\\.xml|robots\\.txt|_vercel).*)",
+      "source": "/((?!api|assets|favicon|altuvera\\.png|site\\.webmanifest|sitemap\\.xml|rss\\.xml|robots\\.txt|copy-code\\.html|_vercel).*)",
       "destination": "/index.html"
     }
   ],
