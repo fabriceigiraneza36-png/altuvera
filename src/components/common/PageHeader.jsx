@@ -309,6 +309,15 @@ const PageHeader = ({
     document.head.appendChild(style);
   }, []);
 
+  // The header always renders the canonical Home link itself. Normalize incoming
+  // breadcrumb shapes and remove any Home/root item so callers cannot duplicate it.
+  const displayBreadcrumbs = (Array.isArray(breadcrumbs) ? breadcrumbs : [])
+    .map((crumb) => ({
+      label: String(crumb?.label || crumb?.name || crumb?.title || "").trim(),
+      to: crumb?.path || crumb?.href || crumb?.url || null,
+    }))
+    .filter((crumb) => crumb.label && crumb.label.toLowerCase() !== "home" && crumb.to !== "/");
+
   const handleBreadcrumbHover = (e, isHover) => {
     e.currentTarget.style.background = isHover
       ? "rgba(255, 255, 255, 0.12)"
@@ -385,7 +394,7 @@ const PageHeader = ({
       {/* Content */}
       <div style={styles.content}>
         {/* Breadcrumbs */}
-        {breadcrumbs.length > 0 && (
+        {displayBreadcrumbs.length > 0 && (
           <nav style={styles.breadcrumbs} aria-label="Breadcrumb navigation">
             <Link
               to="/"
@@ -397,16 +406,16 @@ const PageHeader = ({
               <span>Home</span>
             </Link>
 
-            {breadcrumbs.map((crumb, index) => (
+            {displayBreadcrumbs.map((crumb, index) => (
               <React.Fragment key={crumb.label || index}>
                 <span style={styles.breadcrumbSeparator}>
                   <FiChevronRight size={14} />
                 </span>
-                {index === breadcrumbs.length - 1 || !crumb.path ? (
+                {index === displayBreadcrumbs.length - 1 || !crumb.to ? (
                   <span style={styles.breadcrumbCurrent}>{crumb.label}</span>
                 ) : (
                   <Link
-                    to={crumb.path}
+                    to={crumb.to}
                     style={styles.breadcrumbLink}
                     onMouseEnter={(e) => handleBreadcrumbHover(e, true)}
                     onMouseLeave={(e) => handleBreadcrumbHover(e, false)}
