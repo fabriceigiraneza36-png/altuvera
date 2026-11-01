@@ -125,16 +125,20 @@ const collectEntityGalleryImages = (records, type) => {
           "heroImages", "hero_images", "heroSlides", "hero_slides",
           "bannerSlides", "banner_slides", "coverImages", "cover_images",
           "gallery", "galleryImages", "gallery_images", "images",
-          "attractionImages", "attraction_images", "photos", "media",
+          "attractionImages", "attraction_images", "attractionsImages", "attractions_images",
+          "attractionGallery", "attraction_gallery", "banner_images", "bannerImages",
+          "image_urls", "imageUrls", "photos", "media",
         ];
     const singleKeys = type === "country"
-      ? ["cover_image_url", "coverImageUrl", "cover_image", "coverImage", "image_url", "imageUrl", "hero_image", "heroImage", "image"]
-      : ["coverImageUrl", "cover_image_url", "imageUrl", "image_url", "heroImage", "hero_image", "thumbnailUrl", "thumbnail_url", "image"];
+      ? ["cover_image_url", "coverImageUrl", "cover_image", "coverImage", "image_url", "imageUrl", "hero_image_url", "heroImageUrl", "hero_image", "heroImage", "image"]
+      : ["coverImageUrl", "cover_image_url", "cover_image", "coverImage", "imageUrl", "image_url", "heroImageUrl", "hero_image_url", "heroImage", "hero_image", "thumbnailUrl", "thumbnail_url", "image"];
 
     const candidates = [];
     const pushCandidate = (value, sourceField) => {
       if (value && typeof value === "object" && !Array.isArray(value) && sourceField === "media") {
-        ["hero_images", "heroImages", "banner_images", "bannerImages", "gallery", "images", "photos"].forEach((key) => {
+        ["hero_images", "heroImages", "hero_slides", "heroSlides", "banner_images", "bannerImages",
+          "cover_images", "coverImages", "gallery", "gallery_images", "galleryImages",
+          "images", "image_urls", "imageUrls", "photos"].forEach((key) => {
           readImageList(value[key]).forEach((item) => candidates.push({ item, sourceField: "media." + key }));
         });
         return;
@@ -142,6 +146,18 @@ const collectEntityGalleryImages = (records, type) => {
       readImageList(value).forEach((item) => candidates.push({ item, sourceField }));
     };
 
+    const mediaCollections = [
+      record.attractions, record.attraction_images, record.attractionImages,
+      record.attractions_images, record.attractionsImages,
+    ];
+    mediaCollections.forEach((collection) => {
+      readImageList(collection).forEach((attraction) => {
+        if (!attraction || typeof attraction !== "object") return;
+        ["image", "imageUrl", "image_url", "url", "src", "images", "gallery", "photos", "media"].forEach((key) => {
+          if (attraction[key] != null) pushCandidate(attraction[key], "attraction." + key);
+        });
+      });
+    });
     arrayKeys.forEach((key) => {
       const value = record[key];
       if (value != null) pushCandidate(value, key);
@@ -153,12 +169,13 @@ const collectEntityGalleryImages = (records, type) => {
 
     const seen = new Set();
     return candidates.flatMap(({ item, sourceField }, index) => {
-      const src = imageObjectUrl(item);
+      const src = resolveGalleryImageUrl(item);
       if (!src || seen.has(src)) return [];
       seen.add(src);
-      const thumb = typeof item === "object"
-        ? item.thumbnail_url || item.thumbnailUrl || item.thumb || item.thumb_url || src
-        : src;
+      const thumbCandidate = typeof item === "object"
+        ? item.thumbnail_url || item.thumbnailUrl || item.thumb || item.thumb_url || item.thumbnail || item.preview_url || item.previewUrl
+        : "";
+      const thumb = resolveGalleryImageUrl(thumbCandidate) || src;
       const title = typeof item === "object"
         ? item.title || item.caption || item.name || (type === "country" ? name : name)
         : "";
