@@ -131,7 +131,6 @@ def clean_svg() -> dict:
 
     # Normalize the root to the BIMI SVG Tiny PS declaration. VTracer traces
     # the supplied square PNG into vector paths; no raster <image> is retained.
-    root.set("xmlns", SVG_NS)
     root.set("version", "1.2")
     root.set("baseProfile", "tiny-ps")
     root.set("viewBox", "0 0 512 512")
