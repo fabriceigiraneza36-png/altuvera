@@ -1124,6 +1124,7 @@ export function UserAuthProvider({ children }) {
     setLoginCounter(counter);
     store.setLoginCounter(counter);
     clearPendingVerification();
+    try { sessionStorage.removeItem("altuvera_login_draft_v1"); } catch { /* storage unavailable */ }
     setPendingEmail("");
     setPendingFactorChallenge("");
     setPendingFactorMethods([]);
