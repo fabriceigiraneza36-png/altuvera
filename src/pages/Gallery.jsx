@@ -778,7 +778,10 @@ const GalleryImage = ({ image, alt, className, style, onLoad, onFailure, loading
 
 const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
   const [loaded, setLoaded] = useState(false);
-  useEffect(() => { setLoaded(false); }, [image.src, image.thumb]);
+  useEffect(() => {
+    const hasSource = Boolean(resolveGalleryImageUrl(image.thumb) || resolveGalleryImageUrl(image.src));
+    setLoaded(!hasSource);
+  }, [image.src, image.thumb]);
   return (
     <div className="g-card" onClick={() => onOpen(image)} style={{
       borderRadius: "var(--g-radius-lg)", overflow: "hidden",
