@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BellRing, CalendarDays, Pencil, CheckCircle2, XCircle, Trash2, MapPinned, Globe2, FileText, Package, PartyPopper, AlertTriangle, Siren, Settings, MessageCircle, MessageSquareText, ShieldCheck, X, RefreshCw, CheckCheck, Wallet, CreditCard } from 'lucide-react'
+import { BellRing, CalendarDays, Pencil, CheckCircle2, XCircle, Trash2, MapPinned, Globe2, FileText, Package, PartyPopper, AlertTriangle, Siren, Settings, MessageCircle, RefreshCw } from 'lucide-react'
 
 // ─── Type config ──────────────────────────────────────────────────────────────
 const TYPE_META = {
@@ -34,271 +34,102 @@ const formatAgo = (dateStr) => {
 }
 
 // ─── Single notification item ──────────────────────────────────────────────────
-const NotifItem = ({
-  notif,
-  onMarkRead,
-  onReact,
-  onReply,
-  onDelete,
-}) => {
+const NotifItem = ({ notif, onMarkRead, onDelete }) => {
   const swipeStartX = useRef(null)
   const swipeDeltaX = useRef(0)
-  const [showReply,  setShowReply]  = useState(false)
-  const [replyText,  setReplyText]  = useState('')
-  const [replying,   setReplying]   = useState(false)
   const meta = TYPE_META[notif.type] || TYPE_META.general
-
-  const handleReply = async () => {
-    if (!replyText.trim()) return
-    setReplying(true)
-    try {
-      await onReply(notif.id, replyText)
-      setReplyText('')
-      setShowReply(false)
-    } finally {
-      setReplying(false)
-    }
-  }
+  const Icon = meta.icon
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0    }}
-      exit={{    opacity: 0, x:  10  }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0, backgroundColor: '#f8fbf9' }}
+      exit={{ opacity: 0, x: 18, scale: 0.985 }}
+      whileHover={{ backgroundColor: '#ffffff', boxShadow: '0 10px 26px rgba(15, 75, 51, 0.10)', y: -1 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
       style={{
-        padding:      '14px 16px',
-        borderBottom: '1px solid #f1f5f9',
-        background:   notif.is_read ? '#fff' : '#f0fdf4',
-        cursor:       'default',
-        position:     'relative',
-        touchAction:  'pan-y',
-        transition:   'transform 120ms ease-out, opacity 120ms ease-out',
+        margin: '7px 10px',
+        padding: '15px 14px',
+        borderRadius: 17,
+        border: '1px solid rgba(16, 115, 77, 0.07)',
+        boxShadow: '0 2px 8px rgba(15, 75, 51, 0.045)',
+        background: '#f8fbf9',
+        cursor: 'default',
+        position: 'relative',
+        touchAction: 'pan-y',
+        transition: 'background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease',
       }}
       onTouchStart={(e) => { swipeStartX.current = e.touches[0]?.clientX ?? null; swipeDeltaX.current = 0; }}
       onTouchMove={(e) => { if (swipeStartX.current === null) return; swipeDeltaX.current = e.touches[0].clientX - swipeStartX.current; e.currentTarget.style.transform = 'translateX(' + swipeDeltaX.current + 'px)'; e.currentTarget.style.opacity = String(Math.max(.25, 1 - Math.abs(swipeDeltaX.current) / 260)); }}
       onTouchEnd={(e) => { const delta = swipeDeltaX.current; swipeStartX.current = null; swipeDeltaX.current = 0; if (Math.abs(delta) > 95) { onDelete(notif.id); } else { e.currentTarget.style.transform = ''; e.currentTarget.style.opacity = ''; } }}
+      onClick={() => { if (!notif.is_read) onMarkRead(notif.id) }}
     >
-      {/* Unread dot */}
       {!notif.is_read && (
-        <div style={{
-          position:     'absolute',
-          top:          16,
-          left:         6,
-          width:        7,
-          height:       7,
-          borderRadius: '50%',
-          background:   '#059669',
-        }} />
+        <span aria-label="Unread notification" style={{ position:'absolute', top:17, left:8, width:7, height:7, borderRadius:'50%', background:'#079669', boxShadow:'0 0 0 4px rgba(7,150,105,.10)' }} />
       )}
 
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-        {/* Icon */}
-        <div style={{
-          width:        36,
-          height:       36,
-          borderRadius: 10,
-          background:   `${meta.color}18`,
-          display:      'flex',
-          alignItems:   'center',
-          justifyContent: 'center',
-          flexShrink:   0,
-          color: meta.color,
-          border: `1px solid ${meta.color}22`,
+      <div style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
+        <span style={{
+          width:44, height:44, flex:'0 0 44px', borderRadius:15,
+          display:'grid', placeItems:'center', color:meta.color,
+          background:`linear-gradient(145deg, ${meta.color}14, ${meta.color}08)`,
+          boxShadow:`inset 0 1px 0 rgba(255,255,255,.85), 0 3px 10px ${meta.color}0d`,
         }}>
-          <meta.icon size={18} strokeWidth={1.9} />
-        </div>
+          <Icon size={21} strokeWidth={1.85} />
+        </span>
 
-        {/* Content */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-            <p style={{
-              margin:     0,
-              fontSize:   13,
-              fontWeight: notif.is_read ? 500 : 700,
-              color:      '#0f172a',
-              lineHeight: 1.4,
-            }}>
+        <div style={{ flex:1, minWidth:0, paddingLeft:2 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10 }}>
+            <p style={{ margin:0, fontSize:14, fontWeight:notif.is_read ? 600 : 750, color:'#123b2c', lineHeight:1.4, overflowWrap:'anywhere' }}>
               {notif.title}
             </p>
-            <span style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>
+            <span style={{ fontSize:11, color:'#8ba096', flexShrink:0, whiteSpace:'nowrap', paddingTop:2 }}>
               {formatAgo(notif.created_at)}
             </span>
           </div>
 
-          <p style={{
-            margin:     '4px 0 0',
-            fontSize:   12,
-            color:      '#475569',
-            lineHeight: 1.5,
-          }}>
+          <p style={{ margin:'6px 0 0', fontSize:13, color:'#53675d', lineHeight:1.6, overflowWrap:'anywhere' }}>
             {notif.message}
           </p>
 
-          {/* Action button */}
           {notif.action_url && (
-            <a
-              href={notif.action_url}
-              style={{
-                display:        'inline-block',
-                marginTop:      8,
-                fontSize:       12,
-                fontWeight:     600,
-                color:          meta.color,
-                textDecoration: 'none',
-                padding:        '4px 10px',
-                background:     `${meta.color}12`,
-                borderRadius:   6,
-              }}
-              onClick={() => !notif.is_read && onMarkRead(notif.id)}
-            >
-              {notif.action_label || 'View'} →
+            <a href={notif.action_url} style={{
+              display:'inline-flex', alignItems:'center', gap:6, marginTop:10,
+              fontSize:12, fontWeight:700, color:meta.color, textDecoration:'none',
+              padding:'8px 12px', background:`${meta.color}0d`, borderRadius:10,
+            }} onClick={(e) => { e.stopPropagation(); if (!notif.is_read) onMarkRead(notif.id) }}>
+              {notif.action_label || 'View'} <span aria-hidden="true">→</span>
             </a>
           )}
 
-          {/* Admin reply */}
           {notif.admin_reply && (
-            <div style={{
-              marginTop:    8,
-              padding:      '8px 10px',
-              background:   '#f0fdf4',
-              borderRadius: 8,
-              border:       '1px solid #bbf7d0',
-            }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#166534', fontWeight: 700 }}>
-                Admin replied:
-              </p>
-              <p style={{ margin: '4px 0 0', fontSize: 12, color: '#166534' }}>
-                {notif.admin_reply}
-              </p>
+            <div style={{ marginTop:10, padding:'10px 12px', background:'#f0faf4', borderRadius:12, color:'#166534', boxShadow:'inset 0 0 0 1px rgba(22,101,52,.07)' }}>
+              <p style={{ margin:0, fontSize:11, fontWeight:750 }}>Admin replied</p>
+              <p style={{ margin:'4px 0 0', fontSize:12, lineHeight:1.5 }}>{notif.admin_reply}</p>
             </div>
           )}
-
-          {/* User's own reply */}
-          {notif.reply_text && !notif.admin_reply && (
-            <div style={{
-              marginTop:    8,
-              padding:      '6px 10px',
-              background:   '#f8fafc',
-              borderRadius: 8,
-              border:       '1px solid #e2e8f0',
-            }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#64748b' }}>
-                Your reply: {notif.reply_text}
-              </p>
-            </div>
-          )}
-
-          {/* Action row */}
-          <div style={{
-            display:    'flex',
-            gap:        8,
-            marginTop:  8,
-            flexWrap:   'wrap',
-            alignItems: 'center',
-          }}>
-            {!notif.is_read && (
-              <button
-                onClick={() => onMarkRead(notif.id)}
-                style={actionBtnStyle('#059669')}
-              >
-                ✓ Mark read
-              </button>
-            )}
-
-            {/* Reaction buttons */}
-            <button
-              onClick={() => onReact(notif.id, notif.reaction === 'like' ? null : 'like')}
-              style={actionBtnStyle(notif.reaction === 'like' ? '#059669' : '#94a3b8')}
-              title="Like"
-            >
-              👍 {notif.reaction === 'like' ? 'Liked' : 'Like'}
-            </button>
-
-            {/* Reply button — only if no existing reply */}
-            {!notif.reply_text && (
-              <button
-                onClick={() => setShowReply(v => !v)}
-                style={actionBtnStyle('#0ea5e9')}
-                title="Reply"
-              >
-                💬 Reply
-              </button>
-            )}
-
-            <button
-              onClick={() => onDelete(notif.id)}
-              style={actionBtnStyle('#ef4444')}
-              title="Dismiss"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Reply input */}
-          <AnimatePresence>
-            {showReply && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                style={{ marginTop: 8, overflow: 'hidden' }}
-              >
-                <textarea
-                  value={replyText}
-                  onChange={e => setReplyText(e.target.value)}
-                  placeholder="Write your reply…"
-                  rows={2}
-                  style={{
-                    width:        '100%',
-                    fontSize:     12,
-                    padding:      '8px 10px',
-                    borderRadius: 8,
-                    border:       '1px solid #e2e8f0',
-                    resize:       'none',
-                    fontFamily:   'inherit',
-                    outline:      'none',
-                    boxSizing:    'border-box',
-                  }}
-                  autoFocus
-                />
-                <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                  <button
-                    onClick={handleReply}
-                    disabled={replying || !replyText.trim()}
-                    style={{
-                      ...actionBtnStyle('#059669'),
-                      opacity: replying || !replyText.trim() ? 0.5 : 1,
-                    }}
-                  >
-                    {replying ? 'Sending…' : 'Send Reply'}
-                  </button>
-                  <button
-                    onClick={() => setShowReply(false)}
-                    style={actionBtnStyle('#94a3b8')}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
+
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(notif.id) }}
+          aria-label="Delete notification"
+          title="Delete notification"
+          style={{
+            flex:'0 0 36px', width:36, height:36, display:'grid', placeItems:'center',
+            border:0, borderRadius:12, color:'#8a9a91', background:'transparent',
+            cursor:'pointer', transition:'background .18s ease, color .18s ease, transform .18s ease',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background='#fff0f1'; e.currentTarget.style.color='#d94655'; e.currentTarget.style.transform='scale(1.04)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#8a9a91'; e.currentTarget.style.transform='scale(1)' }}
+        >
+          <Trash2 size={17} strokeWidth={1.8} />
+        </button>
       </div>
     </motion.div>
   )
 }
-
-const actionBtnStyle = (color) => ({
-  background:   'transparent',
-  border:       `1px solid ${color}40`,
-  color:        color,
-  borderRadius: 6,
-  padding:      '3px 8px',
-  fontSize:     11,
-  fontWeight:   600,
-  cursor:       'pointer',
-})
 
 // ─── Panel tabs ────────────────────────────────────────────────────────────────
 const TABS = [
@@ -563,8 +394,6 @@ export default function NotificationPanel({
                 key={n.id}
                 notif={n}
                 onMarkRead={markRead}
-                onReact={react}
-                onReply={reply}
                 onDelete={deleteOne}
               />
             ))}
