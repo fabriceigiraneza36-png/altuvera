@@ -17,7 +17,7 @@ import {
   HiClock,
   HiFingerPrint,
 } from "react-icons/hi";
-import { FiSave, FiX, FiEdit3, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
+import { FiSave, FiX, FiEdit3, FiAlertCircle, FiCheckCircle, FiLink } from "react-icons/fi";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const AUTOSAVE_DELAY = 900;
@@ -913,7 +913,7 @@ export default function UserProfile() {
             <form onSubmit={(e) => { e.preventDefault(); handleUrlImage(); }} noValidate>
               <label htmlFor="up-profile-photo-url" style={{ display: "block", color: "#253d33", fontSize: 14, fontWeight: 750, marginBottom: 8 }}>Image URL</label>
               <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 13px", border: "1px solid " + (photoUrlError ? "#dc4545" : "#cbdcd3"), borderRadius: 13, background: photoUrlError ? "#fffafa" : "#fbfdfc", boxShadow: photoUrlError ? "0 0 0 3px rgba(220,69,69,.08)" : "none" }}>
-                <icon name="link" size="sm" />
+                <FiLink aria-hidden="true" style={{ color: "#648176", flex: "0 0 auto" }} />
                 <input id="up-profile-photo-url" type="url" inputMode="url" value={photoUrl} onChange={(e) => { const value = e.target.value; setPhotoUrl(value); setPhotoUrlError(value.trim() && !/^https?:\/\//i.test(value.trim()) ? "Link must start with https:// or http://." : ""); }} placeholder="https://example.com/photo.jpg" autoComplete="url" aria-invalid={!!photoUrlError} aria-describedby="up-photo-url-help up-photo-url-error" style={{ flex: 1, width: "100%", minWidth: 0, padding: "15px 0", border: 0, outline: "none", background: "transparent", color: "#10231d", fontSize: 16, boxSizing: "border-box" }} />
               </div>
               {photoUrlError ? <p id="up-photo-url-error" role="alert" style={{ margin: "8px 0 0", color: "#c53030", fontSize: 12, lineHeight: 1.45 }}>{photoUrlError}</p> : null}
