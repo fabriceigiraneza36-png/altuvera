@@ -235,6 +235,11 @@ const S = {
 const KEYFRAMES = `
   @keyframes cgProfileReveal { 0% { transform: translateY(10px) scale(.82); opacity: 0; } 65% { transform: translateY(-3px) scale(1.04); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
   @keyframes cgBubbleDrift { 0%,100% { transform:translate3d(0,0,0) scale(1); } 50% { transform:translate3d(-10px,8px,0) scale(1.06); } }
+  .cg-modal { scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior:contain; }
+  .cg-modal::-webkit-scrollbar { display:none; width:0; height:0; }
+  .cg-top { position:sticky; top:0; z-index:5; isolation:isolate; box-shadow:0 8px 24px rgba(4,30,16,.10); }
+  .cg-body { position:relative; }
+  .cg-profile { animation:cgProfileReveal .65s cubic-bezier(.2,.8,.2,1) both; }
   .cg-bubble { animation:cgBubbleDrift 7s ease-in-out infinite; }
   .cg-bubble--slow { animation-duration:9s; animation-delay:-2s; }
   .cg-profile-photo { width:100%; height:100%; object-fit:cover; display:block; opacity:.94; }
@@ -314,12 +319,11 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
       return undefined;
     }
 
-    // Offer the optional security setup to new sign-ups and returning users
-    // who have not enrolled another sign-in factor. Failure to load status
-    // must never block sign-in or the welcome screen.
-    setShowSecurityPrompt(true);
+    // Only offer security setup when the account status endpoints explicitly
+    // confirm that no additional sign-in method has been configured. A network
+    // or API failure must not cause this prompt to appear on every login.
+    setShowSecurityPrompt(false);
     if (type !== "signup" && type !== "login") {
-      setShowSecurityPrompt(false);
       return undefined;
     }
 
@@ -331,7 +335,10 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
           fetch(`${API_URL}/users/security/factors`, { headers }),
           fetch(`${API_URL}/users/security/passkeys`, { headers }),
         ]);
-        if (!factorResponse.ok || !passkeyResponse.ok) return;
+        if (!factorResponse.ok || !passkeyResponse.ok) {
+          if (!cancelled) setShowSecurityPrompt(false);
+          return;
+        }
         const factorsPayload = await factorResponse.json();
         const passkeysPayload = await passkeyResponse.json();
         const factors = factorsPayload?.data || {};
@@ -343,9 +350,10 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
           factors.recoveryCodesAvailable ||
           (Array.isArray(passkeys) && passkeys.length > 0)
         );
-        if (!cancelled && hasExtraMethod) setShowSecurityPrompt(false);
+        if (!cancelled) setShowSecurityPrompt(!hasExtraMethod);
       } catch {
-        // Keep the optional prompt available if the status endpoint is unreachable.
+        // Unknown status is not proof that setup is missing; fail closed.
+        if (!cancelled) setShowSecurityPrompt(false);
       }
     };
     checkFactors();
