@@ -159,6 +159,17 @@ export default function NotificationPanel({
   onClose,
 }) {
   const [tab, setTab] = useState('all')
+  const categoryTouchRef = useRef(null)
+  const tabOrder = TABS.map(item => item.key)
+  const handleCategoryTouchStart = (event) => { const t = event.touches?.[0]; if (t) categoryTouchRef.current = { x:t.clientX, y:t.clientY } }
+  const handleCategoryTouchEnd = (event) => {
+    const start = categoryTouchRef.current; categoryTouchRef.current = null
+    const t = event.changedTouches?.[0]; if (!start || !t) return
+    const dx = t.clientX - start.x, dy = t.clientY - start.y
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.25) return
+    const i = tabOrder.indexOf(tab), next = dx < 0 ? Math.min(tabOrder.length - 1, i + 1) : Math.max(0, i - 1)
+    if (next !== i) setTab(tabOrder[next])
+  }
 
   const displayed =
     tab === 'all'     ? groupedNotifications.all     :
@@ -363,7 +374,7 @@ export default function NotificationPanel({
       </div>
 
       {/* List */}
-      <div style={{ overflowY: 'auto', overflowX:'hidden', flex: '1 1 auto', minHeight:0, overscrollBehavior:'contain', WebkitOverflowScrolling:'touch' }}>
+      <div onTouchStart={handleCategoryTouchStart} onTouchEnd={handleCategoryTouchEnd} style={{ overflowY: 'auto', overflowX:'hidden', flex: '1 1 auto', minHeight:0, overscrollBehavior:'contain', WebkitOverflowScrolling:'touch', touchAction:'pan-y' }}>
         {loading && displayed.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
             <div style={{
