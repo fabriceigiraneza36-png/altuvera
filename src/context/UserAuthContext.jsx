@@ -1123,13 +1123,14 @@ export function UserAuthProvider({ children }) {
     const counter = payload.loginCounter ?? payload.user?.loginCounter ?? 0;
     setLoginCounter(counter);
     store.setLoginCounter(counter);
+    clearPendingVerification();
     setPendingEmail("");
     setPendingFactorChallenge("");
     setPendingFactorMethods([]);
     closeModal();
     triggerCongratulation("login");
     return data;
-  }, [saveAuth, persistSession, closeModal, triggerCongratulation]);
+  }, [saveAuth, persistSession, clearPendingVerification, closeModal, triggerCongratulation]);
 
   const loginWithSecurityCode = useCallback(async (method, email, code) => {
     const data = await authFetch("/users/login/factor", {
