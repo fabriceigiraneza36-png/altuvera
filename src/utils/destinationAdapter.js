@@ -168,7 +168,7 @@ const adaptGalleryItem = (raw) => {
   return {
     ...raw,
     id:           raw.id,
-    imageUrl:     raw.imageUrl || raw.image_url || raw.url || raw.image || raw.src || raw.thumbnailUrl || raw.thumbnail_url || null,
+    imageUrl:     raw.imageUrl || raw.image_url || raw.url || raw.secure_url || raw.secureUrl || raw.public_url || raw.image || raw.src || raw.thumbnailUrl || raw.thumbnail_url || null,
     thumbnailUrl: raw.thumbnailUrl || raw.thumbnail_url || null,
     caption:      raw.caption || raw.title || raw.name || null,
     altText:      raw.altText || raw.alt_text || raw.alt || null,
@@ -250,7 +250,7 @@ export const adaptDestination = (raw) => {
                 if (typeof img === "string" && img.trim()) {
                     urls.push(img.trim());
                 } else if (img && typeof img === "object") {
-                    const u = img.imageUrl || img.image_url || img.url || img.thumbnailUrl || img.thumbnail_url;
+                    const u = img.imageUrl || img.image_url || img.url || img.secure_url || img.secureUrl || img.thumbnailUrl || img.thumbnail_url;
                     if (typeof u === "string" && u.trim()) {
                         urls.push(u.trim());
                     }
@@ -263,7 +263,7 @@ export const adaptDestination = (raw) => {
             heroArray.forEach(img => {
                 const u = typeof img === "string"
                     ? img
-                    : img?.imageUrl || img?.image_url || img?.url || img?.thumbnailUrl || img?.thumbnail_url;
+                    : img?.imageUrl || img?.image_url || img?.url || img?.secure_url || img?.secureUrl || img?.thumbnailUrl || img?.thumbnail_url;
                 if (typeof u === "string" && u.trim()) urls.push(u.trim());
             });
         }
@@ -284,7 +284,7 @@ export const adaptDestination = (raw) => {
             items.forEach(img => {
                 const u = typeof img === "string" ? img :
                     img?.imageUrl || img?.image_url || img?.url || img?.image || img?.src ||
-                    img?.secure_url || img?.originalUrl || img?.original_url ||
+                    img?.secure_url || img?.secureUrl || img?.originalUrl || img?.original_url ||
                     img?.thumbnailUrl || img?.thumbnail_url;
                 if (typeof u === "string" && u.trim()) urls.push(u.trim());
             });
@@ -302,7 +302,7 @@ export const adaptDestination = (raw) => {
                     list.forEach(img => {
                         const u = typeof img === "string" ? img :
                             img?.imageUrl || img?.image_url || img?.url || img?.image || img?.src ||
-                            img?.secure_url || img?.originalUrl || img?.original_url;
+                            img?.secure_url || img?.secureUrl || img?.originalUrl || img?.original_url;
                         if (typeof u === "string" && u.trim()) urls.push(u.trim());
                     });
                 });
@@ -314,7 +314,7 @@ export const adaptDestination = (raw) => {
             if (typeof s === "string" && s.trim()) {
                 urls.push(s.trim());
             } else if (s && typeof s === "object") {
-                const u = s.imageUrl || s.image_url || s.url || s.thumbnailUrl || s.thumbnail_url;
+                const u = s.imageUrl || s.image_url || s.url || s.secure_url || s.secureUrl || s.thumbnailUrl || s.thumbnail_url;
                 if (typeof u === "string" && u.trim()) {
                     urls.push(u.trim());
                 }
