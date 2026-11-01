@@ -525,7 +525,6 @@ const STYLES = `
     .g-viewer-bottom { padding:10px 12px 16px; }
   }
   @media (max-width: 390px) {
-    .g-story-slide { flex:0 0 auto; width:auto; height:auto; }
     .g-info-grid { grid-template-columns:1fr; }
   }
   .g-focus:focus-visible {
