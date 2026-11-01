@@ -37,7 +37,6 @@ import {
 } from "react-icons/fi";
 import SEO from "../components/common/SEO";
 import PageHeader from "../components/common/PageHeader";
-import AnimatedSection from "../components/common/AnimatedSection";
 import { useGallery } from "../hooks/useGallery";
 import { useCountries } from "../hooks/useCountries";
 import { useDestinations } from "../hooks/useDestinations";
@@ -566,6 +565,8 @@ const STYLES = `
     }
   }
   .g-gallery-page { width:100%; min-width:0; }
+  /* Keep the main collection visible even if a browser misses an IO reveal event. */
+  .g-gallery-content { width:100%; min-width:0; animation:gFadeUp .48s cubic-bezier(.16,1,.3,1) both; }
   .g-gallery-intro {
     display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap;
     gap:18px; margin-bottom:22px; padding:clamp(18px,3vw,28px);
@@ -1197,7 +1198,7 @@ export default function Gallery() {
         icon={<FiCamera size={32} />}
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Gallery" }]}
       />
-      <AnimatedSection animation="fadeInUp">
+      <section className="g-gallery-content">
         <div className="g-gallery-page" style={{ padding: "32px clamp(14px,3vw,24px)", maxWidth: 1480, margin: "0 auto" }}>
           <div className="g-gallery-intro">
             <div>
@@ -1253,7 +1254,7 @@ export default function Gallery() {
             </>
           )}
         </div>
-      </AnimatedSection>
+      </section>
 
       {selectedImageIndex !== null && allImages[selectedImageIndex] && (
         <FullscreenModal
