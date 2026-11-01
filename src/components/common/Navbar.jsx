@@ -280,6 +280,7 @@ const Navbar = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [floatingAccountOpen, setFloatingAccountOpen] = useState(false);
   const [mobileAccountOpen, setMobileAccountOpen] = useState(false);
   const mobileProfileRef = useRef(null);
   const mobileAccountModalRef = useRef(null);
@@ -640,6 +641,10 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    if (!navHidden) setFloatingAccountOpen(false);
+  }, [navHidden]);
+
   /* ── Logo detach on scroll hide ── */
   useEffect(() => {
     const prevHidden = prevNavHiddenRef.current;
@@ -671,6 +676,7 @@ const Navbar = () => {
     setActiveDropdown(null);
     setActiveMobileDropdown(null);
     setUserMenuOpen(false);
+    setFloatingAccountOpen(false);
   }, []);
 
   useEffect(() => closeAll(), [location.pathname, closeAll]);
@@ -871,22 +877,23 @@ const Navbar = () => {
      ══════════════════════════════════════ */
   return (
     <>
-      {/* ── Floating circular account control while navbar is hidden ── */}
+      {/* Floating profile access remains available while the navbar is hidden. */}
       {navHidden && user && (
         <button
           type="button"
           className="nav__floating-account"
-          onClick={() => setUserMenuOpen((open) => !open)}
-          aria-label={`Open account menu for ${displayName}`}
-          aria-expanded={userMenuOpen}
+          onClick={() => { setUserMenuOpen(false); setFloatingAccountOpen((open) => !open); }}
+          aria-label={"Open account menu for " + displayName}
+          aria-haspopup="dialog"
+          aria-expanded={floatingAccountOpen}
           title="Account"
           style={{
             position: "fixed",
             top: "max(12px, env(safe-area-inset-top))",
             right: "max(14px, env(safe-area-inset-right))",
             zIndex: 1200,
-            width: 46,
-            height: 46,
+            width: 48,
+            height: 48,
             padding: 0,
             borderRadius: "50%",
             overflow: "hidden",
@@ -907,6 +914,74 @@ const Navbar = () => {
           )}
         </button>
       )}
+
+      <AnimatePresence>
+        {navHidden && user && floatingAccountOpen && (
+          <motion.div
+            className="nav__floating-account-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: .16 }}
+            onMouseDown={(event) => { if (event.target === event.currentTarget) setFloatingAccountOpen(false); }}
+          >
+            <motion.section
+              className="nav__floating-account-menu"
+              role="dialog"
+              aria-modal="true"
+              aria-label={"Account menu for " + displayName}
+              initial={{ opacity: 0, y: -10, scale: .97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: .98 }}
+              transition={{ type: "spring", stiffness: 360, damping: 28 }}
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="nav__floating-account-top">
+                <div>
+                  <span className="nav__floating-account-kicker">YOUR ACCOUNT</span>
+                  <strong>Account menu</strong>
+                </div>
+                <button type="button" onClick={() => setFloatingAccountOpen(false)} aria-label="Close account menu">
+                  <AccountCloseIcon size={19} />
+                </button>
+              </div>
+              <div className="nav__floating-account-profile">
+                <span className="nav__floating-account-avatar">
+                  {user?.avatar
+                    ? <img src={user.avatar} alt="" />
+                    : <span>{getInitials()}</span>}
+                </span>
+                <span className="nav__floating-account-details">
+                  <strong>{displayName}</strong>
+                  <small>{user?.email}</small>
+                  <em>{providerLabel} account</em>
+                </span>
+              </div>
+              <nav className="nav__floating-account-links" aria-label="Account pages">
+                {userMenuItems.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setFloatingAccountOpen(false)}
+                  >
+                    <span className="nav__floating-account-link-icon"><item.icon size={18} strokeWidth={1.9} /></span>
+                    <span>{item.label}</span>
+                    <AccountChevronRightIcon size={16} />
+                  </Link>
+                ))}
+              </nav>
+              <button
+                type="button"
+                className="nav__floating-account-signout"
+                onClick={() => { setFloatingAccountOpen(false); handleLogout(); }}
+              >
+                <AccountLogoutIcon size={17} />
+                Sign out
+              </button>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ══════ NAVBAR ══════ */}
       <nav
