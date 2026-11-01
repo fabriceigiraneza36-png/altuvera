@@ -16,7 +16,16 @@ const reducer = (state, action) => {
   }
 };
 
-const extract = (payload) => payload?.data ?? payload ?? [];
+const extract = (payload) => {
+  const root = payload?.data ?? payload ?? [];
+  if (Array.isArray(root)) return root;
+  if (root && typeof root === "object") {
+    for (const key of ["destinations", "items", "results", "rows"]) {
+      if (Array.isArray(root[key])) return root[key];
+    }
+  }
+  return root;
+};
 
 const qs = (params = {}) => {
   const clean = Object.fromEntries(
