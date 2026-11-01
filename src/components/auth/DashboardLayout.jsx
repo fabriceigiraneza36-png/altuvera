@@ -256,8 +256,11 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
         @media (max-width: 768px) {
           .dashboard-layout { height: auto; min-height: calc(100dvh - 80px); overflow: visible; }
           .dashboard-sidebar {
-            position: fixed; top: 0; left: 0; height: 100vh;
-            transform: translateX(-100%); z-index: 50; padding-top: 20px;
+            position: fixed; inset: 0; width: 100vw; max-width: none;
+            height: 100vh; height: 100dvh; box-sizing: border-box;
+            transform: translateX(-100%); z-index: 50;
+            padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+            overflow-y: auto; overscroll-behavior: contain;
           }
           .dashboard-sidebar.open { transform: translateX(0); }
           .dashboard-overlay.open { display: block; }
