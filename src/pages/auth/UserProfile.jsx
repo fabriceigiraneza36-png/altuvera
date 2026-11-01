@@ -625,7 +625,7 @@ export default function UserProfile() {
                 aria-label="Use an image URL"
                 style={{ left: "46px" }}
               >
-                <HiLink />
+                <HiOutlinePhotograph />
               </button>
               <input
                 type="file"
