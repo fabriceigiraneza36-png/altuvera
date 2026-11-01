@@ -72,6 +72,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
     <div
       className={`dashboard-layout ${noPadding ? "dashboard-layout-no-padding" : ""}`}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       <style>{`
