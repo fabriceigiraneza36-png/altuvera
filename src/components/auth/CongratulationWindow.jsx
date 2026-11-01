@@ -41,10 +41,9 @@ const S = {
     maxHeight:      "min(88dvh, 760px)",
     background:     "#ffffff",
     borderRadius:   24,
-    overflowX:      "hidden",
-    overflowY:      "auto",
-    overscrollBehavior: "contain",
-    WebkitOverflowScrolling: "touch",
+    display:        "flex",
+    flexDirection:  "column",
+    overflow:       "hidden",
     boxShadow:      "0 24px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.04)",
     fontFamily:     "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
@@ -78,8 +77,8 @@ const S = {
     pointerEvents: "none",
   },
   profileRing: {
-    width: 46, height: 46, borderRadius: "50%", background: "#eaf6ee",
-    border: "2px solid #cce7d6", display: "flex", alignItems: "center",
+    width: 48, height: 48, borderRadius: "50%", background: "transparent",
+    border: "2px solid rgba(255,255,255,.72)", display: "flex", alignItems: "center",
     justifyContent: "center", margin: 0, overflow: "hidden", position: "relative",
     zIndex: 1, boxShadow: "0 4px 14px rgba(6,78,59,.12)",
   },
@@ -237,17 +236,16 @@ const S = {
 const KEYFRAMES = `
   @keyframes cgProfileReveal { 0% { transform: translateY(10px) scale(.82); opacity: 0; } 65% { transform: translateY(-3px) scale(1.04); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
   @keyframes cgBubbleDrift { 0%,100% { transform:translate3d(0,0,0) scale(1); } 50% { transform:translate3d(-10px,8px,0) scale(1.06); } }
-  .cg-modal { scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior:contain; }
+  .cg-modal { display:flex; flex-direction:column; min-height:0; overflow:hidden; scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior:contain; }
   .cg-modal::-webkit-scrollbar { display:none; width:0; height:0; }
-  .cg-user-sticky { position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:10px; width:100%; box-sizing:border-box; padding:10px 17px 9px; background:transparent; pointer-events:auto; }
-  .cg-user-sticky__identity { display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
-  .cg-user-sticky__copy { display:flex; flex-direction:column; min-width:0; gap:2px; }
-  .cg-user-sticky__copy strong { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#10452f; font-size:.83rem; font-weight:850; line-height:1.2; }
-  .cg-user-sticky__copy small { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#648071; font-size:.69rem; line-height:1.2; }
-  .cg-user-sticky__close { display:grid; place-items:center; flex:0 0 36px; width:36px; height:36px; padding:0; border:1px solid rgba(6,78,59,.16); border-radius:50%; color:#155b3e; background:transparent; cursor:pointer; transition:background .18s ease,border-color .18s ease,transform .18s ease; }
-  .cg-user-sticky__close:hover { background:rgba(5,150,105,.08); border-color:rgba(5,150,105,.34); transform:rotate(5deg); }
-  .cg-user-sticky__close:focus-visible { outline:3px solid rgba(5,150,105,.24); outline-offset:2px; }
+  .cg-user-sticky { position:relative; z-index:30; display:flex; flex:0 0 auto; align-items:center; justify-content:center; width:100%; min-height:68px; box-sizing:border-box; padding:9px 16px; background:transparent; pointer-events:auto; }
+  .cg-user-sticky__identity { display:flex; align-items:center; justify-content:center; min-width:0; flex:0 0 auto; }
+  .cg-profile { width:clamp(42px, 11vw, 50px)!important; height:clamp(42px, 11vw, 50px)!important; }
+  .cg-modal-scroll { position:relative; flex:1 1 auto; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; scrollbar-width:none; -ms-overflow-style:none; }
+  .cg-modal-scroll::-webkit-scrollbar { display:none; width:0; height:0; }
   .cg-top { position:relative; z-index:1; isolation:isolate; }
+  .cg-top__close { position:absolute; top:12px; right:14px; z-index:5; }
+  .cg-body { position:relative; }
   .cg-body { position:relative; }
   .cg-profile { animation:cgProfileReveal .65s cubic-bezier(.2,.8,.2,1) both; }
   .cg-bubble { animation:cgBubbleDrift 7s ease-in-out infinite; }
@@ -265,7 +263,7 @@ const KEYFRAMES = `
   .cg-quick-link:focus-visible { transform:translateY(-2px); background:#ecfdf5; border-color:#059669; outline:2px solid #34d399; outline-offset:2px; box-shadow:0 6px 14px rgba(5,150,105,.12); }
   .cg-quick-link:focus-visible .cg-quick-icon { background:#047857; color:#fff; }
   .cg-quick-links:hover .cg-marquee-track,.cg-quick-links:focus-within .cg-marquee-track { animation-play-state:paused; }
-  @media (max-width: 520px) { .cg-modal { max-height:min(90dvh,720px)!important; border-radius:20px!important; } .cg-user-sticky { padding:9px 13px 8px; gap:8px; } .cg-user-sticky__copy strong { max-width:min(58vw,220px); font-size:.78rem; } .cg-user-sticky__copy small { max-width:min(58vw,220px); font-size:.65rem; } .cg-user-sticky__close { flex-basis:34px; width:34px; height:34px; } .cg-top { padding:22px 18px 18px!important; } .cg-body { padding:14px 16px 16px!important; } .cg-profile { width:42px!important;height:42px!important; } .cg-tips { gap:7px!important;margin-bottom:10px!important; } .cg-tip { padding:8px 10px!important; } .cg-cta { margin-bottom:8px!important; } .cg-quick-link { min-width:122px; } }
+  @media (max-width: 520px) { .cg-modal { max-height:min(90dvh,720px)!important; border-radius:20px!important; } .cg-user-sticky { min-height:62px; padding:8px 12px; } .cg-profile { width:clamp(42px, 12vw, 48px)!important;height:clamp(42px, 12vw, 48px)!important; } .cg-top { padding:22px 18px 18px!important; } .cg-top__close { top:10px; right:10px; } .cg-body { padding:14px 16px 16px!important; } .cg-tips { gap:7px!important;margin-bottom:10px!important; } .cg-tip { padding:8px 10px!important; } .cg-cta { margin-bottom:8px!important; } .cg-quick-link { min-width:122px; } }
   @media (prefers-reduced-motion: reduce) { .cg-profile { animation:none!important; } .cg-marquee-track { animation:none!important; transform:none!important; width:auto; } .cg-marquee-group[aria-hidden="true"] { display:none!important; } .cg-quick-links { overflow-x:auto!important; scrollbar-width:none; } .cg-quick-links::-webkit-scrollbar { display:none; } }
 `;
 
@@ -558,13 +556,8 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                 exit={{ opacity: 0, scale: 0.94, y: 12 }}
                 transition={{ type: "spring", stiffness: 280, damping: 24 }}
               >
-                {/* ── Top strip ─────────────────────────────────────── */}
-                <div className="cg-top" style={S.topStrip}>
-                  <div className="cg-bubble" style={S.stripBubble1} />
-                  <div className="cg-bubble cg-bubble--slow" style={S.stripBubble2} />
-
-                {/* A transparent, sticky identity row stays visible while the modal content scrolls. */}
-                <div className="cg-user-sticky">
+                {/* This avatar rail stays centered and stationary while the welcome content scrolls. */}
+                <div className="cg-user-sticky" aria-label="Signed-in profile">
                   <motion.div
                     className="cg-user-sticky__identity"
                     initial={{ opacity: 0, y: -6 }}
@@ -582,20 +575,24 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                         ? <img className="cg-profile-photo" src={avatarUrl} alt={`${displayName || "Your"} profile`} />
                         : <span aria-label="Profile initials" style={{ color:"#075538", fontWeight:900, fontSize:15 }}>{avatarInitials}</span>}
                     </motion.div>
-                    <span className="cg-user-sticky__copy">
-                      <strong>{displayName || "Altuvera traveler"}</strong>
-                      <small>{user?.email || "Signed in to your Altuvera account"}</small>
-                    </span>
                   </motion.div>
-                  <button
-                    type="button"
-                    className="cg-user-sticky__close"
-                    onClick={handleClose}
-                    aria-label="Close welcome window"
-                  >
-                    <X size={17} />
-                  </button>
                 </div>
+
+                {/* All welcome text, actions and security options live in this scroll area. */}
+                <div className="cg-modal-scroll">
+                  {/* ── Top strip ─────────────────────────────────────── */}
+                  <div className="cg-top" style={S.topStrip}>
+                    <div className="cg-bubble" style={S.stripBubble1} />
+                    <div className="cg-bubble cg-bubble--slow" style={S.stripBubble2} />
+                    <button
+                      type="button"
+                      className="cg-user-sticky__close cg-top__close"
+                      style={S.closeBtn}
+                      onClick={handleClose}
+                      aria-label="Close welcome window"
+                    >
+                      <X size={17} />
+                    </button>
 
                   <motion.h2
                     id="cg-welcome-title"
@@ -764,6 +761,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                   </nav>
 
                     </>)}
+                </div>
                 </div>
               </motion.div>
             </div>
