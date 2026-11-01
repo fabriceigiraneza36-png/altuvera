@@ -819,25 +819,11 @@ export default function UserProfile() {
                 status="ok"
                 statusLabel="Active"
               />
-              <SecurityRow
-                icon={<HiStar />}
-                label="Member Level"
-                sub="Keep exploring to unlock rewards"
-                status="ok"
-                statusLabel="Elite Explorer"
-              />
             </div>
           </div>
 
           {/* ── Stats Grid ── */}
           <div className="up-stats">
-            <StatCard
-              icon={<HiStar size={22} />}
-              iconBg="#fef9c3"
-              iconColor="#d97706"
-              label="Member Level"
-              value="Elite Explorer"
-            />
             <StatCard
               icon={<HiCheck size={22} />}
               iconBg="#dcfce7"
