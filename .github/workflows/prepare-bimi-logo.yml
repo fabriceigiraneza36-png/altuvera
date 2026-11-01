@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   prepare-logo:
@@ -33,6 +33,18 @@ jobs:
 
       - name: Trace the exact official GitHub logo and validate SVG Tiny PS
         run: python scripts/bimi/prepare_logo.py
+
+      - name: Commit generated SVG to the isolated preparation branch
+        run: |
+          mkdir -p bimi-output
+          cp artifacts/altuvera-bimi-candidate.svg bimi-output/altuvera-bimi.svg
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bimi-output/altuvera-bimi.svg
+          if ! git diff --cached --quiet; then
+            git commit -m "Add generated Altuvera BIMI SVG candidate"
+            git push origin HEAD:bimi/logo-preparation
+          fi
 
       - name: Upload review-only SVG candidate and validation report
         if: always()
