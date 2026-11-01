@@ -1894,7 +1894,7 @@ export default function AuthModal() {
                         {directAuthMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}
                       </label>
                       <input id="direct-factor-code" type="text" inputMode="numeric" autoComplete="one-time-code"
-                        value={factorCode} onChange={(event) => setFactorCode(event.target.value.replace(/\\D/g, "").slice(0, directAuthMethod === "totp" ? 6 : 5))}
+                        value={factorCode} onChange={(event) => setFactorCode(event.target.value.replace(/\D/g, "").slice(0, directAuthMethod === "totp" ? 6 : 5))}
                         className="am-factor-code-input" placeholder={directAuthMethod === "totp" ? "000000" : "00000"} disabled={loading || !isOnline} />
                       {error && <p role="alert" className="am-factor-error">{error}</p>}
                       <div className="mt-3 flex gap-2">
