@@ -76,7 +76,7 @@ const S = {
     pointerEvents: "none",
   },
   profileRing: {
-    width: 76, height: 76, borderRadius: "50%", background: "rgba(255,255,255,0.14)",
+    width: 76, height: 76, borderRadius: "50%", background: "transparent",
     border: "2px solid rgba(255,255,255,0.58)", display: "flex", alignItems: "center",
     justifyContent: "center", margin: "0 auto 12px", overflow: "hidden", position: "relative",
     zIndex: 1, boxShadow: "0 0 0 7px rgba(255,255,255,0.06), 0 10px 28px rgba(0,0,0,.18)",
@@ -304,6 +304,105 @@ const CONTENT = {
   },
 };
 
+
+const SECURITY_PROMPT_DISMISS_PREFIX = "altuvera_security_prompt_dismissed_v1:";
+
+const getSecurityPromptDismissalKey = (user) => {
+  const identity = String(user?.id || user?._id || user?.email || "").trim().toLowerCase();
+  return identity ? SECURITY_PROMPT_DISMISS_PREFIX + encodeURIComponent(identity) : "";
+};
+
+const readSecurityPromptDismissal = (key) => {
+  if (!key) return false;
+  try { return localStorage.getItem(key) === "1"; }
+  catch {
+    try { return sessionStorage.getItem(key) === "1"; }
+    catch { return false; }
+  }
+};
+
+const writeSecurityPromptDismissal = (key) => {
+  if (!key) return;
+  try { localStorage.setItem(key, "1"); }
+  catch { try { sessionStorage.setItem(key, "1"); } catch { /* storage is optional */ } }
+};
+
+const clearSecurityPromptDismissal = (key) => {
+  if (!key) return;
+  try { localStorage.removeItem(key); } catch { /* storage is optional */ }
+  try { sessionStorage.removeItem(key); } catch { /* storage is optional */ }
+};
+
+const isEnabledSecurityFlag = (value) => {
+  if (value === true || value === 1) return true;
+  return typeof value === "string" && ["true", "1", "enabled", "active", "configured", "verified"].includes(value.trim().toLowerCase());
+};
+
+const collectSecurityObjects = (value, output = [], seen = new Set(), depth = 0) => {
+  if (!value || typeof value !== "object" || depth > 5 || seen.has(value)) return output;
+  seen.add(value);
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectSecurityObjects(item, output, seen, depth + 1));
+    return output;
+  }
+  output.push(value);
+  [
+    "data", "factors", "security", "authenticator", "totp", "passkey",
+    "webauthn", "mfa", "twoFactor", "two_factor", "enabledFactors",
+    "enabled_factors", "registeredFactors", "registered_factors",
+  ].forEach((key) => collectSecurityObjects(value[key], output, seen, depth + 1));
+  return output;
+};
+
+const hasConfiguredSecondFactor = (factorPayload, passkeyPayload) => {
+  const objects = collectSecurityObjects(factorPayload);
+  const enabledKeys = [
+    "authenticatorEnabled", "authenticator_enabled", "totpEnabled", "totp_enabled",
+    "passkeyEnabled", "passkey_enabled", "twoFactorEnabled", "two_factor_enabled",
+    "mfaEnabled", "mfa_enabled", "hasAuthenticator", "has_authenticator",
+    "hasPasskey", "has_passkey", "hasPasskeys", "has_passkeys",
+    "recoveryCodesAvailable", "recovery_codes_available",
+  ];
+  if (objects.some((item) => enabledKeys.some((key) => isEnabledSecurityFlag(item[key])))) return true;
+
+  const countKeys = [
+    "recoveryCodesRemaining", "recovery_codes_remaining", "passkeyCount", "passkey_count",
+    "passkeysCount", "passkeys_count", "credentialCount", "credential_count",
+  ];
+  if (objects.some((item) => countKeys.some((key) => Number(item[key]) > 0))) return true;
+
+  const methodLists = objects.flatMap((item) => [
+    item.methods, item.enabledMethods, item.enabled_methods,
+    item.availableFactors, item.available_factors,
+  ]).filter(Array.isArray);
+  if (methodLists.flat().some((method) => /passkey|webauthn|totp|authenticator|security.?key/i.test(
+    String(method?.type || method?.method || method?.name || method)
+  ))) return true;
+
+  const factorEntries = objects.flatMap((item) => Array.isArray(item.factors) ? item.factors : []);
+  if (factorEntries.some((factor) => {
+    const method = String(factor?.type || factor?.method || factor?.name || factor?.factor || "");
+    const enabled = isEnabledSecurityFlag(factor?.enabled ?? factor?.isEnabled ?? factor?.is_enabled ?? factor?.status);
+    return enabled && /passkey|webauthn|totp|authenticator|security.?key/i.test(method);
+  })) return true;
+
+  const passkeyObjects = collectSecurityObjects(passkeyPayload);
+  const passkeyArrays = [
+    passkeyPayload?.passkeys, passkeyPayload?.items,
+    passkeyPayload?.data?.passkeys, passkeyPayload?.data?.items,
+    passkeyPayload?.data,
+  ].filter(Array.isArray);
+  const passkeys = passkeyArrays[0] || [];
+  if (passkeys.some((passkey) => {
+    if (!passkey || typeof passkey !== "object") return Boolean(passkey);
+    if (passkey.revoked === true || passkey.isActive === false || passkey.is_active === false || passkey.enabled === false) return false;
+    const status = String(passkey.status || "").toLowerCase();
+    return !status || ["active", "enabled", "registered", "verified"].includes(status);
+  })) return true;
+
+  return passkeyObjects.some((item) => isEnabledSecurityFlag(item.passkeyEnabled ?? item.passkey_enabled));
+};
+
 /* ═══════════════════════════════════════════════════════════════════════════
    COMPONENT
 ═══════════════════════════════════════════════════════════════════════════ */
@@ -312,6 +411,8 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
   const confettiFiredRef = useRef(false);
   const [showSecurityPrompt, setShowSecurityPrompt] = useState(false);
 
+  const securityPromptKey = getSecurityPromptDismissalKey(user);
+
   useEffect(() => {
     let cancelled = false;
     if (!isVisible) {
@@ -319,46 +420,59 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
       return undefined;
     }
 
-    // Only offer security setup when the account status endpoints explicitly
-    // confirm that no additional sign-in method has been configured. A network
-    // or API failure must not cause this prompt to appear on every login.
     setShowSecurityPrompt(false);
-    if (type !== "signup" && type !== "login") {
-      return undefined;
-    }
+    if (type !== "signup" && type !== "login") return undefined;
 
     const checkFactors = async () => {
       try {
-        const token = localStorage.getItem("altuvera_auth_token") || sessionStorage.getItem("altuvera_auth_token");
-        const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
-        const [factorResponse, passkeyResponse] = await Promise.all([
-          fetch(`${API_URL}/users/security/factors`, { headers }),
-          fetch(`${API_URL}/users/security/passkeys`, { headers }),
-        ]);
-        if (!factorResponse.ok || !passkeyResponse.ok) {
-          if (!cancelled) setShowSecurityPrompt(false);
+        let token = "";
+        try {
+          token = localStorage.getItem("altuvera_auth_token") || sessionStorage.getItem("altuvera_auth_token") || "";
+        } catch { /* storage may be restricted */ }
+        if (!token) return;
+
+        const headers = { Authorization: "Bearer " + token };
+        const factorResponse = await fetch(API_URL + "/users/security/factors", { headers });
+        const passkeyResponse = await fetch(API_URL + "/users/security/passkeys", { headers });
+
+        if (!factorResponse.ok) return;
+        const factorsPayload = await factorResponse.json();
+        if (factorsPayload?.success === false) return;
+
+        let passkeysPayload = null;
+        if (passkeyResponse.ok) {
+          passkeysPayload = await passkeyResponse.json();
+          if (passkeysPayload?.success === false) passkeysPayload = null;
+        }
+
+        const hasConfiguredFactor = hasConfiguredSecondFactor(factorsPayload, passkeysPayload);
+        if (cancelled) return;
+
+        if (hasConfiguredFactor) {
+          clearSecurityPromptDismissal(securityPromptKey);
+          setShowSecurityPrompt(false);
           return;
         }
-        const factorsPayload = await factorResponse.json();
-        const passkeysPayload = await passkeyResponse.json();
-        const factors = factorsPayload?.data || {};
-        const passkeys = passkeysPayload?.data || [];
-        const hasExtraMethod = Boolean(
-          factors.authenticatorEnabled ||
-          factors.totpEnabled ||
-          factors.passkeyEnabled ||
-          factors.recoveryCodesAvailable ||
-          (Array.isArray(passkeys) && passkeys.length > 0)
-        );
-        if (!cancelled) setShowSecurityPrompt(!hasExtraMethod);
+
+        // A failed status request is not evidence that the user has no factor.
+        if (!passkeyResponse.ok || !passkeysPayload) return;
+        setShowSecurityPrompt(!readSecurityPromptDismissal(securityPromptKey));
       } catch {
         // Unknown status is not proof that setup is missing; fail closed.
         if (!cancelled) setShowSecurityPrompt(false);
       }
     };
+
     checkFactors();
     return () => { cancelled = true; };
-  }, [isVisible, type]);
+  }, [isVisible, type, securityPromptKey]);
+
+  useEffect(() => {
+    if (!isVisible) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [isVisible]);
 
   const cfg       = CONTENT[type] || CONTENT.login;
   const displayName = (user?.fullName || user?.name || "").trim();
@@ -409,10 +523,12 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
     return () => clearTimeout(timer);
   }, [isVisible]);
 
+  const rememberSecurityPromptDismissal = () => writeSecurityPromptDismissal(securityPromptKey);
+
   const handleClose = () => {
-    // Dismissing the optional setup step should advance to the welcome screen,
-    // not dismiss the authenticated session or reopen the login flow.
+    // Remember that the user chose to defer security setup for this account.
     if (showSecurityPrompt) {
+      rememberSecurityPromptDismissal();
       setShowSecurityPrompt(false);
       return;
     }
@@ -446,6 +562,9 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
             <div style={S.wrapper}>
               <motion.div
                 className="cg-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="cg-welcome-title"
                 style={S.modal}
                 initial={{ opacity: 0, scale: 0.88, y: 22 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -477,6 +596,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                   </motion.div>
 
                   <motion.h2
+                    id="cg-welcome-title"
                     style={S.stripTitle}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0  }}
@@ -517,10 +637,10 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                           </div>
                         ))}
                       </div>
-                      <button type="button" onClick={() => { setShowSecurityPrompt(false); window.open("/account/security", "_blank", "noopener,noreferrer"); }} style={{ ...S.cta, marginBottom: 10 }}>
-                        Explore security options <ArrowRight size={18} />
+                      <button type="button" onClick={() => { rememberSecurityPromptDismissal(); setShowSecurityPrompt(false); onClose?.(); window.location.assign("/account/security"); }} style={{ ...S.cta, marginBottom: 10 }}>
+                        Set up account security <ArrowRight size={18} />
                       </button>
-                      <button type="button" onClick={() => setShowSecurityPrompt(false)} style={{ width: "100%", minHeight: 46, border: "1px solid #dbe8e0", borderRadius: 13, background: "#fff", color: "#456153", fontSize: "0.88rem", fontWeight: 750, cursor: "pointer", transition: "background .2s, border-color .2s" }}>
+                      <button type="button" onClick={() => { rememberSecurityPromptDismissal(); setShowSecurityPrompt(false); }} style={{ width: "100%", minHeight: 46, border: "1px solid #dbe8e0", borderRadius: 13, background: "#fff", color: "#456153", fontSize: "0.88rem", fontWeight: 750, cursor: "pointer", transition: "background .2s, border-color .2s" }}>
                         Skip for now and continue <ArrowRight size={15} style={{ marginLeft: 5, verticalAlign: "middle" }} />
                       </button>
                       <p style={{ margin: "10px 0 0", color: "#7b8c82", fontSize: "0.72rem", lineHeight: 1.4 }}>You can add or change these methods anytime in Account Security.</p>
