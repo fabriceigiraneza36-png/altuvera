@@ -343,27 +343,6 @@ const clearSecurityPromptDismissal = (key) => {
   try { sessionStorage.removeItem(key); } catch { /* storage is optional */ }
 };
 
-const isEnabledSecurityFlag = (value) => {
-  if (value === true || value === 1) return true;
-  return typeof value === "string" && ["true", "1", "enabled", "active", "configured", "verified"].includes(value.trim().toLowerCase());
-};
-
-const collectSecurityObjects = (value, output = [], seen = new Set(), depth = 0) => {
-  if (!value || typeof value !== "object" || depth > 5 || seen.has(value)) return output;
-  seen.add(value);
-  if (Array.isArray(value)) {
-    value.forEach((item) => collectSecurityObjects(item, output, seen, depth + 1));
-    return output;
-  }
-  output.push(value);
-  [
-    "data", "factors", "security", "authenticator", "totp", "passkey",
-    "webauthn", "mfa", "twoFactor", "two_factor", "enabledFactors",
-    "enabled_factors", "registeredFactors", "registered_factors",
-  ].forEach((key) => collectSecurityObjects(value[key], output, seen, depth + 1));
-  return output;
-};
-
 const hasConfiguredSecondFactor = (factorPayload, passkeyPayload) => {
   // Match the actual API contract from /users/security/factors:
   // { authenticatorEnabled, passkeys, recoveryCodesRemaining, emailOtpEnabled }.
