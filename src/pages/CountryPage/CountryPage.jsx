@@ -887,27 +887,39 @@ const pick = (...v) => {
 };
 
 const getHeroImages = (c) => {
-  const s = new Set();
-  const a = (v) => {
-    const url = typeof v === "string" ? v : v?.url || v?.image_url || v?.imageUrl;
-    if (url && typeof url === "string" && url.trim()) s.add(url.trim());
+  const images = new Set();
+  const addOne = (value) => {
+    const url = typeof value === "string"
+      ? value
+      : value?.url || value?.image_url || value?.imageUrl || value?.src;
+    if (typeof url === "string" && url.trim()) images.add(url.trim());
   };
   const addMany = (value) => {
-    if (Array.isArray(value)) return value.forEach(a);
-    if (typeof value === "string" && value.trim().startsWith("[")) {
-      try { JSON.parse(value).forEach(a); } catch { /* ignore malformed image data */ }
+    let list = value;
+    if (typeof list === "string" && list.trim().startsWith("[")) {
+      try { list = JSON.parse(list); } catch { list = []; }
     }
+    if (Array.isArray(list)) list.forEach(addOne);
   };
+
+  // Keep the primary cover first, then honour the explicitly ordered banner slides.
+  addOne(c?.cover_image_url || c?.coverImageUrl || c?.cover_image || c?.coverImage);
   [
     c?.hero_images, c?.heroImages, c?.hero_slides, c?.heroSlides,
-    c?.banner_slides, c?.bannerSlides, c?.image_urls, c?.imageUrls,
-    c?.gallery, c?.gallery_images, c?.galleryImages, c?.photos, c?.images,
-    c?.media?.hero_images, c?.media?.heroImages, c?.media?.gallery,
-    c?.media?.images, c?.media?.photos, c?.attraction_images, c?.attractionImages,
+    c?.banner_images, c?.bannerImages, c?.banner_slides, c?.bannerSlides,
+    c?.cover_images, c?.coverImages, c?.cover_slides, c?.coverSlides,
   ].forEach(addMany);
-  [c?.image_url, c?.imageUrl, c?.heroImage, c?.hero_image, c?.coverImageUrl, c?.cover_image_url, c?.image]
-    .forEach(a);
-  return [...s].filter(Boolean).slice(0, 12);
+
+  // Older country records may not have a dedicated hero/banner array.
+  if (images.size === 0) {
+    [
+      c?.image_urls, c?.imageUrls, c?.gallery, c?.gallery_images, c?.galleryImages,
+      c?.photos, c?.images, c?.media?.gallery, c?.media?.images,
+      c?.media?.photos, c?.attraction_images, c?.attractionImages,
+    ].forEach(addMany);
+    [c?.image_url, c?.imageUrl, c?.heroImage, c?.hero_image, c?.image].forEach(addOne);
+  }
+  return [...images].slice(0, 12);
 };
 
 const getGalleryImages = (c) => {
