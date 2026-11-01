@@ -312,6 +312,31 @@ const STYLES = `
     animation: gShimmer 1.6s ease infinite;
   }
 
+  .g-card-favorite {
+    position:absolute; top:10px; right:10px; z-index:6; width:40px; height:40px;
+    display:grid; place-items:center; border:1px solid rgba(255,255,255,.62); border-radius:50%;
+    color:#fff; background:rgba(4,24,18,.58); backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px); box-shadow:0 5px 18px rgba(0,0,0,.24);
+    cursor:pointer; transition:transform .2s ease,background .2s ease,border-color .2s ease;
+  }
+  .g-card-favorite:hover { transform:scale(1.08); background:#047857; }
+  .g-card-favorite.is-favorite { color:#fff; background:#059669; border-color:#6ee7b7; }
+  .g-hero-favorites {
+    position:absolute; z-index:50; left:clamp(16px,3vw,32px); bottom:clamp(14px,2.5vw,26px);
+    display:inline-flex; align-items:center; justify-content:center; gap:9px;
+    min-height:46px; padding:0 17px; border:1px solid rgba(255,255,255,.58); border-radius:999px;
+    color:#fff; background:rgba(3,33,24,.72); backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px); box-shadow:0 10px 28px rgba(0,0,0,.22);
+    font-size:13px; font-weight:800; cursor:pointer; transition:transform .2s ease,background .2s ease;
+  }
+  .g-hero-favorites:hover { transform:translateY(-2px); background:#047857; }
+  .g-hero-favorites-count { display:grid; place-items:center; min-width:22px; height:22px; padding:0 5px; border-radius:999px; background:#10b981; color:#03251b; font-size:11px; }
+  .g-gallery-hero-wrap { position:relative; }
+  @media (max-width:700px) {
+    .g-card-favorite { opacity:1; width:38px; height:38px; }
+    .g-hero-favorites { min-height:42px; padding:0 13px; font-size:12px; }
+  }
+
   .g-card {
     transition: all 0.38s var(--g-ease);
     cursor: pointer;
@@ -850,7 +875,17 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
           </span>
         </div>
       )}
-      <div style={{ position: "absolute", top: 10, right: 10, zIndex: 3 }}>
+      <button
+        type="button"
+        className={"g-card-favorite g-focus " + (isFav(image.id) ? "is-favorite" : "")}
+        aria-label={isFav(image.id) ? "Remove from favourites" : "Add to favourites"}
+        aria-pressed={isFav(image.id)}
+        title={isFav(image.id) ? "Remove from favourites" : "Add to favourites"}
+        onClick={(event) => { event.stopPropagation(); onFav(image.id); }}
+      >
+        {isFav(image.id) ? <FiHeart size={19} fill="currentColor" /> : <FiHeart size={19} />}
+      </button>
+      <div style={{ position: "absolute", top: 10, right: 60, zIndex: 3 }}>
         <span style={{
           backgroundColor: "#ECFDF5", color: "#059669", border: "1px solid #D1FAE5",
           padding: "4px 10px", borderRadius: "var(--g-radius-full)", fontSize: 11.5, fontWeight: 600
@@ -1211,8 +1246,14 @@ export default function Gallery() {
   const { images: savedGalleryImages, loading: galleryLoading, error: galleryError, refetch } = useGallery();
   const { countries, loading: countriesLoading, error: countriesError } = useCountries({ limit: 500, page: 1 });
   const { destinations, loading: destinationsLoading, error: destinationsError } = useDestinations({ limit: 500, page: 1, include: "gallery" });
-  const [favorites, setFavorites] = useState(new Set());
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("altuvera-gallery-favorites") || "[]");
+      return new Set(Array.isArray(stored) ? stored : []);
+    } catch { return new Set(); }
+  });
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const [favoriteViewerIndex, setFavoriteViewerIndex] = useState(null);
 
   const countryRows = useMemo(
     () => extractRows(countries, ["countries", "items", "results"]),
@@ -1259,11 +1300,13 @@ export default function Gallery() {
       const next = new Set(previous);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      try { localStorage.setItem("altuvera-gallery-favorites", JSON.stringify([...next])); } catch {}
       return next;
     });
   };
 
   const isFav = (id) => favorites.has(id);
+  const favoriteImages = useMemo(() => allImages.filter((image) => favorites.has(image.id)), [allImages, favorites]);
 
   const clearFilters = () => {
     refetch();
@@ -1277,6 +1320,7 @@ export default function Gallery() {
         description="Explore photography collected directly from Altuvera countries and destinations."
         image="/og-image.jpg"
       />
+      <div className="g-gallery-hero-wrap">
       <PageHeader
         title="Gallery"
         subtitle="Explore images from every country and destination across East Africa"
@@ -1285,6 +1329,15 @@ export default function Gallery() {
         overlay={true}
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Gallery" }]}
       />
+      <button type="button" className="g-hero-favorites g-focus" onClick={() => {
+        setFavoriteViewerIndex(0);
+        document.body.style.overflow = "hidden";
+      }} aria-label={"Open favourite images, " + favoriteImages.length + " saved"}>
+        <FiHeart size={19} />
+        <span>Favourites</span>
+        <span className="g-hero-favorites-count">{favoriteImages.length}</span>
+      </button>
+      </div>
       <section className="g-gallery-content">
         <div className="g-gallery-page" style={{ padding: "32px clamp(14px,3vw,24px)", maxWidth: 1480, margin: "0 auto" }}>
           <div className="g-gallery-intro">
@@ -1303,7 +1356,7 @@ export default function Gallery() {
             <StatCard icon={<FiCamera size={18} />} value={allImages.length} label="Total Images" />
             <StatCard icon={<FiImage size={18} />} value={allImages.filter((image) => image.sourceType === "country").length} label="Country Images" />
             <StatCard icon={<FiMapPin size={18} />} value={allImages.filter((image) => image.sourceType === "destination").length} label="Destination Images" />
-            <StatCard icon={<FiHeart size={18} />} value={favorites.size} label="Favorites" />
+            <StatCard icon={<FiImage size={18} />} value={savedGalleryImages.length} label="Native Gallery Images" />
           </div>
 
           {loading && (
@@ -1343,6 +1396,29 @@ export default function Gallery() {
         </div>
       </section>
 
+      {favoriteViewerIndex !== null && favoriteImages.length > 0 && (
+        <FullscreenModal
+          images={favoriteImages}
+          selectedIndex={Math.min(favoriteViewerIndex, favoriteImages.length - 1)}
+          onClose={() => { setFavoriteViewerIndex(null); document.body.style.overflow = ""; }}
+          onPrev={() => setFavoriteViewerIndex((prev) => Math.max(0, prev - 1))}
+          onNext={() => setFavoriteViewerIndex((prev) => Math.min(favoriteImages.length - 1, prev + 1))}
+          onIndexChange={setFavoriteViewerIndex}
+        />
+      )}
+      {favoriteViewerIndex !== null && favoriteImages.length === 0 && (
+        <div className="g-viewer" role="dialog" aria-modal="true" aria-label="Favourite images">
+          <div className="g-viewer-backdrop" />
+          <button type="button" className="g-viewer-close g-focus" style={{ position:"absolute",top:20,right:20,zIndex:20 }} aria-label="Close favourites" onClick={() => { setFavoriteViewerIndex(null); document.body.style.overflow = ""; }}>
+            <FiX size={21} />
+          </button>
+          <div style={{ position:"absolute",inset:0,display:"grid",placeContent:"center",justifyItems:"center",gap:12,padding:24,textAlign:"center" }}>
+            <FiHeart size={38} />
+            <h2 style={{ margin:0 }}>No favourite images yet</h2>
+            <p style={{ maxWidth:320,margin:0,color:"#d1fae5" }}>Tap the heart on any gallery card to save it here, whether it comes from the native gallery or an imported country or destination.</p>
+          </div>
+        </div>
+      )}
       {selectedImageIndex !== null && allImages[selectedImageIndex] && (
         <FullscreenModal
           images={allImages}
