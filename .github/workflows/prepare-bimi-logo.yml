@@ -1,0 +1,45 @@
+name: Prepare Altuvera BIMI Logo Candidate
+
+on:
+  push:
+    branches:
+      - bimi/logo-preparation
+    paths:
+      - ".github/workflows/prepare-bimi-logo.yml"
+      - "scripts/bimi/prepare_logo.py"
+      - "public/altuvera.png"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-logo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout official Altuvera logo repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install vectorization and preview tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "Pillow==11.2.1" "vtracer==0.6.5" "CairoSVG==2.7.1"
+
+      - name: Trace the exact official GitHub logo and validate SVG Tiny PS
+        run: python scripts/bimi/prepare_logo.py
+
+      - name: Upload review-only SVG candidate and validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: altuvera-bimi-review-candidate
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 30
