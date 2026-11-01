@@ -40,9 +40,11 @@ const S = {
     maxWidth:       460,
     maxHeight:      "min(88dvh, 760px)",
     background:     "#ffffff",
-    borderRadius:   22,
+    borderRadius:   24,
     overflowX:      "hidden",
     overflowY:      "auto",
+    overscrollBehavior: "contain",
+    WebkitOverflowScrolling: "touch",
     boxShadow:      "0 24px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.04)",
     fontFamily:     "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
@@ -50,7 +52,7 @@ const S = {
   /* Top gradient strip */
   topStrip: {
     background:     "linear-gradient(135deg, #064e3b 0%, #065f46 50%, #059669 100%)",
-    padding:        "24px 24px 20px",
+    padding:        "22px 24px 20px",
     position:       "relative",
     overflow:       "hidden",
     textAlign:      "center",
@@ -76,10 +78,10 @@ const S = {
     pointerEvents: "none",
   },
   profileRing: {
-    width: 76, height: 76, borderRadius: "50%", background: "transparent",
-    border: "2px solid rgba(255,255,255,0.58)", display: "flex", alignItems: "center",
-    justifyContent: "center", margin: "0 auto 12px", overflow: "hidden", position: "relative",
-    zIndex: 1, boxShadow: "0 0 0 7px rgba(255,255,255,0.06), 0 10px 28px rgba(0,0,0,.18)",
+    width: 46, height: 46, borderRadius: "50%", background: "#eaf6ee",
+    border: "2px solid #cce7d6", display: "flex", alignItems: "center",
+    justifyContent: "center", margin: 0, overflow: "hidden", position: "relative",
+    zIndex: 1, boxShadow: "0 4px 14px rgba(6,78,59,.12)",
   },
   stripTitle: {
     fontSize:    "1.45rem",
@@ -237,7 +239,15 @@ const KEYFRAMES = `
   @keyframes cgBubbleDrift { 0%,100% { transform:translate3d(0,0,0) scale(1); } 50% { transform:translate3d(-10px,8px,0) scale(1.06); } }
   .cg-modal { scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior:contain; }
   .cg-modal::-webkit-scrollbar { display:none; width:0; height:0; }
-  .cg-top { position:sticky; top:0; z-index:5; isolation:isolate; box-shadow:0 8px 24px rgba(4,30,16,.10); }
+  .cg-user-sticky { position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:10px; width:100%; box-sizing:border-box; padding:10px 17px 9px; background:transparent; pointer-events:auto; }
+  .cg-user-sticky__identity { display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
+  .cg-user-sticky__copy { display:flex; flex-direction:column; min-width:0; gap:2px; }
+  .cg-user-sticky__copy strong { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#10452f; font-size:.83rem; font-weight:850; line-height:1.2; }
+  .cg-user-sticky__copy small { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#648071; font-size:.69rem; line-height:1.2; }
+  .cg-user-sticky__close { display:grid; place-items:center; flex:0 0 36px; width:36px; height:36px; padding:0; border:1px solid rgba(6,78,59,.16); border-radius:50%; color:#155b3e; background:transparent; cursor:pointer; transition:background .18s ease,border-color .18s ease,transform .18s ease; }
+  .cg-user-sticky__close:hover { background:rgba(5,150,105,.08); border-color:rgba(5,150,105,.34); transform:rotate(5deg); }
+  .cg-user-sticky__close:focus-visible { outline:3px solid rgba(5,150,105,.24); outline-offset:2px; }
+  .cg-top { position:relative; z-index:1; isolation:isolate; }
   .cg-body { position:relative; }
   .cg-profile { animation:cgProfileReveal .65s cubic-bezier(.2,.8,.2,1) both; }
   .cg-bubble { animation:cgBubbleDrift 7s ease-in-out infinite; }
@@ -255,7 +265,7 @@ const KEYFRAMES = `
   .cg-quick-link:focus-visible { transform:translateY(-2px); background:#ecfdf5; border-color:#059669; outline:2px solid #34d399; outline-offset:2px; box-shadow:0 6px 14px rgba(5,150,105,.12); }
   .cg-quick-link:focus-visible .cg-quick-icon { background:#047857; color:#fff; }
   .cg-quick-links:hover .cg-marquee-track,.cg-quick-links:focus-within .cg-marquee-track { animation-play-state:paused; }
-  @media (max-width: 520px) { .cg-modal { max-height:min(90dvh,720px)!important; border-radius:20px!important; } .cg-top { padding:22px 18px 18px!important; } .cg-body { padding:14px 16px 16px!important; } .cg-profile { width:68px!important;height:68px!important; } .cg-tips { gap:7px!important;margin-bottom:10px!important; } .cg-tip { padding:8px 10px!important; } .cg-cta { margin-bottom:8px!important; } .cg-quick-link { min-width:122px; } }
+  @media (max-width: 520px) { .cg-modal { max-height:min(90dvh,720px)!important; border-radius:20px!important; } .cg-user-sticky { padding:9px 13px 8px; gap:8px; } .cg-user-sticky__copy strong { max-width:min(58vw,220px); font-size:.78rem; } .cg-user-sticky__copy small { max-width:min(58vw,220px); font-size:.65rem; } .cg-user-sticky__close { flex-basis:34px; width:34px; height:34px; } .cg-top { padding:22px 18px 18px!important; } .cg-body { padding:14px 16px 16px!important; } .cg-profile { width:42px!important;height:42px!important; } .cg-tips { gap:7px!important;margin-bottom:10px!important; } .cg-tip { padding:8px 10px!important; } .cg-cta { margin-bottom:8px!important; } .cg-quick-link { min-width:122px; } }
   @media (prefers-reduced-motion: reduce) { .cg-profile { animation:none!important; } .cg-marquee-track { animation:none!important; transform:none!important; width:auto; } .cg-marquee-group[aria-hidden="true"] { display:none!important; } .cg-quick-links { overflow-x:auto!important; scrollbar-width:none; } .cg-quick-links::-webkit-scrollbar { display:none; } }
 `;
 
@@ -355,65 +365,50 @@ const collectSecurityObjects = (value, output = [], seen = new Set(), depth = 0)
 };
 
 const hasConfiguredSecondFactor = (factorPayload, passkeyPayload) => {
-  const objects = collectSecurityObjects(factorPayload);
-  const enabledKeys = [
-    "authenticatorEnabled", "authenticator_enabled", "totpEnabled", "totp_enabled",
-    "passkeyEnabled", "passkey_enabled", "twoFactorEnabled", "two_factor_enabled",
-    "mfaEnabled", "mfa_enabled", "hasAuthenticator", "has_authenticator",
-    "hasPasskey", "has_passkey", "hasPasskeys", "has_passkeys",
-  ];
-  if (objects.some((item) => enabledKeys.some((key) => isEnabledSecurityFlag(item[key])))) return true;
+  // Match the actual API contract from /users/security/factors:
+  // { authenticatorEnabled, passkeys, recoveryCodesRemaining, emailOtpEnabled }.
+  // Email OTP alone is the first sign-in step, not an enrolled second factor.
+  const factorData = factorPayload?.data?.data
+    ?? factorPayload?.data
+    ?? factorPayload
+    ?? {};
 
-  const countKeys = [
-    "passkeyCount", "passkey_count", "passkeysCount", "passkeys_count",
-    "credentialCount", "credential_count",
-  ];
-  if (objects.some((item) => countKeys.some((key) => Number(item[key]) > 0))) return true;
+  const enabled = (value) =>
+    value === true || value === 1 ||
+    (typeof value === "string" && ["true", "1", "enabled", "active", "configured", "verified"].includes(value.trim().toLowerCase()));
 
-  const methodLists = objects.flatMap((item) => [
-    item.methods, item.enabledMethods, item.enabled_methods,
-    item.availableFactors, item.available_factors,
-  ]).filter(Array.isArray);
-  if (methodLists.flat().some((method) => /passkey|webauthn|totp|authenticator|security.?key/i.test(
-    String(method?.type || method?.method || method?.name || method)
-  ))) return true;
+  const positiveCount = (value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    const count = Number(value);
+    return Number.isFinite(count) && count > 0;
+  };
 
-  const nestedMethodKeys = ["authenticator", "totp", "passkey", "webauthn", "security_key", "twoFactor", "two_factor", "mfa"];
-  if (objects.some((item) => nestedMethodKeys.some((key) => {
-    const value = item[key];
-    if (isEnabledSecurityFlag(value)) return true;
-    if (!value || typeof value !== "object") return false;
-    return isEnabledSecurityFlag(value.enabled ?? value.isEnabled ?? value.is_enabled ?? value.active ?? value.status);
-  }))) return true;
+  if (
+    enabled(factorData.authenticatorEnabled ?? factorData.authenticator_enabled ?? factorData.totpEnabled ?? factorData.totp_enabled) ||
+    enabled(factorData.passkeyEnabled ?? factorData.passkey_enabled) ||
+    positiveCount(factorData.passkeys ?? factorData.passkeyCount ?? factorData.passkey_count) ||
+    positiveCount(factorData.recoveryCodesRemaining ?? factorData.recovery_codes_remaining)
+  ) return true;
 
-  if (objects.some((item) => {
-    const method = String(item.type || item.method || item.name || item.factor || "");
-    const enabled = isEnabledSecurityFlag(item.enabled ?? item.isEnabled ?? item.is_enabled ?? item.active ?? item.status);
-    return enabled && /passkey|webauthn|totp|authenticator|security.?key/i.test(method);
-  })) return true;
+  // The passkey list is a second source of truth. Ignore explicitly revoked
+  // or disabled credentials; only registered, usable credentials count.
+  const passkeyData = passkeyPayload?.data?.data
+    ?? passkeyPayload?.data
+    ?? passkeyPayload;
+  const passkeys = Array.isArray(passkeyData)
+    ? passkeyData
+    : Array.isArray(passkeyData?.passkeys)
+      ? passkeyData.passkeys
+      : Array.isArray(passkeyData?.items)
+        ? passkeyData.items
+        : [];
 
-  const factorEntries = objects.flatMap((item) => Array.isArray(item.factors) ? item.factors : []);
-  if (factorEntries.some((factor) => {
-    const method = String(factor?.type || factor?.method || factor?.name || factor?.factor || "");
-    const enabled = isEnabledSecurityFlag(factor?.enabled ?? factor?.isEnabled ?? factor?.is_enabled ?? factor?.status);
-    return enabled && /passkey|webauthn|totp|authenticator|security.?key/i.test(method);
-  })) return true;
-
-  const passkeyObjects = collectSecurityObjects(passkeyPayload);
-  const passkeyArrays = [
-    passkeyPayload?.passkeys, passkeyPayload?.items,
-    passkeyPayload?.data?.passkeys, passkeyPayload?.data?.items,
-    passkeyPayload?.data,
-  ].filter(Array.isArray);
-  const passkeys = passkeyArrays[0] || [];
-  if (passkeys.some((passkey) => {
+  return passkeys.some((passkey) => {
     if (!passkey || typeof passkey !== "object") return Boolean(passkey);
     if (passkey.revoked === true || passkey.isActive === false || passkey.is_active === false || passkey.enabled === false) return false;
     const status = String(passkey.status || "").toLowerCase();
     return !status || ["active", "enabled", "registered", "verified"].includes(status);
-  })) return true;
-
-  return passkeyObjects.some((item) => isEnabledSecurityFlag(item.passkeyEnabled ?? item.passkey_enabled));
+  });
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -589,24 +584,39 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                   <div className="cg-bubble" style={S.stripBubble1} />
                   <div className="cg-bubble cg-bubble--slow" style={S.stripBubble2} />
 
-                  {/* Close */}
-                  <button
-                    style={S.closeBtn}
-                    onClick={handleClose}
-                    aria-label="Close"
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; }}
+                {/* A transparent, sticky identity row stays visible while the modal content scrolls. */}
+                <div className="cg-user-sticky">
+                  <motion.div
+                    className="cg-user-sticky__identity"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    <X size={16} />
-                  </button>
-
-                  {/* Full-circle profile photo over the animated dark-green header */}
-                  <motion.div className="cg-profile" style={S.profileRing}
-                    initial={{ scale: 0.78, opacity: 0, y: 8 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.12 }}>
-                    {avatarUrl ? <img className="cg-profile-photo" src={avatarUrl} alt={`${user?.fullName || user?.name || "Your"} profile`} /> : <span aria-label="Profile initials" style={{ color:"#fff", fontWeight:900, fontSize:25, letterSpacing:"-.04em" }}>{avatarInitials}</span>}
+                    <motion.div
+                      className="cg-profile"
+                      style={S.profileRing}
+                      initial={{ scale: 0.82, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.08 }}
+                    >
+                      {avatarUrl
+                        ? <img className="cg-profile-photo" src={avatarUrl} alt={`${displayName || "Your"} profile`} />
+                        : <span aria-label="Profile initials" style={{ color:"#075538", fontWeight:900, fontSize:15 }}>{avatarInitials}</span>}
+                    </motion.div>
+                    <span className="cg-user-sticky__copy">
+                      <strong>{displayName || "Altuvera traveler"}</strong>
+                      <small>{user?.email || "Signed in to your Altuvera account"}</small>
+                    </span>
                   </motion.div>
+                  <button
+                    type="button"
+                    className="cg-user-sticky__close"
+                    onClick={handleClose}
+                    aria-label="Close welcome window"
+                  >
+                    <X size={17} />
+                  </button>
+                </div>
 
                   <motion.h2
                     id="cg-welcome-title"
