@@ -78,6 +78,36 @@ const styles = `
 @keyframes dbLiveShimmer{0%{background-position:100% 0}100%{background-position:-120% 0}}
 @media(max-width:640px){.db-live-section{gap:20px}.db-live-heading{align-items:center}.db-live-destination{flex-basis:min(84vw,330px)}.db-live-package,.db-live-story{flex-basis:78vw}.db-live-skeleton{flex-basis:78vw;height:300px}.db-live-track{gap:12px}}
 @media(prefers-reduced-motion:reduce){.db-live-skeleton-image,.db-live-skeleton-line{animation:none}}
+
+/* Premium dashboard package cards: consistent heights, readable content and touch-friendly layout. */
+.db-live-package>.hpkg-card{position:relative;display:flex;flex-direction:column;height:100%;min-height:100%;background:linear-gradient(180deg,#fff 0%,#fcfffd 100%);border:1px solid #dce9e2;border-radius:22px;box-shadow:0 8px 24px rgba(6,78,59,.075);transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease;isolation:isolate}
+.db-live-package>.hpkg-card:focus-visible{outline:3px solid #10b981;outline-offset:3px}
+.db-live-package .hpkg-img-wrap{position:relative;height:clamp(172px,19vw,218px);flex:0 0 auto;overflow:hidden;background:#d1fae5}
+.db-live-package .hpkg-img-wrap:after{content:"";position:absolute;inset:35% 0 0;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(2,44,34,.5));z-index:1}
+.db-live-package .hpkg-img-wrap img{transition:transform .65s cubic-bezier(.2,.7,.2,1);will-change:transform}
+.db-live-package>.hpkg-card:hover .hpkg-img-wrap img{transform:scale(1.055)}
+.db-live-package .hpkg-badge,.db-live-package .hpkg-discount,.db-live-package .hpkg-wish,.db-live-package .hpkg-duration-pill{z-index:2}
+.db-live-package .hpkg-badge{top:13px;left:13px;padding:6px 10px;border-radius:999px;font-size:.65rem;font-weight:850;letter-spacing:.035em;box-shadow:0 4px 12px rgba(15,23,42,.12)}
+.db-live-package .hpkg-discount{top:13px;right:13px;padding:6px 9px;border-radius:999px;font-size:.65rem;font-weight:900;background:#fff7ed;color:#c2410c;box-shadow:0 4px 12px rgba(15,23,42,.12)}
+.db-live-package .hpkg-wish{top:12px;right:12px;width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.75);border-radius:50%;background:rgba(255,255,255,.94);box-shadow:0 5px 16px rgba(15,23,42,.15);transition:transform .2s ease,background .2s ease}
+.db-live-package .hpkg-wish:hover{transform:scale(1.08);background:#fff}
+.db-live-package .hpkg-duration-pill{bottom:12px;left:13px;padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:rgba(2,44,34,.76);color:#fff;font-size:.68rem;font-weight:800;backdrop-filter:blur(8px)}
+.db-live-package .hpkg-body{flex:1 1 auto;gap:10px;padding:17px 17px 16px}
+.db-live-package .hpkg-category{align-self:flex-start;max-width:100%;padding:5px 9px;border-radius:7px;background:#ecfdf5;color:#047857;font-size:.65rem;font-weight:850;letter-spacing:.065em;text-transform:uppercase;overflow-wrap:anywhere}
+.db-live-package .hpkg-title{display:-webkit-box;min-height:0;margin:0;color:#102a22;font-size:1rem;font-weight:850;line-height:1.4;letter-spacing:-.02em;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.db-live-package .hpkg-meta{display:flex;flex-wrap:wrap;gap:6px;color:#64748b;font-size:.76rem}
+.db-live-package .hpkg-meta-item{display:flex;align-items:center;gap:5px;min-width:0;overflow-wrap:anywhere}
+.db-live-package .hpkg-desc{display:-webkit-box;margin:0;color:#64748b;font-size:.8rem;line-height:1.65;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.db-live-package .hpkg-body>div[style*="flex-wrap"]{gap:6px!important}
+.db-live-package .hpkg-body>div[style*="flex-wrap"] span{font-size:.65rem!important;padding:5px 8px!important;line-height:1.3}
+.db-live-package .hpkg-footer{display:flex;align-items:center;justify-content:flex-start;margin-top:auto;padding-top:13px;border-top:1px solid #edf3ef}
+.db-live-package .hpkg-cta{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 13px;border-radius:11px;background:#047857;color:#fff;font-size:.77rem;font-weight:850;transition:background .2s ease,transform .2s ease}
+.db-live-package>.hpkg-card:hover .hpkg-cta{background:#065f46;transform:translateX(2px)}
+.db-live-package .hpkg-cta svg{width:14px;height:14px}
+@media(min-width:761px){.db-live-package{flex-basis:clamp(250px,28vw,310px)}}
+@media(max-width:640px){.db-live-package{flex:0 0 min(82vw,320px);width:min(82vw,320px)}.db-live-package>.hpkg-card{border-radius:20px}.db-live-package .hpkg-img-wrap{height:176px}.db-live-package .hpkg-body{padding:15px;gap:9px}.db-live-package .hpkg-title{font-size:.96rem}.db-live-package .hpkg-desc{font-size:.78rem;-webkit-line-clamp:3}.db-live-package .hpkg-wish{width:40px;height:40px}}
+@media(max-width:360px){.db-live-package{flex-basis:86vw;width:86vw}.db-live-package .hpkg-img-wrap{height:164px}.db-live-package .hpkg-body{padding:13px}}
+@media(prefers-reduced-motion:reduce){.db-live-package>.hpkg-card,.db-live-package .hpkg-img-wrap img,.db-live-package .hpkg-cta{transition:none}}
 `;
 
 function SkeletonCard({ kind = "card" }) {
