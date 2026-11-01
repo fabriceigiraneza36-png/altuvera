@@ -20,6 +20,7 @@ import {
   FiArrowUp,
   FiTag,
   FiMapPin,
+  FiGlobe,
   FiCamera,
   FiStar,
   FiHeart,
@@ -488,6 +489,64 @@ const STYLES = `
       transition-duration: 0.01ms !important;
     }
   }
+  .g-gallery-page { width:100%; min-width:0; }
+  .g-gallery-intro {
+    display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap;
+    gap:18px; margin-bottom:22px; padding:clamp(18px,3vw,28px);
+    border:1px solid rgba(16,185,129,.15); border-radius:24px;
+    background:
+      radial-gradient(circle at 92% 8%,rgba(52,211,153,.20),transparent 34%),
+      linear-gradient(135deg,#052e25 0%,#065f46 55%,#047857 100%);
+    color:#fff; box-shadow:0 18px 46px rgba(6,78,59,.14);
+  }
+  .g-gallery-intro > div:first-child { max-width:720px; min-width:0; }
+  .g-gallery-intro h2 { margin:5px 0 7px; color:#fff; font:800 clamp(22px,3.2vw,34px)/1.12 Inter,sans-serif; letter-spacing:-.04em; }
+  .g-gallery-intro p { margin:0; color:rgba(236,253,245,.82); font-size:13px; line-height:1.7; max-width:650px; }
+  .g-gallery-intro .g-gallery-eyebrow { color:#a7f3d0; font-size:10px; font-weight:850; letter-spacing:.17em; text-transform:uppercase; }
+  .g-gallery-source-counts { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .g-gallery-source-counts span {
+    display:inline-flex; align-items:center; gap:7px; padding:9px 12px; border:1px solid rgba(255,255,255,.17);
+    border-radius:999px; background:rgba(255,255,255,.10); color:#ecfdf5; font-size:11px; font-weight:750;
+    backdrop-filter:blur(12px);
+  }
+  .g-gallery-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:32px; }
+  .g-gallery-stats > div { min-width:0; }
+  .g-gallery-grid-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; margin:2px 0 16px; padding:0 5px; }
+  .g-gallery-grid-heading p { margin:0 0 4px; color:#059669; font-size:10px; font-weight:850; text-transform:uppercase; letter-spacing:.16em; }
+  .g-gallery-grid-heading h3 { margin:0; color:#111827; font-size:clamp(17px,2vw,22px); font-weight:850; letter-spacing:-.03em; }
+  .g-gallery-grid-heading > span { flex-shrink:0; color:#64748b; font-size:11px; font-weight:750; }
+  .g-card-source-link {
+    display:inline-flex; align-items:center; gap:5px; width:max-content; max-width:100%; margin-top:8px;
+    padding:5px 8px; border:1px solid rgba(255,255,255,.25); border-radius:999px;
+    color:#d1fae5; background:rgba(2,28,21,.42); text-decoration:none; font-size:10px; font-weight:800;
+    line-height:1.2; backdrop-filter:blur(9px); transition:background .2s ease,border-color .2s ease,transform .2s ease;
+  }
+  .g-card-source-link:hover { color:#fff; background:rgba(5,150,105,.82); border-color:rgba(167,243,208,.6); transform:translateY(-1px); }
+  .g-viewer-source-link {
+    display:flex; width:max-content; max-width:100%; margin:0 auto 8px; align-items:center; justify-content:center; gap:7px;
+    padding:8px 13px; border:1px solid rgba(167,243,208,.28); border-radius:999px;
+    color:#d1fae5; background:rgba(16,185,129,.17); text-decoration:none; font-size:11px; font-weight:800;
+    backdrop-filter:blur(10px); transition:background .2s ease,border-color .2s ease;
+  }
+  .g-viewer-source-link:hover { background:rgba(16,185,129,.32); border-color:rgba(167,243,208,.56); color:#fff; }
+
+  @media (max-width:900px) {
+    .g-gallery-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  }
+  @media (max-width:600px) {
+    .g-grid-4 { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .g-gallery-intro { align-items:stretch; flex-direction:column; gap:14px; margin-bottom:16px; border-radius:18px; }
+    .g-gallery-source-counts { width:100%; }
+    .g-gallery-source-counts span { flex:1 1 auto; justify-content:center; }
+    .g-gallery-stats { gap:9px; margin-bottom:24px; }
+    .g-gallery-grid-heading { align-items:flex-start; flex-direction:column; gap:5px; }
+    .g-card-source-link { font-size:9px; padding:5px 7px; }
+  }
+  @media (max-width:380px) {
+    .g-grid-4 { grid-template-columns:1fr; gap:12px; }
+    .g-gallery-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  }
+
 `;
 
 const useWidth = () => {
@@ -666,6 +725,16 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
             <FiMapPin size={10} /> {image.location || image.countryName}
           </div>
         )}
+        {image.sourceUrl && (
+          <Link
+            to={image.sourceUrl}
+            className="g-card-source-link"
+            onClick={(event) => event.stopPropagation()}
+            aria-label={image.sourceLabel + " — " + (image.sourceName || image.title)}
+          >
+            {image.sourceLabel || "View source"} <FiExternalLink size={11} />
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -837,6 +906,11 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onInd
       </div>
 
       <div className="g-viewer-bottom">
+        {currentImage.sourceUrl && (
+          <Link to={currentImage.sourceUrl} className="g-viewer-source-link">
+            {currentImage.sourceLabel || "View source details"} <FiExternalLink size={13} />
+          </Link>
+        )}
         <button className="g-info-link g-focus" onClick={() => setShowDetails((v) => !v)}>
           <FiInfo size={16} />
           {showDetails ? "Hide image information" : "View image information"}
