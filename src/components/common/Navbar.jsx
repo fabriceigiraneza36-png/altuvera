@@ -877,6 +877,18 @@ const Navbar = () => {
      ══════════════════════════════════════ */
   return (
     <>
+      {/* Keep brand identity opposite the compact floating account control while scrolling. */}
+      {navHidden && (
+        <Link
+          to="/"
+          className="nav__floating-brand"
+          aria-label="Altuvera Safaris home"
+          title="Altuvera Safaris"
+        >
+          <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT || "Altuvera Safaris"} />
+        </Link>
+      )}
+
       {/* Floating profile access remains available while the navbar is hidden. */}
       {navHidden && user && (
         <button
@@ -892,8 +904,8 @@ const Navbar = () => {
             top: "max(12px, env(safe-area-inset-top))",
             right: "max(14px, env(safe-area-inset-right))",
             zIndex: 1200,
-            width: 48,
-            height: 48,
+            width: 38,
+            height: 38,
             padding: 0,
             borderRadius: "50%",
             overflow: "hidden",
