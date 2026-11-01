@@ -551,6 +551,14 @@ const STYLES = `
   @media (max-width: 600px) {
     .g-grid-4 { grid-template-columns: 1fr; gap: 12px; }
   }
+  .g-image-fallback {
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+    width:100%; min-width:0; min-height:120px; color:#6b8b79;
+    background:linear-gradient(145deg,#eef8f1,#e3f1e8);
+    font-size:11px; font-weight:750; letter-spacing:.01em;
+  }
+  .g-story-image-shell .g-image-fallback { min-height:100%; color:#a7f3d0; background:#10241d; }
+  .g-card .g-image-fallback { height:240px; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -726,8 +734,51 @@ const StatCard = ({ icon, value, label }) => (
   </div>
 );
 
+const GalleryImage = ({ image, alt, className, style, onLoad, onFailure, loading = "lazy" }) => {
+  const thumbnailUrl = resolveGalleryImageUrl(image?.thumb || image?.thumbnail_url || image?.thumbnailUrl || image?.thumb_url);
+  const originalUrl = resolveGalleryImageUrl(image?.src || image?.image_url || image?.imageUrl || image?.url || image?.image);
+  const fallbackUrl = originalUrl || thumbnailUrl;
+  const [source, setSource] = useState(thumbnailUrl || fallbackUrl);
+  const [failed, setFailed] = useState(!(thumbnailUrl || fallbackUrl));
+
+  useEffect(() => {
+    setSource(thumbnailUrl || fallbackUrl);
+    setFailed(!(thumbnailUrl || fallbackUrl));
+  }, [thumbnailUrl, fallbackUrl]);
+
+  const handleError = () => {
+    if (originalUrl && source !== originalUrl) { setSource(originalUrl); return; }
+    setFailed(true);
+    onFailure?.();
+  };
+
+  if (failed) {
+    return (
+      <div className="g-image-fallback" role="img" aria-label={alt || "Image unavailable"} style={style}>
+        <FiImage size={27} aria-hidden="true" />
+        <span>Image unavailable</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={source}
+      alt={alt || "Altuvera gallery image"}
+      className={className}
+      style={style}
+      loading={loading}
+      decoding="async"
+      draggable="false"
+      onLoad={onLoad}
+      onError={handleError}
+    />
+  );
+};
+
 const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
   const [loaded, setLoaded] = useState(false);
+  useEffect(() => { setLoaded(false); }, [image.src, image.thumb]);
   return (
     <div className="g-card" onClick={() => onOpen(image)} style={{
       borderRadius: "var(--g-radius-lg)", overflow: "hidden",
@@ -736,8 +787,9 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
       animation: `gSlideUp 0.4s ease ${index * 0.04}s both`,
     }}>
       {!loaded && <div className="g-shimmer" style={{ height: 240, position: "absolute", inset: 0, zIndex: 1 }} />}
-      <img src={image.thumb || image.src} alt={image.alt} loading="lazy" onLoad={() => setLoaded(true)}
-        className="g-card-img" style={{ width: "100%", height: 240, objectFit: "cover", display: "block" }} />
+      <GalleryImage image={image} alt={image.alt} loading="lazy" onLoad={() => setLoaded(true)}
+        onFailure={() => setLoaded(true)} className="g-card-img"
+        style={{ width: "100%", height: 240, objectFit: "cover", display: "block" }} />
       <div className="g-card-overlay" />
       {image.isFeatured && (
         <div style={{ position: "absolute", top: 10, left: 10, zIndex: 3 }}>
@@ -951,11 +1003,12 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onInd
                 className="g-story-image-shell"
                 style={getStorySize(image, i)}
               >
-                <img
-                  src={image.src || image.thumb}
+                <GalleryImage
+                  image={image}
                   alt={image.alt || image.title || "Altuvera gallery image"}
-                  draggable="false"
+                  loading="eager"
                   onLoad={(e) => handleStoryImageLoad(image, e)}
+                  style={{ width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%", objectFit: "cover", display: "block" }}
                 />
                 <div className="g-story-caption">
                   {image.title && <h2>{image.title}</h2>}
@@ -1044,7 +1097,7 @@ const SnapScrollGallery = ({ images, onImageClick }) => {
             transform: `scale(${Math.abs(scrollPosition - idx * 172) < 100 ? 1 : 0.9}) blur(${Math.abs(scrollPosition - idx * 172) > 100 ? "4px" : "0px"})`,
             transition: "all 0.3s ease", boxShadow: "0 4px 12px rgba(5, 150, 105, 0.15)",
           }}>
-            <img src={image.thumb || image.src} alt={image.alt} loading="lazy" style={{
+            <GalleryImage image={image} alt={image.alt} loading="lazy" style={{
               width: "100%", height: "100%", objectFit: "cover",
             }} />
             <div style={{
