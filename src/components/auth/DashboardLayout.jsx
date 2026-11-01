@@ -1,5 +1,5 @@
 // src/components/auth/DashboardLayout.jsx
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import {
@@ -18,7 +18,33 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
   const { user, logout }    = useUserAuth();
   const navigate             = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const touchStartRef = useRef(null);
   const { tripAlerts, dismissTripAlert, unreadCount } = useNotifications();
+
+  // Touch gestures are shared by every page using DashboardLayout.
+  // Open only from the left screen edge; close with a leftward swipe while open.
+  const handleTouchStart = (event) => {
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    const touch = event.changedTouches?.[0];
+    if (!start || !touch || window.matchMedia("(min-width: 769px)").matches) return;
+
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+
+    if (dx > 0 && start.x <= 36 && !mobileMenuOpen) {
+      setMobileMenuOpen(true);
+    } else if (dx < 0 && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+  };
   const { unreadCount: unreadMessages } = useConversations();
 
   const handleLogout = () => { logout(); navigate("/"); };
@@ -36,7 +62,11 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
   ];
 
   return (
-    <div className={`dashboard-layout ${noPadding ? "dashboard-layout-no-padding" : ""}`}>
+    <div
+      className={`dashboard-layout ${noPadding ? "dashboard-layout-no-padding" : ""}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <style>{`
         .dashboard-layout {
           display: flex;
