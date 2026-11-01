@@ -1112,6 +1112,58 @@ export function UserAuthProvider({ children }) {
     persistSession, requiresLoginVerification, saveAuth, triggerCongratulation,
   ]);
 
+
+  // Shared completion path for direct security-method authentication. The server
+  // returns the same complete account/session payload as email and OAuth login.
+  const finishStandaloneSecurityLogin = useCallback((data) => {
+    const payload = extractPayload(data);
+    if (!payload.token || !payload.user)
+      throw new Error("Altuvera could not create a complete sign-in session. Please try another method.");
+    saveAuth(data, { persist: persistSession });
+    const counter = payload.loginCounter ?? payload.user?.loginCounter ?? 0;
+    setLoginCounter(counter);
+    store.setLoginCounter(counter);
+    clearPendingVerification();
+    try { sessionStorage.removeItem("altuvera_login_draft_v1"); } catch { /* storage unavailable */ }
+    setPendingEmail("");
+    setPendingFactorChallenge("");
+    setPendingFactorMethods([]);
+    closeModal();
+    triggerCongratulation("login");
+    return data;
+  }, [saveAuth, persistSession, clearPendingVerification, closeModal, triggerCongratulation]);
+
+  const loginWithSecurityCode = useCallback(async (method, email, code) => {
+    const data = await authFetch("/users/login/factor", {
+      method: "POST",
+      body: JSON.stringify({ method, email: trim(email), code: trim(code) }),
+    });
+    if (data?.success === false) throw new Error(data.message || "Security verification failed.");
+    return finishStandaloneSecurityLogin(data);
+  }, [authFetch, finishStandaloneSecurityLogin]);
+
+  const startPasskeyLogin = useCallback(async (email = "") => {
+    if (!window.PublicKeyCredential || !navigator.credentials)
+      throw new Error("Passkeys are not supported in this browser or device.");
+    const optionsResponse = await authFetch("/users/login/passkey/options", {
+      method: "POST",
+      body: JSON.stringify(email ? { email: trim(email) } : {}),
+    });
+    const source = optionsResponse?.data || optionsResponse || {};
+    const challengeToken = source.challengeToken;
+    if (!challengeToken) throw new Error("Altuvera could not start passkey sign-in. Please try another method.");
+    const optionsJSON = { ...source };
+    delete optionsJSON.challengeToken;
+    delete optionsJSON.success;
+    const assertion = await startAuthentication({ optionsJSON });
+    const data = await authFetch("/users/login/passkey/verify", {
+      method: "POST",
+      body: JSON.stringify({ challengeToken, response: assertion }),
+    });
+    if (data?.success === false) throw new Error(data.message || "Passkey verification failed.");
+    return finishStandaloneSecurityLogin(data);
+  }, [authFetch, finishStandaloneSecurityLogin]);
+
   const beginFactorChallenge = useCallback((challenge, methods = []) => {
     if (!challenge) throw new Error("The additional verification challenge was missing. Please sign in again.");
     setPendingFactorChallenge(challenge);
@@ -1900,7 +1952,7 @@ export function UserAuthProvider({ children }) {
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation, pendingVerification,
     openModal, closeModal, setModalView, persistPendingVerification, clearPendingVerification,
-    login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
+    login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, loginWithSecurityCode, startPasskeyLogin, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,
@@ -1916,7 +1968,7 @@ export function UserAuthProvider({ children }) {
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation,
     openModal, closeModal, setModalView,
-    login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
+    login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, loginWithSecurityCode, startPasskeyLogin, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,

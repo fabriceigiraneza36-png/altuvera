@@ -99,6 +99,36 @@ const CODE_TTL_RESEND = 10 * 60;
 const SIGNUP_DRAFT_KEY = "altuvera_signup_draft_v1";
 const SIGNUP_DRAFT_TTL_MS = 10 * 60 * 1000;
 
+const LOGIN_DRAFT_KEY = "altuvera_login_draft_v1";
+const LOGIN_DRAFT_TTL_MS = 30 * 60 * 1000;
+
+const readLoginDraft = () => {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(LOGIN_DRAFT_KEY) || "null");
+    if (!saved || Number(saved.expiresAt) <= Date.now()) {
+      sessionStorage.removeItem(LOGIN_DRAFT_KEY);
+      return null;
+    }
+    return {
+      email: String(saved.email || ""),
+      fullName: String(saved.fullName || ""),
+      keepSignedIn: saved.keepSignedIn !== false,
+    };
+  } catch { return null; }
+};
+
+const persistLoginDraft = (form) => {
+  if (!form.email?.trim() && !form.fullName?.trim()) return;
+  try {
+    sessionStorage.setItem(LOGIN_DRAFT_KEY, JSON.stringify({
+      email: String(form.email || "").trim(),
+      fullName: String(form.fullName || "").trim(),
+      keepSignedIn: form.keepSignedIn !== false,
+      expiresAt: Date.now() + LOGIN_DRAFT_TTL_MS,
+    }));
+  } catch { /* login remains usable when session storage is unavailable */ }
+};
+
 const API_BASE = API_URL;
 
 const ROLES = [
@@ -246,7 +276,8 @@ const formatAuthError = (error, fallback = "Something went wrong. Please try aga
   if (/429|too many requests|rate.?limit|too many attempts/.test(lower)) return "There have been too many attempts. Please wait a little before trying again.";
   if (/already exists|already registered|email.*(taken|in use|registered)|duplicate.*email/.test(lower)) return "An account may already use this email. Try signing in or use the account-recovery option.";
   if (/invalid email|email.*invalid/.test(lower)) return "Check the email address and enter it in the format name@example.com.";
-  if (/expired|invalid.*(otp|verification|security) code|incorrect.*(otp|verification|security) code/.test(lower)) return "That verification code is invalid or expired. Check the code or request a new one.";
+  if (/expired/.test(lower)) return "That code has expired. Return to sign-in and request a new one.";
+  if (/invalid.*(otp|verification|security) code|incorrect.*(otp|verification|security) code/.test(lower)) return "That verification code is incorrect. Check it and try again."
   if (/not linked|not connected|no linked|provider.{0,30}(disabled|not configured|not linked|not connected)|account.{0,30}(not linked|not connected)/.test(lower)) return "That sign-in method is not connected to this Altuvera account. Use a method you have already set up, then review Account Security & Recovery to add or manage your sign-in options.";
   if (/not found|invalid credentials|unauthorized|authentication failed|incorrect.*(name|email)|user does not exist/.test(lower)) return "We couldn't verify those details. Check your email and full name, then try again.";
   if (message.length > 240 || /<\/?[a-z][^>]*>|\bat\s+[^\s]+\s*\(|typeerror|referenceerror|syntaxerror|unexpected token|unexpected end of json|cannot read properties|is not a function|internal server error|bad gateway/i.test(message)) return fallback;
@@ -626,7 +657,7 @@ const SocialButtons = ({
 export default function AuthModal() {
   const {
     isModalOpen, modalView, setModalView, closeModal, openModal,
-    login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode,
+    login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, loginWithSecurityCode, startPasskeyLogin, resendCode,
     pendingEmail, pendingVerification, clearPendingVerification, pendingFactorMethods, persistSession, setSessionPreference, updateProfile,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, promptGoogleAuth, startGithubAuth,
@@ -640,9 +671,10 @@ export default function AuthModal() {
 
   /* ── Form state ── */
   const [restoredSignupDraft] = useState(() => readSignupDraft());
+  const [restoredLoginDraft] = useState(() => readLoginDraft());
   const signupDraftExpiresAtRef = useRef(restoredSignupDraft?.expiresAt || (Date.now() + SIGNUP_DRAFT_TTL_MS));
   const [form, setForm] = useState(() => ({
-    email: "", fullName: "", phone: "", bio: "",
+    email: restoredLoginDraft?.email || "", fullName: restoredLoginDraft?.fullName || "", phone: "", bio: "",
     role: "user", keepSignedIn: persistSession,
     avatarFile: null, avatarPreview: "",
     dateOfBirth: "", nationality: "",
@@ -650,7 +682,7 @@ export default function AuthModal() {
     profession: "", travelStyles: [],
     ...(restoredSignupDraft?.data || {}),
     avatarFile: null,
-    keepSignedIn: restoredSignupDraft?.data?.keepSignedIn ?? persistSession,
+    keepSignedIn: restoredSignupDraft?.data?.keepSignedIn ?? restoredLoginDraft?.keepSignedIn ?? persistSession,
   }));
   const [pendingPromptDismissed, setPendingPromptDismissed] = useState(false);
   const [pendingClockNow, setPendingClockNow] = useState(() => Date.now());
@@ -673,6 +705,7 @@ export default function AuthModal() {
   const [code,            setCode]            = useState(emptyCode());
   const [factorCode, setFactorCode] = useState("");
   const [factorMethod, setFactorMethod] = useState("totp");
+  const [directAuthMethod, setDirectAuthMethod] = useState("");
   useEffect(() => {
     if (!pendingFactorMethods.length) return;
     const nextMethod = pendingFactorMethods.includes(factorMethod)
@@ -742,6 +775,11 @@ export default function AuthModal() {
     const expiresAt = signupDraftExpiresAtRef.current;
     if (expiresAt > Date.now()) persistSignupDraft(form, expiresAt);
   }, [form, modalView]);
+
+  useEffect(() => {
+    if (modalView !== "login") return;
+    persistLoginDraft(form);
+  }, [form.email, form.fullName, form.keepSignedIn, modalView]);
 
   useEffect(() => {
     setPendingPromptDismissed(false);
@@ -974,7 +1012,7 @@ export default function AuthModal() {
     const remaining = Math.max(0, Math.ceil((pendingVerification.expiresAt - Date.now()) / 1000));
     if (remaining <= 0) {
       setCodeExpired(true);
-      setError("This verification code has expired. Request a new code to continue.");
+      setError("This code has expired. Go back to sign-in and request a new code.");
       return undefined;
     }
     startExpiryCountdown(remaining);
@@ -1093,7 +1131,6 @@ export default function AuthModal() {
     e.preventDefault();
     setEmailTouched(true); setNameTouched(true); setError("");
     if (!emailOk) { setError("Check your email address. It should look like name@example.com."); firstInputRef.current?.focus(); return; }
-    if (!nameOk)  { setError("Enter the full name associated with your account."); nameInputRef.current?.focus(); return; }
     if (!isOnline) { setError("You appear to be offline. Reconnect to request your verification code."); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
@@ -1284,6 +1321,7 @@ export default function AuthModal() {
     try {
       setLoading(true); setCodeState("verifying"); setError("");
       await verifyCode(activeEmail, val);
+      try { sessionStorage.removeItem(LOGIN_DRAFT_KEY); } catch {}
       setCodeState("success"); stopExpiryCountdown();
     } catch (err) {
       setCodeState("error"); setError(formatAuthError(err, "Verification failed."));
@@ -1671,7 +1709,7 @@ export default function AuthModal() {
                                   : "bg-gray-50 text-gray-600 border border-gray-200"
                           }`}>
                             {forgotCodeExpired ? (
-                              <><HiExclamationCircle className="w-4 h-4" /><span>Code expired — request a new one</span></>
+                              <><HiExclamationCircle className="w-4 h-4" /><span>Code expired — go back to sign-in and request a new one</span></>
                             ) : (
                               <><HiInformationCircle className="w-4 h-4" />
                                 <span>Expires in <strong className="tabular-nums font-bold">{formatExpiry(forgotCodeExpiry)}</strong></span>
@@ -1797,20 +1835,29 @@ export default function AuthModal() {
                     <button
                       type="button"
                       disabled={isBusy || !isOnline || switchingView}
-                      onClick={() => {
-                        setShowAuthMethods(false);
-                        setAuthMethod("email");
-                        setError("");
-                        setSuccess("Passkeys are a second verification step, not a standalone sign-in provider. Continue with your email first. After email verification, Altuvera will offer a passkey only when one is registered to this account. If it is not registered, use another available method, then add it from Account Security & Recovery.");
-                        window.setTimeout(() => firstInputRef.current?.focus(), 80);
+                      onClick={async () => {
+                        setError(""); setSuccess(""); setLoading(true);
+                        try { await startPasskeyLogin(form.email); }
+                        catch (err) { setError(formatAuthError(err, "Passkey sign-in failed. Try another enrolled method.")); }
+                        finally { setLoading(false); }
                       }}
                       className="am-method-option am-method-option--passkey"
                     >
                       <span className="am-method-icon"><RiShieldKeyholeLine className="h-5 w-5" /></span>
                       <span className="am-method-copy">
-                        <strong>Passkey verification</strong>
-                        <small>Available after email verification when this account has a saved passkey</small>
+                        <strong>Sign in with a passkey</strong>
+                        <small>Use your device PIN, fingerprint, face recognition or security key — no email code</small>
                       </span>
+                      <HiArrowRight className="h-4 w-4 am-method-arrow" />
+                    </button>
+                    <button type="button" onClick={() => { setDirectAuthMethod("totp"); setFactorCode(""); setError(""); setSuccess(""); }} disabled={isBusy || !isOnline} className="am-method-option">
+                      <span className="am-method-icon"><HiShieldCheck className="h-5 w-5" /></span>
+                      <span className="am-method-copy"><strong>Authenticator app</strong><small>Sign in directly with your enrolled 6-digit code</small></span>
+                      <HiArrowRight className="h-4 w-4 am-method-arrow" />
+                    </button>
+                    <button type="button" onClick={() => { setDirectAuthMethod("recovery_code"); setFactorCode(""); setError(""); setSuccess(""); }} disabled={isBusy || !isOnline} className="am-method-option">
+                      <span className="am-method-icon"><HiLockClosed className="h-5 w-5" /></span>
+                      <span className="am-method-copy"><strong>Recovery code</strong><small>Use one unused 5-digit recovery code — no email code</small></span>
                       <HiArrowRight className="h-4 w-4 am-method-arrow" />
                     </button>
                     <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGoogleAuth("signin")} className="am-method-option am-method-option--google">
@@ -1829,9 +1876,39 @@ export default function AuthModal() {
                       <HiArrowRight className="h-4 w-4 am-method-arrow" />
                     </button>
                   </div>
+                  {directAuthMethod && (
+                    <form className="am-factor-code-form mt-4" onSubmit={async (event) => {
+                      event.preventDefault();
+                      const expectedLength = directAuthMethod === "totp" ? 6 : 5;
+                      if (!EMAIL_RE.test(form.email.trim())) { setError("Enter the email address connected to your Altuvera account."); return; }
+                      if (factorCode.length !== expectedLength) { setError(directAuthMethod === "totp" ? "Enter the complete 6-digit authenticator code." : "Enter the complete 5-digit recovery code."); return; }
+                      setLoading(true); setError("");
+                      try { await loginWithSecurityCode(directAuthMethod, form.email, factorCode); setFactorCode(""); setDirectAuthMethod(""); }
+                      catch (err) { setError(formatAuthError(err, "Security sign-in failed. Check your details and try again.")); }
+                      finally { setLoading(false); }
+                    }}>
+                      <label className="am-factor-code-label" htmlFor="direct-factor-email">Altuvera account email</label>
+                      <input id="direct-factor-email" type="email" autoComplete="email" value={form.email}
+                        onChange={(event) => set("email", event.target.value)} className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                        placeholder="you@example.com" disabled={loading} />
+                      <label className="am-factor-code-label mt-3" htmlFor="direct-factor-code">
+                        {directAuthMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}
+                      </label>
+                      <input id="direct-factor-code" type="text" inputMode="numeric" autoComplete="one-time-code"
+                        value={factorCode} onChange={(event) => setFactorCode(event.target.value.replace(/\D/g, "").slice(0, directAuthMethod === "totp" ? 6 : 5))}
+                        className="am-factor-code-input" placeholder={directAuthMethod === "totp" ? "000000" : "00000"} disabled={loading || !isOnline} />
+                      {error && <p role="alert" className="am-factor-error">{error}</p>}
+                      <div className="mt-3 flex gap-2">
+                        <button type="button" onClick={() => { setDirectAuthMethod(""); setFactorCode(""); setError(""); }} className="am-factor-use-other">Cancel</button>
+                        <button type="submit" disabled={loading || !isOnline || factorCode.length !== (directAuthMethod === "totp" ? 6 : 5)} className="am-factor-submit">
+                          {loading ? "Signing in…" : "Verify and sign in"} <HiArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </form>
+                  )}
                   <div className="am-method-security-note">
                     <HiShieldCheck className="h-4 w-4" />
-                    <span>Altuvera checks your enrolled security methods after the first sign-in step. An unavailable passkey will never be treated as an active method; you will be guided to use a configured method and add a passkey later from Account Security & Recovery.</span>
+                    <span>These options work only with security methods already enrolled on your Altuvera account. A successful passkey, authenticator or recovery-code check signs you in directly; no email code is sent.</span>
                   </div>
                 </div>
               )}
@@ -1848,6 +1925,12 @@ export default function AuthModal() {
                     <p className="text-sm text-gray-500 mt-1">Sign in to your travel dashboard</p>
                   </div>
 
+                  {pendingVerification?.email && Number(pendingVerification.expiresAt) > Date.now() && (
+                    <button type="button" onClick={() => { setError(""); setSuccess(""); setCode(emptyCode()); setCodeState(""); setVerifySource("login"); setModalView("verify"); }}
+                      className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100">
+                      <HiClipboardCopy className="h-4 w-4" /> I already have a code — paste it
+                    </button>
+                  )}
                   <form onSubmit={handleSignIn} noValidate className="space-y-4">
                     <InputField
                       id="login-email" label="Email Address" icon={HiMail}
@@ -1861,11 +1944,11 @@ export default function AuthModal() {
 
                     <div>
                       <InputField
-                        id="login-name" label="Full Name" icon={HiUser} refProp={nameInputRef}
+                        id="login-name" label="Full Name (optional)" icon={HiUser} refProp={nameInputRef}
                         value={form.fullName} onChange={(v) => set("fullName", v)}
                         onBlur={() => setNameTouched(true)} disabled={isBusy}
-                        placeholder="Your full name" autoComplete="name" required
-                        error={nameTouched && !nameOk ? "At least 2 characters required." : ""}
+                        placeholder="Optional" autoComplete="name"
+                        error={nameTouched && Boolean(form.fullName.trim()) && !nameOk ? "Enter at least 2 characters or leave this blank." : ""}
                         valid={nameTouched && nameOk}
                       />
                       <div className="flex justify-end mt-1.5">
