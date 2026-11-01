@@ -871,33 +871,41 @@ const Navbar = () => {
      ══════════════════════════════════════ */
   return (
     <>
-      {/* ── FLOATING LOGO when nav hidden ── */}
-      {logoDetached && logoRect && (
-        <Link
-          to="/"
-          className="nav__logo nav__logo--floating"
+      {/* ── Floating circular account control while navbar is hidden ── */}
+      {navHidden && user && (
+        <button
+          type="button"
+          className="nav__floating-account"
+          onClick={() => setUserMenuOpen((open) => !open)}
+          aria-label={`Open account menu for ${displayName}`}
+          aria-expanded={userMenuOpen}
+          title="Account"
           style={{
             position: "fixed",
-            top: 12,
-            left: logoRect.left,
-            zIndex: 1100,
-            opacity: navHidden ? 0.35 : 0,
-            transition: "opacity 0.4s ease",
-            pointerEvents: navHidden ? "auto" : "none",
+            top: "max(12px, env(safe-area-inset-top))",
+            right: "max(14px, env(safe-area-inset-right))",
+            zIndex: 1200,
+            width: 46,
+            height: 46,
+            padding: 0,
+            borderRadius: "50%",
+            overflow: "hidden",
+            border: "2px solid #ffffff",
+            background: "#065f46",
+            color: "#ffffff",
+            boxShadow: "0 8px 26px rgba(4, 78, 59, .28)",
+            display: "grid",
+            placeItems: "center",
+            cursor: "pointer",
+            animation: "navAccountPop .28s cubic-bezier(.2,.8,.2,1) both",
           }}
-          aria-label="Home"
         >
-          <div className="nav__logo-glow" />
-          <div className="nav__logo-img-wrapper">
-            <img
-              src={getBrandLogoUrl()}
-              alt={BRAND_LOGO_ALT}
-              className="nav__logo-img"
-              draggable={false}
-            />
-          </div>
-          <span className="nav__logo-text">Altuvera</span>
-        </Link>
+          {user.avatar ? (
+            <img src={user.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+          ) : (
+            <span style={{ fontSize: 14, fontWeight: 800, letterSpacing: ".02em" }}>{getInitials()}</span>
+          )}
+        </button>
       )}
 
       {/* ══════ NAVBAR ══════ */}
