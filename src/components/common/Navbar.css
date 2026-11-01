@@ -2638,6 +2638,7 @@
 
 /* ── ≤ 480px ──────────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
+  .nav__floating-brand { width:116px; height:34px; top:max(9px, env(safe-area-inset-top)); left:max(8px, env(safe-area-inset-left)); }
   .nav__inner            { padding: 0 14px; }
   .nav__logo-img-wrapper { width: 40px; height: 40px; }
   .nav__hamburger        { width: 42px; height: 42px; border-radius: 10px; }
@@ -3893,6 +3894,37 @@
 }
 .nav:not(.nav--hidden) {
   visibility: visible;
+}
+.nav__floating-brand {
+  position:fixed;
+  top:max(10px, env(safe-area-inset-top));
+  left:max(12px, env(safe-area-inset-left));
+  z-index:1199;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  width:clamp(116px, 22vw, 168px);
+  height:38px;
+  padding:2px 5px;
+  border:0;
+  border-radius:12px;
+  background:transparent;
+  text-decoration:none;
+  -webkit-tap-highlight-color:transparent;
+  animation:navAccountPop .28s cubic-bezier(.2,.8,.2,1) both;
+}
+.nav__floating-brand img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:left center;
+  background:transparent;
+  filter:drop-shadow(0 2px 7px rgba(0,0,0,.2));
+}
+.nav__floating-brand:focus-visible {
+  outline:2px solid rgba(16,185,129,.7);
+  outline-offset:3px;
 }
 .nav__floating-account {
   -webkit-tap-highlight-color: transparent;
