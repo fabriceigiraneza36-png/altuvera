@@ -83,6 +83,9 @@
 
     const grouped = useMemo(() => groupedNotifications || { all: [], booking: [], system: [] }, [groupedNotifications]);
 
+    // Opening the notifications page acknowledges the current unread batch.
+    useEffect(() => { void markAllRead(); }, [markAllRead]);
+
     const [tab,        setTab]        = useState('all');
     const [replyingId, setReplyingId] = useState(null);
     const [replyTexts, setReplyTexts] = useState({});
