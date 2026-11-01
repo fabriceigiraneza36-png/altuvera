@@ -186,6 +186,21 @@ const store = {
 
 const trim = (v) => (typeof v === "string" ? v.trim() : "");
 
+const normalizeFactorMethods = (methods) => {
+  const source = Array.isArray(methods) ? methods : [];
+  const normalized = source.map((entry) => {
+    const raw = typeof entry === "string"
+      ? entry
+      : entry?.method || entry?.type || entry?.name || entry?.factor || "";
+    const value = String(raw).trim().toLowerCase().replace(/[ -]+/g, "_");
+    if (["passkey", "webauthn", "security_key", "public_key"].includes(value)) return "passkey";
+    if (["totp", "authenticator", "authenticator_app", "otp"].includes(value)) return "totp";
+    if (["recovery_code", "recovery_codes", "backup_code", "backup_codes"].includes(value)) return "recovery_code";
+    return "";
+  }).filter(Boolean);
+  return normalized.length ? [...new Set(normalized)] : ["totp", "recovery_code"];
+};
+
 const pick = (...vals) => {
   for (const v of vals) {
     const t = trim(v);
@@ -1053,7 +1068,7 @@ export function UserAuthProvider({ children }) {
       const challenge = data.challengeToken || data.data?.challengeToken;
       if (!challenge) throw new Error("The additional verification challenge was missing. Please sign in again.");
       setPendingFactorChallenge(challenge);
-      const methods = data.methods || data.data?.methods || ["totp", "recovery_code"];
+      const methods = normalizeFactorMethods(data.methods || data.data?.methods);
       setPendingFactorMethods(methods);
       setModalView("factor");
       return { requiresSecondFactor: true, methods };
@@ -1100,7 +1115,7 @@ export function UserAuthProvider({ children }) {
   const beginFactorChallenge = useCallback((challenge, methods = []) => {
     if (!challenge) throw new Error("The additional verification challenge was missing. Please sign in again.");
     setPendingFactorChallenge(challenge);
-    setPendingFactorMethods(Array.isArray(methods) ? methods : []);
+    setPendingFactorMethods(normalizeFactorMethods(methods));
     setModalView("factor");
   }, []);
 
