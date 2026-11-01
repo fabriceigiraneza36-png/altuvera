@@ -368,6 +368,8 @@ export default function UserProfile() {
   const [editing, setEditing]   = useState(false);
   const [loading, setLoading]   = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState("");
   const [autoSave, setAutoSave] = useState(true);
   const [syncState, setSyncState] = useState(SYNC_STATE.IDLE);
   const [lastSavedAt, setLastSavedAt] = useState(null);
@@ -501,8 +503,8 @@ export default function UserProfile() {
 
   const handleUrlImage = useCallback(async () => {
     if (uploading) return;
-    const entered = window.prompt("Paste a direct, publicly accessible image URL (https://…). The image link will be saved to your profile in the database.");
-    if (entered === null || !entered.trim()) return;
+    const entered = photoUrl;
+    if (!entered.trim()) { showNotification("error", "Paste a direct image URL first."); return; }
     let url;
     try {
       url = new URL(entered.trim());
@@ -524,12 +526,14 @@ export default function UserProfile() {
       if (!validation.valid) throw new Error(validation.error);
       await uploadAvatar(file);
       showNotification("success", "Profile picture updated and its URL saved to your account.");
+      setPhotoModalOpen(false);
+      setPhotoUrl("");
     } catch (err) {
       showNotification("error", err.message || "Could not use that URL. The image host may block browser access (CORS); try another direct image URL or select a file from your device.");
     } finally {
       setUploading(false);
     }
-  }, [uploading, showNotification, validateFile, uploadAvatar]);
+  }, [uploading, photoUrl, showNotification, validateFile, uploadAvatar]);
 
   const handleImageClick = useCallback(() => {
     if (!uploading) fileInputRef.current?.click();
@@ -608,24 +612,13 @@ export default function UserProfile() {
               )}
               <button
                 className="up-camera-btn"
-                onClick={handleImageClick}
+                onClick={() => setPhotoModalOpen(true)}
                 disabled={uploading}
                 type="button"
-                title="Upload new photo"
-                aria-label="Upload profile picture"
+                title="Change profile photo"
+                aria-label="Change profile photo"
               >
                 {uploading ? <HiRefresh className="up-spin" /> : <HiCamera />}
-              </button>
-              <button
-                type="button"
-                className="up-camera-btn"
-                onClick={handleUrlImage}
-                disabled={uploading}
-                title="Use an image URL"
-                aria-label="Use an image URL"
-                style={{ left: "46px" }}
-              >
-                <HiOutlinePhotograph />
               </button>
               <input
                 type="file"
@@ -891,6 +884,25 @@ export default function UserProfile() {
           </div>
 
         </div>
+      {photoModalOpen && (
+        <div role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setPhotoModalOpen(false); }} style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(4, 20, 16, .62)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="up-photo-modal-title" style={{ width: "100%", maxWidth: 420, background: "#fff", color: "#10231d", borderRadius: 20, padding: 24, boxShadow: "0 24px 80px rgba(0,0,0,.28)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+              <h2 id="up-photo-modal-title" style={{ margin: 0, fontSize: "1.3rem" }}>Change profile photo</h2>
+              <button type="button" onClick={() => setPhotoModalOpen(false)} aria-label="Close photo options" style={{ border: 0, background: "#f1f5f3", borderRadius: 10, width: 38, height: 38, fontSize: 22, cursor: "pointer" }}><FiX /></button>
+            </div>
+            <p style={{ margin: "0 0 18px", color: "#64746e", lineHeight: 1.5 }}>Choose one way to update your profile picture.</p>
+            <button type="button" onClick={() => { setPhotoModalOpen(false); handleImageClick(); }} disabled={uploading} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: 14, border: "1px solid #dbe7e1", borderRadius: 12, background: "#f7fbf9", color: "#075e46", fontWeight: 700, cursor: "pointer", textAlign: "left" }}>
+              <HiCamera size={22} /> Choose photo from device
+            </button>
+            <form onSubmit={(e) => { e.preventDefault(); handleUrlImage(); }} style={{ marginTop: 16 }}>
+              <label htmlFor="up-profile-photo-url" style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>Or paste an image URL</label>
+              <input id="up-profile-photo-url" type="url" value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} placeholder="https://example.com/photo.jpg" autoComplete="url" style={{ width: "100%", minWidth: 0, padding: "12px 13px", border: "1px solid #cbd8d2", borderRadius: 10, fontSize: 16, boxSizing: "border-box" }} />
+              <button type="submit" disabled={uploading || !photoUrl.trim()} style={{ width: "100%", marginTop: 10, padding: 13, border: 0, borderRadius: 10, background: "#047857", color: "#fff", fontWeight: 700, cursor: uploading ? "wait" : "pointer", opacity: uploading || !photoUrl.trim() ? .6 : 1 }}>{uploading ? "Updating photo…" : "Use this image URL"}</button>
+            </form>
+          </section>
+        </div>
+      )}
       </DashboardLayout>
     </>
   );
