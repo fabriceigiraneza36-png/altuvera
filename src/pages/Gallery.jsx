@@ -210,14 +210,37 @@ const combineGallerySources = (galleryRows, countryRows, destinationRows) => {
     ...collectEntityGalleryImages(countryRows, "country"),
     ...collectEntityGalleryImages(destinationRows, "destination"),
   ];
-  const merged = [...imported, ...(Array.isArray(galleryRows) ? galleryRows : [])];
+  const savedRows = Array.isArray(galleryRows) ? galleryRows : [];
+  const normalizedSaved = savedRows.map((image, index) => {
+    const src = resolveGalleryImageUrl(image?.src || image?.image_url || image?.imageUrl || image?.url || image?.image);
+    if (!src) return null;
+    const thumb = resolveGalleryImageUrl(image?.thumb || image?.thumbnail_url || image?.thumbnailUrl || image?.thumbnail || image?.thumb_url) || src;
+    return { ...image, id: image?.id || "gallery-" + index, src, thumb, alt: image?.alt || image?.alt_text || image?.title || "Altuvera gallery image" };
+  }).filter(Boolean);
+
+  const merged = [...imported, ...normalizedSaved];
   const seen = new Set();
   return merged.filter((image) => {
-    const src = String(image?.src || image?.image_url || "").trim();
+    const src = resolveGalleryImageUrl(image?.src || image?.image_url || "");
     if (!src || seen.has(src)) return false;
     seen.add(src);
     return true;
   });
+};
+
+const extractRows = (value, preferredKeys = []) => {
+  let current = value;
+  const visited = new Set();
+  for (let depth = 0; depth < 6; depth += 1) {
+    if (Array.isArray(current)) return current;
+    if (!current || typeof current !== "object" || visited.has(current)) return [];
+    visited.add(current);
+    const keys = [...preferredKeys, "items", "results", "rows", "data"];
+    const nextKey = keys.find((key) => current[key] != null && current[key] !== current);
+    if (!nextKey) return [];
+    current = current[nextKey];
+  }
+  return Array.isArray(current) ? current : [];
 };
 
 const STYLES = `
@@ -1049,16 +1072,18 @@ export default function Gallery() {
   const [favorites, setFavorites] = useState(new Set());
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
 
-  const countryRows = useMemo(() => {
-    if (Array.isArray(countries)) return countries;
-    if (Array.isArray(countries?.data)) return countries.data;
-    if (Array.isArray(countries?.countries)) return countries.countries;
-    return [];
-  }, [countries]);
+  const countryRows = useMemo(
+    () => extractRows(countries, ["countries", "items", "results"]),
+    [countries]
+  );
+  const destinationRows = useMemo(
+    () => extractRows(destinations, ["destinations", "items", "results"]),
+    [destinations]
+  );
 
   const allImages = useMemo(
-    () => combineGallerySources(savedGalleryImages, countryRows, destinations),
-    [savedGalleryImages, countryRows, destinations]
+    () => combineGallerySources(savedGalleryImages, countryRows, destinationRows),
+    [savedGalleryImages, countryRows, destinationRows]
   );
 
   const loading = galleryLoading || countriesLoading || destinationsLoading;
@@ -1126,7 +1151,7 @@ export default function Gallery() {
             </div>
             <div className="g-gallery-source-counts">
               <span><FiGlobe size={15} /> {countryRows.length} countries</span>
-              <span><FiMapPin size={15} /> {Array.isArray(destinations) ? destinations.length : 0} destinations</span>
+              <span><FiMapPin size={15} /> {destinationRows.length} destinations</span>
             </div>
           </div>
 
