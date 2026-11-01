@@ -370,6 +370,7 @@ export default function UserProfile() {
   const [uploading, setUploading] = useState(false);
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [photoUrl, setPhotoUrl] = useState("");
+  const [photoUrlError, setPhotoUrlError] = useState("");
   const [autoSave, setAutoSave] = useState(true);
   const [syncState, setSyncState] = useState(SYNC_STATE.IDLE);
   const [lastSavedAt, setLastSavedAt] = useState(null);
@@ -504,13 +505,14 @@ export default function UserProfile() {
   const handleUrlImage = useCallback(async () => {
     if (uploading) return;
     const entered = photoUrl;
-    if (!entered.trim()) { showNotification("error", "Paste a direct image URL first."); return; }
+    if (!entered.trim()) { setPhotoUrlError("Enter a direct link to an image."); return; }
     let url;
     try {
       url = new URL(entered.trim());
-      if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Use an HTTP or HTTPS image URL.");
+      if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Use a secure HTTPS image link.");
+      if (!url.hostname.includes(".") || /\s/.test(entered.trim())) throw new Error("Enter a valid image URL, such as https://example.com/photo.jpg");
     } catch (err) {
-      showNotification("error", err.message || "Enter a valid image URL.");
+      setPhotoUrlError(err.message || "Enter a valid image URL.");
       return;
     }
     try {
@@ -528,6 +530,7 @@ export default function UserProfile() {
       showNotification("success", "Profile picture updated and its URL saved to your account.");
       setPhotoModalOpen(false);
       setPhotoUrl("");
+      setPhotoUrlError("");
     } catch (err) {
       showNotification("error", err.message || "Could not use that URL. The image host may block browser access (CORS); try another direct image URL or select a file from your device.");
     } finally {
@@ -885,21 +888,41 @@ export default function UserProfile() {
 
         </div>
       {photoModalOpen && (
-        <div role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setPhotoModalOpen(false); }} style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(4, 20, 16, .62)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="up-photo-modal-title" style={{ width: "100%", maxWidth: 420, background: "#fff", color: "#10231d", borderRadius: 20, padding: 24, boxShadow: "0 24px 80px rgba(0,0,0,.28)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-              <h2 id="up-photo-modal-title" style={{ margin: 0, fontSize: "1.3rem" }}>Change profile photo</h2>
-              <button type="button" onClick={() => setPhotoModalOpen(false)} aria-label="Close photo options" style={{ border: 0, background: "#f1f5f3", borderRadius: 10, width: 38, height: 38, fontSize: 22, cursor: "pointer" }}><FiX /></button>
+        <div
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget && !uploading) setPhotoModalOpen(false); }}
+          onKeyDown={(e) => { if (e.key === "Escape" && !uploading) setPhotoModalOpen(false); }}
+          style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(3, 24, 18, .68)", backdropFilter: "blur(7px)", WebkitBackdropFilter: "blur(7px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))" }}
+        >
+          <section role="dialog" aria-modal="true" aria-labelledby="up-photo-modal-title" style={{ width: "100%", maxWidth: 440, maxHeight: "min(90dvh, 680px)", overflowY: "auto", background: "#fff", color: "#10231d", borderRadius: 24, padding: "clamp(20px, 5vw, 28px)", boxShadow: "0 28px 90px rgba(0,0,0,.32)", boxSizing: "border-box" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+                <div style={{ width: 48, height: 48, flex: "0 0 48px", borderRadius: 16, display: "grid", placeItems: "center", background: "#e7f6ef", color: "#047857" }}><HiCamera size={25} /></div>
+                <div>
+                  <h2 id="up-photo-modal-title" style={{ margin: 0, fontSize: "clamp(1.2rem, 4vw, 1.45rem)", lineHeight: 1.25, fontWeight: 800 }}>Change profile photo</h2>
+                  <p style={{ margin: "5px 0 0", color: "#6b7c75", fontSize: 14, lineHeight: 1.45 }}>Choose a photo that represents you.</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setPhotoModalOpen(false)} disabled={uploading} aria-label="Close photo options" style={{ flex: "0 0 38px", border: 0, background: "#f1f5f3", color: "#344b42", borderRadius: 12, width: 38, height: 38, fontSize: 22, cursor: "pointer" }}><FiX /></button>
             </div>
-            <p style={{ margin: "0 0 18px", color: "#64746e", lineHeight: 1.5 }}>Choose one way to update your profile picture.</p>
-            <button type="button" onClick={() => { setPhotoModalOpen(false); handleImageClick(); }} disabled={uploading} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: 14, border: "1px solid #dbe7e1", borderRadius: 12, background: "#f7fbf9", color: "#075e46", fontWeight: 700, cursor: "pointer", textAlign: "left" }}>
-              <HiCamera size={22} /> Choose photo from device
+            <button type="button" onClick={() => { setPhotoModalOpen(false); handleImageClick(); }} disabled={uploading} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, marginTop: 24, padding: 15, border: "1px solid #d7e8df", borderRadius: 16, background: "#f7fbf9", color: "#075e46", fontWeight: 750, cursor: "pointer", textAlign: "left", boxSizing: "border-box" }}>
+              <span style={{ width: 42, height: 42, borderRadius: 12, display: "grid", placeItems: "center", background: "#dff3e9", flex: "0 0 42px" }}><HiOutlinePhotograph size={22} /></span>
+              <span style={{ flex: 1, minWidth: 0 }}><span style={{ display: "block" }}>Choose from device</span><span style={{ display: "block", marginTop: 4, color: "#718078", fontSize: 12, fontWeight: 500 }}>Select an image saved on your phone or computer</span></span>
             </button>
-            <form onSubmit={(e) => { e.preventDefault(); handleUrlImage(); }} style={{ marginTop: 16 }}>
-              <label htmlFor="up-profile-photo-url" style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>Or paste an image URL</label>
-              <input id="up-profile-photo-url" type="url" value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} placeholder="https://example.com/photo.jpg" autoComplete="url" style={{ width: "100%", minWidth: 0, padding: "12px 13px", border: "1px solid #cbd8d2", borderRadius: 10, fontSize: 16, boxSizing: "border-box" }} />
-              <button type="submit" disabled={uploading || !photoUrl.trim()} style={{ width: "100%", marginTop: 10, padding: 13, border: 0, borderRadius: 10, background: "#047857", color: "#fff", fontWeight: 700, cursor: uploading ? "wait" : "pointer", opacity: uploading || !photoUrl.trim() ? .6 : 1 }}>{uploading ? "Updating photo…" : "Use this image URL"}</button>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "22px 0 18px", color: "#8a9992", fontSize: 11, fontWeight: 800, letterSpacing: ".12em" }}><span style={{ height: 1, background: "#e4ece7", flex: 1 }} /><span>OR USE A LINK</span><span style={{ height: 1, background: "#e4ece7", flex: 1 }} /></div>
+            <form onSubmit={(e) => { e.preventDefault(); handleUrlImage(); }} noValidate>
+              <label htmlFor="up-profile-photo-url" style={{ display: "block", color: "#253d33", fontSize: 14, fontWeight: 750, marginBottom: 8 }}>Image URL</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 13px", border: "1px solid " + (photoUrlError ? "#dc4545" : "#cbdcd3"), borderRadius: 13, background: photoUrlError ? "#fffafa" : "#fbfdfc", boxShadow: photoUrlError ? "0 0 0 3px rgba(220,69,69,.08)" : "none" }}>
+                <icon name="link" size="sm" />
+                <input id="up-profile-photo-url" type="url" inputMode="url" value={photoUrl} onChange={(e) => { const value = e.target.value; setPhotoUrl(value); setPhotoUrlError(value.trim() && !/^https?:\/\//i.test(value.trim()) ? "Link must start with https:// or http://." : ""); }} placeholder="https://example.com/photo.jpg" autoComplete="url" aria-invalid={!!photoUrlError} aria-describedby="up-photo-url-help up-photo-url-error" style={{ flex: 1, width: "100%", minWidth: 0, padding: "15px 0", border: 0, outline: "none", background: "transparent", color: "#10231d", fontSize: 16, boxSizing: "border-box" }} />
+              </div>
+              {photoUrlError ? <p id="up-photo-url-error" role="alert" style={{ margin: "8px 0 0", color: "#c53030", fontSize: 12, lineHeight: 1.45 }}>{photoUrlError}</p> : null}
+              <p id="up-photo-url-help" style={{ margin: "8px 0 0", color: "#78877f", fontSize: 12, lineHeight: 1.5 }}>Use a direct, publicly accessible image link. The image must load successfully and be 5 MB or smaller.</p>
+              <button type="submit" disabled={uploading || !photoUrl.trim() || !!photoUrlError} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, marginTop: 18, padding: 14, border: 0, borderRadius: 13, background: "#047857", color: "#fff", fontWeight: 800, fontSize: 15, cursor: uploading ? "wait" : "pointer", opacity: uploading || !photoUrl.trim() || !!photoUrlError ? .55 : 1 }}>
+                {uploading ? <HiRefresh className="up-spin" /> : <HiOutlinePhotograph />} {uploading ? "Validating and updating…" : "Use this image"}
+              </button>
             </form>
+            <p style={{ margin: "15px 0 0", color: "#87958e", fontSize: 11, textAlign: "center", lineHeight: 1.5 }}>Supported images: JPEG, PNG, WebP · Max 5 MB</p>
           </section>
         </div>
       )}
