@@ -2979,3 +2979,172 @@
     animation: none !important;
   }
 }
+
+
+/* Altuvera sign-in method selector — emerald and white visual system */
+.am-auth-methods {
+  border: 1px solid #d7ebdf;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(16,185,129,.10), transparent 34%),
+    linear-gradient(155deg, #f4fbf6 0%, #ffffff 58%, #f7fcf8 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95);
+}
+.am-method-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 18px auto 24px;
+  text-align: center;
+}
+.am-method-heading__icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 3px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 19px;
+  color: #fff;
+  background: linear-gradient(145deg, #064e3b 0%, #087f58 68%, #10a36f 100%);
+  box-shadow: 0 12px 26px rgba(6,78,59,.20), inset 0 1px 0 rgba(255,255,255,.2);
+}
+.am-method-heading__eyebrow {
+  color: #078052;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .19em;
+}
+.am-method-heading h2 {
+  margin: 0;
+  color: #103c2b;
+  font-size: clamp(21px, 4vw, 27px);
+  font-weight: 900;
+  letter-spacing: -.045em;
+  line-height: 1.15;
+}
+.am-method-heading p {
+  max-width: 390px;
+  margin: 0;
+  color: #647a6e;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.am-auth-methods .am-method-back {
+  border: 1px solid #d7e9de;
+  background: rgba(255,255,255,.9);
+  color: #155b3e;
+  box-shadow: 0 3px 12px rgba(6,78,59,.045);
+}
+.am-auth-methods .am-method-option {
+  min-height: 76px;
+  padding: 14px 15px;
+  border: 1px solid #d7e9de;
+  border-radius: 18px;
+  background: rgba(255,255,255,.96);
+  color: #123d2b;
+  box-shadow: 0 5px 16px rgba(6,78,59,.045), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.am-auth-methods .am-method-option:hover:not(:disabled) {
+  border-color: #77c69a;
+  background: #f5fcf7;
+  box-shadow: 0 11px 25px rgba(6,78,59,.10);
+  transform: translateY(-2px);
+}
+.am-auth-methods .am-method-icon {
+  width: 46px;
+  height: 46px;
+  flex-basis: 46px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(145deg, #064e3b, #07845b);
+  box-shadow: 0 5px 12px rgba(6,78,59,.16);
+}
+.am-auth-methods .am-method-option:nth-child(2) .am-method-icon {
+  background: #fff;
+  border-color: #e4eee8;
+  color: #0f5135;
+}
+.am-auth-methods .am-method-option:nth-child(3) .am-method-icon {
+  background: #102c22;
+  color: #fff;
+}
+.am-auth-methods .am-method-copy strong {
+  color: #123d2b;
+  font-size: 14px;
+  font-weight: 850;
+}
+.am-auth-methods .am-method-copy small {
+  color: #647a6e;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.am-auth-methods .am-method-arrow {
+  color: #16845a;
+}
+.am-method-security-note,
+.am-factor-method-not-available {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px 13px;
+  border: 1px solid #d8ebdf;
+  border-radius: 14px;
+  color: #246044;
+  background: #eff9f2;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.am-method-security-note svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #078052;
+}
+.am-factor-method-not-available {
+  margin: 0 0 14px;
+  padding: 13px;
+  text-align: left;
+}
+.am-factor-method-not-available__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color: white;
+  background: linear-gradient(145deg, #064e3b, #07845b);
+}
+.am-factor-method-not-available strong,
+.am-factor-method-not-available small {
+  display: block;
+}
+.am-factor-method-not-available strong {
+  margin-bottom: 3px;
+  color: #155b3e;
+  font-size: 12px;
+  font-weight: 850;
+}
+.am-factor-method-not-available small {
+  color: #61786b;
+  font-size: 11px;
+  line-height: 1.55;
+}
+@media (max-width: 639px) {
+  .am-auth-methods {
+    border-radius: 0;
+    padding: 18px 14px 24px !important;
+  }
+  .am-method-heading { margin: 14px auto 20px; }
+  .am-method-heading__icon { width: 52px; height: 52px; border-radius: 17px; }
+  .am-auth-methods .am-method-option { min-height: 70px; padding: 11px; gap: 10px; border-radius: 15px; }
+  .am-auth-methods .am-method-icon { width: 42px; height: 42px; flex-basis: 42px; border-radius: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-auth-methods .am-method-option { transition: none !important; }
+  .am-auth-methods .am-method-option:hover:not(:disabled) { transform: none; }
+}
+
