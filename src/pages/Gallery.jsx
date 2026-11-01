@@ -27,6 +27,7 @@ import {
   FiDownload,
   FiShare2,
   FiZoomIn,
+  FiZoomOut,
   FiRefreshCw,
   FiAlertCircle,
   FiImage,
@@ -368,30 +369,63 @@ const STYLES = `
     cursor:pointer; backdrop-filter:blur(14px); transition:transform .25s ease, background .25s ease;
   }
   .g-viewer-close:hover { transform:scale(1.08); background:rgba(5,150,105,.8); }
-  .g-story-stage { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; min-height:0; }
+  .g-story-stage {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; min-height:0;
+  }
   .g-story-track {
-    width:100%; height:100%; display:flex; align-items:center; gap:clamp(14px,3vw,42px);
-    overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scroll-behavior:smooth;
-    overscroll-behavior-x:contain; padding:clamp(78px,10vh,105px) max(9vw,78px) clamp(120px,17vh,155px);
+    --g-viewer-card-width:clamp(280px,34vw,380px);
+    box-sizing:border-box; width:100%; height:100%; display:flex; align-items:center;
+    gap:clamp(14px,2vw,22px); overflow-x:auto; overflow-y:hidden;
+    scroll-snap-type:x mandatory; scroll-behavior:smooth; overscroll-behavior-x:contain;
+    padding:clamp(82px,10vh,112px) calc((100vw - var(--g-viewer-card-width))/2) clamp(156px,19vh,196px);
+    scroll-padding-inline:calc((100vw - var(--g-viewer-card-width))/2);
     -webkit-overflow-scrolling:touch; touch-action:pan-x;
   }
   .g-story-slide {
-    flex:0 0 auto; width:auto; height:auto; min-height:0;
-    scroll-snap-align:center; scroll-snap-stop:always; display:flex; align-items:center; justify-content:center;
-    opacity:.28; filter:blur(7px) saturate(.65); transform:scale(.82);
-    transition:transform .55s cubic-bezier(.2,.8,.2,1), opacity .55s ease, filter .55s ease;
-    cursor:pointer;
+    box-sizing:border-box; flex:0 0 var(--g-viewer-card-width); width:var(--g-viewer-card-width);
+    height:240px; min-height:0; display:flex; align-items:stretch; justify-content:center;
+    scroll-snap-align:center; scroll-snap-stop:always; opacity:.7;
+    filter:brightness(.42) saturate(.62); transform:scale(.86);
+    transition:transform .48s cubic-bezier(.2,.8,.2,1), opacity .48s ease, filter .48s ease;
+    cursor:pointer; will-change:transform,opacity,filter;
   }
-  .g-story-slide.is-active { opacity:1; filter:none; transform:scale(1); cursor:default; }
+  .g-story-slide.is-active {
+    opacity:1; filter:none; transform:scale(1.035); cursor:default; z-index:2;
+  }
   .g-story-image-shell {
-    position:relative; width:100%; height:100%; min-width:0; min-height:0; overflow:hidden; border-radius:24px;
-    box-shadow:0 30px 100px rgba(0,0,0,.55); background:#10241d;
-    display:flex; align-items:center; justify-content:center;
+    box-sizing:border-box; position:relative; width:100%; height:100%; min-width:0; min-height:0;
+    overflow:hidden; border:2px solid rgba(255,255,255,.92); border-radius:22px;
+    box-shadow:0 18px 54px rgba(0,0,0,.42); background:#10241d;
+    display:flex; align-items:stretch; justify-content:stretch;
+    transition:border-color .38s ease,box-shadow .38s ease;
   }
-  .g-story-image-shell img {
-    width:100%; height:100%; max-width:100%; max-height:100%; display:block; object-fit:cover; user-select:none;
-    -webkit-user-drag:none; animation:gStoryImageIn .55s ease both;
+  .g-story-slide.is-active .g-story-image-shell {
+    border-color:#10b981;
+    box-shadow:0 24px 68px rgba(0,0,0,.52),0 0 0 3px rgba(16,185,129,.18),0 0 30px rgba(16,185,129,.26);
   }
+  .g-story-image-shell > img {
+    box-sizing:border-box; width:100%; height:100%; min-width:100%; min-height:100%;
+    max-width:none; max-height:none; display:block; object-fit:cover; object-position:center;
+    user-select:none; -webkit-user-drag:none; animation:gStoryImageIn .55s ease both;
+    transition:transform .28s cubic-bezier(.2,.8,.2,1); transform-origin:center center;
+  }
+  .g-story-image-shell > .g-image-fallback {
+    box-sizing:border-box; width:100%; height:100%; min-height:100%; flex:1 1 100%;
+  }
+  .g-story-zoom-controls {
+    position:absolute; z-index:5; top:10px; right:10px; display:flex; align-items:center; gap:5px;
+    padding:5px; border:1px solid rgba(255,255,255,.22); border-radius:999px;
+    color:#fff; background:rgba(3,20,15,.66); backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px); box-shadow:0 5px 18px rgba(0,0,0,.24);
+  }
+  .g-story-zoom-controls button {
+    display:grid; place-items:center; width:32px; height:32px; padding:0;
+    border:0; border-radius:50%; color:#fff; background:rgba(255,255,255,.12);
+    cursor:pointer; transition:background .2s ease,transform .2s ease,opacity .2s ease;
+  }
+  .g-story-zoom-controls button:hover:not(:disabled) { background:#059669; transform:scale(1.08); }
+  .g-story-zoom-controls button:disabled { opacity:.35; cursor:not-allowed; }
+  .g-story-zoom-level { min-width:38px; text-align:center; font-size:10px; font-weight:800; letter-spacing:.02em; }
   .g-story-caption {
     position:absolute; left:0; right:0; bottom:0; padding:65px 24px 22px;
     background:linear-gradient(transparent,rgba(0,0,0,.82)); pointer-events:none;
@@ -474,21 +508,16 @@ const STYLES = `
     .g-viewer-counter { display:none; }
     .g-viewer-close { width:38px; height:38px; }
     .g-story-track {
-      gap:10px; padding:70px 52px 112px;
-      scroll-padding-inline:52px;
+      --g-viewer-card-width:min(78vw,360px);
+      gap:14px; padding:76px calc((100vw - var(--g-viewer-card-width))/2) 154px;
+      scroll-padding-inline:calc((100vw - var(--g-viewer-card-width))/2);
+      touch-action:pan-x;
     }
-    .g-story-slide {
-      flex:0 0 auto; width:auto; height:auto;
-      transform:scale(.82); filter:blur(5px) saturate(.55);
-    }
-    .g-story-slide.is-active { transform:scale(1); }
+    .g-story-slide { height:240px; transform:scale(.86); }
+    .g-story-slide.is-active { transform:scale(1.035); }
     .g-story-image-shell { border-radius:18px; }
-    .g-viewer-arrow {
-      display:grid; width:46px; height:46px; z-index:30;
-      background:rgba(5,30,22,.68); border-color:rgba(255,255,255,.38);
-    }
-    .g-viewer-arrow-left { left:7px; }
-    .g-viewer-arrow-right { right:7px; }
+    .g-story-zoom-controls { top:8px; right:8px; }
+    .g-viewer-arrow { display:none; }
     .g-story-caption { padding:55px 16px 16px; }
     .g-story-caption h2 { font-size:19px; }
     .g-image-info { margin-left:0; margin-right:0; max-height:28vh; padding:14px; border-radius:15px; }
@@ -866,53 +895,59 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
 
 const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onIndexChange }) => {
   const [showDetails, setShowDetails] = useState(false);
-  const [storySizes, setStorySizes] = useState({});
+  const [zoomScale, setZoomScale] = useState(1);
   const trackRef = useRef(null);
-  const touchStartX = useRef(null);
   const currentImage = images[selectedIndex];
+  const zoomSteps = [1, 1.5, 2, 2.5, 3];
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") onPrev();
-      if (e.key === "ArrowRight") onNext();
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "ArrowLeft") { event.preventDefault(); onPrev(); }
+      if (event.key === "ArrowRight") { event.preventDefault(); onNext(); }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, onPrev, onNext]);
 
+  // Keep the selected card centered without scrolling the page behind the modal.
   useEffect(() => {
     const track = trackRef.current;
-    if (!track) return;
-    const item = track.children[selectedIndex];
-    if (item) item.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    const item = track?.children?.[selectedIndex];
+    if (!track || !item) return;
+    const trackRect = track.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    const trackCenter = trackRect.left + trackRect.width / 2;
+    const itemCenter = itemRect.left + itemRect.width / 2;
+    const offset = itemCenter - trackCenter;
+    if (Math.abs(offset) > 1) track.scrollBy({ left: offset, behavior: "smooth" });
   }, [selectedIndex]);
 
+  // Native horizontal scrolling provides swipe navigation on phones. This listener
+  // synchronizes the active index when a swipe or trackpad gesture settles.
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-
     let raf = 0;
     const syncActiveSlide = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        const center = track.scrollLeft + track.clientWidth / 2;
+        const trackRect = track.getBoundingClientRect();
+        const center = trackRect.left + trackRect.width / 2;
         let nearest = selectedIndex;
         let distance = Infinity;
 
         Array.from(track.children).forEach((child, index) => {
-          const childCenter = child.offsetLeft + child.offsetWidth / 2;
-          const d = Math.abs(childCenter - center);
-          if (d < distance) {
-            distance = d;
+          const rect = child.getBoundingClientRect();
+          const childCenter = rect.left + rect.width / 2;
+          const nextDistance = Math.abs(childCenter - center);
+          if (nextDistance < distance) {
+            distance = nextDistance;
             nearest = index;
           }
         });
 
-        if (nearest !== selectedIndex) {
-          onIndexChange(nearest);
-          setShowDetails(false);
-        }
+        if (nearest !== selectedIndex) onIndexChange(nearest);
       });
     };
 
@@ -923,109 +958,127 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onInd
     };
   }, [selectedIndex, onIndexChange]);
 
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e) => {
-    if (touchStartX.current === null) return;
-    const distance = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(distance) > 45) distance < 0 ? onNext() : onPrev();
-    touchStartX.current = null;
-  };
-
-  const getStorySize = (image, index) => {
-    const size = storySizes[image.id];
-    if (size) return size;
-
-    // A compact fallback keeps the first render responsive before the image reports
-    // its natural dimensions. Once loaded, the exact aspect ratio is used.
-    const mobile = typeof window !== "undefined" && window.innerWidth <= 700;
-    const maxW = Math.min(window.innerWidth * (mobile ? 0.88 : 0.76), mobile ? 680 : 900);
-    const maxH = Math.min(window.innerHeight * (mobile ? 0.68 : 0.72), mobile ? 560 : 760);
-    return { width: maxW, height: maxH };
-  };
-
-  const handleStoryImageLoad = (image, e) => {
-    const nw = e.currentTarget.naturalWidth;
-    const nh = e.currentTarget.naturalHeight;
-    if (!nw || !nh) return;
-
-    const mobile = typeof window !== "undefined" && window.innerWidth <= 700;
-    const maxW = Math.min(window.innerWidth * (mobile ? 0.88 : 0.76), mobile ? 680 : 900);
-    const maxH = Math.min(window.innerHeight * (mobile ? 0.68 : 0.72), mobile ? 560 : 760);
-    const scale = Math.min(maxW / nw, maxH / nh);
-    const next = {
-      width: Math.max(1, Math.round(nw * scale)),
-      height: Math.max(1, Math.round(nh * scale)),
-    };
-
-    setStorySizes((prev) => {
-      const oldSize = prev[image.id];
-      if (oldSize && oldSize.width === next.width && oldSize.height === next.height) return prev;
-      return { ...prev, [image.id]: next };
-    });
-  };
+  useEffect(() => {
+    setZoomScale(1);
+    setShowDetails(false);
+  }, [selectedIndex]);
 
   if (!currentImage) return null;
 
   return (
-    <div className="g-viewer" role="dialog" aria-modal="true" aria-label="Image viewer">
+    <div className="g-viewer" role="dialog" aria-modal="true" aria-label="Gallery image viewer">
       <div className="g-viewer-backdrop" />
       <div className="g-viewer-topbar">
-        <div className="g-story-progress">
-          {images.map((_, i) => (
-            <button key={i} aria-label={'Open image ' + (i + 1)} onClick={() => {
-              if (i > selectedIndex) onNext();
-              else if (i < selectedIndex) onPrev();
-            }} className={i === selectedIndex ? "active" : ""} />
+        <div className="g-story-progress" aria-label="Choose an image">
+          {images.map((image, index) => (
+            <button
+              key={image.id || image.src || index}
+              type="button"
+              aria-label={"Open image " + (index + 1)}
+              aria-current={index === selectedIndex ? "step" : undefined}
+              onClick={() => onIndexChange(index)}
+              className={index === selectedIndex ? "active" : ""}
+            />
           ))}
         </div>
         <div className="g-viewer-counter">{selectedIndex + 1} / {images.length}</div>
-        <button className="g-viewer-close g-focus" onClick={onClose} aria-label="Close image viewer">
+        <button type="button" className="g-viewer-close g-focus" onClick={onClose} aria-label="Close image viewer">
           <FiX size={21} />
         </button>
       </div>
 
-      <div
-        className="g-story-stage"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
-        <button className="g-viewer-arrow g-viewer-arrow-left g-focus" onClick={onPrev} disabled={selectedIndex === 0} aria-label="Previous image" title="Previous image">
+      <div className="g-story-stage">
+        <button
+          type="button"
+          className="g-viewer-arrow g-viewer-arrow-left g-focus"
+          onClick={onPrev}
+          disabled={selectedIndex === 0}
+          aria-label="Previous image"
+          title="Previous image"
+        >
           <FiChevronLeft size={27} />
         </button>
 
-        <div ref={trackRef} className="g-story-track g-scroll-hidden">
-          {images.map((image, i) => (
-            <article
-              key={image.id}
-              className={'g-story-slide ' + (i === selectedIndex ? "is-active" : "")}
-              onClick={() => i === selectedIndex && setShowDetails(false)}
-            >
-              <div
-                className="g-story-image-shell"
-                style={getStorySize(image, i)}
+        <div ref={trackRef} className="g-story-track g-scroll-hidden" aria-label="Gallery images">
+          {images.map((image, index) => {
+            const isActive = index === selectedIndex;
+            return (
+              <article
+                key={image.id || image.src || index}
+                className={"g-story-slide " + (isActive ? "is-active" : "")}
+                aria-current={isActive ? "true" : undefined}
+                onClick={() => {
+                  if (!isActive) onIndexChange(index);
+                  else setShowDetails(false);
+                }}
               >
-                <GalleryImage
-                  image={image}
-                  alt={image.alt || image.title || "Altuvera gallery image"}
-                  loading="eager"
-                  onLoad={(e) => handleStoryImageLoad(image, e)}
-                  style={{ width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%", objectFit: "cover", display: "block" }}
-                />
-                <div className="g-story-caption">
-                  {image.title && <h2>{image.title}</h2>}
-                  {(image.location || image.countryName) && (
-                    <span><FiMapPin size={13} /> {image.location || image.countryName}</span>
+                <div
+                  className="g-story-image-shell"
+                  onDoubleClick={(event) => {
+                    event.stopPropagation();
+                    if (isActive) setZoomScale((value) => value === 1 ? 2 : 1);
+                  }}
+                >
+                  <GalleryImage
+                    image={image}
+                    alt={image.alt || image.title || "Altuvera gallery image"}
+                    loading="eager"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      minWidth: "100%",
+                      minHeight: "100%",
+                      objectFit: "cover",
+                      objectPosition: "center",
+                      display: "block",
+                      transform: "scale(" + (isActive ? zoomScale : 1) + ")",
+                    }}
+                  />
+
+                  {isActive && (
+                    <div className="g-story-zoom-controls" onClick={(event) => event.stopPropagation()}>
+                      <button
+                        type="button"
+                        aria-label="Zoom out"
+                        title="Zoom out"
+                        disabled={zoomScale <= 1}
+                        onClick={() => setZoomScale((value) => zoomSteps[Math.max(0, zoomSteps.indexOf(value) - 1)])}
+                      >
+                        <FiZoomOut size={16} />
+                      </button>
+                      <span className="g-story-zoom-level">{Math.round(zoomScale * 100)}%</span>
+                      <button
+                        type="button"
+                        aria-label="Zoom in"
+                        title="Zoom in"
+                        disabled={zoomScale >= 3}
+                        onClick={() => setZoomScale((value) => zoomSteps[Math.min(zoomSteps.length - 1, zoomSteps.indexOf(value) + 1)])}
+                      >
+                        <FiZoomIn size={16} />
+                      </button>
+                    </div>
                   )}
+
+                  <div className="g-story-caption">
+                    {image.title && <h2>{image.title}</h2>}
+                    {(image.location || image.countryName) && (
+                      <span><FiMapPin size={13} /> {image.location || image.countryName}</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
 
-        <button className="g-viewer-arrow g-viewer-arrow-right g-focus" onClick={onNext} disabled={selectedIndex === images.length - 1} aria-label="Next image" title="Next image">
+        <button
+          type="button"
+          className="g-viewer-arrow g-viewer-arrow-right g-focus"
+          onClick={onNext}
+          disabled={selectedIndex === images.length - 1}
+          aria-label="Next image"
+          title="Next image"
+        >
           <FiChevronRight size={27} />
         </button>
       </div>
@@ -1036,7 +1089,7 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onInd
             {currentImage.sourceLabel || "View source details"} <FiExternalLink size={13} />
           </Link>
         )}
-        <button className="g-info-link g-focus" onClick={() => setShowDetails((v) => !v)}>
+        <button type="button" className="g-info-link g-focus" onClick={() => setShowDetails((value) => !value)}>
           <FiInfo size={16} />
           {showDetails ? "Hide image information" : "View image information"}
           <FiChevronDown className={showDetails ? "g-info-chevron open" : "g-info-chevron"} size={15} />
@@ -1063,6 +1116,7 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onInd
     </div>
   );
 };
+
 const SnapScrollGallery = ({ images, onImageClick }) => {
   const scrollContainerRef = useRef(null);
   const [scrollPosition, setScrollPosition] = useState(0);
