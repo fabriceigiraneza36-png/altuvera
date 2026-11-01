@@ -361,13 +361,12 @@ const hasConfiguredSecondFactor = (factorPayload, passkeyPayload) => {
     "passkeyEnabled", "passkey_enabled", "twoFactorEnabled", "two_factor_enabled",
     "mfaEnabled", "mfa_enabled", "hasAuthenticator", "has_authenticator",
     "hasPasskey", "has_passkey", "hasPasskeys", "has_passkeys",
-    "recoveryCodesAvailable", "recovery_codes_available",
   ];
   if (objects.some((item) => enabledKeys.some((key) => isEnabledSecurityFlag(item[key])))) return true;
 
   const countKeys = [
-    "recoveryCodesRemaining", "recovery_codes_remaining", "passkeyCount", "passkey_count",
-    "passkeysCount", "passkeys_count", "credentialCount", "credential_count",
+    "passkeyCount", "passkey_count", "passkeysCount", "passkeys_count",
+    "credentialCount", "credential_count",
   ];
   if (objects.some((item) => countKeys.some((key) => Number(item[key]) > 0))) return true;
 
@@ -378,6 +377,20 @@ const hasConfiguredSecondFactor = (factorPayload, passkeyPayload) => {
   if (methodLists.flat().some((method) => /passkey|webauthn|totp|authenticator|security.?key/i.test(
     String(method?.type || method?.method || method?.name || method)
   ))) return true;
+
+  const nestedMethodKeys = ["authenticator", "totp", "passkey", "webauthn", "security_key", "twoFactor", "two_factor", "mfa"];
+  if (objects.some((item) => nestedMethodKeys.some((key) => {
+    const value = item[key];
+    if (isEnabledSecurityFlag(value)) return true;
+    if (!value || typeof value !== "object") return false;
+    return isEnabledSecurityFlag(value.enabled ?? value.isEnabled ?? value.is_enabled ?? value.active ?? value.status);
+  }))) return true;
+
+  if (objects.some((item) => {
+    const method = String(item.type || item.method || item.name || item.factor || "");
+    const enabled = isEnabledSecurityFlag(item.enabled ?? item.isEnabled ?? item.is_enabled ?? item.active ?? item.status);
+    return enabled && /passkey|webauthn|totp|authenticator|security.?key/i.test(method);
+  })) return true;
 
   const factorEntries = objects.flatMap((item) => Array.isArray(item.factors) ? item.factors : []);
   if (factorEntries.some((factor) => {
