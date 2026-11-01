@@ -282,6 +282,7 @@
                               <p style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#10231d', letterSpacing: n.is_read ? 0 : '-.01em' }}>
                                 {n.title}
                               </p>
+                              {!n.is_read && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 999, background: '#d1fae5', color: '#047857', fontSize: 10, fontWeight: 900, letterSpacing: '.04em', textTransform: 'uppercase' }}><span style={{ width: 5, height: 5, borderRadius: 99, background: '#059669' }} />New</span>}
                               {isUrgentBooking && <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 7px',borderRadius:999,background:'#fee2e2',color:'#b91c1c',fontSize:10,fontWeight:900,textTransform:'uppercase',letterSpacing:'.04em'}}><Siren size={12}/> Urgent</span>}
                             </div>
                             <span style={{ fontSize: 12, color: '#819188', flexShrink: 0, fontSize: 11 }}>
