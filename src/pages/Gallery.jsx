@@ -41,34 +41,61 @@ import AnimatedSection from "../components/common/AnimatedSection";
 import { useGallery } from "../hooks/useGallery";
 import { useCountries } from "../hooks/useCountries";
 import { useDestinations } from "../hooks/useDestinations";
+import { API_URL, toAbsoluteApiUrl } from "../utils/apiBase";
 
 const getRecordSlug = (record) => {
   const value = record?.slug || record?.id || record?._id || record?.country_id || record?.destination_id || record?.name || record?.title || "item";
   return String(value).trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
 };
 
-const imageObjectUrl = (value) => {
-  if (typeof value === "string") return value.trim();
-  if (!value || typeof value !== "object") return "";
-  const nested = value.image && typeof value.image === "object" ? value.image : null;
-  return String(
-    value.url || value.image_url || value.imageUrl || value.src ||
-    (typeof value.image === "string" ? value.image : "") ||
-    value.original_url || value.originalUrl || nested?.url || nested?.image_url || nested?.imageUrl || ""
-  ).trim();
+const imageObjectUrl = (value, depth = 0, seen = new Set()) => {
+  if (depth > 5 || value == null) return "";
+  if (typeof value === "string") {
+    const text = value.trim();
+    if (!text) return "";
+    if ((text.startsWith("{") && text.endsWith("}")) || (text.startsWith("[") && text.endsWith("]"))) {
+      try { return imageObjectUrl(JSON.parse(text), depth + 1, seen); } catch { return text; }
+    }
+    return text;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) { const resolved = imageObjectUrl(item, depth + 1, seen); if (resolved) return resolved; }
+    return "";
+  }
+  if (typeof value !== "object" || seen.has(value)) return "";
+  seen.add(value);
+  for (const key of ["url","secure_url","secureUrl","image_url","imageUrl","src","original_url","originalUrl","public_url","publicUrl","file_url","fileUrl","download_url","downloadUrl","thumbnail_url","thumbnailUrl","thumb_url","thumbUrl"]) {
+    const resolved = imageObjectUrl(value[key], depth + 1, seen);
+    if (resolved) return resolved;
+  }
+  for (const key of ["image","file","asset","media","source","photo","content"]) {
+    const resolved = imageObjectUrl(value[key], depth + 1, seen);
+    if (resolved) return resolved;
+  }
+  return "";
+};
+
+const resolveGalleryImageUrl = (value) => {
+  const raw = imageObjectUrl(value);
+  if (!raw) return "";
+  if (/^(https?:|data:image\/|blob:)/i.test(raw)) return raw;
+  if (raw.startsWith("//")) return (typeof window !== "undefined" ? window.location.protocol : "https:") + raw;
+  try {
+    if (/^\/api(?:\/|$)/i.test(raw)) return toAbsoluteApiUrl(raw);
+    const backendOrigin = new URL(API_URL).origin;
+    return new URL(raw.startsWith("/") ? raw : "/" + raw, backendOrigin).toString();
+  } catch { return raw; }
 };
 
 const readImageList = (value) => {
   if (Array.isArray(value)) return value;
   if (typeof value === "string" && value.trim().startsWith("[")) {
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
+    try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
   }
-  return value ? [value] : [];
+  if (typeof value === "string" && value.trim().startsWith("{")) {
+    try { return [JSON.parse(value)]; } catch { return [value]; }
+  }
+  return value == null || value === "" ? [] : [value];
 };
 
 const collectEntityGalleryImages = (records, type) => {
