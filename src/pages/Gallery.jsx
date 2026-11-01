@@ -358,7 +358,7 @@ const STYLES = `
   }
   .g-viewer-backdrop {
     position: absolute; inset: 0;
-    background: radial-gradient(circle at center, rgba(6,78,59,.35), rgba(2,12,9,.98) 72%);
+    background:radial-gradient(circle at center,rgba(6,78,59,.25),rgba(2,12,9,.55) 82%);
   }
   .g-viewer-topbar, .g-viewer-bottom { position: absolute; z-index: 5; left: 0; right: 0; }
   .g-viewer-topbar {
@@ -385,7 +385,7 @@ const STYLES = `
   .g-story-track {
     --g-viewer-card-width:clamp(280px,34vw,380px);
     box-sizing:border-box; width:100%; height:100%; display:flex; align-items:center;
-    gap:clamp(14px,2vw,22px); overflow-x:auto; overflow-y:hidden;
+    gap:clamp(6px,1vw,12px); overflow-x:auto; overflow-y:hidden;
     scroll-snap-type:x mandatory; scroll-behavior:smooth; overscroll-behavior-x:contain;
     padding:clamp(82px,10vh,112px) calc((100vw - var(--g-viewer-card-width))/2) clamp(156px,19vh,196px);
     scroll-padding-inline:calc((100vw - var(--g-viewer-card-width))/2);
@@ -393,15 +393,15 @@ const STYLES = `
   }
   .g-story-slide {
     box-sizing:border-box; flex:0 0 var(--g-viewer-card-width); width:var(--g-viewer-card-width);
-    height:240px; min-height:0; display:flex; align-items:stretch; justify-content:center;
+    height:clamp(320px,48vh,520px); min-height:0; display:flex; align-items:stretch; justify-content:center;
     scroll-snap-align:center; scroll-snap-stop:always; opacity:1;
     transform:scale(.86);
-    transition:transform .48s cubic-bezier(.2,.8,.2,1);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
     cursor:pointer; will-change:transform;
   }
   .g-story-slide:not(.is-active) .g-story-image-shell::after {
     content:""; position:absolute; z-index:1; inset:0; border-radius:inherit;
-    background:rgba(0,0,0,.5); pointer-events:none; transition:background .38s ease;
+    background:rgba(0,0,0,.32); pointer-events:none; transition:background .24s ease;
   }
   .g-story-slide.is-active {
     transform:scale(1.035); cursor:default; z-index:2;
@@ -411,7 +411,7 @@ const STYLES = `
     overflow:hidden; border:2px solid rgba(255,255,255,.92); border-radius:22px;
     box-shadow:0 18px 54px rgba(0,0,0,.42); background:#10241d;
     display:flex; align-items:stretch; justify-content:stretch;
-    transition:border-color .38s ease,box-shadow .38s ease;
+    transition:border-color .24s ease,box-shadow .24s ease;
   }
   .g-story-slide.is-active .g-story-image-shell {
     border-color:#10b981;
@@ -522,15 +522,16 @@ const STYLES = `
     .g-viewer-counter { display:none; }
     .g-viewer-close { width:38px; height:38px; }
     .g-story-track {
-      --g-viewer-card-width:min(78vw,360px);
-      gap:14px; padding:76px calc((100vw - var(--g-viewer-card-width))/2) 154px;
+      --g-viewer-card-width:min(82vw,420px);
+      gap:7px; padding:66px calc((100vw - var(--g-viewer-card-width))/2) 118px;
       scroll-padding-inline:calc((100vw - var(--g-viewer-card-width))/2);
       touch-action:pan-x;
     }
-    .g-story-slide { height:240px; transform:scale(.86); }
-    .g-story-slide.is-active { transform:scale(1.035); }
+    .g-story-slide { height:clamp(330px,49vh,480px); transform:scale(.86); }
+    .g-story-slide.is-active { transform:scale(1.025); }
     .g-story-image-shell { border-radius:18px; }
-    .g-story-zoom-controls { top:8px; right:8px; }
+    .g-story-zoom-controls { display:none !important; }
+    .g-story-image-shell > img { touch-action:pan-x pan-y pinch-zoom; }
     .g-viewer-arrow { display:none; }
     .g-story-caption { padding:55px 16px 16px; }
     .g-story-caption h2 { font-size:19px; }
@@ -909,9 +910,38 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
 const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onIndexChange }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
+  const [isMobileViewer, setIsMobileViewer] = useState(typeof window !== "undefined" && window.matchMedia("(max-width: 700px)").matches);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 700px)");
+    const update = () => setIsMobileViewer(query.matches);
+    update();
+    query.addEventListener?.("change", update);
+    return () => query.removeEventListener?.("change", update);
+  }, []);
   const trackRef = useRef(null);
   const currentImage = images[selectedIndex];
   const zoomSteps = [1, 1.5, 2, 2.5, 3];
+  const pinchRef = useRef({ distance: 0, startScale: 1 });
+  const imageTouchHandlers = {
+    onTouchStart: (event) => {
+      if (event.touches.length === 2) {
+        const dx = event.touches[0].clientX - event.touches[1].clientX;
+        const dy = event.touches[0].clientY - event.touches[1].clientY;
+        pinchRef.current = { distance: Math.hypot(dx, dy), startScale: zoomScale };
+      }
+    },
+    onTouchMove: (event) => {
+      if (event.touches.length !== 2 || !pinchRef.current.distance) return;
+      event.preventDefault();
+      const dx = event.touches[0].clientX - event.touches[1].clientX;
+      const dy = event.touches[0].clientY - event.touches[1].clientY;
+      const distance = Math.hypot(dx, dy);
+      setZoomScale(Math.min(4, Math.max(1, pinchRef.current.startScale * distance / pinchRef.current.distance)));
+    },
+    onTouchEnd: (event) => {
+      if (event.touches.length < 2) pinchRef.current.distance = 0;
+    },
+  };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -980,7 +1010,10 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onInd
 
   return (
     <div className="g-viewer" role="dialog" aria-modal="true" aria-label="Gallery image viewer">
-      <div className="g-viewer-backdrop" />
+      <div className="g-viewer-backdrop" style={currentImage?.src ? {
+        backgroundImage: "linear-gradient(rgba(3,20,15,.36),rgba(3,20,15,.56)), url(\"" + currentImage.src + "\")",
+        backgroundPosition: "center", backgroundSize: "cover", filter: "none"
+      } : undefined} />
       <div className="g-viewer-topbar">
         <div className="g-story-progress" aria-label="Choose an image">
           {images.map((image, index) => (
@@ -1031,6 +1064,7 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onInd
                     event.stopPropagation();
                     if (isActive) setZoomScale((value) => value === 1 ? 2 : 1);
                   }}
+                  {...(isActive ? imageTouchHandlers : {})}
                 >
                   <GalleryImage
                     image={image}
@@ -1048,36 +1082,20 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onInd
                     }}
                   />
 
-                  {isActive && (
+                  {!isMobileViewer && isActive && (
                     <div className="g-story-zoom-controls" onClick={(event) => event.stopPropagation()}>
-                      <button
-                        type="button"
-                        aria-label="Zoom out"
-                        title="Zoom out"
-                        disabled={zoomScale <= 1}
-                        onClick={() => setZoomScale((value) => zoomSteps[Math.max(0, zoomSteps.indexOf(value) - 1)])}
-                      >
+                      <button type="button" aria-label="Zoom out" title="Zoom out" disabled={zoomScale <= 1}
+                        onClick={() => setZoomScale((value) => zoomSteps[Math.max(0, zoomSteps.indexOf(value) - 1)])}>
                         <FiZoomOut size={16} />
                       </button>
-                      <span className="g-story-zoom-level">{Math.round(zoomScale * 100)}%</span>
-                      <button
-                        type="button"
-                        aria-label="Zoom in"
-                        title="Zoom in"
-                        disabled={zoomScale >= 3}
-                        onClick={() => setZoomScale((value) => zoomSteps[Math.min(zoomSteps.length - 1, zoomSteps.indexOf(value) + 1)])}
-                      >
+                      <button type="button" aria-label="Zoom in" title="Zoom in" disabled={zoomScale >= 3}
+                        onClick={() => setZoomScale((value) => zoomSteps[Math.min(zoomSteps.length - 1, zoomSteps.indexOf(value) + 1)])}>
                         <FiZoomIn size={16} />
                       </button>
                     </div>
                   )}
 
-                  <div className="g-story-caption">
-                    {image.title && <h2>{image.title}</h2>}
-                    {(image.location || image.countryName) && (
-                      <span><FiMapPin size={13} /> {image.location || image.countryName}</span>
-                    )}
-                  </div>
+
                 </div>
               </article>
             );
