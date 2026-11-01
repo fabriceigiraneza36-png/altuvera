@@ -3148,3 +3148,324 @@
   .am-auth-methods .am-method-option:hover:not(:disabled) { transform: none; }
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PREMIUM AUTH METHOD + SECOND-FACTOR SCREENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.am-auth-methods {
+  box-sizing: border-box;
+  border: 1px solid #e0eee5;
+  border-radius: 22px;
+  background: linear-gradient(160deg, #f8fcf9 0%, #f1f8f3 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+}
+.am-auth-methods .am-method-heading {
+  margin: 14px auto 22px;
+}
+.am-auth-methods .am-method-heading__icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 19px;
+  background: linear-gradient(145deg, #064e3b 0%, #087f58 65%, #10a36f 100%);
+  box-shadow: 0 12px 28px rgba(6,78,59,.2), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.am-method-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.am-auth-methods .am-method-option {
+  box-sizing: border-box;
+  min-height: 76px;
+  padding: 13px 15px;
+  border: 1px solid #d4e8da;
+  border-radius: 17px;
+  background: rgba(255,255,255,.96);
+  color: #123d2b;
+  box-shadow: 0 5px 16px rgba(6,78,59,.055), inset 0 1px 0 rgba(255,255,255,.95);
+}
+.am-auth-methods .am-method-option:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: #83c99d;
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(6,78,59,.11);
+}
+.am-auth-methods .am-method-option:active:not(:disabled) {
+  transform: translateY(0) scale(.99);
+}
+.am-auth-methods .am-method-list .am-method-option .am-method-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(145deg, #064e3b, #07845b);
+  box-shadow: 0 6px 14px rgba(6,78,59,.17);
+}
+.am-auth-methods .am-method-list .am-method-option--passkey .am-method-icon,
+.am-auth-methods .am-method-list .am-method-option--google .am-method-icon,
+.am-auth-methods .am-method-list .am-method-option--github .am-method-icon,
+.am-auth-methods .am-method-list .am-method-option--email .am-method-icon {
+  color: #fff;
+  background: linear-gradient(145deg, #064e3b, #07845b);
+  border-color: rgba(255,255,255,.2);
+}
+.am-auth-methods .am-method-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.am-auth-methods .am-method-copy strong {
+  color: #123d2b;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.3;
+}
+.am-auth-methods .am-method-copy small {
+  color: #647a6e;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.am-auth-methods .am-method-arrow {
+  flex: 0 0 auto;
+  color: #087c54;
+}
+.am-method-security-note {
+  margin-top: 16px;
+  padding: 13px 14px;
+  border: 1px solid #cfe7d7;
+  border-radius: 14px;
+  color: #315f48;
+  background: #eaf6ee;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.am-method-security-note svg {
+  flex: 0 0 auto;
+  color: #087c54;
+}
+.am-factor-view {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 8px 2px 4px;
+}
+.am-factor-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 4px auto 21px;
+  text-align: center;
+}
+.am-factor-heading__icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 2px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 19px;
+  color: #fff;
+  background: linear-gradient(145deg, #064e3b, #07845b);
+  box-shadow: 0 12px 26px rgba(6,78,59,.18);
+}
+.am-factor-heading h2 {
+  margin: 0;
+  color: #103c2b;
+  font-size: clamp(21px, 4vw, 26px);
+  font-weight: 900;
+  letter-spacing: -.04em;
+}
+.am-factor-heading p {
+  max-width: 380px;
+  margin: 0;
+  color: #647a6e;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.am-factor-passkey-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 70px;
+  margin: 0 0 14px;
+  padding: 13px 15px;
+  border: 1px solid #08764f;
+  border-radius: 16px;
+  color: #fff;
+  background: linear-gradient(120deg, #064e3b, #087f58);
+  box-shadow: 0 9px 22px rgba(6,78,59,.16);
+  text-align: left;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.am-factor-passkey-button > svg:first-child {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  border-radius: 13px;
+  color: #075538;
+  background: #fff;
+}
+.am-factor-passkey-button span {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+.am-factor-passkey-button strong { font-size: 13px; font-weight: 850; }
+.am-factor-passkey-button small { color: rgba(255,255,255,.82); font-size: 11px; line-height: 1.45; }
+.am-factor-passkey-button:disabled { cursor: not-allowed; opacity: .55; }
+.am-factor-passkey-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: saturate(1.08);
+  box-shadow: 0 13px 27px rgba(6,78,59,.22);
+}
+.am-factor-method-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 2px 0 15px;
+}
+.am-factor-method-choice,
+.am-factor-use-other {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid #d5e7dc;
+  border-radius: 12px;
+  color: #315f48;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+.am-factor-method-choice.is-active {
+  border-color: #087c54;
+  color: #fff;
+  background: #086345;
+  box-shadow: 0 5px 13px rgba(6,78,59,.13);
+}
+.am-factor-method-choice:focus-visible,
+.am-factor-use-other:focus-visible,
+.am-factor-passkey-button:focus-visible,
+.am-factor-submit:focus-visible {
+  outline: 3px solid rgba(5,150,105,.24);
+  outline-offset: 2px;
+}
+.am-factor-code-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.am-factor-code-label {
+  color: #315f48;
+  font-size: 12px;
+  font-weight: 800;
+}
+.am-factor-code-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 54px;
+  border: 1.5px solid #d4e6da;
+  border-radius: 14px;
+  outline: none;
+  padding: 12px 15px;
+  color: #103c2b;
+  background: #fbfefc;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: .28em;
+  text-align: center;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.am-factor-code-input:focus {
+  border-color: #07845b;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(5,150,105,.10);
+}
+.am-factor-code-input[aria-invalid="true"] { border-color: #dc6b6b; }
+.am-factor-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 49px;
+  margin-top: 2px;
+  border: 0;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(120deg, #087c54, #059669);
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: 0 7px 18px rgba(5,150,105,.2);
+}
+.am-factor-submit:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+.am-factor-error {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid #f2caca;
+  border-radius: 12px;
+  color: #a33131;
+  background: #fff4f4;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.am-factor-use-other {
+  width: 100%;
+  margin-top: 16px;
+  color: #0a6948;
+  background: #f3faf5;
+}
+.am-factor-use-other:hover { border-color: #9bcfb0; background: #eaf6ee; }
+.am-factor-recovery-note {
+  margin: 12px 0 0;
+  color: #718177;
+  font-size: 11px;
+  line-height: 1.55;
+  text-align: center;
+}
+@media (max-width: 639px) {
+  .am-auth-methods { border-radius: 16px; padding: 17px 12px 20px !important; }
+  .am-auth-methods .am-method-option { min-height: 68px; padding: 10px; gap: 9px; border-radius: 14px; }
+  .am-auth-methods .am-method-list .am-method-option .am-method-icon { flex-basis: 42px; width: 42px; height: 42px; border-radius: 13px; }
+  .am-auth-methods .am-method-copy strong { font-size: 13px; }
+  .am-auth-methods .am-method-copy small { font-size: 10.5px; }
+  .am-factor-view { padding: 4px 0; }
+  .am-factor-heading { margin-bottom: 17px; }
+  .am-factor-heading__icon { width: 52px; height: 52px; border-radius: 17px; }
+  .am-factor-passkey-button { min-height: 66px; padding: 11px; gap: 9px; }
+  .am-factor-passkey-button > svg:first-child { width: 38px; height: 38px; padding: 9px; }
+  .am-factor-method-choice { flex: 1 1 auto; }
+  .am-factor-code-input { min-height: 51px; font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-factor-passkey-button,
+  .am-factor-method-choice,
+  .am-factor-use-other,
+  .am-factor-submit,
+  .am-auth-methods .am-method-option {
+    transition: none !important;
+  }
+  .am-factor-passkey-button:hover:not(:disabled),
+  .am-auth-methods .am-method-option:hover:not(:disabled) {
+    transform: none !important;
+  }
+}
