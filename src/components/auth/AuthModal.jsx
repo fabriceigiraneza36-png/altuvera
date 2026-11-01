@@ -1130,7 +1130,6 @@ export default function AuthModal() {
     e.preventDefault();
     setEmailTouched(true); setNameTouched(true); setError("");
     if (!emailOk) { setError("Check your email address. It should look like name@example.com."); firstInputRef.current?.focus(); return; }
-    if (!nameOk)  { setError("Enter the full name associated with your account."); nameInputRef.current?.focus(); return; }
     if (!isOnline) { setError("You appear to be offline. Reconnect to request your verification code."); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
@@ -1944,7 +1943,7 @@ export default function AuthModal() {
 
                     <div>
                       <InputField
-                        id="login-name" label="Full Name" icon={HiUser} refProp={nameInputRef}
+                        id="login-name" label="Full Name (optional)" icon={HiUser} refProp={nameInputRef}
                         value={form.fullName} onChange={(v) => set("fullName", v)}
                         onBlur={() => setNameTouched(true)} disabled={isBusy}
                         placeholder="Your full name" autoComplete="name" required
