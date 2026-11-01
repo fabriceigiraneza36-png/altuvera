@@ -29,7 +29,7 @@ jobs:
       - name: Install vectorization and preview tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "Pillow==11.2.1" "vtracer==0.6.15" "CairoSVG==2.7.1"
+          python -m pip install "Pillow==11.2.1" "vtracer==1.0.0a4" "CairoSVG==2.7.1"
 
       - name: Trace the exact official GitHub logo and validate SVG Tiny PS
         run: python scripts/bimi/prepare_logo.py

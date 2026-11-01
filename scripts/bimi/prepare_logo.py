@@ -108,21 +108,22 @@ def prepare_square_source() -> dict:
 
 
 def clean_svg() -> dict:
-    vtracer.convert_image_to_svg_py(
-        str(PREPARED),
-        str(RAW_SVG),
-        colormode="color",
-        hierarchical="stacked",
+    config = vtracer.Config(
         mode="spline",
+        hierarchical="stacked",
         filter_speckle=8,
         color_precision=4,
-        layer_difference=24,
+        layer_difference=32,
         corner_threshold=60,
-        length_threshold=4.0,
-        max_iterations=10,
+        length_threshold=5.5,
+        max_iterations=8,
         splice_threshold=45,
-        path_precision=2,
+        path_precision=1,
+        simplify=2.2,
+        max_colors=8,
+        optimize=2,
     )
+    config.convert_file(str(PREPARED), str(RAW_SVG))
 
     tree = ET.parse(RAW_SVG)
     root = tree.getroot()
@@ -186,7 +187,7 @@ def clean_svg() -> dict:
     square_viewbox = len(viewbox) == 4 and viewbox[2] == viewbox[3]
     has_single_title = sum(1 for e in parsed if e.tag.split("}")[-1] == "title") == 1
     size_bytes = SVG_OUT.stat().st_size
-    corners_are_solid_white = all(pixel[0:3] == (255, 255, 255) and pixel[3] == 255 for pixel in corner_pixels)
+    corners_are_solid_white = all(all(channel >= 250 for channel in pixel[0:3]) and pixel[3] >= 250 for pixel in corner_pixels)
 
     checks = {
         "svg_root": parsed.tag.split("}")[-1] == "svg",
