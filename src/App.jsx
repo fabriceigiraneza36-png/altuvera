@@ -1038,13 +1038,13 @@ useEffect(injectAppStyles, []);
         />
         <Route
           path="/auth/google/callback"
-          element={<GoogleCallbackPage />}
+          element={<PageWrapper title="Signing in with Google…" noindex><GoogleCallbackPage /></PageWrapper>}
         />
 
         <Route path="/account/recovery/complete" element={<PageWrapper title="Complete Account Recovery" noindex><AccountRecoveryComplete /></PageWrapper>} />
 
         {/* ── Booking email verification ── */}
-        <Route path="/booking/verify" element={<ConfirmBookingRequest />} />
+        <Route path="/booking/verify" element={<PageWrapper title="Booking Email Verification" noindex><ConfirmBookingRequest /></PageWrapper>} />
 
         {/* ── Main shell (Navbar + Footer) ── */}
         <Route element={<AppLayout />}>
