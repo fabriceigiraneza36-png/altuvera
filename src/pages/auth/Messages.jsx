@@ -2207,7 +2207,11 @@ export default function Messages() {
   ══════════════════════════════════════════════════════════════════════ */
   return (
     <>
-      <Helmet><title>Messages | Altuvera</title></Helmet>
+      <Helmet>
+        <title>{activeId && activeConversation
+          ? `${convTitle} | Messages | Altuvera Safaris`
+          : 'Messages | Altuvera Safaris'}</title>
+      </Helmet>
 
       <DashboardLayout
         /* Keep the chat viewport-sized and retain the mobile toggle for dashboard sidebar navigation. */
