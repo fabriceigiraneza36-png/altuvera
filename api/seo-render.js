@@ -24,6 +24,41 @@ const STATIC = {
   "/payment-terms": ["Booking Terms & Conditions | Altuvera Safaris", "Read the terms and conditions that apply to using Altuvera Safaris services and website."]
 };
 
+const COUNTRY_SEO = {
+  rwanda: {
+    title: "Rwanda Safaris & Gorilla Trekking | Altuvera Safaris",
+    description: "Discover Rwanda gorilla trekking in Volcanoes National Park, Akagera wildlife safaris and Nyungwe Forest with Altuvera Safaris. Plan a tailor-made Rwanda journey."
+  },
+  uganda: {
+    title: "Uganda Safaris & Gorilla Trekking | Altuvera Safaris",
+    description: "Discover Uganda gorilla trekking in Bwindi, Queen Elizabeth National Park wildlife safaris and tailor-made journeys with Altuvera Safaris."
+  },
+  tanzania: {
+    title: "Tanzania Safaris, Kilimanjaro & Zanzibar | Altuvera Safaris",
+    description: "Explore Tanzania safaris in the Serengeti and Ngorongoro, Kilimanjaro trekking and Zanzibar escapes with Altuvera Safaris."
+  },
+  kenya: {
+    title: "Kenya Safaris & Maasai Mara Wildlife | Altuvera Safaris",
+    description: "Plan Kenya safaris in the Maasai Mara and Amboseli, with wildlife encounters and tailor-made East African journeys from Altuvera Safaris."
+  },
+  ethiopia: {
+    title: "Ethiopia Tours, Highlands & Cultural Journeys | Altuvera Safaris",
+    description: "Discover Ethiopia's highlands, Lalibela's heritage and the Simien Mountains with Altuvera Safaris. Plan a tailor-made journey with local insight."
+  }
+};
+const normalizeCountrySegment = (value) => {
+  let raw = String(value || "").trim();
+  try { raw = decodeURIComponent(raw); } catch {}
+  if (/^\d+$/.test(raw)) return raw;
+  return raw.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+};
+const normalizeCountryPath = (pathname) => {
+  const match = String(pathname || "").match(/^\/country\/([^/]+)(\/destinations)?$/i);
+  if (!match) return pathname;
+  return "/country/" + normalizeCountrySegment(match[1]) + (match[2] || "");
+};
+
 const PRIVATE = ["/dashboard", "/reviews", "/profile", "/my-bookings", "/wishlist", "/settings", "/account", "/notifications", "/messages", "/booking", "/booking-verification", "/auth", "/admin", "/tailwind-test"];
 const esc = (v) => String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const textOf = (v, max = 10000) => {
@@ -125,10 +160,29 @@ const render = async (route) => {
   if (country) {
     const data = unwrap(await fetchJson("/countries/" + encodeURIComponent(country[1])), "country");
     if (!data.name && !data.title) { page.title = "Country Guide | Altuvera Safaris"; page.description = "Explore country travel guides across East Africa."; page.noindex = true; page.status = 404; page.body = '<h1>Country guide unavailable</h1><p>Browse our <a href="/destinations">East Africa destinations</a>.</p>'; return page; }
-    const name = first(data.name, data.title, country[1]), description = first(data.seo_description, data.meta_description, data.short_description, data.tagline, data.description, "Explore travel highlights and places to visit in " + name + " with Altuvera Safaris.");
+    const name = first(data.name, data.title, country[1]);
+    const countryMeta = COUNTRY_SEO[normalizeCountrySegment(country[1])] || COUNTRY_SEO[normalizeCountrySegment(name)];
+    const overview = first(data.full_description, data.long_description, data.description, data.overview);
+    const description = first(data.seo_description, data.meta_description, countryMeta?.description, data.short_description, data.tagline, overview, "Explore travel highlights and places to visit in " + name + " with Altuvera Safaris.");
     const destinations = arr(data.destinations), only = Boolean(country[2]);
-    page.title = (only ? "Destinations in " + name : "Explore " + name) + " | Altuvera Safaris"; page.description = only ? "Browse destinations, national parks and travel experiences in " + name + " with Altuvera Safaris." : description; page.image = imageOf(data); page.type = "TouristDestination";
-    page.body = '<h1>' + esc(only ? "Destinations in " + name : name + " Travel Guide") + '</h1><p>' + esc(description) + '</p>' + listHtml(destinations, "/destinations/", "Destinations in " + name) + '<p><a href="/destinations">Explore all East Africa destinations</a></p>'; return page;
+    const highlights = arr(data.highlights || data.attractions || data.experiences).slice(0, 8);
+    const bestTime = first(data.best_time_to_visit, data.climate_detail && data.climate_detail.best_time);
+    page.title = only
+      ? "Destinations in " + name + " | Altuvera Safaris"
+      : first(data.meta_title, data.seo_title, countryMeta?.title, name + " Safaris & Travel Guide | Altuvera Safaris");
+    page.description = only
+      ? "Browse destinations, national parks and travel experiences in " + name + " with Altuvera Safaris."
+      : description;
+    page.image = imageOf(data);
+    page.type = "TouristDestination";
+    page.body = '<h1>' + esc(only ? "Destinations in " + name : name + " Travel Guide") + '</h1>' +
+      '<p>' + esc(description) + '</p>' +
+      (overview && overview !== description ? '<p>' + esc(overview) + '</p>' : "") +
+      (bestTime ? '<p class="eyebrow">Best time to visit: ' + esc(bestTime) + '</p>' : "") +
+      (highlights.length ? '<h2>Travel highlights</h2><ul>' + highlights.map((item) => '<li>' + esc(textOf(item, 500)) + '</li>').join("") + '</ul>' : "") +
+      listHtml(destinations, "/destinations/", "Destinations in " + name) +
+      '<p><a href="/destinations">Explore all East Africa destinations</a></p>';
+    return page;
   }
   const dest = route.match(/^\/destinations\/([^/]+)$/i);
   if (dest) {
@@ -252,6 +306,7 @@ export default async function handler(req, res) {
   if (!raw.startsWith("/") || raw.startsWith("//")) raw = "/";
   let pathname = raw.replace(/\/{2,}/g, "/");
   if (pathname.length > 1) pathname = pathname.replace(/\/+$/, "");
+  pathname = normalizeCountryPath(pathname);
   const page = await render(pathname);
   const canonical = SITE + (pathname === "/" ? "/" : pathname);
   const output = htmlDocument(page, canonical);
