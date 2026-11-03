@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import destinations, { getAllDestinations } from "../src/data/destinations.js";
+import destinations from "../src/data/destinations.js";
 import posts from "../src/data/posts.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,56 +12,99 @@ const publicDir = path.join(repoRoot, "public");
 
 const baseUrlRaw =
   process.env.VITE_SITE_URL ||
+  process.env.VITE_APP_URL ||
   process.env.SITE_URL ||
   "https://www.altuverasafaris.com";
 const baseUrl = String(baseUrlRaw).replace(/\/+$/, "");
+const apiBase = String(
+  process.env.VITE_API_URL ||
+  process.env.API_URL ||
+  "https://backend-jd8f.onrender.com/api",
+).replace(/\/+$/, "");
 
-const today = new Date().toISOString().slice(0, 10);
-
-const toAbs = (p) => {
-  const normalized = String(p || "/").startsWith("/") ? p : `/${p}`;
-  return `${baseUrl}${normalized}`;
+const toAbs = (value = "/") => {
+  const raw = String(value || "/");
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return baseUrl + (raw.startsWith("/") ? raw : "/" + raw);
 };
 
-const escapeXml = (s) =>
-  String(s ?? "")
+const escapeXml = (value) =>
+  String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
-const isIsoDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
-
-const apiBase = String(process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com/api").replace(/\/+$/, "");
-const fetchJson = async (path) => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5000);
-  try {
-    const response = await fetch(apiBase + path, { signal: controller.signal });
-    if (!response.ok) throw new Error("HTTP " + response.status);
-    return await response.json();
-  } finally { clearTimeout(timer); }
+const validDate = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
 };
-const getLiveSeoData = async () => {
+
+const slugify = (value) =>
+  String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const fetchJson = async (route) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
   try {
-    const results = await Promise.all([
-      fetchJson("/countries?limit=500&is_active=true"),
-      fetchJson("/destinations?limit=1000&is_active=true"),
-    ]);
-    const countries = Array.isArray(results[0]) ? results[0] : (Array.isArray(results[0]?.data) ? results[0].data : []);
-    const destinations = Array.isArray(results[1]) ? results[1] : (Array.isArray(results[1]?.data) ? results[1].data : []);
-    return { countries, destinations };
-  } catch (error) {
-    console.warn("[seo] Live API unavailable; using static SEO fallback:", error?.message || error);
-    return null;
+    const response = await fetch(apiBase + route, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status + " for " + route);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
   }
+};
+
+const extractRows = (payload, keys = []) => {
+  if (Array.isArray(payload)) return payload;
+  const candidates = [
+    payload?.data,
+    payload?.data?.data,
+    payload?.data?.rows,
+    payload?.results,
+    ...keys.map((key) => payload?.[key]),
+    ...keys.map((key) => payload?.data?.[key]),
+  ];
+  return candidates.find(Array.isArray) || [];
+};
+
+const getLiveSeoData = async () => {
+  const results = await Promise.allSettled([
+    fetchJson("/countries?limit=500&is_active=true"),
+    fetchJson("/packages?page=1&limit=100&sort=latest"),
+  ]);
+  const countries = results[0].status === "fulfilled"
+    ? extractRows(results[0].value, ["countries"])
+    : [];
+  const packages = results[1].status === "fulfilled"
+    ? extractRows(results[1].value, ["packages"])
+    : [];
+
+  if (results[0].status === "rejected") {
+    console.warn("[seo] Live countries unavailable:", results[0].reason?.message || results[0].reason);
+  }
+  if (results[1].status === "rejected") {
+    console.warn("[seo] Live packages unavailable:", results[1].reason?.message || results[1].reason);
+  }
+  return { countries, packages };
 };
 
 const buildSitemap = async () => {
   const staticRoutes = [
     "/",
     "/destinations",
+    "/packages",
     "/explore",
     "/services",
     "/about",
@@ -78,154 +121,130 @@ const buildSitemap = async () => {
   ];
 
   const live = await getLiveSeoData();
-  const countryRows = live?.countries?.length
-    ? live.countries
-    : Array.from(new Set(Object.keys(destinations || {}).map((k) => String(k))))
-        .map((slug) => ({ slug, name: slug }));
+  const fallbackCountries = Object.keys(destinations || {}).map((name) => ({ name }));
+  const countryRows = live.countries.length ? live.countries : fallbackCountries;
+  const countryBySlug = new Map();
 
-  const liveDestinationRows = live?.destinations?.length
-    ? live.destinations
-    : getAllDestinations().filter((d) => d && d.id);
+  for (const country of countryRows) {
+    if (!country || country.is_active === false || country.isActive === false) continue;
+    const slug = slugify(
+      country.slug || country.country_slug || country.name || country.country_name || country.id,
+    );
+    if (slug && !countryBySlug.has(slug)) countryBySlug.set(slug, country);
+  }
 
-  const countryIds = Array.from(
-    new Set(
-      countryRows
-        .map((c) => String(c.slug || c.name || c.id || "").trim().toLowerCase())
-        .filter(Boolean),
-    ),
-  ).sort();
+  const entries = staticRoutes.map((loc) => ({ loc }));
 
-  const destinationItems = liveDestinationRows
-    .filter((d) => d && (d.slug || d.id))
-    .map((d) => ({
-      loc: "/destinations/" + String(d.slug || d.id).trim(),
-      lastmod: today,
-      changefreq: "monthly",
-      priority: 0.8,
-      image: d.image_url || d.hero_image || d.cover_image_url ||
-        (Array.isArray(d.images) ? d.images[0] : undefined),
-      imageTitle: d.name,
-    }));
+  for (const [slug, country] of [...countryBySlug.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    const lastmod = validDate(country.updated_at || country.updatedAt || country.modified_at);
+    entries.push({ loc: "/country/" + slug, ...(lastmod ? { lastmod } : {}) });
+    entries.push({ loc: "/country/" + slug + "/destinations", ...(lastmod ? { lastmod } : {}) });
+  }
 
-  const postItems = (Array.isArray(posts) ? posts : [])
-    .filter((p) => p && p.slug)
-    .map((p) => ({
-      loc: `/post/${p.slug}`,
-      lastmod: isIsoDate(p.date) ? p.date : today,
-      changefreq: "monthly",
-      priority: 0.7,
-      image: p.image,
-      imageTitle: p.title,
-    }));
+  // Packages are taken only from the public API, which filters drafts for guests.
+  // Destination details are handled by the database-backed destinations sitemap.
+  const packagesBySlug = new Map();
+  for (const pkg of live.packages) {
+    if (!pkg || pkg.is_published === false || pkg.isPublished === false) continue;
+    const slug = String(pkg.slug || "").trim().toLowerCase();
+    if (!slug || !/^[a-z0-9_-]+$/.test(slug)) continue;
+    if (!packagesBySlug.has(slug)) packagesBySlug.set(slug, pkg);
+  }
 
-  const urlEntries = [];
-
-  for (const r of staticRoutes) {
-    urlEntries.push({
-      loc: r,
-      lastmod: today,
-      changefreq: r === "/" ? "weekly" : "monthly",
-      priority: r === "/" ? 1.0 : 0.8,
+  for (const [slug, pkg] of [...packagesBySlug.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    const lastmod = validDate(pkg.updated_at || pkg.updatedAt || pkg.created_at || pkg.createdAt);
+    const image = pkg.cover_image_url || pkg.poster_url || pkg.image_url || "";
+    entries.push({
+      loc: "/packages/" + slug,
+      ...(lastmod ? { lastmod } : {}),
+      ...(typeof image === "string" && /^https:\/\//i.test(image)
+        ? { image, imageTitle: pkg.title || slug }
+        : {}),
     });
   }
 
-  for (const id of countryIds) {
-    urlEntries.push({
-      loc: `/country/${id}`,
-      lastmod: today,
-      changefreq: "weekly",
-      priority: 0.85,
-    });
-    urlEntries.push({
-      loc: `/country/${id}/destinations`,
-      lastmod: today,
-      changefreq: "weekly",
-      priority: 0.8,
-    });
+  const postsBySlug = new Map();
+  for (const post of Array.isArray(posts) ? posts : []) {
+    const slug = String(post?.slug || "").trim().toLowerCase();
+    if (slug && /^[a-z0-9_-]+$/.test(slug) && !postsBySlug.has(slug)) postsBySlug.set(slug, post);
   }
 
-  urlEntries.push(...destinationItems, ...postItems);
+  for (const [slug, post] of [...postsBySlug.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    const lastmod = validDate(post.updatedAt || post.updated_at || post.dateModified || post.date);
+    entries.push({
+      loc: "/post/" + slug,
+      ...(lastmod ? { lastmod } : {}),
+      ...(typeof post.image === "string" && /^https:\/\//i.test(post.image)
+        ? { image: post.image, imageTitle: post.title || slug }
+        : {}),
+    });
+  }
 
   const seen = new Set();
-  const urls = urlEntries.filter((u) => {
-    const key = String(u.loc);
+  const urls = entries.filter((entry) => {
+    const key = String(entry.loc || "").replace(/\/+$/, "") || "/";
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 
-  const lines = [];
-  lines.push('<?xml version="1.0" encoding="UTF-8"?>');
-  lines.push(
+  const lines = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
-  );
+  ];
 
-  for (const u of urls) {
+  for (const entry of urls) {
     lines.push("  <url>");
-    lines.push(`    <loc>${escapeXml(toAbs(u.loc))}</loc>`);
-    if (u.lastmod) lines.push(`    <lastmod>${escapeXml(u.lastmod)}</lastmod>`);
-    if (u.changefreq)
-      lines.push(`    <changefreq>${escapeXml(u.changefreq)}</changefreq>`);
-    if (typeof u.priority === "number")
-      lines.push(`    <priority>${u.priority.toFixed(2)}</priority>`);
-    if (u.image && String(u.image).startsWith("http")) {
+    lines.push("    <loc>" + escapeXml(toAbs(entry.loc)) + "</loc>");
+    if (entry.lastmod) lines.push("    <lastmod>" + escapeXml(entry.lastmod) + "</lastmod>");
+    if (entry.image) {
       lines.push("    <image:image>");
-      lines.push(`      <image:loc>${escapeXml(u.image)}</image:loc>`);
-      if (u.imageTitle)
-        lines.push(`      <image:title>${escapeXml(u.imageTitle)}</image:title>`);
+      lines.push("      <image:loc>" + escapeXml(entry.image) + "</image:loc>");
+      if (entry.imageTitle) lines.push("      <image:title>" + escapeXml(entry.imageTitle) + "</image:title>");
       lines.push("    </image:image>");
     }
     lines.push("  </url>");
   }
 
-  lines.push("</urlset>");
-  lines.push("");
+  lines.push("</urlset>", "");
   return lines.join("\n");
 };
 
 const toRssDate = (iso) => {
-  const d = new Date(isIsoDate(iso) ? `${iso}T00:00:00Z` : Date.now());
-  return d.toUTCString();
+  const dateValue = validDate(iso);
+  return new Date(dateValue ? dateValue + "T00:00:00Z" : Date.now()).toUTCString();
 };
 
 const buildRss = () => {
   const items = (Array.isArray(posts) ? posts : [])
-    .filter((p) => p && p.slug)
+    .filter((post) => post && post.slug)
     .slice()
     .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
 
-  const lines = [];
-  lines.push('<?xml version="1.0" encoding="UTF-8"?>');
-  lines.push("<rss version=\"2.0\">");
-  lines.push("  <channel>");
-  lines.push("    <title>Altuvera Journal</title>");
-  lines.push(`    <link>${escapeXml(toAbs("/posts"))}</link>`);
-  lines.push(
-    `    <description>${escapeXml(
-      "Travel guides, safari tips, and stories from East Africa and beyond.",
-    )}</description>`,
-  );
-  lines.push("    <language>en</language>");
-  lines.push(
-    `    <lastBuildDate>${escapeXml(new Date().toUTCString())}</lastBuildDate>`,
-  );
+  const lines = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0">',
+    "  <channel>",
+    "    <title>Altuvera Safaris Journal</title>",
+    "    <link>" + escapeXml(toAbs("/posts")) + "</link>",
+    "    <description>" + escapeXml("Travel guides, safari tips and stories from East Africa and beyond.") + "</description>",
+    "    <language>en</language>",
+    "    <lastBuildDate>" + escapeXml(new Date().toUTCString()) + "</lastBuildDate>",
+  ];
 
-  for (const p of items) {
-    const link = toAbs(`/post/${p.slug}`);
+  for (const post of items) {
+    const link = toAbs("/post/" + post.slug);
     lines.push("    <item>");
-    lines.push(`      <title>${escapeXml(p.title)}</title>`);
-    lines.push(`      <link>${escapeXml(link)}</link>`);
-    lines.push(`      <guid isPermaLink="true">${escapeXml(link)}</guid>`);
-    lines.push(`      <pubDate>${escapeXml(toRssDate(p.date))}</pubDate>`);
-    if (p.excerpt)
-      lines.push(`      <description>${escapeXml(p.excerpt)}</description>`);
-    if (p.category) lines.push(`      <category>${escapeXml(p.category)}</category>`);
+    lines.push("      <title>" + escapeXml(post.title) + "</title>");
+    lines.push("      <link>" + escapeXml(link) + "</link>");
+    lines.push("      <guid isPermaLink=\"true\">" + escapeXml(link) + "</guid>");
+    lines.push("      <pubDate>" + escapeXml(toRssDate(post.date)) + "</pubDate>");
+    if (post.excerpt) lines.push("      <description>" + escapeXml(post.excerpt) + "</description>");
+    if (post.category) lines.push("      <category>" + escapeXml(post.category) + "</category>");
     lines.push("    </item>");
   }
 
-  lines.push("  </channel>");
-  lines.push("</rss>");
-  lines.push("");
+  lines.push("  </channel>", "</rss>", "");
   return lines.join("\n");
 };
 
@@ -236,4 +255,3 @@ const main = async () => {
 };
 
 await main();
-
