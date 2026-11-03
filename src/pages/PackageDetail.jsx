@@ -407,7 +407,7 @@ export default function PackageDetail() {
   const packageSeoDescription = String(
     pkg.meta_description || pkg.short_description || pkg.description ||
       ("Explore " + pkg.title + " with Altuvera Safaris. Discover the destination, experiences and travel details for this East African journey."),
-  ).replace(/<[^>]*>/g, " ").replace(/\\s+/g, " ").trim().slice(0, 180);
+  ).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 180);
   const packageSeoUrl = "/packages/" + encodeURIComponent(pkg.slug || slug || pkg.id);
   const packageSeo = (
     <SEO
