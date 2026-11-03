@@ -1,16 +1,31 @@
+const slugify = (value) =>
+  String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 export const SLUG_MAP = {
-  'Rwanda': 'rwanda',
-  'tanzania': 'tanzania',
-  'uganda': 'uganda',
-  'rwanda': 'rwanda',
-  // Add more mappings as needed
+  rwanda: "rwanda",
+  tanzania: "tanzania",
+  uganda: "uganda",
 };
 
 export const getCountrySlug = (country) => {
-  if (typeof country === 'string') {
-    const name = country.trim();
-    return SLUG_MAP[name.toLowerCase()] || name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
+  if (country == null) return "";
+  if (typeof country === "string" || typeof country === "number") {
+    return slugify(country);
   }
-  return country?.slug || country?.id || 
-         getCountrySlug(country?.name || country?.name);
+
+  const value =
+    country.slug ??
+    country.country_slug ??
+    country.id ??
+    country.name ??
+    country.country_name ??
+    "";
+
+  return slugify(value);
 };
