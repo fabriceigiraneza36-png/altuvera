@@ -25,6 +25,7 @@ import DestinationCard, {
 } from "@components/common/DestinationCard";
 import { useCountry, useCountryDestinations } from "../../hooks/useCountries";
 import { getCountrySlug } from "../../utils/countrySlugMap";
+import { getCountrySeo } from "../../utils/countrySeo";
 import CommentsCarousel from "../CommentsCarousel";
 import RatingPanel from "@components/common/RatingPanel";
 import InlineCommentComposer from "../../components/common/InlineCommentComposer";
@@ -1589,7 +1590,8 @@ export default function CountryPage() {
   const { country, loading, error, refetch } = useCountry(countryId);
   const { destinations: allDests = [], loading: destsLoading } = useCountryDestinations(countryId);
 
-  const slug = country ? getCountrySlug(country) : "";
+  const countrySeo = country ? getCountrySeo(country) : null;
+  const slug = countrySeo?.slug || (country ? getCountrySlug(country) : "");
   const heroImages = country ? getHeroImages(country) : [];
 
   if (loading) {
@@ -1640,10 +1642,10 @@ export default function CountryPage() {
       <ScrollBar />
 
       <SEO
-        title={`Explore ${country.name}`}
-        description={pick(country?.tagline, country?.short_notes, country?.description) || `Discover ${country.name}.`}
+        title={countrySeo?.title || `Explore ${country.name}`}
+        description={countrySeo?.description || `Discover ${country.name} with Altuvera Safaris.`}
         keywords={[country.name, country.continent, country.region, "safari", "travel"].filter(Boolean)}
-        url={`/country/${slug}`}
+        url={`/country/${String(slug).toLowerCase()}`}
         image={heroImages[0]}
         type="website"
         breadcrumbs={[
