@@ -51,12 +51,12 @@ function firstArray(value) {
 function isPackageImageUrl(rawValue) {
   const value = String(rawValue || "").trim();
   if (!value) return false;
-  if (/^data:image\\//i.test(value)) return true;
+  if (/^data:image\//i.test(value)) return true;
   try {
     const parsed = new URL(value, "https://altuverasafaris.com");
     const pathname = decodeURIComponent(parsed.pathname).toLowerCase();
-    const imageExtension = /\\.(?:avif|gif|jpe?g|png|webp|svg)$/i.test(pathname);
-    const imageHost = /(^|\\.)((res\\.)?cloudinary\\.com|images\\.unsplash\\.com|images\\.pexels\\.com|images\\.ctfassets\\.net|lh3\\.googleusercontent\\.com|storage\\.googleapis\\.com)$/i.test(parsed.hostname);
+    const imageExtension = /\.(?:avif|gif|jpe?g|png|webp|svg)$/i.test(pathname);
+    const imageHost = /(^|\.)((res\.)?cloudinary\.com|images\.unsplash\.com|images\.pexels\.com|images\.ctfassets\.net|lh3\.googleusercontent\.com|storage\.googleapis\.com)$/i.test(parsed.hostname);
     return imageExtension || imageHost || pathname.includes("/image/upload/");
   } catch {
     return false;
