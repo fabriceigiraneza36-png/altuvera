@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useUserAuth } from "../context/UserAuthContext";
 
-const API_BASE = (import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api").replace(/\\/+$/, "");
+const API_BASE = (import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api").replace(/\/+$/, "");
 const TOKEN_KEY = "altuvera_auth_token";
 
 const getToken = () => {
