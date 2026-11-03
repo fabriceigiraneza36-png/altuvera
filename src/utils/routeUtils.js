@@ -259,10 +259,6 @@ export const getRedirectUrl = (pathname) => {
     return URL_CORRECTIONS[normalizedPath];
   }
 
-  if (COUNTRY_ALIASES[normalizedPath]) {
-    return COUNTRY_ALIASES[normalizedPath];
-  }
-
   const destinationList = Array.isArray(destinations)
     ? destinations
     : Object.values(destinations || {}).flat();
