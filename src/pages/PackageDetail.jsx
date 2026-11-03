@@ -411,7 +411,8 @@ export default function PackageDetail() {
   const galleryUrls = rawGallery
     .map((item) => typeof item === "string" ? item : item?.url || item?.image_url || item?.src)
     .filter((url) => isPackageImageUrl(url) && !failedGalleryImages.includes(url));
-  const rawCover = pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url;
+  const rawCover = [pkg.cover_image_url, pkg.image_url, pkg.thumbnail_url]
+    .find((url) => isPackageImageUrl(url) && !failedGalleryImages.includes(url)) || "";
   const gallery = [...new Set([
     rawCover,
     ...galleryUrls,
