@@ -28,15 +28,80 @@ const SEO = ({
 }) => {
   const location = useLocation();
   const siteName = "Altuvera Safaris";
+const COUNTRY_SEO = {
+  rwanda: {
+    name: "Rwanda",
+    title: "Rwanda Safaris & Gorilla Trekking",
+    description: "Discover Rwanda gorilla trekking in Volcanoes National Park, Akagera wildlife safaris and Nyungwe Forest with Altuvera Safaris. Plan a tailor-made Rwanda journey.",
+    keywords: ["Rwanda safaris", "gorilla trekking Rwanda", "Volcanoes National Park", "Rwanda wildlife tours"],
+  },
+  uganda: {
+    name: "Uganda",
+    title: "Uganda Safaris & Gorilla Trekking",
+    description: "Discover Uganda gorilla trekking in Bwindi, Queen Elizabeth National Park wildlife safaris and tailor-made journeys with Altuvera Safaris.",
+    keywords: ["Uganda safaris", "gorilla trekking Uganda", "Bwindi Impenetrable Forest", "Uganda wildlife tours"],
+  },
+  tanzania: {
+    name: "Tanzania",
+    title: "Tanzania Safaris, Kilimanjaro & Zanzibar",
+    description: "Explore Tanzania safaris in the Serengeti and Ngorongoro, Kilimanjaro trekking and Zanzibar escapes with Altuvera Safaris.",
+    keywords: ["Tanzania safaris", "Serengeti safaris", "Ngorongoro Crater", "Kilimanjaro trekking"],
+  },
+  kenya: {
+    name: "Kenya",
+    title: "Kenya Safaris & Maasai Mara Wildlife",
+    description: "Plan Kenya safaris in the Maasai Mara and Amboseli, with wildlife encounters and tailor-made East African journeys from Altuvera Safaris.",
+    keywords: ["Kenya safaris", "Maasai Mara safaris", "Amboseli National Park", "Kenya wildlife tours"],
+  },
+  ethiopia: {
+    name: "Ethiopia",
+    title: "Ethiopia Tours, Highlands & Cultural Journeys",
+    description: "Discover Ethiopia's highlands, Lalibela's heritage and the Simien Mountains with Altuvera Safaris. Plan a tailor-made journey with local insight.",
+    keywords: ["Ethiopia tours", "Lalibela", "Simien Mountains", "Ethiopia cultural travel"],
+  },
+};
+
+const normalizeCountryCanonical = (value) => {
+  const raw = String(value || "/");
+  try {
+    const parsed = new URL(raw, getSiteUrl());
+    parsed.pathname = parsed.pathname.replace(/^\/country\/([^/]+)\/?$/i, (_match, slug) => {
+      return /^\d+$/.test(slug) ? "/country/" + slug : "/country/" + slug.toLowerCase();
+    });
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.origin === new URL(getSiteUrl()).origin ? parsed.pathname : parsed.toString();
+  } catch {
+    return raw.replace(/^\/country\/([^/]+)\/?$/i, (_match, slug) => "/country/" + slug.toLowerCase());
+  }
+};
   const baseUrl = getSiteUrl();
-  const fullTitle = withBrand(title || siteName);
-  const fullDescription = toMetaDescription(description || DEFAULT_SEO_DESCRIPTION);
+  const countrySeo = (() => {
+    const match = location.pathname.match(/^\/country\/([^/]+)\/?$/i);
+    if (!match) return null;
+    return COUNTRY_SEO[match[1].toLowerCase()] || null;
+  })();
+  const requestedCanonical = canonical || url || location.pathname || "/";
+  const canonicalPath = normalizeCountryCanonical(requestedCanonical);
+  const fullTitle = withBrand(countrySeo?.title || title || siteName);
+  const fullDescription = toMetaDescription(countrySeo?.description || description || DEFAULT_SEO_DESCRIPTION);
   const fullImage = toAbsoluteUrl(image || BRAND_LOGO_PATH);
-  const canonicalUrl = toAbsoluteUrl(canonical || url || location.pathname || "/");
-  const keywordList = Array.isArray(keywords) ? keywords : keywords ? [keywords] : [];
+  const canonicalUrl = toAbsoluteUrl(canonicalPath);
+  const suppliedKeywords = Array.isArray(keywords) ? keywords : keywords ? [keywords] : [];
+  const keywordList = [...new Set([...suppliedKeywords, ...(countrySeo?.keywords || [])].filter(Boolean))];
   const tagList = Array.isArray(tags) ? tags : [];
 
   const structuredDataArray = [];
+  if (countrySeo) {
+    structuredDataArray.push({
+      "@context": "https://schema.org",
+      "@type": "TouristDestination",
+      name: countrySeo.name,
+      description: fullDescription,
+      url: canonicalUrl,
+      image: fullImage,
+    });
+  }
   if (type === "article" && published) {
     structuredDataArray.push({
       "@context": "https://schema.org",
@@ -70,7 +135,7 @@ const SEO = ({
         "@type": "ListItem",
         position: index + 1,
         name: crumb.name,
-        item: toAbsoluteUrl(crumb.url),
+        item: toAbsoluteUrl(normalizeCountryCanonical(crumb.url)),
       }));
     if (items.length) {
       structuredDataArray.push({
