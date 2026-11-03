@@ -1,3 +1,5 @@
+import postsFallback from "../src/data/posts.js";
+
 const SITE = "https://www.altuverasafaris.com";
 const RAW_API = process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com";
 const API = String(RAW_API).replace(/\/+$/, "").replace(/\/api$/i, "") + "/api";
@@ -44,8 +46,10 @@ const arr = (v) => {
   if (typeof v === "string") { try { const x = JSON.parse(v); return Array.isArray(x) ? x : []; } catch { return v.split(/\r?\n/).map((s) => s.trim()).filter(Boolean); } }
   return [];
 };
-const unwrap = (payload) => {
-  const options = [payload && payload.data && payload.data.destination, payload && payload.data && payload.data.country, payload && payload.data && payload.data.post, payload && payload.data && payload.data.package, payload && payload.data, payload && payload.destination, payload && payload.country, payload && payload.post, payload && payload.package, payload];
+const unwrap = (payload, preferred = "") => {
+  const nested = preferred && payload && payload.data && payload.data[preferred];
+  const direct = preferred && payload && payload[preferred];
+  const options = [nested, direct, payload && payload.data && payload.data.destination, payload && payload.data && payload.data.post, payload && payload.data && payload.data.package, payload && payload.data && payload.data.country, payload && payload.data, payload && payload.destination, payload && payload.post, payload && payload.package, payload && payload.country, payload];
   return options.find((x) => x && !Array.isArray(x) && typeof x === "object" && (x.name || x.title || x.slug || x.meta_title)) || {};
 };
 const rows = (payload) => {
@@ -91,7 +95,7 @@ const render = async (route) => {
   }
   const country = route.match(/^\/country\/([^/]+)(\/destinations)?$/i);
   if (country) {
-    const data = unwrap(await fetchJson("/countries/" + encodeURIComponent(country[1])));
+    const data = unwrap(await fetchJson("/countries/" + encodeURIComponent(country[1])), "country");
     if (!data.name && !data.title) { page.title = "Country Guide | Altuvera Safaris"; page.description = "Explore country travel guides across East Africa."; page.noindex = true; page.status = 404; page.body = '<h1>Country guide unavailable</h1><p>Browse our <a href="/destinations">East Africa destinations</a>.</p>'; return page; }
     const name = first(data.name, data.title, country[1]), description = first(data.seo_description, data.meta_description, data.short_description, data.tagline, data.description, "Explore travel highlights and places to visit in " + name + " with Altuvera Safaris.");
     const destinations = arr(data.destinations), only = Boolean(country[2]);
@@ -100,7 +104,7 @@ const render = async (route) => {
   }
   const dest = route.match(/^\/destinations\/([^/]+)$/i);
   if (dest) {
-    const data = unwrap(await fetchJson("/destinations/" + encodeURIComponent(dest[1]) + "?include=all"));
+    const data = unwrap(await fetchJson("/destinations/" + encodeURIComponent(dest[1]) + "?include=all"), "destination");
     if (!data.name && !data.title) { page.title = "Destination Guide | Altuvera Safaris"; page.description = "Explore East African destinations with Altuvera Safaris."; page.noindex = true; page.status = 404; page.body = '<h1>Destination unavailable</h1><p>Browse our <a href="/destinations">East Africa destinations</a>.</p>'; return page; }
     const name = first(data.name, data.title, dest[1]), countryName = first(data.country_name, data.countryName, data.country), description = first(data.seo_description, data.meta_description, data.short_description, data.shortDescription, data.description, data.overview, "Discover " + name + " with Altuvera Safaris.");
     const highlights = arr(data.highlights || data.activities || data.experiences).slice(0, 12), itinerary = arr(data.itinerary).slice(0, 7);
@@ -109,7 +113,8 @@ const render = async (route) => {
   }
   const post = route.match(/^\/post\/([^/]+)$/i);
   if (post) {
-    const data = unwrap(await fetchJson("/posts/" + encodeURIComponent(post[1])));
+    const livePost = unwrap(await fetchJson("/posts/" + encodeURIComponent(post[1])), "post");
+    const data = (livePost && (livePost.title || livePost.name)) ? livePost : (Array.isArray(postsFallback) ? postsFallback.find((item) => String(item.slug || "").toLowerCase() === String(post[1]).toLowerCase()) : null) || {};
     if (!data.title && !data.name) { page.title = "Travel Article | Altuvera Safaris"; page.description = "Read travel guides and stories from Altuvera Safaris."; page.noindex = true; page.status = 404; page.body = '<h1>Article unavailable</h1><p>Visit the <a href="/posts">Altuvera travel journal</a>.</p>'; return page; }
     const title = first(data.meta_title, data.title), description = first(data.meta_description, data.excerpt, data.short_description, data.description, "Read this Altuvera Safaris travel guide for destination ideas and practical travel advice.");
     page.title = title + (/\baltuvera\b/i.test(title) ? "" : " | Altuvera Safaris"); page.description = description; page.image = imageOf(data); page.type = "BlogPosting"; page.author = first(data.author_name, data.author, data.writer); page.published = first(data.published_at, data.publishedAt, data.date);
@@ -117,7 +122,7 @@ const render = async (route) => {
   }
   const pkg = route.match(/^\/packages\/([^/]+)$/i);
   if (pkg) {
-    const data = unwrap(await fetchJson("/packages/slug/" + encodeURIComponent(pkg[1])));
+    const data = unwrap(await fetchJson("/packages/slug/" + encodeURIComponent(pkg[1])), "package");
     if (!data.title && !data.name) { page.title = "Safari Package | Altuvera Safaris"; page.description = "Explore Altuvera Safaris travel packages."; page.noindex = true; page.status = 404; page.body = '<h1>Package unavailable</h1><p>Browse <a href="/packages">all safari packages</a>.</p>'; return page; }
     const name = first(data.title, data.name), description = first(data.meta_description, data.short_description, data.description, "Discover " + name + " with Altuvera Safaris.");
     const highlights = arr(data.highlights || data.features).slice(0, 10);
@@ -127,7 +132,7 @@ const render = async (route) => {
   if (route === "/destinations" || route === "/packages" || route === "/posts" || route === "/tips") {
     const destList = route === "/destinations", pkgList = route === "/packages", postList = route === "/posts" || route === "/tips";
     const response = await fetchJson(destList ? "/destinations?limit=50&sort=popular" : pkgList ? "/packages?page=1&limit=40&sort=latest" : "/posts?limit=40");
-    const items = rows(response), details = STATIC[route];
+    const liveItems = rows(response), items = liveItems.length ? liveItems : (postList && Array.isArray(postsFallback) ? postsFallback : []), details = STATIC[route];
     page.title = details[0]; page.description = details[1];
     const label = destList ? "Safari destinations" : pkgList ? "Published safari packages" : "Travel stories and guides";
     page.body = '<h1>' + esc(details[0].replace(" | Altuvera Safaris", "")) + '</h1><p>' + esc(details[1]) + '</p>' + listHtml(items, destList ? "/destinations/" : pkgList ? "/packages/" : "/post/", label); return page;
