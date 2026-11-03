@@ -1,4 +1,5 @@
 import postsFallback from "../src/data/posts.js";
+import { getCountrySeo } from "../src/utils/countrySeo.js";
 
 const SITE = "https://www.altuverasafaris.com";
 const RAW_API = process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com";
@@ -14,7 +15,7 @@ const STATIC = {
   "/explore": ["Explore East Africa | Altuvera Safaris", "Discover East African experiences, destinations and trip ideas to help shape your next safari or cultural journey."],
   "/services": ["Safari & Travel Services | Altuvera Safaris", "Explore Altuvera Safaris services, including wildlife safaris, gorilla trekking, mountain adventures, cultural experiences and tailored travel planning."],
   "/about": ["About Altuvera Safaris | Authentic East African Adventures", "Meet Altuvera Safaris, a Rwanda-based travel company connecting guests with East African wildlife, landscapes, culture and local experiences."],
-  "/contact": ["Contact Altuvera Safaris", "Contact Altuvera Safaris to discuss East African travel ideas, destination questions and a tailor-made safari or cultural journey."],
+  "/contact": ["Contact Altuvera Safaris | East Africa Safari Enquiries", "Speak with our Rwanda-based team about gorilla trekking, wildlife safaris and tailor-made cultural journeys across East Africa. Start planning with Altuvera Safaris."],
   "/gallery": ["East Africa Safari Gallery | Altuvera Safaris", "View landscapes, wildlife, destinations and cultural moments from Altuvera Safaris experiences across East Africa."],
   "/faq": ["Altuvera Safaris FAQs", "Find helpful answers about planning an East African safari with Altuvera Safaris, including destinations, bookings and travel preparation."],
   "/team": ["Meet the Altuvera Safaris Team", "Meet the people behind Altuvera Safaris and learn about the local knowledge and care that shape our East African travel experiences."],
@@ -125,9 +126,17 @@ const render = async (route) => {
   if (country) {
     const data = unwrap(await fetchJson("/countries/" + encodeURIComponent(country[1])), "country");
     if (!data.name && !data.title) { page.title = "Country Guide | Altuvera Safaris"; page.description = "Explore country travel guides across East Africa."; page.noindex = true; page.status = 404; page.body = '<h1>Country guide unavailable</h1><p>Browse our <a href="/destinations">East Africa destinations</a>.</p>'; return page; }
-    const name = first(data.name, data.title, country[1]), description = first(data.seo_description, data.meta_description, data.short_description, data.tagline, data.description, "Explore travel highlights and places to visit in " + name + " with Altuvera Safaris.");
+    const countrySeo = getCountrySeo(data, country[1]);
+    const name = countrySeo.name || first(data.name, data.title, country[1]);
+    const description = first(data.description, data.full_description, data.overview, data.short_description, data.tagline, countrySeo.description);
     const destinations = arr(data.destinations), only = Boolean(country[2]);
-    page.title = (only ? "Destinations in " + name : "Explore " + name) + " | Altuvera Safaris"; page.description = only ? "Browse destinations, national parks and travel experiences in " + name + " with Altuvera Safaris." : description; page.image = imageOf(data); page.type = "TouristDestination";
+    page.title = only
+      ? first(data.destinations_meta_title, data.destinations_seo_title, "Destinations in " + name + " | Altuvera Safaris")
+      : countrySeo.title;
+    page.description = only
+      ? "Browse destinations, national parks and travel experiences in " + name + " with Altuvera Safaris."
+      : countrySeo.description;
+    page.image = imageOf(data); page.type = "TouristDestination";
     page.body = '<h1>' + esc(only ? "Destinations in " + name : name + " Travel Guide") + '</h1><p>' + esc(description) + '</p>' + listHtml(destinations, "/destinations/", "Destinations in " + name) + '<p><a href="/destinations">Explore all East Africa destinations</a></p>'; return page;
   }
   const dest = route.match(/^\/destinations\/([^/]+)$/i);
@@ -252,6 +261,10 @@ export default async function handler(req, res) {
   if (!raw.startsWith("/") || raw.startsWith("//")) raw = "/";
   let pathname = raw.replace(/\/{2,}/g, "/");
   if (pathname.length > 1) pathname = pathname.replace(/\/+$/, "");
+  pathname = pathname.replace(
+    /^\/country\/([^/]+)(\/destinations)?$/i,
+    (_match, countrySlug, suffix = "") => "/country/" + countrySlug.toLowerCase() + suffix,
+  );
   const page = await render(pathname);
   const canonical = SITE + (pathname === "/" ? "/" : pathname);
   const output = htmlDocument(page, canonical);
