@@ -7,35 +7,12 @@
     ShieldCheck, CheckCheck, Search, Filter, Clock3, Check, BellOff, Inbox, ArrowUpRight,
   } from 'lucide-react';
   import { Helmet }     from 'react-helmet-async';
+  import { getNotificationContextRows, getNotificationActionUrl, getNotificationPresentation } from '../../utils/notificationPresentation';
   import { motion, AnimatePresence } from 'framer-motion';
   import DashboardLayout from '../../components/auth/DashboardLayout';
   import UserPushReminder from '../../components/auth/UserPushReminder';
   import { useNotifications } from '../../hooks/useNotifications';
   import { useBrowserPush } from '../../hooks/useBrowserPush';
-
-  const TYPE_META = {
-    booking_created: { icon: CalendarDays, color: '#059669' },
-    booking_updated: { icon: Pencil, color: '#0ea5e9' },
-    booking_confirmed: { icon: CheckCircle2, color: '#16a34a' },
-    booking_cancelled: { icon: XCircle, color: '#dc2626' },
-    booking_deleted: { icon: Trash2, color: '#7c3aed' },
-    payment_confirmed: { icon: CreditCard, color: '#059669' },
-    payment_request: { icon: Wallet, color: '#d97706' },
-    new_destination: { icon: MapIcon, color: '#0891b2' },
-    new_country: { icon: Globe2, color: '#0891b2' },
-    new_post: { icon: FileText, color: '#7c3aed' },
-    new_package: { icon: Package, color: '#d97706' },
-    checklist_request: { icon: ClipboardList, color: '#059669' },
-    checklist_ready: { icon: CheckCheck, color: '#16a34a' },
-    promotion: { icon: PartyPopper, color: '#db2777' },
-    newsletter: { icon: Newspaper, color: '#059669' },
-    warning: { icon: AlertTriangle, color: '#f59e0b' },
-    alert: { icon: Siren, color: '#dc2626' },
-    login_success: { icon: ShieldCheck, color: '#059669' },
-    user_login_success: { icon: ShieldCheck, color: '#059669' },
-    system: { icon: Settings, color: '#64748b' },
-    general: { icon: MessageCircle, color: '#059669' },
-  };
 
   const readSessionExpiry = (notification) => {
     const metadata = notification?.metadata || notification?.metadata_json || {};
@@ -57,6 +34,7 @@
   const formatDate = (d) => {
     if (!d) return '';
     const dt   = new Date(d);
+    if (Number.isNaN(dt.getTime())) return "Recently";
     const diff = Date.now() - dt.getTime();
     const m    = Math.floor(diff / 60_000);
     if (m < 1)   return 'Just now';
@@ -305,8 +283,9 @@
             <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
               <AnimatePresence initial={false}>
                 {displayed.map((n, idx) => {
-                  const meta = TYPE_META[n.type] || TYPE_META.general;
-                  const isUrgentBooking = String(n.type || '').startsWith('booking_');
+                  const meta = getNotificationPresentation(n);
+                  const contextRows = getNotificationContextRows(n);
+                  const hasAction = Boolean(n.action_url || n.actionUrl || meta.isMessage);
                   return (
                     <motion.div
                       key={n.id} layout
@@ -342,11 +321,12 @@
                           {/* Title + time */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                             <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                              <p style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#10231d', letterSpacing: n.is_read ? 0 : '-.01em' }}>
+                              <p style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#10231d', letterSpacing: n.is_read ? 0 : '-.01em', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                                 {n.title}
                               </p>
                               {!n.is_read && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 999, background: '#d1fae5', color: '#047857', fontSize: 10, fontWeight: 900, letterSpacing: '.04em', textTransform: 'uppercase' }}><span style={{ width: 5, height: 5, borderRadius: 99, background: '#059669' }} />New</span>}
-                              {isUrgentBooking && <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 7px',borderRadius:999,background:'#fee2e2',color:'#b91c1c',fontSize:10,fontWeight:900,textTransform:'uppercase',letterSpacing:'.04em'}}><Siren size={12}/> Urgent</span>}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 999, background: `${meta.color}12`, color: meta.color, fontSize: 9, fontWeight: 850, textTransform: 'uppercase', letterSpacing: '.045em' }}>{meta.label}</span>
+                              {meta.isUrgent && <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 7px',borderRadius:999,background:'#fff0ef',color:'#b42332',fontSize:9,fontWeight:900,textTransform:'uppercase',letterSpacing:'.04em'}}><Siren size={11}/> Important</span>}
                             </div>
                             <span style={{ fontSize: 12, color: '#819188', flexShrink: 0, fontSize: 11 }}>
                               {formatDate(n.created_at)}
@@ -354,9 +334,20 @@
                           </div>
 
                           {/* Message */}
-                          <p style={{ margin: '6px 0 0', fontSize: 14, color: '#475569', lineHeight: 1.6 }}>
-                            {n.message}
+                          <p style={{ margin: '8px 0 0', fontSize: 13, color: '#475569', lineHeight: 1.65, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                            {n.message || n.body || 'You have a new update from Altuvera.'}
                           </p>
+
+                          {contextRows.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                              {contextRows.map(([label, value]) => (
+                                <span key={label} style={{ display: 'inline-flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 4, maxWidth: '100%', padding: '6px 8px', borderRadius: 9, background: '#f5faf7', border: '1px solid #e4f0e8', color: '#52675c', fontSize: 10, lineHeight: 1.4 }}>
+                                  <strong style={{ color: '#82948a', fontWeight: 750 }}>{label}</strong>
+                                  <span style={{ fontWeight: 750, overflowWrap: 'anywhere' }}>{String(value)}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
 
                           {readSessionExpiry(n) && (
                             <div role="status" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 10, padding: "7px 10px", borderRadius: 9, background: "#eff6ff", color: "#1d4ed8", fontSize: 12, fontWeight: 700 }}>
@@ -366,10 +357,10 @@
                           )}
 
                           {/* Action link */}
-                          {n.action_url && (
-                            <a href={n.action_url} style={{ display: 'inline-block', marginTop: 10, padding: '6px 14px', borderRadius: 8, background: `${meta.color}12`, color: meta.color, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+                          {hasAction && (
+                            <a href={getNotificationActionUrl(n)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 11, padding: '9px 12px', borderRadius: 11, background: meta.color, color: '#fff', boxShadow: `0 4px 12px ${meta.color}22`, fontSize: 11, fontWeight: 850, textDecoration: 'none', maxWidth: '100%' }}
                               onClick={() => !n.is_read && markRead(n.id)}>
-                              {n.action_label || 'View Details'} →
+                              {n.action_label || n.actionLabel || (meta.isMessage ? 'Open conversation' : 'View details')} <ArrowUpRight size={14}/>
                             </a>
                           )}
 
