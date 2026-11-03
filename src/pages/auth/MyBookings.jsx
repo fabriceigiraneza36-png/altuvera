@@ -1225,6 +1225,11 @@ export default function MyBookings() {
   const [page,        setPage]        = useState(1);
   const [totalPages,  setTotalPages]  = useState(1);
   const [total,       setTotal]       = useState(0);
+  const [infoRequests, setInfoRequests] = useState([]);
+  const [activeInfoRequest, setActiveInfoRequest] = useState(null);
+  const [infoAnswers, setInfoAnswers] = useState({});
+  const [infoSubmitting, setInfoSubmitting] = useState(false);
+  const [infoError, setInfoError] = useState("");
 
   const [reqBooking,    setReqBooking]    = useState(null);
   const [reqSubmitting, setReqSubmitting] = useState(false);
@@ -1291,6 +1296,49 @@ export default function MyBookings() {
       window.removeEventListener("focus", onFocus);
     };
   }, [fetchBookings]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadInfoRequests = async () => {
+      const { data, error: requestError } = await safeFetch(authFetch, "/packages/my/info-requests");
+      if (cancelled) return;
+      if (!requestError) {
+        const rows = data?.data || data?.requests || (Array.isArray(data) ? data : []);
+        setInfoRequests(Array.isArray(rows) ? rows : []);
+      }
+    };
+    loadInfoRequests();
+    const refreshInfoRequests = () => loadInfoRequests();
+    window.addEventListener("focus", refreshInfoRequests);
+    return () => { cancelled = true; window.removeEventListener("focus", refreshInfoRequests); };
+  }, [authFetch]);
+
+  const openInfoForm = useCallback((request) => {
+    setInfoError("");
+    setInfoAnswers({});
+    setActiveInfoRequest(request);
+  }, []);
+
+  const submitInfoForm = useCallback(async () => {
+    if (!activeInfoRequest) return;
+    setInfoSubmitting(true);
+    setInfoError("");
+    const { error: submitError } = await safeFetch(
+      authFetch,
+      `/packages/${activeInfoRequest.package_id}/info-requests/${activeInfoRequest.id}/respond`,
+      { method: "POST", body: JSON.stringify({ response: infoAnswers }) }
+    );
+    if (submitError) {
+      setInfoError(toUserErrorMessage(submitError));
+      setInfoSubmitting(false);
+      return;
+    }
+    setInfoSubmitting(false);
+    setActiveInfoRequest(null);
+    const { data } = await safeFetch(authFetch, "/packages/my/info-requests", { cache: false });
+    const rows = data?.data || data?.requests || (Array.isArray(data) ? data : []);
+    if (Array.isArray(rows)) setInfoRequests(rows);
+  }, [activeInfoRequest, authFetch, infoAnswers]);
 
   /* ── Derived ────────────────────────────────────────────────────────────── */
 
@@ -1526,6 +1574,34 @@ export default function MyBookings() {
             </div>
           </motion.section>
 
+          {infoRequests.length > 0 && (
+            <section style={{ background: "#fff", border: "1px solid #dbeafe", borderRadius: 20, padding: "18px 20px", boxShadow: "0 8px 24px rgba(15,23,42,.04)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ width: 40, height: 40, borderRadius: 13, display: "grid", placeItems: "center", background: "#ecfdf5", color: "#047857" }}><ClipboardCheck size={19}/></span>
+                  <div><h3 style={{ margin: 0, fontSize: 15, fontWeight: 850, color: "#0f172a" }}>Information needed</h3><p style={{ margin: "3px 0 0", fontSize: 12, color: "#64748b" }}>Complete forms requested by the Altuvera team</p></div>
+                </div>
+                <span style={{ padding: "5px 10px", borderRadius: 99, background: "#f1f5f9", color: "#475569", fontSize: 11, fontWeight: 800 }}>{infoRequests.filter(item => item.status === "pending").length} awaiting you</span>
+              </div>
+              <div style={{ display: "grid", gap: 10 }}>
+                {infoRequests.map(request => {
+                  const pending = request.status === "pending" && (!request.expires_at || new Date(request.expires_at) > new Date());
+                  return (
+                    <div key={request.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", border: "1px solid #e2e8f0", borderRadius: 14, padding: 13, background: pending ? "#fbfffd" : "#f8fafc" }}>
+                      <div style={{ minWidth: 0, flex: "1 1 220px" }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a", overflowWrap: "anywhere" }}>{request.title}</p>
+                        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#64748b" }}>{request.package_title || "Safari package"} · {Array.isArray(request.fields) ? request.fields.length : 0} questions{request.expires_at ? " · Due " + fmtFull(request.expires_at) : ""}</p>
+                      </div>
+                      <button type="button" disabled={!pending} onClick={() => openInfoForm(request)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, minHeight: 39, padding: "9px 13px", border: pending ? "1px solid #047857" : "1px solid #cbd5e1", borderRadius: 11, background: pending ? "#047857" : "#f1f5f9", color: pending ? "#fff" : "#64748b", fontSize: 12, fontWeight: 800, cursor: pending ? "pointer" : "not-allowed", flexShrink: 0 }}>
+                        {pending ? <><FileText size={14}/> Complete form</> : <><CheckCircle size={14}/> {request.status === "responded" ? "Submitted" : "Unavailable"}</>}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {/* ── Stats ──────────────────────────────────────────────────── */}
           <div style={S.statsGrid}>
             {stats.map((s) => (
@@ -1751,6 +1827,51 @@ export default function MyBookings() {
                 submitting={reqSubmitting}
                 error={reqError}
               />
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Package information request form ─────────────────────────── */}
+        <AnimatePresence>
+          {activeInfoRequest && (
+            <div style={{ position: "fixed", inset: 0, zIndex: 10020, background: "rgba(2,6,23,.62)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 12 }} onClick={() => !infoSubmitting && setActiveInfoRequest(null)}>
+              <motion.div initial={{ opacity: 0, y: 18, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12 }} onClick={event => event.stopPropagation()} style={{ width: "100%", maxWidth: 620, maxHeight: "92dvh", overflowY: "auto", borderRadius: 22, background: "#fff", boxShadow: "0 28px 90px rgba(0,0,0,.28)" }}>
+                <div style={{ position: "relative", overflow: "hidden", padding: "22px 22px 20px", color: "#fff", background: activeInfoRequest.accent_color || "#047857" }}>
+                  {activeInfoRequest.header_image && <img src={activeInfoRequest.header_image} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: .22 }}/> }
+                  <div style={{ position: "relative", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                    <div><p style={{ margin: "0 0 7px", fontSize: 10, fontWeight: 850, letterSpacing: ".14em", textTransform: "uppercase", opacity: .8 }}>Altuvera · additional details</p><h3 style={{ margin: 0, fontSize: 21, lineHeight: 1.2, fontWeight: 900 }}>{activeInfoRequest.title}</h3><p style={{ margin: "8px 0 0", fontSize: 12, opacity: .88 }}>{activeInfoRequest.package_title || "Your package request"}</p></div>
+                    <button type="button" onClick={() => setActiveInfoRequest(null)} disabled={infoSubmitting} aria-label="Close form" style={{ display: "grid", placeItems: "center", width: 34, height: 34, border: "1px solid rgba(255,255,255,.3)", borderRadius: 10, background: "rgba(255,255,255,.14)", color: "#fff", cursor: "pointer", flexShrink: 0 }}><X size={17}/></button>
+                  </div>
+                </div>
+                <div style={{ padding: 22 }}>
+                  {activeInfoRequest.description && <p style={{ margin: "0 0 18px", color: "#475569", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{activeInfoRequest.description}</p>}
+                  <div style={{ display: "grid", gap: 15 }}>
+                    {(Array.isArray(activeInfoRequest.fields) ? activeInfoRequest.fields : []).map((field, index) => {
+                      const value = infoAnswers[field.id] ?? (field.type === "checkbox" ? [] : "");
+                      const baseStyle = { width: "100%", boxSizing: "border-box", minHeight: 42, padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 11, background: "#fff", color: "#0f172a", font: "inherit", fontSize: 13 };
+                      const setAnswer = next => setInfoAnswers(prev => ({ ...prev, [field.id]: next }));
+                      return (
+                        <div key={field.id || index}>
+                          <label style={{ display: "block", marginBottom: 7, color: "#1e293b", fontSize: 12, fontWeight: 850 }}>{field.label}{field.required ? <span style={{ color: "#dc2626" }}> *</span> : ""}</label>
+                          {field.type === "textarea" ? <textarea rows={4} required={field.required} value={value} placeholder={field.placeholder || ""} onChange={event => setAnswer(event.target.value)} style={{ ...baseStyle, resize: "vertical" }}/>
+                            : field.type === "select" ? <select required={field.required} value={value} onChange={event => setAnswer(event.target.value)} style={baseStyle}><option value="">Choose an option</option>{(field.options || []).map(option => <option key={option} value={option}>{option}</option>)}</select>
+                            : field.type === "radio" ? <div style={{ display: "grid", gap: 8 }}>{(field.options || []).map(option => <label key={option} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}><input type="radio" name={field.id} checked={value === option} onChange={() => setAnswer(option)}/>{option}</label>)}</div>
+                            : field.type === "checkbox" ? <div style={{ display: "grid", gap: 8 }}>{(field.options || []).map(option => <label key={option} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569" }}><input type="checkbox" checked={Array.isArray(value) && value.includes(option)} onChange={event => setAnswer(event.target.checked ? [...(Array.isArray(value) ? value : []), option] : (Array.isArray(value) ? value.filter(item => item !== option) : []))}/>{option}</label>)}</div>
+                            : <input type={field.type === "file" ? "url" : (["text","email","tel","number","date"].includes(field.type) ? field.type : "text")} required={field.required} value={value} placeholder={field.type === "file" ? "Paste a secure file link" : (field.placeholder || "")} onChange={event => setAnswer(event.target.value)} style={baseStyle}/>}
+                          {field.type === "file" && <p style={{ margin: "5px 0 0", color: "#64748b", fontSize: 11 }}>Share a secure link to your file.</p>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {infoError && <div role="alert" style={{ marginTop: 16, padding: 12, border: "1px solid #fecaca", borderRadius: 11, background: "#fef2f2", color: "#991b1b", fontSize: 12, fontWeight: 700 }}>{infoError}</div>}
+                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: 9, marginTop: 22, paddingTop: 16, borderTop: "1px solid #e2e8f0" }}>
+                    <button type="button" onClick={() => setActiveInfoRequest(null)} disabled={infoSubmitting} style={{ minHeight: 42, padding: "10px 15px", border: "1px solid #cbd5e1", borderRadius: 11, background: "#fff", color: "#475569", fontSize: 12, fontWeight: 800 }}>Close</button>
+                    <button type="button" onClick={submitInfoForm} disabled={infoSubmitting} style={{ minHeight: 42, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 17px", border: 0, borderRadius: 11, background: "#047857", color: "#fff", fontSize: 12, fontWeight: 850, opacity: infoSubmitting ? .65 : 1 }}>
+                      {infoSubmitting ? <><Loader2 size={15} className="animate-spin"/> Sending…</> : <><Send size={15}/> Submit information</>}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           )}
         </AnimatePresence>
