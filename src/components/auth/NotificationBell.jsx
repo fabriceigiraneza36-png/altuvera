@@ -48,8 +48,9 @@ export default function NotificationBell({ style = {} }) {
       <motion.button
         ref={bellRef}
         onClick={() => {
-          setOpen(v => !v)
-          if (!open) { notifs.refresh(); void notifs.markAllRead(); }
+          const nextOpen = !open
+          setOpen(nextOpen)
+          if (nextOpen) notifs.refresh()
         }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
