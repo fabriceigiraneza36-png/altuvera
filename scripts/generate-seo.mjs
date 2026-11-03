@@ -2,7 +2,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import destinations from "../src/data/destinations.js";
 import posts from "../src/data/posts.js";
 import { ADVENTURE_CATALOG } from "../src/data/adventureCatalog.js";
 
@@ -122,16 +121,27 @@ const buildSitemap = async () => {
   ];
 
   const live = await getLiveSeoData();
-  const fallbackCountries = Object.keys(destinations || {}).map((name) => ({ name }));
-  const countryRows = live.countries.length ? live.countries : fallbackCountries;
+  // Country URLs must come only from explicitly active backend records.
+  // Fail closed when the live API is unavailable or returns no active countries:
+  // never infer country pages from destination keys or bundled static content.
   const countryBySlug = new Map();
 
-  for (const country of countryRows) {
-    if (!country || country.is_active === false || country.isActive === false) continue;
+  for (const country of live.countries) {
+    if (!country) continue;
+    const active = [country.is_active, country.isActive].some(
+      (value) => value === true || value === 1 || String(value).trim().toLowerCase() === "true",
+    );
+    if (!active) continue;
+
     const slug = slugify(
       country.slug || country.country_slug || country.name || country.country_name || country.id,
     );
-    if (slug && !countryBySlug.has(slug)) countryBySlug.set(slug, country);
+    if (!slug || !/^[a-z0-9-]+$/.test(slug)) continue;
+    if (!countryBySlug.has(slug)) countryBySlug.set(slug, country);
+  }
+
+  if (!countryBySlug.size) {
+    console.warn("[seo] No explicitly active countries returned; omitting country URLs from sitemap.");
   }
 
   const entries = staticRoutes.map((loc) => ({ loc }));
