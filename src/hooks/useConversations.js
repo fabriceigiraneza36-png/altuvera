@@ -42,39 +42,11 @@ const authFetch = (url, opts = {}) => {
 };
 
 /* ─── Serialise snake_case → camelCase ──────────────────────────────── */
-const notifiedGroupMessageTags = new Set();
-
-const notifyMessage = (title, body, tag, actionUrl = null) => {
-  try {
-    if (String(tag || "").startsWith("altuvera-group-message-")) {
-      if (notifiedGroupMessageTags.has(tag)) return;
-      notifiedGroupMessageTags.add(tag);
-      if (notifiedGroupMessageTags.size > 500) notifiedGroupMessageTags.clear();
-    }
-    if (typeof window === "undefined" || !("Notification" in window)) return;
-    const show = () => {
-      const notification = new Notification(title, {
-        body,
-        tag,
-        icon: "/favicon.ico",
-        badge: "/favicon.ico",
-      });
-      notification.onclick = () => {
-        window.focus();
-        if (actionUrl) window.location.assign(actionUrl);
-        notification.close();
-      };
-    };
-    if (Notification.permission === "granted") {
-      show();
-    } else if (Notification.permission === "default") {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") show();
-      }).catch(() => {});
-    }
-  } catch { /* browser notifications are optional; inbox remains the source of truth */ }
-};
-
+// External browser alerts are dispatched by the backend Web Push service worker.
+// Keeping this page-level Notification API disabled avoids duplicate popups and
+// lets the worker suppress alerts while the website tab is visibly in use.
+const notifyMessage = () => {};
+ 
 const getCurrentUserId = () => {
   try {
     const token = getToken();
