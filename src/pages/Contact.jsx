@@ -464,8 +464,8 @@ const Contact = () => {
   return (
     <div className="ct-page">
       <SEO
-        title="Contact Us — Altuvera Safari"
-        description="Get in touch with Altuvera for personalised safari planning across East Africa."
+        title="Contact Altuvera Safaris | East Africa Safari Enquiries"
+        description="Speak with our Rwanda-based team about gorilla trekking, wildlife safaris and tailor-made cultural journeys across East Africa. Start planning with Altuvera Safaris."
         keywords={["contact Altuvera", "safari booking", "East Africa travel"]}
         url="/contact"
       />
