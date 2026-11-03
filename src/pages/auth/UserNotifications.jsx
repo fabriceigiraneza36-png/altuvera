@@ -9,6 +9,7 @@
   import { Helmet }     from 'react-helmet-async';
   import { motion, AnimatePresence } from 'framer-motion';
   import DashboardLayout from '../../components/auth/DashboardLayout';
+  import UserPushReminder from '../../components/auth/UserPushReminder';
   import { useNotifications } from '../../hooks/useNotifications';
   import { useBrowserPush } from '../../hooks/useBrowserPush';
 
@@ -142,6 +143,7 @@
           title="Notifications"
           subtitle="Stay up to date with your bookings, trips, and updates."
         >
+          <UserPushReminder />
           {/* ── Trip Alerts ── */}
           <AnimatePresence>
             {tripAlerts.length > 0 && (
