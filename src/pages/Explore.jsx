@@ -17,6 +17,7 @@ import DestinationCard, {
 } from '../components/common/DestinationCard';
 import { useCountries } from '../hooks/useCountries';
 import { useTestimonials } from '../hooks/useTestimonials';
+import { ADVENTURE_CATALOG } from '../data/adventureCatalog';
 import {
   FiArrowRight, FiMapPin, FiCompass, FiClock, FiStar,
   FiHeart, FiUsers, FiAward, FiTrendingUp, FiGlobe,
@@ -1599,7 +1600,68 @@ export default function Explore() {
           </div>
         </section>
 
-        {/* ════════ 5. TESTIMONIALS ════════ */}
+        {/* ════════ 5. ADVENTURE GUIDES ════════ */}
+        <section className="ex-section ex-section--alt">
+          <div className="ex-inner">
+            <AnimatedSection animation="fadeInUp">
+              <div className="ex-section-head">
+                <h2 className="ex-section-title">Explore East African Adventures</h2>
+                <p className="ex-section-desc">
+                  Compare wildlife safaris, gorilla trekking, mountain journeys, coastal escapes and cultural experiences before choosing your route.
+                </p>
+              </div>
+            </AnimatedSection>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
+                gap: 18,
+              }}
+            >
+              {ADVENTURE_CATALOG.map((adventure, index) => (
+                <AnimatedSection key={adventure.slug} animation="fadeInUp" delay={Math.min(index * 0.04, 0.2)}>
+                  <Link
+                    to={`/adventures/${adventure.slug}`}
+                    aria-label={`Read the ${adventure.title} guide`}
+                    style={{
+                      display: "flex",
+                      height: "100%",
+                      flexDirection: "column",
+                      overflow: "hidden",
+                      border: "1px solid #dcebe1",
+                      borderRadius: 18,
+                      background: "#fff",
+                      color: "#0f172a",
+                      textDecoration: "none",
+                      boxShadow: "0 8px 24px rgba(15, 23, 42, .05)",
+                    }}
+                  >
+                    <img
+                      src={adventure.image}
+                      alt=""
+                      loading="lazy"
+                      style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "cover" }}
+                    />
+                    <div style={{ display: "flex", flex: 1, flexDirection: "column", padding: 18 }}>
+                      <h3 style={{ margin: "0 0 9px", color: "#14532d", fontSize: 18, lineHeight: 1.3 }}>
+                        {adventure.title}
+                      </h3>
+                      <p style={{ margin: "0 0 16px", color: "#475569", fontSize: 13.5, lineHeight: 1.7 }}>
+                        {adventure.seoDescription || adventure.summary}
+                      </p>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: "auto", color: "#047857", fontSize: 13, fontWeight: 800 }}>
+                        Read the guide <FiArrowRight size={14} />
+                      </span>
+                    </div>
+                  </Link>
+                </AnimatedSection>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ════════ 6. TESTIMONIALS ════════ */}
         <section className="ex-section ex-section--alt">
           <div className="ex-inner">
             <AnimatedSection animation="fadeInUp">
