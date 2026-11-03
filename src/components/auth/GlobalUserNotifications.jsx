@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, BellRing, MessageCircle, Send, X, CalendarDays, Pencil, CheckCircle2, ClipboardList, AlertTriangle, Siren, Settings, ChevronDown, ChevronUp, UsersRound, Sparkles } from "lucide-react";
+import { ArrowUpRight, BellRing, MessageCircle, Send, X, ClipboardList, ChevronDown, ChevronUp, UsersRound, Sparkles, CheckCircle2 } from "lucide-react";
 import { useNotifications } from "../../hooks/useNotifications";
+import { getNotificationContextRows, getNotificationPresentation } from "../../utils/notificationPresentation";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
 const getToken = () => {
@@ -10,19 +11,6 @@ const getToken = () => {
       sessionStorage.getItem("altuvera_auth_token") ||
       localStorage.getItem("auth_token") || "";
   } catch { return ""; }
-};
-
-const TYPE_META = {
-  booking_created: [CalendarDays, "#059669"],
-  booking_updated: [Pencil, "#0ea5e9"],
-  booking_confirmed: [CheckCircle2, "#16a34a"],
-  checklist_request: [ClipboardList, "#059669"],
-  checklist_ready: [CheckCircle2, "#16a34a"],
-  warning: [AlertTriangle, "#d97706"],
-  alert: [Siren, "#dc2626"],
-  system: [Settings, "#64748b"],
-  message_received: [MessageCircle, "#059669"],
-  general: [MessageCircle, "#059669"],
 };
 
 const conversationIdOf = (notification) =>
@@ -76,33 +64,14 @@ export default function GlobalUserNotifications() {
   }, [notifications]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const meta = useMemo(
-    () => TYPE_META[visible && visible.type] || TYPE_META.general,
+    () => getNotificationPresentation(visible || {}),
     [visible],
   );
-  const MetaIcon = meta[0];
+  const MetaIcon = meta.icon;
   const conversationId = conversationIdOf(visible);
-  const isChatNotification = Boolean(conversationId) && (
-    visible?.category === "message" ||
-    String(visible?.type || "").toLowerCase().includes("message") ||
-    Boolean(visible?.metadata?.messageId) ||
-    Boolean(visible?.metadata?.groupId) ||
-    Boolean(visible?.group_id) ||
-    Boolean(visible?.groupId)
-  );
-  const isGroupChatNotification = Boolean(
-    visible?.group_id || visible?.groupId ||
-    visible?.metadata?.groupId || visible?.metadata?.group_id ||
-    visible?.conversation_type === "group" || visible?.conversationType === "group"
-  );
+  const isChatNotification = meta.isMessage || Boolean(conversationId);
+  const isGroupChatNotification = meta.isGroup;
   const isFocused = hovered || keyboardFocused;
-
-  const metadata = useMemo(() => {
-    let raw = visible?.metadata || visible?.metadata_json || {};
-    if (typeof raw === "string") {
-      try { raw = JSON.parse(raw); } catch { raw = {}; }
-    }
-    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-  }, [visible]);
 
   const timeLabel = useMemo(() => {
     const raw = visible?.created_at || visible?.createdAt || visible?.created_at_utc;
@@ -117,15 +86,11 @@ export default function GlobalUserNotifications() {
     return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   }, [visible]);
 
-  const title = visible?.title || (visible?.sender_name ? "Message from " + visible.sender_name : "New notification");
+  const title = visible?.title || (visible?.sender_name ? "Message from " + visible.sender_name : meta.label);
   const body = visible?.message || visible?.body || "You have a new update from Altuvera.";
   const actionLabel = conversationId ? "View message" : (visible?.action_label || visible?.actionLabel || "View details");
-  const kindLabel = isGroupChatNotification ? "Group message" : isChatNotification ? "New message" : "New activity";
-  const detailRows = [
-    ["From", visible?.sender_name || visible?.senderName || metadata?.senderName || metadata?.sender_name],
-    ["Destination", metadata?.destinationName || metadata?.destination_name || metadata?.destination],
-    ["Reference", metadata?.bookingNumber || metadata?.booking_number || visible?.booking_number],
-  ].filter((row) => row[1] !== undefined && row[1] !== null && String(row[1]).trim() !== "");
+  const kindLabel = isGroupChatNotification ? "Group message" : isChatNotification ? "Direct message" : meta.label;
+  const detailRows = getNotificationContextRows(visible || {});
 
   const markAsSeen = (item) => {
     if (item?.id && !item.is_read) markRead(item.id);
@@ -167,7 +132,8 @@ export default function GlobalUserNotifications() {
 
   const dismissNotification = () => {
     if (!visible) return;
-    markAsSeen(visible);
+    // Dismissing the preview must not mark the saved notification as read.
+    // It remains available in the inbox with its unread state intact.
     setVisible(null);
     setExpanded(false);
     setReplyExpanded(false);
@@ -178,13 +144,10 @@ export default function GlobalUserNotifications() {
   dismissHandlerRef.current = dismissNotification;
 
   useEffect(() => {
-    if (!visible) return undefined;
-    // Unfocused alerts tuck away after 10 seconds. When hovered or focused,
-    // give the traveller 30 seconds to read; sustained focus opens the target.
-    const timer = window.setTimeout(() => {
-      if (isFocused) openHandlerRef.current?.();
-      else dismissHandlerRef.current?.();
-    }, isFocused ? 30000 : 10000);
+    if (!visible || isFocused) return undefined;
+    // Let a focused or hovered message stay available until the traveller
+    // chooses an action. Otherwise tuck the preview away without marking it read.
+    const timer = window.setTimeout(() => dismissHandlerRef.current?.(), 14000);
     return () => window.clearTimeout(timer);
   }, [visible?.id, isFocused]);
 
@@ -245,17 +208,17 @@ export default function GlobalUserNotifications() {
         .altuvera-toast-card { animation: altuvera-toast-gentle-bounce 1s cubic-bezier(.34,1.3,.64,1) 280ms 3; }
         .altuvera-toast-card, .altuvera-toast-card * { box-sizing: border-box; }
         .altuvera-toast-card {
-          display:flex; flex-direction:column; width:100%; max-height:min(72vh, 610px);
-          color:#15291f; background:rgba(255,255,255,.97);
-          border:1px solid rgba(206,226,214,.95); border-radius:22px;
-          box-shadow:0 24px 70px rgba(7,40,25,.22), 0 4px 14px rgba(7,40,25,.08);
+          display:flex; flex-direction:column; width:100%; max-height:min(76vh, 660px);
+          color:#15291f; background:rgba(255,255,255,.985);
+          border:1px solid rgba(206,226,214,.95); border-radius:24px;
+          box-shadow:0 28px 84px rgba(7,40,25,.24), 0 5px 18px rgba(7,40,25,.09);
           overflow:hidden; backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
         }
-        .altuvera-toast-topline { height:3px; flex-shrink:0; background:linear-gradient(90deg,#075b40,#0ba477 60%,#9be8bd); }
+        .altuvera-toast-topline { height:3px; flex-shrink:0; background:linear-gradient(90deg,#075b40,var(--toast-accent,#0ba477) 58%,#b7f0d0); }
         .altuvera-toast-main { padding:15px 15px 12px; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
         .altuvera-toast-header { display:flex; align-items:flex-start; gap:11px; }
-        .altuvera-toast-icon { position:relative; display:grid; place-items:center; width:44px; height:44px; flex:0 0 44px; border-radius:15px; background:linear-gradient(145deg,#e8f9ef,#d5f3e2); color:#087c53; box-shadow:inset 0 0 0 1px rgba(8,124,83,.08); }
-        .altuvera-toast-icon::after { content:""; position:absolute; width:8px; height:8px; right:1px; top:1px; border:2px solid white; border-radius:50%; background:#0ba477; }
+        .altuvera-toast-icon { position:relative; display:grid; place-items:center; width:44px; height:44px; flex:0 0 44px; border-radius:15px; background:linear-gradient(145deg,#e8f9ef,#d5f3e2); color:var(--toast-accent,#087c53); box-shadow:inset 0 0 0 1px rgba(8,124,83,.08); }
+        .altuvera-toast-icon::after { content:""; position:absolute; width:8px; height:8px; right:1px; top:1px; border:2px solid white; border-radius:50%; background:var(--toast-accent,#0ba477); }
         .altuvera-toast-headcopy { flex:1; min-width:0; }
         .altuvera-toast-eyebrow { display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin:1px 0 4px; color:#078257; font-size:9px; font-weight:850; letter-spacing:.105em; text-transform:uppercase; }
         .altuvera-toast-time { color:#94a79b; font-size:10px; font-weight:650; letter-spacing:0; text-transform:none; }
@@ -362,7 +325,7 @@ export default function GlobalUserNotifications() {
             <div className="altuvera-toast-topline" />
             <div className="altuvera-toast-main">
               <div className="altuvera-toast-header">
-                <div className="altuvera-toast-icon" aria-hidden="true">
+                <div className="altuvera-toast-icon" aria-hidden="true" style={{ color: meta.color, background: `linear-gradient(145deg, ${meta.color}1c, ${meta.color}0c)` }}>
                   <MetaIcon size={20} strokeWidth={2.15} />
                 </div>
                 <div className="altuvera-toast-headcopy">

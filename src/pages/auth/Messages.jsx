@@ -638,7 +638,6 @@ const MSG_STYLES = `
     visibility: visible !important;
     pointer-events: auto !important;
   }
-  .msg-message-actions-button { display: none !important; }
   .msg-bubble-wrap { -webkit-touch-callout: none; }
   .msg-chat .msg-scroll-layer {
     display: block !important;
@@ -675,7 +674,81 @@ const MSG_STYLES = `
   .msg-chat-head > button { padding: 5px !important; }
   .msg-chat-foot { padding-left: 6px !important; padding-right: 6px !important; }
   .msg-composer-row button { min-width: 34px; width: 34px; }
-}`;
+}
+
+/* Final responsive guardrails: message rows and their content must shrink
+   inside the chat column instead of forcing the conversation wider. */
+.msg-chat,
+.msg-chat-body,
+.msg-chat-body > div,
+.msg-bubble-wrap,
+.msg-bubble-wrap > .flex-col,
+.msg-message-text {
+  box-sizing:border-box;
+  min-width:0;
+  max-width:100%;
+}
+.msg-chat-body {
+  width:100%;
+  overflow-x:hidden !important;
+}
+.msg-chat-body > div { width:100%; }
+.msg-bubble-wrap {
+  display:flex;
+  width:100%;
+  max-width:100% !important;
+  min-width:0;
+}
+.msg-bubble-wrap > .flex-col {
+  width:auto;
+  max-width:calc(100% - 48px);
+}
+.msg-message-text {
+  width:fit-content;
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.msg-message-text a,
+.msg-message-text span {
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+/* The action surface stays full-size: no clipped height and no nested scroll. */
+.msg-action-menu-scroll {
+  box-sizing:border-box;
+  max-height:none !important;
+  overflow:visible !important;
+  padding:0 !important;
+  background:#fff !important;
+}
+.msg-action-menu-scroll > div:last-child > button {
+  display:flex;
+  width:100%;
+  min-height:46px;
+  align-items:center;
+  padding:10px 12px;
+  font-size:14px;
+}
+.msg-action-menu-scroll button svg { flex:0 0 auto; }
+.msg-chat-body.msg-action-menu-open {
+  padding-bottom:clamp(390px, 50vh, 450px) !important;
+}
+
+@media (max-width:767px) {
+  .msg-chat-body { padding-left:9px !important; padding-right:9px !important; }
+  .msg-bubble-wrap > .flex-col { max-width:calc(100% - 44px); }
+  .msg-message-actions-button {
+    display:flex !important;
+    width:32px;
+    height:32px;
+    align-items:center;
+    justify-content:center;
+  }
+}
+`;
 
 let stylesInjected = false;
 function injectMsgStyles() {
@@ -918,7 +991,6 @@ const MsgBubble = React.memo(function MsgBubble({
   const actionMenuRef = useRef(null);
   const longPressTimerRef = useRef(null);
   const longPressTriggeredRef = useRef(false);
-  const openedFromLongPressRef = useRef(false);
   const touchStartX = useRef(null);
   const swipeOffsetX = useRef(0);
   const swipeTriggered = useRef(false);
@@ -947,39 +1019,55 @@ const MsgBubble = React.memo(function MsgBubble({
 
   useLayoutEffect(() => {
     if (!menuOpen) return undefined;
-    const isMobileViewport = () => window.matchMedia("(max-width: 767px)").matches;
 
-    // On touch screens, move the bubble into a comfortable reading position first.
-    // The menu then stays below that same bubble instead of jumping to another side.
-    if (isMobileViewport() && openedFromLongPressRef.current) {
-      bubbleRef.current?.scrollIntoView({ block: "center", behavior: "auto" });
-      openedFromLongPressRef.current = false;
-    }
+    const margin = 12;
+    const gap = 8;
+    const chatBody = bubbleRef.current?.closest(".msg-chat-body");
+    chatBody?.classList.add("msg-action-menu-open");
 
+    // Keep the complete action panel attached to the message. If the message is
+    // too close to the composer, create temporary scroll room and move it up.
     const positionMenu = () => {
-      const anchor = isMobileViewport() ? bubbleRef.current : actionButtonRef.current;
+      const anchor = bubbleRef.current;
       const menu = actionMenuRef.current;
       if (!anchor || !menu) return;
 
-      const margin = 10;
-      const gap = 7;
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const viewportWidth = window.visualViewport?.width || window.innerWidth;
       const rect = anchor.getBoundingClientRect();
-      const visualHeight = window.visualViewport?.height || window.innerHeight;
-      const visualWidth = window.visualViewport?.width || window.innerWidth;
-      const isMobile = isMobileViewport();
-      const composer = isMobile ? document.querySelector(".msg-chat-foot") : null;
-      const composerTop = composer ? composer.getBoundingClientRect().top : visualHeight;
-      const safeBottom = Math.max(margin + 72, Math.min(visualHeight - margin, composerTop - margin));
-      const width = Math.min(isMobile ? 244 : 224, visualWidth - margin * 2);
-      const top = rect.bottom + gap;
-      const maxHeight = Math.max(96, Math.min(
-        isMobile ? 300 : visualHeight - margin * 2,
-        safeBottom - top
-      ));
-      // Keep the menu aligned to the same side of the anchor; clamp only horizontally.
+      const chat = anchor.closest(".msg-chat");
+      const header = chat?.querySelector(".msg-chat-head");
+      const composer = chat?.querySelector(".msg-chat-foot");
+      const safeTop = Math.max(margin, (header?.getBoundingClientRect().bottom ?? margin) + 8);
+      const composerTop = composer?.getBoundingClientRect().top ?? viewportHeight;
+      const safeBottom = Math.min(viewportHeight - margin, composerTop - margin);
+      const width = Math.max(180, Math.min(288, viewportWidth - margin * 2));
+
+      menu.style.width = `${width}px`;
+      const menuHeight = Math.ceil(menu.getBoundingClientRect().height || menu.scrollHeight);
+      let top = rect.bottom + gap;
+
+      if (top + menuHeight > safeBottom && chatBody) {
+        const overflow = Math.ceil(top + menuHeight - safeBottom + 16);
+        const currentScroll = chatBody.scrollTop;
+        const maxScroll = Math.max(0, chatBody.scrollHeight - chatBody.clientHeight);
+        const nextScroll = Math.min(maxScroll, currentScroll + overflow);
+        if (nextScroll > currentScroll + 1) {
+          chatBody.scrollTop = nextScroll;
+          window.requestAnimationFrame(positionMenu);
+          return;
+        }
+      }
+
+      // In exceptionally short viewports, keep the panel fully visible rather
+      // than reducing its height or introducing an inner scrollbar.
+      if (top + menuHeight > safeBottom) {
+        top = Math.max(safeTop, safeBottom - menuHeight);
+      }
       const preferredLeft = mine ? rect.right - width : rect.left;
-      const left = Math.max(margin, Math.min(visualWidth - width - margin, preferredLeft));
-      setMenuPosition({ top, left, width, maxHeight });
+      const maxLeft = Math.max(margin, viewportWidth - width - margin);
+      const left = Math.max(margin, Math.min(maxLeft, preferredLeft));
+      setMenuPosition({ top, left, width });
     };
 
     positionMenu();
@@ -990,6 +1078,7 @@ const MsgBubble = React.memo(function MsgBubble({
     window.visualViewport?.addEventListener("resize", onViewportChange);
     window.visualViewport?.addEventListener("scroll", onViewportChange);
     return () => {
+      chatBody?.classList.remove("msg-action-menu-open");
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", onViewportChange);
       window.removeEventListener("scroll", onViewportChange, true);
@@ -1001,12 +1090,10 @@ const MsgBubble = React.memo(function MsgBubble({
     if (!menuOpen) return undefined;
     const closeOnOutside = (event) => {
       if (actionMenuRef.current?.contains(event.target) || actionButtonRef.current?.contains(event.target)) return;
-      openedFromLongPressRef.current = false;
       setMenuOpen(false);
     };
     const closeOnEscape = (event) => {
       if (event.key === "Escape") {
-        openedFromLongPressRef.current = false;
         setMenuOpen(false);
       }
     };
@@ -1052,7 +1139,6 @@ const MsgBubble = React.memo(function MsgBubble({
         clearLongPress();
         longPressTimerRef.current = window.setTimeout(() => {
           longPressTriggeredRef.current = true;
-          openedFromLongPressRef.current = true;
           setMenuPosition(null);
           setMenuOpen(true);
           if (navigator.vibrate) navigator.vibrate(12);
@@ -1195,16 +1281,38 @@ const MsgBubble = React.memo(function MsgBubble({
                 <MoreHorizontal size={15}/>
               </button>
               {menuOpen && createPortal(
-                <div ref={actionMenuRef} style={{ position: "fixed", top: menuPosition?.top ?? 0, left: menuPosition?.left ?? 10, width: menuPosition?.width ?? "min(15.25rem, calc(100vw - 20px))", maxHeight: menuPosition?.maxHeight ?? "min(300px, calc(100dvh - 24px))", overflowY: "auto", overflowX: "hidden", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none", visibility: menuPosition ? "visible" : "hidden", zIndex: 2147483647, isolation: "isolate", touchAction: "pan-y", WebkitTransform: "translateZ(0)" }} className="msg-action-menu-scroll rounded-2xl border border-slate-200/90 bg-white/98 shadow-[0_18px_55px_rgba(15,23,42,0.24)] backdrop-blur-xl p-1.5">
-                  <button type="button" onClick={copyMessage} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-100"><Copy size={17}/> Copy message</button>
-                  <button type="button" onClick={()=>{setMenuOpen(false);setReactionPickerOpen(true)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-100"><Smile size={17}/> React</button>
-                  <button type="button" onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-100"><CornerUpLeft size={17}/> Reply</button>
-                  {mine && <>
-                    <button type="button" onClick={()=>{onStartEdit(message);setMenuOpen(false)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100"><Edit3 size={17}/> Edit</button>
-                    <button type="button" onClick={()=>{onUnsend(message.id);setMenuOpen(false)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-rose-600 transition-colors hover:bg-rose-50 active:bg-rose-100"><Undo2 size={17}/> Unsend</button>
-                  </>}
-                  <button type="button" onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full min-h-10 flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100"><Pin size={17}/> {message.isPinned ? "Unpin" : "Pin"}</button>
-                  <button type="button" onClick={()=>{onHighlight(message.id,!message.isHighlighted);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-2 px-3 py-2.5 rounded-xl text-left text-sm font-semibold hover:bg-amber-50 active:bg-amber-100"><Highlighter size={17}/> {message.isHighlighted ? "Remove highlight" : "Highlight"}</button>
+                <div
+                  ref={actionMenuRef}
+                  role="menu"
+                  aria-label="Message actions"
+                  style={{
+                    position: "fixed",
+                    top: menuPosition?.top ?? 0,
+                    left: menuPosition?.left ?? 12,
+                    width: menuPosition?.width ?? "min(18rem, calc(100vw - 24px))",
+                    visibility: menuPosition ? "visible" : "hidden",
+                    zIndex: 2147483647,
+                    isolation: "isolate",
+                    touchAction: "pan-y",
+                    WebkitTransform: "translateZ(0)",
+                  }}
+                  className="msg-action-menu-scroll rounded-[22px] border border-slate-200/90 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.22)]"
+                >
+                  <div className="flex items-center justify-between gap-3 px-3 pb-2 pt-2.5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">Message actions</span>
+                    <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close message actions" className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X size={16}/></button>
+                  </div>
+                  <div className="space-y-1 px-2 pb-2.5">
+                    <button type="button" role="menuitem" onClick={copyMessage} className="w-full min-h-11 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-100"><Copy size={18}/> Copy message</button>
+                    <button type="button" role="menuitem" onClick={()=>{setMenuOpen(false);setReactionPickerOpen(true)}} className="w-full min-h-11 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-100"><Smile size={18}/> React</button>
+                    <button type="button" role="menuitem" onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-100"><CornerUpLeft size={18}/> Reply</button>
+                    {mine && <>
+                      <button type="button" role="menuitem" onClick={()=>{onStartEdit(message);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 active:bg-slate-100"><Edit3 size={18}/> Edit</button>
+                      <button type="button" role="menuitem" onClick={()=>{onUnsend(message.id);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50 active:bg-rose-100"><Undo2 size={18}/> Unsend</button>
+                    </>}
+                    <button type="button" role="menuitem" onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 active:bg-slate-100"><Pin size={18}/> {message.isPinned ? "Unpin" : "Pin"}</button>
+                    <button type="button" role="menuitem" onClick={()=>{onHighlight(message.id,!message.isHighlighted);setMenuOpen(false)}} className="w-full min-h-11 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-amber-50 hover:text-amber-800 active:bg-amber-100"><Highlighter size={18}/> {message.isHighlighted ? "Remove highlight" : "Highlight"}</button>
+                  </div>
                 </div>,
                 document.body
               )}
