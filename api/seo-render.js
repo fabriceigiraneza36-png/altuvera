@@ -42,10 +42,6 @@ const COUNTRY_SEO = {
     title: "Kenya Safaris & Maasai Mara Wildlife | Altuvera Safaris",
     description: "Plan Kenya safaris in the Maasai Mara and Amboseli, with wildlife encounters and tailor-made East African journeys from Altuvera Safaris."
   },
-  ethiopia: {
-    title: "Ethiopia Tours, Highlands & Cultural Journeys | Altuvera Safaris",
-    description: "Discover Ethiopia's highlands, Lalibela's heritage and the Simien Mountains with Altuvera Safaris. Plan a tailor-made journey with local insight."
-  }
 };
 const normalizeCountrySegment = (value) => {
   let raw = String(value || "").trim();
@@ -160,7 +156,17 @@ const render = async (route) => {
   const country = route.match(/^\/country\/([^/]+)(\/destinations)?$/i);
   if (country) {
     const data = unwrap(await fetchJson("/countries/" + encodeURIComponent(country[1])), "country");
-    if (!data.name && !data.title) { page.title = "Country Guide | Altuvera Safaris"; page.description = "Explore country travel guides across East Africa."; page.noindex = true; page.status = 404; page.body = '<h1>Country guide unavailable</h1><p>Browse our <a href="/destinations">East Africa destinations</a>.</p>'; return page; }
+    const explicitlyActive = [data.is_active, data.isActive].some(
+      (value) => value === true || value === 1 || String(value).trim().toLowerCase() === "true",
+    );
+    if ((!data.name && !data.title) || !explicitlyActive) {
+      page.title = "Country Guide | Altuvera Safaris";
+      page.description = "Explore currently available country destinations with Altuvera Safaris.";
+      page.noindex = true;
+      page.status = 404;
+      page.body = '<h1>Country guide unavailable</h1><p>This country is not currently available. Browse our <a href="/destinations">available destinations</a>.</p>';
+      return page;
+    }
     const name = first(data.name, data.title, country[1]);
     const countryMeta = COUNTRY_SEO[normalizeCountrySegment(country[1])] || COUNTRY_SEO[normalizeCountrySegment(name)];
     const overview = first(data.full_description, data.long_description, data.description, data.overview);
