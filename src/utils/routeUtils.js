@@ -349,19 +349,27 @@ export const getAllKnownRoutes = () => [
   "/settings",
 ];
 
-export const getAllCountryRoutes = () => [
-  "/country/Rwanda",
-  "/country/tanzania",
-  "/country/uganda",
-  "/country/rwanda",
-  "/country/ethiopia",
-  "/country/djibouti",
-  "/country/botswana",
-  "/country/namibia",
-  "/country/south-africa",
-  "/country/zambia",
-  "/country/zimbabwe",
-];
+// Derive country routes from the live country collection only. No hardcoded
+// route list: inactive, deleted, or unavailable countries cannot be preloaded.
+export const getAllCountryRoutes = (liveCountries = []) => {
+  if (!Array.isArray(liveCountries)) return [];
+
+  const routes = new Set();
+  for (const country of liveCountries) {
+    if (!country) continue;
+    const active = [country.is_active, country.isActive].some(
+      (value) => value === true || value === 1 || String(value).trim().toLowerCase() === "true",
+    );
+    if (!active) continue;
+
+    const rawSlug = country.slug || country.country_slug || country.name || country.country_name || country.id;
+    const slug = String(rawSlug || "").trim().toLowerCase();
+    if (!/^[a-z0-9-]+$/.test(slug)) continue;
+    routes.add("/country/" + slug);
+  }
+
+  return [...routes].sort();
+};
 
 // ============================================
 // ROUTE PRELOADING
