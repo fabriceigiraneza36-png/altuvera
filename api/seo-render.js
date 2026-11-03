@@ -49,8 +49,36 @@ const arr = (v) => {
 const unwrap = (payload, preferred = "") => {
   const nested = preferred && payload && payload.data && payload.data[preferred];
   const direct = preferred && payload && payload[preferred];
-  const options = [nested, direct, payload && payload.data && payload.data.destination, payload && payload.data && payload.data.post, payload && payload.data && payload.data.package, payload && payload.data && payload.data.country, payload && payload.data, payload && payload.destination, payload && payload.post, payload && payload.package, payload && payload.country, payload];
+  const options = preferred
+    ? [nested, direct, payload && payload.data && payload.data.data, payload && payload.data, payload]
+    : [payload && payload.data && payload.data.destination, payload && payload.data && payload.data.post, payload && payload.data && payload.data.package, payload && payload.data && payload.data.country, payload && payload.data, payload && payload.destination, payload && payload.post, payload && payload.package, payload && payload.country, payload];
   return options.find((x) => x && !Array.isArray(x) && typeof x === "object" && (x.name || x.title || x.slug || x.meta_title)) || {};
+};
+const fetchDestination = async (slug) => {
+  const configured = String(process.env.VITE_API_URL || process.env.API_URL || "").replace(/\/+$/, "");
+  const bases = [];
+  if (configured) {
+    bases.push(configured);
+    try { bases.push(new URL(configured).origin + "/api"); } catch {}
+  }
+  bases.push("https://backend-jd8f.onrender.com/api", "https://api.altuverasafaris.com/api");
+  const unique = Array.from(new Set(bases.map((base) => base.replace(/\/+$/, "").replace(/\/api$/i, "") + "/api")));
+  const results = await Promise.all(unique.map(async (base) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3600);
+    try {
+      const response = await fetch(base + "/destinations/" + encodeURIComponent(slug) + "?include=all", {
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
+      if (!response.ok) return null;
+      const record = unwrap(await response.json(), "destination");
+      const recordSlug = String(record.slug || "").trim().toLowerCase();
+      return recordSlug === String(slug).trim().toLowerCase() ? record : null;
+    } catch { return null; }
+    finally { clearTimeout(timer); }
+  }));
+  return results.find(Boolean) || {};
 };
 const rows = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -104,7 +132,7 @@ const render = async (route) => {
   }
   const dest = route.match(/^\/destinations\/([^/]+)$/i);
   if (dest) {
-    const data = unwrap(await fetchJson("/destinations/" + encodeURIComponent(dest[1]) + "?include=all"), "destination");
+    const data = await fetchDestination(dest[1]);
     if (!data.name && !data.title) { page.title = "Destination Guide | Altuvera Safaris"; page.description = "Explore East African destinations with Altuvera Safaris."; page.noindex = true; page.status = 404; page.body = '<h1>Destination unavailable</h1><p>Browse our <a href="/destinations">East Africa destinations</a>.</p>'; return page; }
     const name = first(data.name, data.title, dest[1]), countryName = first(data.country_name, data.countryName, data.country), description = first(data.seo_description, data.meta_description, data.short_description, data.shortDescription, data.description, data.overview, "Discover " + name + " with Altuvera Safaris.");
     const highlights = arr(data.highlights || data.activities || data.experiences).slice(0, 12), itinerary = arr(data.itinerary).slice(0, 7);
