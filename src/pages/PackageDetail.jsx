@@ -48,6 +48,21 @@ function firstArray(value) {
   try { return JSON.parse(value); } catch { return []; }
 }
 
+function isPackageImageUrl(rawValue) {
+  const value = String(rawValue || "").trim();
+  if (!value) return false;
+  if (/^data:image\\//i.test(value)) return true;
+  try {
+    const parsed = new URL(value, "https://altuverasafaris.com");
+    const pathname = decodeURIComponent(parsed.pathname).toLowerCase();
+    const imageExtension = /\\.(?:avif|gif|jpe?g|png|webp|svg)$/i.test(pathname);
+    const imageHost = /(^|\\.)((res\\.)?cloudinary\\.com|images\\.unsplash\\.com|images\\.pexels\\.com|images\\.ctfassets\\.net|lh3\\.googleusercontent\\.com|storage\\.googleapis\\.com)$/i.test(parsed.hostname);
+    return imageExtension || imageHost || pathname.includes("/image/upload/");
+  } catch {
+    return false;
+  }
+}
+
 function money(value, currency = "USD") {
   if (value === null || value === undefined || value === "") return null;
   try {
@@ -205,6 +220,7 @@ export default function PackageDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
+  const [failedGalleryImages, setFailedGalleryImages] = useState([]);
   const [packageComments, setPackageComments] = useState([]);
   const [packageCommentText, setPackageCommentText] = useState("");
   const [packageCommentsLoading, setPackageCommentsLoading] = useState(false);
@@ -394,12 +410,14 @@ export default function PackageDetail() {
   const rawGallery = firstArray(pkg.image_gallery || pkg.images || pkg.gallery);
   const galleryUrls = rawGallery
     .map((item) => typeof item === "string" ? item : item?.url || item?.image_url || item?.src)
-    .filter(Boolean);
+    .filter((url) => isPackageImageUrl(url) && !failedGalleryImages.includes(url));
+  const rawCover = pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url;
   const gallery = [...new Set([
-    pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url,
+    rawCover,
     ...galleryUrls,
-  ].filter(Boolean))];
-  const cover = gallery[activeGalleryIndex] || pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url;
+  ].filter((url) => isPackageImageUrl(url) && !failedGalleryImages.includes(url)))];
+  const safeGalleryIndex = Math.min(activeGalleryIndex, Math.max(0, gallery.length - 1));
+  const cover = gallery[safeGalleryIndex] || gallery[0] || "";
   const destination = pkg.destination_name || pkg.destination || "East Africa";
   const country = pkg.country_name || pkg.country || "";
   const highlights = firstArray(pkg.features || pkg.highlights).slice(0, 3);
@@ -461,7 +479,7 @@ export default function PackageDetail() {
         <div className="pkg-intro-flow">
         <div className="pkg-poster">
           {cover ? (
-            <img key={cover} src={cover} alt={pkg.title} />
+            <img key={cover} src={cover} alt={pkg.title} onError={() => setFailedGalleryImages((current) => current.includes(cover) ? current : [...current, cover])} />
           ) : (
             <div className="pkg-poster-empty"><Sparkles size={48} /></div>
           )}
@@ -469,7 +487,7 @@ export default function PackageDetail() {
             <div className="pkg-gallery-controls" aria-label="Package photo gallery">
               <button type="button" aria-label="Previous photo" onClick={() => setActiveGalleryIndex((i) => (i - 1 + gallery.length) % gallery.length)}>‹</button>
               <div className="pkg-gallery-dots">
-                {gallery.map((url, index) => <button key={url + index} type="button" aria-label={`Show photo ${index + 1}`} aria-current={index === activeGalleryIndex ? "true" : undefined} className={index === activeGalleryIndex ? "active" : ""} onClick={() => setActiveGalleryIndex(index)} />)}
+                {gallery.map((url, index) => <button key={url + index} type="button" aria-label={`Show photo ${index + 1}`} aria-current={index === safeGalleryIndex ? "true" : undefined} className={index === safeGalleryIndex ? "active" : ""} onClick={() => setActiveGalleryIndex(index)} />)}
               </div>
               <button type="button" aria-label="Next photo" onClick={() => setActiveGalleryIndex((i) => (i + 1) % gallery.length)}>›</button>
             </div>
