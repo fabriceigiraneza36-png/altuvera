@@ -19,6 +19,17 @@
       "destination": "https://backend-jd8f.onrender.com/api/seo/destinations-sitemap.xml"
     },
     {
+      "source": "/:path((?!api|assets|favicon\\.svg|favicon\\.ico|altuvera\\.png|site\\.webmanifest|sitemap\\.xml|destinations-sitemap\\.xml|rss\\.xml|robots\\.txt|copy-code\\.html|_vercel).*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "[Gg]ooglebot|[Bb]ingbot|[Dd]uck[Dd]uck[Bb]ot|[Yy]andex[Bb]ot|[Bb]aiduspider|[Ff]acebookexternalhit|[Ff]acebot|[Tt]witterbot|[Ll]inked[Ii]n[Bb]ot|[Ww]hats[Aa]pp|[Tt]elegram[Bb]ot|[Dd]iscord[Bb]ot|[Ss]lack[Bb]ot|[Pp]int[eE]rest"
+        }
+      ],
+      "destination": "/api/seo-render?path=/:path"
+    },
+    {
       "source": "/((?!api|assets|favicon|altuvera\\.png|site\\.webmanifest|sitemap\\.xml|rss\\.xml|robots\\.txt|copy-code\\.html|_vercel).*)",
       "destination": "/index.html"
     }
