@@ -14,7 +14,7 @@ const STATIC = {
   "/explore": ["Explore East Africa | Altuvera Safaris", "Discover East African experiences, destinations and trip ideas to help shape your next safari or cultural journey."],
   "/services": ["Safari & Travel Services | Altuvera Safaris", "Explore Altuvera Safaris services, including wildlife safaris, gorilla trekking, mountain adventures, cultural experiences and tailored travel planning."],
   "/about": ["About Altuvera Safaris | Authentic East African Adventures", "Meet Altuvera Safaris, a Rwanda-based travel company connecting guests with East African wildlife, landscapes, culture and local experiences."],
-  "/contact": ["Contact Altuvera Safaris", "Contact Altuvera Safaris to discuss East African travel ideas, destination questions and a tailor-made safari or cultural journey."],
+  "/contact": ["Contact Altuvera Safaris | East Africa Safari Planning", "Discuss gorilla trekking in Rwanda, wildlife safaris and tailor-made East African journeys with Altuvera Safaris. Contact our local team to start planning."],
   "/gallery": ["East Africa Safari Gallery | Altuvera Safaris", "View landscapes, wildlife, destinations and cultural moments from Altuvera Safaris experiences across East Africa."],
   "/faq": ["Altuvera Safaris FAQs", "Find helpful answers about planning an East African safari with Altuvera Safaris, including destinations, bookings and travel preparation."],
   "/team": ["Meet the Altuvera Safaris Team", "Meet the people behind Altuvera Safaris and learn about the local knowledge and care that shape our East African travel experiences."],
