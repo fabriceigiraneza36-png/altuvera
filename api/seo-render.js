@@ -176,6 +176,7 @@ const render = async (route) => {
 const schema = (page, canonical) => {
   const organizationId = SITE + "/#organization";
   const websiteId = SITE + "/#website";
+  const webpageId = canonical + "#webpage";
   const organization = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -195,32 +196,37 @@ const schema = (page, canonical) => {
     "publisher": { "@id": organizationId },
     "inLanguage": "en"
   };
-  const data = [
-    organization,
-    website,
-    {
+  const pageEntity = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": webpageId,
+    "url": canonical,
+    "name": page.title,
+    "description": page.description,
+    "isPartOf": { "@id": websiteId },
+    "publisher": { "@id": organizationId },
+    "mainEntity": page.type && page.type !== "WebPage"
+      ? { "@id": canonical + (page.type === "BlogPosting" ? "#article" : page.type === "TouristDestination" ? "#destination" : "#trip") }
+      : undefined
+  };
+  const data = [organization, website, pageEntity];
+  if (page.type && page.type !== "WebPage") {
+    const entity = {
       "@context": "https://schema.org",
       "@type": page.type,
-      "@id": canonical + "#webpage",
-      "url": canonical,
+      "@id": canonical + (page.type === "BlogPosting" ? "#article" : page.type === "TouristDestination" ? "#destination" : "#trip"),
       "name": page.title,
       "description": page.description,
-      "isPartOf": { "@id": websiteId },
-      "publisher": { "@id": organizationId },
-      "image": page.image
+      "image": page.image,
+      "mainEntityOfPage": { "@id": webpageId }
+    };
+    if (page.type === "BlogPosting") {
+      if (page.author) entity.author = { "@type": "Person", "name": page.author };
+      if (page.published) entity.datePublished = page.published;
+      entity.publisher = { "@id": organizationId };
     }
-  ];
-  if (page.type === "BlogPosting") data.push({
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": page.title,
-    "description": page.description,
-    "mainEntityOfPage": { "@type": "WebPage", "@id": canonical },
-    "image": page.image,
-    ...(page.author ? { "author": { "@type": "Person", "name": page.author } } : {}),
-    ...(page.published ? { "datePublished": page.published } : {}),
-    "publisher": { "@id": organizationId }
-  });
+    data.push(entity);
+  }
   return JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 };
 const htmlDocument = (page, canonical) => {
