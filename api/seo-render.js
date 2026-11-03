@@ -174,8 +174,53 @@ const render = async (route) => {
   page.title = "Page Not Found | Altuvera Safaris"; page.description = "The requested Altuvera Safaris page could not be found."; page.noindex = true; page.status = 404; page.body = '<h1>Page not found</h1><p>Visit the <a href="/">Altuvera Safaris homepage</a> or explore <a href="/destinations">East Africa destinations</a>.</p>'; return page;
 };
 const schema = (page, canonical) => {
-  const data = [{ "@context": "https://schema.org", "@type": page.type, "@id": canonical + "#webpage", "url": canonical, "name": page.title, "description": page.description, "isPartOf": { "@id": SITE + "/#website" }, "publisher": { "@id": SITE + "/#organization" }, "image": page.image }];
-  if (page.type === "BlogPosting") data.push({ "@context": "https://schema.org", "@type": "BlogPosting", "headline": page.title, "description": page.description, "mainEntityOfPage": { "@type": "WebPage", "@id": canonical }, "image": page.image, ...(page.author ? { "author": { "@type": "Person", "name": page.author } } : {}), ...(page.published ? { "datePublished": page.published } : {}), "publisher": { "@type": "Organization", "@id": SITE + "/#organization", "name": "Altuvera Safaris", "logo": { "@type": "ImageObject", "url": LOGO } } });
+  const organizationId = SITE + "/#organization";
+  const websiteId = SITE + "/#website";
+  const organization = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": organizationId,
+    "name": "Altuvera Safaris",
+    "url": SITE + "/",
+    "logo": { "@type": "ImageObject", "url": LOGO },
+    "email": "info@altuverasafaris.com",
+    "telephone": "+250785751391"
+  };
+  const website = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": websiteId,
+    "url": SITE + "/",
+    "name": "Altuvera Safaris",
+    "publisher": { "@id": organizationId },
+    "inLanguage": "en"
+  };
+  const data = [
+    organization,
+    website,
+    {
+      "@context": "https://schema.org",
+      "@type": page.type,
+      "@id": canonical + "#webpage",
+      "url": canonical,
+      "name": page.title,
+      "description": page.description,
+      "isPartOf": { "@id": websiteId },
+      "publisher": { "@id": organizationId },
+      "image": page.image
+    }
+  ];
+  if (page.type === "BlogPosting") data.push({
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": page.title,
+    "description": page.description,
+    "mainEntityOfPage": { "@type": "WebPage", "@id": canonical },
+    "image": page.image,
+    ...(page.author ? { "author": { "@type": "Person", "name": page.author } } : {}),
+    ...(page.published ? { "datePublished": page.published } : {}),
+    "publisher": { "@id": organizationId }
+  });
   return JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 };
 const htmlDocument = (page, canonical) => {
