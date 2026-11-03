@@ -195,7 +195,7 @@ const render = async (route) => {
     page.body = '<h1>' + esc(name) + '</h1>' + (countryName ? '<p class="eyebrow">' + esc(countryName) + ' · East Africa</p>' : "") + '<p>' + esc(description) + '</p>' + (highlights.length ? '<h2>Highlights and experiences</h2><ul>' + highlights.map((v) => '<li>' + esc(textOf(v, 600)) + '</li>').join("") + '</ul>' : "") + (itinerary.length ? '<h2>Suggested itinerary</h2>' + itinerary.map((v, i) => '<article><h3>' + esc(first(v.title, "Day " + (v.dayNumber || v.day_number || i + 1))) + '</h3><p>' + esc(first(v.description, v.activities)) + '</p></article>').join("") : "") + '<p><a href="/destinations">Browse all destinations</a></p>'; return page;
   }
 
-  const adventureMatch = route.match(/^\\/adventures\\/([^/]+)$/i);
+  const adventureMatch = route.match(/^\/adventures\/([^/]+)$/i);
   if (adventureMatch) {
     const slug = decodeURIComponent(adventureMatch[1]).toLowerCase();
     const adventure = ADVENTURE_CATALOG.find((item) => item.slug === slug);
@@ -237,7 +237,7 @@ const render = async (route) => {
     });
 
     const rawTitle = first(adventure.seoTitle, adventure.title);
-    const title = rawTitle + (/\\baltuvera\\b/i.test(rawTitle) ? "" : " | Altuvera Safaris");
+    const title = rawTitle.toLowerCase().includes("altuvera") ? rawTitle : rawTitle + " | Altuvera Safaris";
     const description = first(adventure.seoDescription, adventure.summary);
     const questions = Array.isArray(adventure.faqs) ? adventure.faqs : [];
     const officialLinks = Array.isArray(adventure.planningLinks) ? adventure.planningLinks : [];
