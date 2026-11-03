@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { BellRing, ShieldCheck, X, RefreshCw, Settings2 } from 'lucide-react'
 import { useUserAuth } from '../../context/UserAuthContext'
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com/api').replace(/\\/+$/, '')
+const API_BASE = (import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com/api').replace(/\/+$/, '')
 
 const getToken = (contextToken) => {
   if (contextToken) return contextToken
