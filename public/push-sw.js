@@ -2,21 +2,31 @@
  * Persistent notifications are required for reliable mobile browser delivery.
  */
 self.addEventListener("push", (event) => {
-  let data = {};
-  try { data = event.data ? event.data.json() : {}; }
-  catch { data = { body: event.data ? event.data.text() : "" }; }
+  event.waitUntil((async () => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; }
+    catch { data = { body: event.data ? event.data.text() : "" }; }
 
-  const title = data.title || "Altuvera Safaris";
-  const options = {
-    body: data.body || "You have a new update from Altuvera.",
-    icon: data.icon || "/favicon.ico",
-    badge: data.badge || "/favicon.ico",
-    tag: data.tag || (data.id ? `altuvera-${data.id}` : "altuvera-notification"),
-    renotify: Boolean(data.tag),
-    data: { ...(data.data || {}), url: data.data?.url || "https://www.altuverasafaris.com/notifications" },
-  };
+    // Keep external browser alerts for moments when the traveller is away from
+    // the website. A visible and focused tab already receives the in-app update.
+    const windows = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    const websiteIsActive = windows.some((client) =>
+      client.visibilityState === "visible" && (client.focused === true || client.focused == null)
+    );
+    if (websiteIsActive) return;
 
-  event.waitUntil(self.registration.showNotification(title, options));
+    const title = data.title || "Altuvera Safaris";
+    const options = {
+      body: data.body || "You have a new update from Altuvera.",
+      icon: data.icon || "/favicon.ico",
+      badge: data.badge || "/favicon.ico",
+      tag: data.tag || (data.id ? "altuvera-" + data.id : "altuvera-notification"),
+      renotify: Boolean(data.tag),
+      data: { ...(data.data || {}), url: data.data?.url || "https://www.altuverasafaris.com/notifications" },
+    };
+
+    await self.registration.showNotification(title, options);
+  })());
 });
 
 self.addEventListener("notificationclick", (event) => {
