@@ -1968,6 +1968,7 @@ export default function Messages() {
 
 
   const [draft,        setDraft]        = useState("");
+  const [draftRecoveryVisible, setDraftRecoveryVisible] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [aiSuggestionLanguage, setAiSuggestionLanguage] = useState("");
   const aiSuggestionRequestRef = useRef(0);
@@ -2052,8 +2053,12 @@ export default function Messages() {
 
   /* ── Persist draft per conversation ── */
   useEffect(() => {
-    if (!draftStorageKey) return;
-    try { setDraft(localStorage.getItem(draftStorageKey) || ""); } catch {}
+    if (!draftStorageKey) { setDraftRecoveryVisible(false); return; }
+    try {
+      const savedDraft = localStorage.getItem(draftStorageKey) || "";
+      setDraft(savedDraft);
+      setDraftRecoveryVisible(Boolean(savedDraft));
+    } catch { setDraftRecoveryVisible(false); }
   }, [draftStorageKey]);
   useEffect(() => {
     if (!draftStorageKey) return;
@@ -2670,6 +2675,17 @@ export default function Messages() {
                       )}
                     </div>
 
+                    {draftRecoveryVisible && draft && (
+                      <div role="status" className="mb-2 flex min-w-0 items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-950 shadow-sm">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-emerald-700"><FileText size={18}/></span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold">Your unsent message is saved</p>
+                          <p className="mt-0.5 text-xs leading-5 text-emerald-800">You left this conversation before sending. Your text is back in the message field—continue writing whenever you're ready.</p>
+                          <button type="button" onClick={() => { try { if (draftStorageKey) localStorage.removeItem(draftStorageKey); } catch {} setDraft(""); setDraftRecoveryVisible(false); }} className="mt-2 text-xs font-bold text-emerald-800 underline underline-offset-2">Discard saved message</button>
+                        </div>
+                        <button type="button" aria-label="Dismiss saved-message notice" onClick={() => setDraftRecoveryVisible(false)} className="shrink-0 rounded-full p-1 hover:bg-emerald-100"><X size={16}/></button>
+                      </div>
+                    )}
                     {/* Textarea */}
                     <textarea
                       ref={textareaRef}
