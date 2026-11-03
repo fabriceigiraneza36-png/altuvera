@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, BellRing, MessageCircle, Send, X, ClipboardList, ChevronDown, ChevronUp, UsersRound, Sparkles, CheckCircle2 } from "lucide-react";
 import { useNotifications } from "../../hooks/useNotifications";
-import { getNotificationContextRows, getNotificationPresentation, parseNotificationMetadata } from "../../utils/notificationPresentation";
+import { getNotificationContextRows, getNotificationPresentation } from "../../utils/notificationPresentation";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
 const getToken = () => {
@@ -72,11 +72,6 @@ export default function GlobalUserNotifications() {
   const isChatNotification = meta.isMessage || Boolean(conversationId);
   const isGroupChatNotification = meta.isGroup;
   const isFocused = hovered || keyboardFocused;
-
-  const metadata = useMemo(
-    () => parseNotificationMetadata(visible),
-    [visible],
-  );
 
   const timeLabel = useMemo(() => {
     const raw = visible?.created_at || visible?.createdAt || visible?.created_at_utc;
