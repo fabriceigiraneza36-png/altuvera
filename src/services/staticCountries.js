@@ -7,10 +7,15 @@ const getFallbackCountry = (slug) => {
   const normalizedSlug = slug.trim().toLowerCase();
   
   // Find exact match by id/slug field
-  const country = countries.find(c => 
-    (c.id && c.id.toLowerCase() === normalizedSlug) ||
-    (c.slug && c.slug.toLowerCase() === normalizedSlug)
-  );
+  // Static country records are reference content, not proof of a live offering.
+  // Only records explicitly marked active may be used as a fallback.
+  const country = countries.find(c => {
+    const active = c?.is_active === true || c?.isActive === true;
+    return active && (
+      (c.id && c.id.toLowerCase() === normalizedSlug) ||
+      (c.slug && c.slug.toLowerCase() === normalizedSlug)
+    );
+  });
   
   return country ? { 
     ...country, 
