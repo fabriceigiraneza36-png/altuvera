@@ -1,8 +1,7 @@
 {
   "framework": "vite",
-  "buildCommand": "vite build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
-
   "rewrites": [
     {
       "source": "/destinations/:slug",
@@ -17,14 +16,13 @@
     },
     {
       "source": "/destinations-sitemap.xml",
-      "destination": "https://api.altuverasafaris.com/api/seo/destinations-sitemap.xml"
+      "destination": "https://backend-jd8f.onrender.com/api/seo/destinations-sitemap.xml"
     },
     {
       "source": "/((?!api|assets|favicon|altuvera\\.png|site\\.webmanifest|sitemap\\.xml|rss\\.xml|robots\\.txt|copy-code\\.html|_vercel).*)",
       "destination": "/index.html"
     }
   ],
-
   "headers": [
     {
       "source": "/assets/(.*)",
@@ -35,7 +33,6 @@
         }
       ]
     },
-
     {
       "source": "/index.html",
       "headers": [
@@ -49,7 +46,6 @@
         }
       ]
     },
-
     {
       "source": "/",
       "headers": [
@@ -59,7 +55,6 @@
         }
       ]
     },
-
     {
       "source": "/post/(.*)",
       "headers": [
@@ -69,7 +64,6 @@
         }
       ]
     },
-
     {
       "source": "/blog/(.*)",
       "headers": [
@@ -79,7 +73,6 @@
         }
       ]
     },
-
     {
       "source": "/packages/(.*)",
       "headers": [
@@ -89,7 +82,6 @@
         }
       ]
     },
-
     {
       "source": "/destinations/(.*)",
       "headers": [
@@ -99,7 +91,6 @@
         }
       ]
     },
-
     {
       "source": "/country/(.*)",
       "headers": [
@@ -109,7 +100,6 @@
         }
       ]
     },
-
     {
       "source": "/adventures/(.*)",
       "headers": [
@@ -119,7 +109,6 @@
         }
       ]
     },
-
     {
       "source": "/sitemap.xml",
       "headers": [
@@ -133,7 +122,6 @@
         }
       ]
     },
-
     {
       "source": "/rss.xml",
       "headers": [
@@ -147,7 +135,6 @@
         }
       ]
     },
-
     {
       "source": "/robots.txt",
       "headers": [
@@ -161,7 +148,6 @@
         }
       ]
     },
-
     {
       "source": "/site.webmanifest",
       "headers": [
@@ -175,7 +161,6 @@
         }
       ]
     },
-
     {
       "source": "/(.*)\\.html",
       "headers": [
@@ -185,7 +170,6 @@
         }
       ]
     },
-
     {
       "source": "/(.*)",
       "headers": [
