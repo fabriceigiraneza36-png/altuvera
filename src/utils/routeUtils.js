@@ -184,13 +184,8 @@ const URL_CORRECTIONS = {
 // COUNTRY ALIASES
 // ============================================
 
-const COUNTRY_ALIASES = {
-  "/Rwanda": "/country/Rwanda",
-  "/tanzania": "/country/tanzania",
-  "/uganda": "/country/uganda",
-  "/rwanda": "/country/rwanda",
-  // ... rest of your COUNTRY_ALIASES
-};
+// Country routes are backend-owned. Do not keep static aliases here:
+ // an alias can outlive a country's active status.
 
 // ============================================
 // LEVENSHTEIN DISTANCE
@@ -287,6 +282,10 @@ export const getRedirectUrl = (pathname) => {
     return slug ? `/destinations/${slug}` : null;
   }
 
+  // Country pages are resolved against the live backend only. Never fuzzy-
+  // redirect an unknown or inactive country slug to a different route.
+  if (/^\/country\/[^/]+(?:\/destinations)?$/i.test(normalizedPath)) return null;
+
   const knownRoutes = [
     "/",
     "/destinations",
@@ -308,10 +307,6 @@ export const getRedirectUrl = (pathname) => {
     "/my-bookings",
     "/wishlist",
     "/settings",
-    "/country/Rwanda",
-    "/country/tanzania",
-    "/country/uganda",
-    "/country/rwanda",
   ];
 
   const closestRoute = findClosestRoute(normalizedPath, knownRoutes);
