@@ -1,135 +1,178 @@
 import React, { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BellRing, CalendarDays, Pencil, CheckCircle2, XCircle, Trash2, MapPinned, Globe2, FileText, Package, PartyPopper, AlertTriangle, Siren, Settings, MessageCircle, RefreshCw } from 'lucide-react'
-
-// ─── Type config ──────────────────────────────────────────────────────────────
-const TYPE_META = {
-  booking_created:   { icon: CalendarDays, color: '#059669', label: 'Booking Created'    },
-  booking_updated:   { icon: Pencil, color: '#0ea5e9', label: 'Booking Updated'    },
-  booking_confirmed: { icon: CheckCircle2, color: '#16a34a', label: 'Booking Confirmed'  },
-  booking_cancelled: { icon: XCircle, color: '#dc2626', label: 'Booking Cancelled'  },
-  booking_deleted:   { icon: Trash2, color: '#7c3aed', label: 'Booking Removed'   },
-  new_destination:   { icon: MapPinned, color: '#0891b2', label: 'New Destination'   },
-  new_country:       { icon: Globe2, color: '#0891b2', label: 'New Country'        },
-  new_post:          { icon: FileText, color: '#7c3aed', label: 'New Blog Post'      },
-  new_package:       { icon: Package, color: '#d97706', label: 'New Package'        },
-  promotion:         { icon: PartyPopper, color: '#db2777', label: 'Promotion'          },
-  warning:           { icon: AlertTriangle, color: '#f59e0b', label: 'Warning'            },
-  alert:             { icon: Siren, color: '#dc2626', label: 'Alert'              },
-  system:            { icon: Settings, color: '#64748b', label: 'System'             },
-  general:           { icon: MessageCircle, color: '#059669', label: 'Message'            },
-}
-
-const formatAgo = (dateStr) => {
-  if (!dateStr) return ''
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const m    = Math.floor(diff / 60_000)
-  if (m < 1)   return 'Just now'
-  if (m < 60)  return `${m}m ago`
-  const h = Math.floor(m / 60)
-  if (h < 24)  return `${h}h ago`
-  const d = Math.floor(h / 24)
-  if (d < 7)   return `${d}d ago`
-  return new Date(dateStr).toLocaleDateString()
-}
+import { BellRing, RefreshCw, Trash2, X } from 'lucide-react'
+import { getNotificationContextRows, getNotificationActionUrl, getNotificationPresentation } from '../../utils/notificationPresentation'
 
 // ─── Single notification item ──────────────────────────────────────────────────
 const NotifItem = ({ notif, onMarkRead, onDelete }) => {
-  const swipeStartX = useRef(null)
-  const swipeDeltaX = useRef(0)
-  const meta = TYPE_META[notif.type] || TYPE_META.general
-  const Icon = meta.icon
+  const swipeStartX = useRef(null);
+  const swipeDeltaX = useRef(0);
+  const meta = getNotificationPresentation(notif);
+  const Icon = meta.icon;
+  const contextRows = getNotificationContextRows(notif);
+  const actionUrl = getNotificationActionUrl(notif);
+  const hasAction = Boolean(notif.action_url || notif.actionUrl || meta.isMessage);
+  const title = notif.title || meta.label;
+  const body = notif.message || notif.body || "You have a new update from Altuvera.";
+  const createdAt = notif.created_at || notif.createdAt;
 
   return (
-    <motion.div
+    <motion.article
       layout
       initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0, backgroundColor: '#f8fbf9' }}
-      exit={{ opacity: 0, x: 18, scale: 0.985 }}
-      whileHover={{ backgroundColor: '#ffffff', boxShadow: '0 10px 26px rgba(15, 75, 51, 0.10)', y: -1 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: 22, scale: 0.985 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="alt-notification-item"
       style={{
-        margin: '7px 10px',
-        padding: '15px 14px',
-        borderRadius: 17,
-        border: '1px solid rgba(16, 115, 77, 0.07)',
-        boxShadow: '0 2px 8px rgba(15, 75, 51, 0.045)',
-        background: '#f8fbf9',
-        cursor: 'default',
-        position: 'relative',
-        touchAction: 'pan-y',
-        transition: 'background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease',
+        margin: "8px 10px",
+        padding: "15px 14px",
+        borderRadius: 18,
+        border: notif.is_read ? "1px solid #e7eee9" : "1px solid #cce9d8",
+        boxShadow: notif.is_read ? "0 2px 8px rgba(15,75,51,.035)" : "0 7px 20px rgba(7,132,91,.075)",
+        background: notif.is_read ? "#fff" : "linear-gradient(135deg,#f3fbf6,#ffffff 72%)",
+        position: "relative",
+        minWidth: 0,
+        cursor: "default",
+        touchAction: "pan-y",
+        overflow: "hidden",
       }}
-      onTouchStart={(e) => { swipeStartX.current = e.touches[0]?.clientX ?? null; swipeDeltaX.current = 0; }}
-      onTouchMove={(e) => { if (swipeStartX.current === null) return; swipeDeltaX.current = e.touches[0].clientX - swipeStartX.current; e.currentTarget.style.transform = 'translateX(' + swipeDeltaX.current + 'px)'; e.currentTarget.style.opacity = String(Math.max(.25, 1 - Math.abs(swipeDeltaX.current) / 260)); }}
-      onTouchEnd={(e) => { const delta = swipeDeltaX.current; swipeStartX.current = null; swipeDeltaX.current = 0; if (Math.abs(delta) > 95) { onDelete(notif.id); } else { e.currentTarget.style.transform = ''; e.currentTarget.style.opacity = ''; } }}
-      onClick={() => { if (!notif.is_read) onMarkRead(notif.id) }}
+      onTouchStart={(event) => {
+        swipeStartX.current = event.touches?.[0]?.clientX ?? null;
+        swipeDeltaX.current = 0;
+      }}
+      onTouchMove={(event) => {
+        if (swipeStartX.current === null) return;
+        const touch = event.touches?.[0];
+        if (!touch) return;
+        const delta = touch.clientX - swipeStartX.current;
+        swipeDeltaX.current = delta;
+        if (Math.abs(delta) > 5) {
+          event.currentTarget.style.transform = `translate3d(${delta}px,0,0)`;
+          event.currentTarget.style.opacity = String(Math.max(.25, 1 - Math.abs(delta) / 260));
+        }
+      }}
+      onTouchEnd={(event) => {
+        const delta = swipeDeltaX.current;
+        swipeStartX.current = null;
+        swipeDeltaX.current = 0;
+        if (Math.abs(delta) > 95) {
+          onDelete(notif.id);
+        } else {
+          event.currentTarget.style.transform = "";
+          event.currentTarget.style.opacity = "";
+        }
+      }}
+      onTouchCancel={(event) => {
+        swipeStartX.current = null;
+        swipeDeltaX.current = 0;
+        event.currentTarget.style.transform = "";
+        event.currentTarget.style.opacity = "";
+      }}
+      onClick={() => { if (!notif.is_read) onMarkRead(notif.id); }}
     >
       {!notif.is_read && (
-        <span aria-label="Unread notification" style={{ position:'absolute', top:17, left:8, width:7, height:7, borderRadius:'50%', background:'#079669', boxShadow:'0 0 0 4px rgba(7,150,105,.10)' }} />
+        <span
+          aria-label="Unread notification"
+          style={{ position: "absolute", top: 17, left: 7, width: 7, height: 7, borderRadius: 99, background: "#079669", boxShadow: "0 0 0 4px rgba(7,150,105,.10)" }}
+        />
       )}
 
-      <div style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
+      <div className="alt-notification-item-row" style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0 }}>
         <span style={{
-          width:44, height:44, flex:'0 0 44px', borderRadius:15,
-          display:'grid', placeItems:'center', color:meta.color,
-          background:`linear-gradient(145deg, ${meta.color}14, ${meta.color}08)`,
-          boxShadow:`inset 0 1px 0 rgba(255,255,255,.85), 0 3px 10px ${meta.color}0d`,
+          width: 46, height: 46, flex: "0 0 46px", borderRadius: 15,
+          display: "grid", placeItems: "center", color: meta.color,
+          background: `linear-gradient(145deg,${meta.color}1c,${meta.color}09)`,
+          border: `1px solid ${meta.color}20`,
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,.9), 0 3px 10px rgba(15,23,42,.035)",
         }}>
-          <Icon size={21} strokeWidth={1.85} />
+          <Icon size={21} strokeWidth={1.9} aria-hidden="true"/>
         </span>
 
-        <div style={{ flex:1, minWidth:0, paddingLeft:2 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:10 }}>
-            <p style={{ margin:0, fontSize:14, fontWeight:notif.is_read ? 600 : 750, color:'#123b2c', lineHeight:1.4, overflowWrap:'anywhere' }}>
-              {notif.title}
-            </p>
-            <span style={{ fontSize:11, color:'#8ba096', flexShrink:0, whiteSpace:'nowrap', paddingTop:2 }}>
-              {formatAgo(notif.created_at)}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, minWidth: 0 }}>
+            <div style={{ minWidth: 0, flex: "1 1 auto" }}>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: notif.is_read ? 650 : 800, color: "#123b2c", lineHeight: 1.4, overflowWrap: "anywhere", wordBreak: "break-word" }}>
+                {title}
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 5 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 7px", borderRadius: 999, background: `${meta.color}12`, color: meta.color, fontSize: 9, fontWeight: 850, letterSpacing: ".055em", textTransform: "uppercase" }}>
+                  {meta.label}
+                </span>
+                {!notif.is_read && <span style={{ display: "inline-flex", padding: "3px 7px", borderRadius: 999, background: "#dff7e9", color: "#047857", fontSize: 9, fontWeight: 900, textTransform: "uppercase" }}>New</span>}
+                {meta.isUrgent && <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 7px", borderRadius: 999, background: "#fff0ef", color: "#b42332", fontSize: 9, fontWeight: 900, textTransform: "uppercase" }}><X size={10}/> Important</span>}
+              </div>
+            </div>
+            <span style={{ fontSize: 10, color: "#8ba096", flex: "0 0 auto", whiteSpace: "nowrap", paddingTop: 2 }}>
+              {formatAgo(createdAt)}
             </span>
           </div>
 
-          <p style={{ margin:'6px 0 0', fontSize:13, color:'#53675d', lineHeight:1.6, overflowWrap:'anywhere' }}>
-            {notif.message}
+          <p style={{ margin: "9px 0 0", fontSize: 12.5, color: "#53675d", lineHeight: 1.65, whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }}>
+            {body}
           </p>
 
-          {notif.action_url && (
-            <a href={notif.action_url} style={{
-              display:'inline-flex', alignItems:'center', gap:6, marginTop:10,
-              fontSize:12, fontWeight:700, color:meta.color, textDecoration:'none',
-              padding:'8px 12px', background:`${meta.color}0d`, borderRadius:10,
-            }} onClick={(e) => { e.stopPropagation(); if (!notif.is_read) onMarkRead(notif.id) }}>
-              {notif.action_label || 'View'} <span aria-hidden="true">→</span>
-            </a>
+          {contextRows.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 9 }}>
+              {contextRows.map(([label, value]) => (
+                <span key={label} style={{ display: "inline-flex", alignItems: "baseline", flexWrap: "wrap", gap: 4, maxWidth: "100%", padding: "5px 8px", borderRadius: 9, background: "#f5faf7", border: "1px solid #e4f0e8", color: "#52675c", fontSize: 10, lineHeight: 1.4 }}>
+                  <strong style={{ color: "#82948a", fontWeight: 750 }}>{label}</strong>
+                  <span style={{ fontWeight: 750, overflowWrap: "anywhere" }}>{String(value)}</span>
+                </span>
+              ))}
+            </div>
           )}
 
           {notif.admin_reply && (
-            <div style={{ marginTop:10, padding:'10px 12px', background:'#f0faf4', borderRadius:12, color:'#166534', boxShadow:'inset 0 0 0 1px rgba(22,101,52,.07)' }}>
-              <p style={{ margin:0, fontSize:11, fontWeight:750 }}>Admin replied</p>
-              <p style={{ margin:'4px 0 0', fontSize:12, lineHeight:1.5 }}>{notif.admin_reply}</p>
+            <div style={{ marginTop: 10, padding: "10px 11px", borderRadius: 12, background: "#f0faf4", border: "1px solid #d7efdf" }}>
+              <p style={{ margin: 0, fontSize: 10, fontWeight: 850, color: "#08734f", letterSpacing: ".06em", textTransform: "uppercase" }}>Reply from Altuvera</p>
+              <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: 1.55, color: "#315b45", whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{notif.admin_reply}</p>
             </div>
           )}
-        </div>
 
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onDelete(notif.id) }}
-          aria-label="Delete notification"
-          title="Delete notification"
-          style={{
-            flex:'0 0 36px', width:36, height:36, display:'grid', placeItems:'center',
-            border:0, borderRadius:12, color:'#8a9a91', background:'transparent',
-            cursor:'pointer', transition:'background .18s ease, color .18s ease, transform .18s ease',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background='#fff0f1'; e.currentTarget.style.color='#d94655'; e.currentTarget.style.transform='scale(1.04)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#8a9a91'; e.currentTarget.style.transform='scale(1)' }}
-        >
-          <Trash2 size={17} strokeWidth={1.8} />
-        </button>
+          {(notif.reply_text || notif.replyText) && (
+            <div style={{ marginTop: 9, padding: "9px 11px", borderRadius: 11, background: "#f7f9fb", border: "1px solid #e6ebef" }}>
+              <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: 1.5 }}>
+                Your reply: {notif.reply_text || notif.replyText}
+                {!notif.admin_reply && <span style={{ marginLeft: 5, color: "#94a3b8", fontStyle: "italic" }}>Awaiting response</span>}
+              </p>
+            </div>
+          )}
+
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 11 }}>
+            {hasAction && (
+              <a
+                href={actionUrl}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (!notif.is_read) onMarkRead(notif.id);
+                }}
+                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, minHeight: 35, padding: "8px 11px", borderRadius: 11, background: meta.color, color: "#fff", boxShadow: `0 4px 11px ${meta.color}22`, fontSize: 11, fontWeight: 850, textDecoration: "none", maxWidth: "100%" }}
+              >
+                {notif.action_label || notif.actionLabel || (meta.isMessage ? "Open conversation" : "View details")}
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+            {!notif.is_read && (
+              <button type="button" onClick={(event) => { event.stopPropagation(); onMarkRead(notif.id); }} style={{ minHeight: 35, padding: "7px 10px", borderRadius: 10, border: "1px solid #dcebe1", background: "#fff", color: "#087c53", fontSize: 10, fontWeight: 800, cursor: "pointer" }}>
+                Mark as read
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); onDelete(notif.id); }}
+              aria-label="Dismiss notification"
+              title="Dismiss notification"
+              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minHeight: 35, padding: "7px 9px", border: "1px solid #f0e1e1", borderRadius: 10, color: "#a65d63", background: "#fffafa", fontSize: 10, fontWeight: 750, cursor: "pointer" }}
+            >
+              <Trash2 size={14}/> Dismiss
+            </button>
+          </div>
+        </div>
       </div>
-    </motion.div>
-  )
-}
+    </motion.article>
+  );
+};
 
 // ─── Panel tabs ────────────────────────────────────────────────────────────────
 const TABS = [
