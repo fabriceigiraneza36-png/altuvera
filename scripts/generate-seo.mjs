@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import destinations from "../src/data/destinations.js";
 import posts from "../src/data/posts.js";
+import { ADVENTURE_CATALOG } from "../src/data/adventureCatalog.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -134,6 +135,18 @@ const buildSitemap = async () => {
   }
 
   const entries = staticRoutes.map((loc) => ({ loc }));
+
+  // Every public adventure guide has its own crawlable landing page.
+  for (const guide of ADVENTURE_CATALOG) {
+    const slug = String(guide?.slug || "").trim().toLowerCase();
+    if (!slug || !/^[a-z0-9-]+$/.test(slug)) continue;
+    entries.push({
+      loc: "/adventures/" + slug,
+      ...(typeof guide.image === "string" && /^https:\/\//i.test(guide.image)
+        ? { image: guide.image, imageTitle: guide.title || slug }
+        : {}),
+    });
+  }
 
   for (const [slug, country] of [...countryBySlug.entries()].sort(([a], [b]) => a.localeCompare(b))) {
     const lastmod = validDate(country.updated_at || country.updatedAt || country.modified_at);

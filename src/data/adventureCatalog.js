@@ -2,133 +2,293 @@ export const ADVENTURE_CATALOG = [
   {
     slug: "safari-adventures",
     icon: "🦁",
-    title: "Safari Adventures",
-    eyebrow: "Wildlife & Great Migration",
-    summary:
-      "Experience the thrill of the Great Migration, the Big Five, and iconic East African landscapes with expert guides, private game drives, and conservation-led safari stays.",
-    description:
-      "Safari Adventures are designed for travelers who want to witness Africa’s most dramatic wildlife moments in comfort and style. From sunrise game drives to golden-hour sundowners, every day is crafted to balance excitement, comfort, and meaningful encounters with nature.",
-    whyItMatters:
-      "This style of journey gives you front-row access to the continent’s most iconic wildlife while supporting responsible tourism, community lodges, and anti-poaching initiatives.",
-    whatYouWillExperience: [
-      "Guided game drives across national parks and private conservancies",
-      "Big Five sightings, migration season highlights, and birding hotspots",
-      "Luxury tented camps, eco-lodges, and immersive bush dining",
+    title: "East Africa Wildlife Safaris",
+    seoTitle: "East Africa Wildlife Safaris | Big Five & Great Migration",
+    seoDescription:
+      "Explore East Africa wildlife safaris across Kenya, Tanzania, Uganda and Rwanda. Compare national parks, game-drive experiences and tailor-made routes.",
+    keywords: [
+      "East Africa wildlife safaris",
+      "African game drives",
+      "Big Five safari",
+      "Great Migration safari",
+      "Kenya safari",
+      "Tanzania safari",
     ],
-    bestFor: ["Wildlife lovers", "First-time safari travelers", "Photographers"],
+    eyebrow: "Wildlife, national parks & the Great Migration",
+    summary:
+      "Explore East Africa's varied safari landscapes, from the Serengeti and Maasai Mara to protected wildlife areas in Rwanda and Uganda.",
+    description:
+      "An East African wildlife safari can include open savanna, woodland, wetlands and mountain landscapes. The right route depends on the wildlife you hope to see, your travel dates, the time available and how much travel between parks you are comfortable with.",
+    whyItMatters:
+      "Choosing parks and travel connections before setting the itinerary helps make the journey realistic. It also leaves room for the different pace of game drives, guided nature experiences and time in local communities.",
+    whatYouWillExperience: [
+      "Guided game drives in selected national parks and conservancies",
+      "Wildlife viewing shaped around park habitats, season and travel time",
+      "Opportunities to learn about conservation and the communities connected to protected areas",
+    ],
+    bestFor: ["Wildlife enthusiasts", "First-time safari travellers", "Nature photographers"],
+    relatedCountrySlugs: ["kenya", "tanzania", "rwanda", "uganda"],
+    faqs: [
+      {
+        question: "How do I choose where to go on safari in East Africa?",
+        answer:
+          "Start with the wildlife and landscapes that interest you, then compare park locations, travel dates, transfer times and the number of days available. A balanced route is usually more rewarding than trying to cover too many parks.",
+      },
+      {
+        question: "Can an East African safari include more than one country?",
+        answer:
+          "Yes. A multi-country itinerary can be planned around suitable transport connections, border requirements and enough time in each destination. The best combination depends on your dates and priorities.",
+      },
+    ],
+    filters: [
+      "safari",
+      "wildlife",
+      "savanna",
+      "park",
+      "migration",
+      "big five",
+      "game drive",
+      "national park",
+      "serengeti",
+      "maasai mara",
+      "akagera",
+      "queen elizabeth",
+    ],
     image:
       "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80",
-    accent: "#F59E0B",
-    filters: ["safari", "wildlife", "savanna", "park", "migration", "big five"],
+    accent: "#059669",
   },
   {
     slug: "mountain-trekking",
     icon: "🏔️",
-    title: "Mountain Trekking",
-    eyebrow: "Summits, ridgelines & alpine adventure",
-    summary:
-      "Climb Africa’s highest peaks, walk misty trails, and discover high-altitude landscapes that reward every step with unforgettable views.",
-    description:
-      "Mountain Trekking experiences are for travelers who want an active journey with a strong sense of achievement. They combine altitude, scenery, and expert support to make summit dreams feel possible and safe.",
-    whyItMatters:
-      "These journeys create a deep connection to East Africa’s dramatic geography while supporting local mountain guides, conservation teams, and trail communities.",
-    whatYouWillExperience: [
-      "Acclimatization climbs, guided hikes, and summit preparation support",
-      "Snow-capped peaks, volcanic ridges, and cloud forests",
-      "Camping, high-altitude logistics, and expert local guides",
+    title: "Kilimanjaro Trekking & Mountain Hikes",
+    seoTitle: "Kilimanjaro Trekking & East African Mountain Hikes",
+    seoDescription:
+      "Plan a guided Mount Kilimanjaro trek or East African mountain hike. Compare routes, acclimatisation needs and practical preparation before travelling.",
+    keywords: [
+      "Mount Kilimanjaro trekking",
+      "Kilimanjaro hiking routes",
+      "East Africa mountain trekking",
+      "guided mountain hikes",
+      "Tanzania trekking",
     ],
-    bestFor: ["Active adventurers", "Hikers", "Bucket-list climbers"],
+    eyebrow: "Kilimanjaro, volcanic peaks & mountain trails",
+    summary:
+      "Explore guided mountain journeys in East Africa, including routes on Mount Kilimanjaro and hikes through volcanic and highland landscapes.",
+    description:
+      "Mountain journeys in East Africa range from high-altitude summit attempts to shorter guided hikes. Mount Kilimanjaro is the region's best-known summit challenge, while other mountain areas offer different terrain, scenery and levels of exertion.",
+    whyItMatters:
+      "Altitude, route choice and acclimatisation time matter more than speed. Planning enough days, understanding the demands of the route and following qualified local guides are central to a safer and more considered mountain experience.",
+    whatYouWillExperience: [
+      "Guided hikes and summit itineraries selected for your experience and available time",
+      "Changing mountain environments, forest trails and high-altitude landscapes",
+      "Route planning, acclimatisation time and practical preparation before departure",
+    ],
+    bestFor: ["Hikers", "Active travellers", "Summit-focused adventurers"],
+    relatedCountrySlugs: ["tanzania", "uganda", "rwanda"],
+    planningLinks: [
+      {
+        label: "TANAPA: Kilimanjaro National Park visitor guide",
+        url: "https://www.tanzaniaparks.go.tz/kilimanjaro/visitor-guide",
+      },
+    ],
+    faqs: [
+      {
+        question: "How many days should I allow for a Kilimanjaro climb?",
+        answer:
+          "The duration depends on the route and itinerary. Compare route length and acclimatisation time with a qualified operator before choosing; a rushed schedule is not a good substitute for a suitable plan.",
+      },
+      {
+        question: "Do I need a guide to climb Mount Kilimanjaro?",
+        answer:
+          "Tanzania National Parks states that climbs must be guided by a licensed operator. Check the current park guidance and arrangements before booking.",
+      },
+    ],
+    filters: [
+      "mountain",
+      "trek",
+      "hiking",
+      "climb",
+      "peak",
+      "kilimanjaro",
+      "volcano",
+      "rwenzori",
+      "highland",
+    ],
     image:
       "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80",
-    accent: "#6366F1",
-    filters: ["mountain", "trek", "hiking", "climb", "peak", "kilimanjaro"],
+    accent: "#047857",
   },
   {
     slug: "primate-tracking",
     icon: "🦍",
-    title: "Primate Tracking",
-    eyebrow: "Gorillas, chimpanzees & forest magic",
-    summary:
-      "Enter misty forests for rare encounters with mountain gorillas, chimpanzees, and other primates in some of the world’s most important habitats.",
-    description:
-      "Primate Tracking blends wildlife, conservation, and deeply personal encounters. These journeys are intimate, awe-filled, and carefully managed so guests can experience protected forests with respect and care.",
-    whyItMatters:
-      "Forest conservation programs, ranger support, and community benefits are central to every visit, making this more than a wildlife encounter—it is a contribution to preservation.",
-    whatYouWillExperience: [
-      "Guided treks through bamboo and rainforest habitats",
-      "Gorilla and chimpanzee viewing in protected reserves",
-      "Conservation talks, ranger-led storytelling, and community visits",
+    title: "Compare Gorilla Trekking in Rwanda & Uganda",
+    seoTitle: "Gorilla Trekking in Rwanda & Uganda | Compare Trips",
+    seoDescription:
+      "Compare gorilla trekking in Rwanda's Volcanoes National Park and Uganda's Bwindi and Mgahinga. Explore the main locations and plan your route.",
+    keywords: [
+      "gorilla trekking Rwanda",
+      "gorilla trekking Uganda",
+      "Rwanda vs Uganda gorilla trekking",
+      "Volcanoes National Park gorillas",
+      "Bwindi gorilla trekking",
+      "Mgahinga gorilla trekking",
+      "mountain gorilla tracking",
     ],
-    bestFor: ["Wildlife enthusiasts", "Conservation travelers", "Nature photographers"],
+    eyebrow: "Mountain gorillas & protected forest habitats",
+    summary:
+      "Compare the main mountain-gorilla trekking locations in Rwanda and Uganda before choosing the route that fits your wider East African journey.",
+    description:
+      "Rwanda's Volcanoes National Park and Uganda's Bwindi Impenetrable and Mgahinga Gorilla National Parks are established mountain-gorilla trekking destinations. Each option has its own setting and travel logistics, so the best fit depends on your arrival point, dates, preferred itinerary and time available.",
+    whyItMatters:
+      "A gorilla trek is a protected-area wildlife experience, not a guaranteed wildlife sighting at a fixed location. Permits, park briefings, local conditions and the trek itself need to be planned with the relevant authorities and qualified local operators.",
+    whatYouWillExperience: [
+      "Guided tracking in Volcanoes National Park, Bwindi Impenetrable National Park or Mgahinga Gorilla National Park",
+      "A park briefing followed by a forest trek at the pace and location set by park conditions",
+      "A conservation-focused encounter in a protected mountain-forest habitat",
+    ],
+    bestFor: ["Wildlife and conservation travellers", "Visitors comparing Rwanda and Uganda", "Nature photographers"],
+    relatedCountrySlugs: ["rwanda", "uganda"],
+    planningLinks: [
+      {
+        label: "Visit Rwanda: hiking and Volcanoes National Park",
+        url: "https://visitrwanda.com/interests/hiking/",
+      },
+      {
+        label: "Uganda Wildlife Authority: gorilla tracking",
+        url: "https://ugandawildlife.org/activities/gorilla-tracking/",
+      },
+    ],
+    faqs: [
+      {
+        question: "Where can I go gorilla trekking in Rwanda?",
+        answer:
+          "Rwanda's mountain-gorilla trekking takes place in Volcanoes National Park in the Virunga region. Check current permit availability and park guidance before confirming travel dates.",
+      },
+      {
+        question: "Where can I go gorilla trekking in Uganda?",
+        answer:
+          "Uganda Wildlife Authority identifies Bwindi Impenetrable National Park and Mgahinga Gorilla National Park as the country's mountain-gorilla tracking locations.",
+      },
+      {
+        question: "What should I compare before choosing Rwanda or Uganda?",
+        answer:
+          "Compare permit availability for your dates, access and transfer times, accommodation location, the rest of your itinerary and the current park requirements. Permit conditions and fees should be confirmed with the relevant authority.",
+      },
+    ],
+    filters: [
+      "gorilla",
+      "gorilla trekking",
+      "gorilla tracking",
+      "mountain gorilla",
+      "primate",
+      "forest",
+      "chimpanzee",
+      "tracking",
+      "volcanoes national park",
+      "bwindi",
+      "mgahinga",
+    ],
     image:
       "https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=1200&q=80",
     accent: "#10B981",
-    filters: ["gorilla", "primate", "wildlife", "forest", "chimpanzee", "tracking"],
   },
   {
     slug: "beach-escapes",
     icon: "🏖️",
-    title: "Beach Escapes",
-    eyebrow: "Oceanfront relaxation & island beauty",
-    summary:
-      "Unwind on white-sand beaches, turquoise waters, and island hideaways with barefoot luxury, ocean swims, and laid-back coastal culture.",
-    description:
-      "Beach Escapes combine coastal scenery, wellness, and easy adventure. They are perfect for travelers who want spectacular views, warm waters, and flexible days filled with sun, sea, and island charm.",
-    whyItMatters:
-      "Island tourism supports local communities, sustainable resorts, and marine conservation efforts while preserving the beauty of East Africa’s coast.",
-    whatYouWillExperience: [
-      "Beachfront stays, dhow cruises, and snorkel outings",
-      "White-sand coastlines, coral reefs, and island villages",
-      "Slow, restorative days with excellent dining and ocean views",
+    title: "Zanzibar & East Africa Beach Escapes",
+    seoTitle: "Zanzibar & East Africa Beach Holidays",
+    seoDescription:
+      "Discover Zanzibar and East Africa's coast through beach stays, island culture and marine experiences. Plan a coastal break or combine it with safari.",
+    keywords: [
+      "Zanzibar beach holidays",
+      "East Africa beach holidays",
+      "Tanzania coast travel",
+      "Indian Ocean island escapes",
+      "Kenya coast holidays",
     ],
-    bestFor: ["Couples", "Beach lovers", "Relaxed travelers"],
+    eyebrow: "Indian Ocean beaches, islands & coastal culture",
+    summary:
+      "Discover coastal and island journeys, from Zanzibar's historic character to East Africa's Indian Ocean beaches.",
+    description:
+      "An East African beach escape can be a slower coastal stay, an island-focused holiday or the final part of a longer wildlife itinerary. Choose the coast or island that suits your preferred activities, travel connections and time available.",
+    whyItMatters:
+      "A well-planned coast-and-safari combination gives enough time for both experiences without making every day a transfer day. Local culture and marine environments are also an important part of the coastal story.",
+    whatYouWillExperience: [
+      "Beach stays and time to explore coastal towns and island communities",
+      "Optional sailing, swimming and marine activities with suitable local providers",
+      "A coastal extension to a wider East African itinerary",
+    ],
+    bestFor: ["Couples", "Beach lovers", "Travellers combining safari and coast"],
+    relatedCountrySlugs: ["tanzania", "kenya"],
+    filters: ["beach", "coast", "island", "ocean", "seaside", "zanzibar", "diani"],
     image:
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
-    accent: "#EC4899",
-    filters: ["beach", "coast", "island", "ocean", "seaside", "zanzibar"],
+    accent: "#047857",
   },
   {
     slug: "cultural-immersion",
     icon: "🎭",
-    title: "Cultural Immersion",
-    eyebrow: "Communities, traditions & living heritage",
-    summary:
-      "Connect with local communities through food, dance, storytelling, markets, and authentic village experiences that bring East Africa to life.",
-    description:
-      "Cultural Immersion journeys reveal the people behind the landscapes. They invite you to travel with curiosity, learn from local traditions, and take part in experiences shaped by community leadership and respect.",
-    whyItMatters:
-      "These experiences preserve heritage, create fair income for artisans and guides, and help travelers engage with East Africa in a meaningful and respectful way.",
-    whatYouWillExperience: [
-      "Village visits, market tours, and local storytelling",
-      "Traditional performances, craft workshops, and cuisine",
-      "Community-led experiences rooted in real culture and history",
+    title: "East Africa Cultural & Community Experiences",
+    seoTitle: "East Africa Cultural Tours & Community Experiences",
+    seoDescription:
+      "Explore East African cultural experiences, local heritage, food, craft and community-led visits with a respectful, locally informed itinerary.",
+    keywords: [
+      "East Africa cultural tours",
+      "Rwanda cultural experiences",
+      "Uganda cultural tours",
+      "Kenya cultural experiences",
+      "Tanzania cultural tours",
     ],
-    bestFor: ["Culture seekers", "Families", "Slow travelers"],
+    eyebrow: "Living heritage, local food & community-led experiences",
+    summary:
+      "Explore the people, food, craft and living heritage that give East African journeys their local character.",
+    description:
+      "Cultural travel is most rewarding when visits are shaped with local hosts and communities. Experiences may include food, markets, craft, music, storytelling and heritage sites, depending on the place and the people who welcome visitors.",
+    whyItMatters:
+      "Respectful community visits should be agreed with local hosts, make expectations clear and recognise the knowledge and time shared by the people taking part.",
+    whatYouWillExperience: [
+      "Local food traditions, markets and craft experiences",
+      "Heritage visits and storytelling led by local guides or hosts",
+      "Community experiences arranged with respect for local preferences and protocols",
+    ],
+    bestFor: ["Culture seekers", "Curious travellers", "Families and small groups"],
+    relatedCountrySlugs: ["rwanda", "uganda", "kenya", "tanzania"],
+    filters: ["culture", "heritage", "community", "traditional", "maasai", "craft", "food"],
     image:
       "https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1200&q=80",
-    accent: "#8B5CF6",
-    filters: ["culture", "heritage", "community", "traditional", "maasai", "craft"],
+    accent: "#047857",
   },
   {
     slug: "photography-tours",
     icon: "📸",
-    title: "Photography Tours",
-    eyebrow: "Golden hour, wildlife & cinematic landscapes",
-    summary:
-      "Capture unforgettable East African scenes with expert guidance, ideal timing, and carefully chosen locations for wildlife and landscape photography.",
-    description:
-      "Photography Tours are tailored for travelers who want to turn their journey into a visual story. From sunrise game drives to dramatic mountain silhouettes, these trips are built around light, composition, and iconic views.",
-    whyItMatters:
-      "Great photography encourages deeper observation, supports conservation storytelling, and helps travelers remember every detail of the trip long after they return home.",
-    whatYouWillExperience: [
-      "Golden-hour safaris, landscape sessions, and wildlife framing tips",
-      "Iconic viewpoints, hidden trails, and expert local guidance",
-      "A creative itinerary focused on light, color, and atmosphere",
+    title: "East Africa Safari Photography Tours",
+    seoTitle: "East Africa Safari & Wildlife Photography Tours",
+    seoDescription:
+      "Plan an East Africa photography trip around wildlife, landscapes and changing light, with time for thoughtful stops and guided experiences.",
+    keywords: [
+      "East Africa photography tours",
+      "African safari photography",
+      "wildlife photography safari",
+      "landscape photography East Africa",
     ],
-    bestFor: ["Photographers", "Content creators", "Visual storytellers"],
+    eyebrow: "Wildlife, landscapes & thoughtful time in the field",
+    summary:
+      "Shape an East African journey around wildlife and landscape photography, with an itinerary that allows time for observation and changing light.",
+    description:
+      "A photography-focused safari benefits from a considered pace, suitable locations and realistic time for travel between them. The right plan depends on your subjects, equipment, experience and preferred balance between wildlife and landscapes.",
+    whyItMatters:
+      "Allowing time for patient observation supports better photography and a more respectful wildlife experience. Guides and park rules should always take priority over getting a particular image.",
+    whatYouWillExperience: [
+      "Wildlife and landscape outings planned around location, conditions and available light",
+      "Time for observation, composition and responsible photography",
+      "A flexible itinerary shaped around your interests and experience",
+    ],
+    bestFor: ["Wildlife photographers", "Landscape photographers", "Visual storytellers"],
+    relatedCountrySlugs: ["kenya", "tanzania", "rwanda", "uganda"],
+    filters: ["photography", "camera", "wildlife", "landscape", "light", "composition"],
     image:
       "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80",
-    accent: "#EF4444",
-    filters: ["photography", "camera", "wildlife", "landscape", "light", "composition"],
+    accent: "#047857",
   },
 ];

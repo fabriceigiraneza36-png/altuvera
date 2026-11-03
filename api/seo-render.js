@@ -1,4 +1,5 @@
 import postsFallback from "../src/data/posts.js";
+import { ADVENTURE_CATALOG } from "../src/data/adventureCatalog.js";
 
 const SITE = "https://www.altuverasafaris.com";
 const RAW_API = process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com";
@@ -193,6 +194,87 @@ const render = async (route) => {
     page.title = first(data.meta_title, data.seo_title, name + (countryName ? " in " + countryName : "") + " | Altuvera Safaris"); page.description = description; page.image = imageOf(data); page.type = "TouristDestination";
     page.body = '<h1>' + esc(name) + '</h1>' + (countryName ? '<p class="eyebrow">' + esc(countryName) + ' · East Africa</p>' : "") + '<p>' + esc(description) + '</p>' + (highlights.length ? '<h2>Highlights and experiences</h2><ul>' + highlights.map((v) => '<li>' + esc(textOf(v, 600)) + '</li>').join("") + '</ul>' : "") + (itinerary.length ? '<h2>Suggested itinerary</h2>' + itinerary.map((v, i) => '<article><h3>' + esc(first(v.title, "Day " + (v.dayNumber || v.day_number || i + 1))) + '</h3><p>' + esc(first(v.description, v.activities)) + '</p></article>').join("") : "") + '<p><a href="/destinations">Browse all destinations</a></p>'; return page;
   }
+
+  const adventureMatch = route.match(/^\/adventures\/([^/]+)$/i);
+  if (adventureMatch) {
+    const slug = decodeURIComponent(adventureMatch[1]).toLowerCase();
+    const adventure = ADVENTURE_CATALOG.find((item) => item.slug === slug);
+    if (!adventure) {
+      page.title = "Adventure Guide Not Found | Altuvera Safaris";
+      page.description = "The requested East Africa adventure guide could not be found.";
+      page.noindex = true;
+      page.status = 404;
+      page.body = '<h1>Adventure guide not found</h1><p>Browse <a href="/explore">East Africa experiences</a> or <a href="/destinations">all destinations</a>.</p>';
+      return page;
+    }
+
+    const destinationResponse = await fetchJson("/destinations?limit=100&sort=popular");
+    const destinationRows = rows(destinationResponse);
+    const terms = [...(adventure.filters || []), adventure.title, adventure.slug]
+      .map((term) => String(term || "").toLowerCase())
+      .filter(Boolean);
+    const relatedDestinations = destinationRows.filter((destination) => {
+      const haystack = [
+        destination.category,
+        destination.experienceCategory,
+        destination.adventureCategory,
+        destination.classification,
+        destination.destinationType,
+        destination.name,
+        destination.tagline,
+        destination.short_description,
+        destination.shortDescription,
+        destination.description,
+        destination.country_name,
+        destination.countryName,
+        destination.country,
+      ]
+        .map((value) => textOf(value, 1200))
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return terms.some((term) => haystack.includes(term));
+    });
+
+    const rawTitle = first(adventure.seoTitle, adventure.title);
+    const title = rawTitle.toLowerCase().includes("altuvera") ? rawTitle : rawTitle + " | Altuvera Safaris";
+    const description = first(adventure.seoDescription, adventure.summary);
+    const questions = Array.isArray(adventure.faqs) ? adventure.faqs : [];
+    const officialLinks = Array.isArray(adventure.planningLinks) ? adventure.planningLinks : [];
+    const countryLinks = (Array.isArray(adventure.relatedCountrySlugs) ? adventure.relatedCountrySlugs : [])
+      .filter((countrySlug) => /^[a-z0-9-]+$/.test(countrySlug))
+      .map((countrySlug) => {
+        const name = countrySlug.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+        return '<li><a href="/country/' + esc(countrySlug) + '">' + esc(name) + ' travel guide</a></li>';
+      }).join("");
+
+    page.title = title;
+    page.description = description;
+    page.image = adventure.image || LOGO;
+    page.body =
+      '<h1>' + esc(adventure.title) + '</h1>' +
+      '<p class="lead">' + esc(adventure.summary) + '</p>' +
+      '<h2>Plan the right experience</h2><p>' + esc(adventure.description) + '</p>' +
+      '<p>' + esc(adventure.whyItMatters) + '</p>' +
+      '<h2>What you may experience</h2><ul>' +
+      (Array.isArray(adventure.whatYouWillExperience) ? adventure.whatYouWillExperience : [])
+        .map((item) => '<li>' + esc(textOf(item, 800)) + '</li>').join("") +
+      '</ul>' +
+      '<h2>Who this journey suits</h2><ul>' +
+      (Array.isArray(adventure.bestFor) ? adventure.bestFor : [])
+        .map((item) => '<li>' + esc(textOf(item, 300)) + '</li>').join("") +
+      '</ul>' +
+      (countryLinks ? '<h2>Explore this experience by country</h2><ul>' + countryLinks + '</ul>' : "") +
+      listHtml(relatedDestinations, "/destinations/", "Related East Africa destinations") +
+      (questions.length ? '<section><h2>Frequently asked questions</h2>' + questions.map((item) =>
+        '<article><h3>' + esc(textOf(item.question, 500)) + '</h3><p>' + esc(textOf(item.answer, 1800)) + '</p></article>'
+      ).join("") + '</section>' : "") +
+      (officialLinks.length ? '<section><h2>Official planning information</h2><ul>' + officialLinks.map((item) =>
+        '<li><a href="' + esc(item.url) + '">' + esc(item.label) + '</a></li>'
+      ).join("") + '</ul><p>Confirm current park guidance and visitor requirements with the responsible authority before travelling.</p></section>' : "") +
+      '<p><a href="/booking">Plan your journey</a> · <a href="/contact">Contact Altuvera Safaris</a> · <a href="/explore">Explore East Africa</a></p>';
+    return page;
+  }
   const post = route.match(/^\/post\/([^/]+)$/i);
   if (post) {
     const livePost = unwrap(await fetchJson("/posts/" + encodeURIComponent(post[1])), "post");
@@ -223,7 +305,12 @@ const render = async (route) => {
   if (details) {
     page.title = details[0]; page.description = details[1];
     const links = route === "/" ? [["Explore destinations", "/destinations"], ["Safari packages", "/packages"], ["Travel journal", "/posts"], ["Our services", "/services"], ["About Altuvera", "/about"], ["Contact our team", "/contact"]] : [];
-    page.body = '<h1>' + esc(details[0].replace(" | Altuvera Safaris", "")) + '</h1><p>' + esc(details[1]) + '</p>' + (links.length ? '<nav aria-label="Explore Altuvera"><ul>' + links.map((v) => '<li><a href="' + esc(v[1]) + '">' + esc(v[0]) + '</a></li>').join("") + '</ul></nav>' : ""); return page;
+    const adventureLinks = (route === "/" || route === "/explore")
+      ? '<section><h2>Explore East Africa experiences</h2><ul>' + ADVENTURE_CATALOG.map((item) =>
+          '<li><a href="/adventures/' + esc(item.slug) + '">' + esc(item.title) + '</a> — ' + esc(first(item.seoDescription, item.summary)) + '</li>'
+        ).join("") + '</ul></section>'
+      : "";
+    page.body = '<h1>' + esc(details[0].replace(" | Altuvera Safaris", "")) + '</h1><p>' + esc(details[1]) + '</p>' + (links.length ? '<nav aria-label="Explore Altuvera"><ul>' + links.map((v) => '<li><a href="' + esc(v[1]) + '">' + esc(v[0]) + '</a></li>').join("") + '</ul></nav>' : "") + adventureLinks; return page;
   }
   page.title = "Page Not Found | Altuvera Safaris"; page.description = "The requested Altuvera Safaris page could not be found."; page.noindex = true; page.status = 404; page.body = '<h1>Page not found</h1><p>Visit the <a href="/">Altuvera Safaris homepage</a> or explore <a href="/destinations">East Africa destinations</a>.</p>'; return page;
 };
