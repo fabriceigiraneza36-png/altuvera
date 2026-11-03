@@ -10,6 +10,7 @@
   import { motion, AnimatePresence } from 'framer-motion';
   import DashboardLayout from '../../components/auth/DashboardLayout';
   import { useNotifications } from '../../hooks/useNotifications';
+  import { useBrowserPush } from '../../hooks/useBrowserPush';
 
   const TYPE_META = {
     booking_created: { icon: CalendarDays, color: '#059669' },
@@ -82,6 +83,7 @@
     } = useNotifications();
 
     const grouped = useMemo(() => groupedNotifications || { all: [], booking: [], system: [] }, [groupedNotifications]);
+    const browserPush = useBrowserPush();
 
     const [tab,        setTab]        = useState('all');
     const [searchText, setSearchText] = useState('');
@@ -180,6 +182,65 @@
               </motion.div>
             )}
           </AnimatePresence>
+
+          {browserPush.showReminder && (
+            <motion.section
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              role="status"
+              aria-live="polite"
+              style={{
+                display: 'flex', alignItems: 'flex-start', gap: 14,
+                padding: '17px 18px', marginBottom: 18, borderRadius: 18,
+                border: '1px solid #bde5cf',
+                background: 'linear-gradient(120deg,#f0fbf5 0%,#ffffff 100%)',
+                boxShadow: '0 8px 24px rgba(4,120,87,.07)',
+              }}
+            >
+              <span style={{
+                display: 'grid', placeItems: 'center', width: 42, height: 42,
+                flex: '0 0 42px', borderRadius: 14, color: '#047857',
+                background: '#dcfce7', border: '1px solid #bbf7d0',
+              }}>
+                <Bell size={20} />
+              </span>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <h3 style={{ margin: 0, color: '#123b2c', fontSize: 14, fontWeight: 800 }}>
+                  Stay updated with browser notifications
+                </h3>
+                <p style={{ margin: '5px 0 0', color: '#52685d', fontSize: 12, lineHeight: 1.65 }}>
+                  Enable notifications to receive important booking, message, and account updates even when Altuvera is not open.
+                </p>
+                {browserPush.permission === 'denied' && (
+                  <p style={{ margin: '8px 0 0', color: '#92400e', fontSize: 12, lineHeight: 1.6 }}>
+                    Notifications are blocked by your browser. Open this site’s settings from your browser address bar or site permissions, change Notifications to Allow, then come back and check again.
+                  </p>
+                )}
+                {browserPush.error && (
+                  <p role="alert" style={{ margin: '8px 0 0', color: '#b91c1c', fontSize: 12, lineHeight: 1.6 }}>
+                    {browserPush.error}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={browserPush.permission === 'denied' ? browserPush.refresh : browserPush.enablePush}
+                disabled={browserPush.loading}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  gap: 7, flex: '0 0 auto', alignSelf: 'center',
+                  padding: '10px 14px', border: 0, borderRadius: 11,
+                  background: '#047857', color: '#fff', fontSize: 12,
+                  fontWeight: 800, cursor: browserPush.loading ? 'wait' : 'pointer',
+                  opacity: browserPush.loading ? .65 : 1, whiteSpace: 'nowrap',
+                }}
+              >
+                {browserPush.loading ? 'Enabling…' : browserPush.permission === 'denied' ? 'Check again' : browserPush.browserSubscribed ? 'Finish setup' : 'Enable'}
+                <ArrowUpRight size={14} />
+              </button>
+            </motion.section>
+          )}
 
           {/* ── Notification centre header ── */}
           <section style={{ marginBottom: 22, padding: 'clamp(20px, 4vw, 30px)', borderRadius: 24, color: '#fff', background: 'linear-gradient(125deg,#064e3b 0%,#047857 55%,#10a37f 100%)', boxShadow: '0 16px 40px rgba(4,120,87,.18)', position: 'relative', overflow: 'hidden' }}>
