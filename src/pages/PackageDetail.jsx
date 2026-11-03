@@ -10,6 +10,7 @@ import {
   Sparkles, ShieldCheck, AlertCircle,
 } from "lucide-react";
 import { packagesAPI } from "../api/packages";
+import SEO from "../components/common/SEO";
 import { useUserAuth } from "../context/UserAuthContext";
 import { apiFetch } from "../utils/apiBase";
 import CountryPhoneSelect, {
@@ -402,6 +403,25 @@ export default function PackageDetail() {
   const destination = pkg.destination_name || pkg.destination || "East Africa";
   const country = pkg.country_name || pkg.country || "";
   const highlights = firstArray(pkg.features || pkg.highlights).slice(0, 3);
+  const packageSeoTitle = pkg.meta_title || pkg.title + " | East Africa Safari Package";
+  const packageSeoDescription = String(
+    pkg.meta_description || pkg.short_description || pkg.description ||
+      ("Explore " + pkg.title + " with Altuvera Safaris. Discover the destination, experiences and travel details for this East African journey."),
+  ).replace(/<[^>]*>/g, " ").replace(/\\s+/g, " ").trim().slice(0, 180);
+  const packageSeoUrl = "/packages/" + encodeURIComponent(pkg.slug || slug || pkg.id);
+  const packageSeo = (
+    <SEO
+      title={packageSeoTitle}
+      description={packageSeoDescription}
+      image={cover}
+      url={packageSeoUrl}
+      breadcrumbs={[
+        { name: "Home", url: "/" },
+        { name: "Packages", url: "/packages" },
+        { name: pkg.title, url: packageSeoUrl },
+      ]}
+    />
+  );
 
   if (success) {
     return (
