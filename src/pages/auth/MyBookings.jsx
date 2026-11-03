@@ -1319,6 +1319,13 @@ export default function MyBookings() {
     setActiveInfoRequest(request);
   }, []);
 
+  useEffect(() => {
+    const requestedId = new URLSearchParams(window.location.search).get("infoRequestId");
+    if (!requestedId || !infoRequests.length) return;
+    const requested = infoRequests.find(item => String(item.id) === String(requestedId));
+    if (requested && requested.status === "pending") openInfoForm(requested);
+  }, [infoRequests, openInfoForm]);
+
   const submitInfoForm = useCallback(async () => {
     if (!activeInfoRequest) return;
     setInfoSubmitting(true);
