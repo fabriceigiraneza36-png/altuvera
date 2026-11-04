@@ -45,6 +45,7 @@ import EmailAutocompleteInput from "../common/EmailAutocompleteInput";
 import CountryPhoneSelect, { COUNTRIES } from "./CountryPhoneSelect";
 import ProfessionPickerModal from "./ProfessionPickerModal";
 import { API_URL } from "../../utils/apiBase";
+import { reportAuthDiagnostic } from "../../utils/authDiagnostics";
 import "./AuthModal.css";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1188,7 +1189,18 @@ export default function AuthModal() {
     } catch (err) {
       const msg = err?.message || "";
       if (isDismissalError(msg)) return;
-      setError(formatAuthError(msg, "Google authentication failed."));
+      const referenceId = err?.diagnosticReference || reportAuthDiagnostic({
+        provider: "google",
+        stage: "provider_sdk",
+        category: /not configured|missing/i.test(msg) ? "configuration"
+          : /network|fetch|offline/i.test(msg) ? "network" : "unexpected",
+        errorCode: err?.code || err?.name || "GOOGLE_SDK_FAILED",
+        error: err,
+        message: msg,
+      });
+      setError(formatAuthError(referenceId && !msg.includes(referenceId)
+        ? `${msg} Reference: ${referenceId}`
+        : msg, "Google authentication failed."));
     }
   }, [clearSocialAuthError, isBusy, isOnline, promptGoogleAuth]);
 
@@ -1197,7 +1209,19 @@ export default function AuthModal() {
     if (!isOnline) { setError("You appear to be offline. Reconnect before using social sign-in."); return; }
     clearSocialAuthError?.(); setError(""); setSuccess("");
     try { startGithubAuth(mode); }
-    catch (err) { setError(formatAuthError(err, "GitHub authentication failed.")); }
+    catch (err) {
+      const referenceId = err?.diagnosticReference || reportAuthDiagnostic({
+        provider: "github",
+        stage: "oauth_start",
+        category: /not configured|missing/i.test(err?.message || "") ? "configuration" : "unexpected",
+        errorCode: err?.code || "GITHUB_OAUTH_START_FAILED",
+        error: err,
+      });
+      const message = err?.message || "GitHub authentication failed.";
+      setError(formatAuthError(referenceId && !message.includes(referenceId)
+        ? `${message} Reference: ${referenceId}`
+        : message, "GitHub authentication failed."));
+    }
   }, [clearSocialAuthError, isBusy, isOnline, startGithubAuth]);
 
   const handlePasskeyAuth = useCallback(async () => {
@@ -1205,20 +1229,35 @@ export default function AuthModal() {
     if (!isOnline) { setError("You appear to be offline. Reconnect before using a passkey."); return; }
     setError(""); setSuccess(""); setLoading(true);
     try { await startPasskeyLogin(form.email.trim()); }
-    catch (err) { setError(formatAuthError(err, "Passkey sign-in failed. Try another enrolled method.")); }
+    catch (err) {
+      const message = err?.message || "Passkey sign-in failed.";
+      setError(formatAuthError(message, "Passkey sign-in failed. Try another enrolled method."));
+    }
     finally { setLoading(false); }
   }, [form.email, isBusy, isOnline, startPasskeyLogin]);
 
   const handleFacebookAuth = useCallback(() => {
     if (isBusy) return;
-    if (!FACEBOOK_LOGIN_ENABLED) {
-      setError("Facebook sign-in is prepared but not enabled yet. Altuvera must connect its Meta app credentials first.");
+    if (!isOnline) {
+      const referenceId = reportAuthDiagnostic({
+        provider: "facebook", stage: "oauth_start", category: "network",
+        errorCode: "BROWSER_OFFLINE", message: "The device is offline.",
+      });
+      setError(`Reconnect to the internet before using Facebook sign-in. Reference: ${referenceId}`);
       return;
     }
-    if (!isOnline) { setError("You appear to be offline. Reconnect before using Facebook sign-in."); return; }
     clearSocialAuthError?.(); setError(""); setSuccess("");
     try { startFacebookAuth(); }
-    catch (err) { setError(formatAuthError(err, "Facebook authentication failed.")); }
+    catch (err) {
+      const referenceId = err?.diagnosticReference || reportAuthDiagnostic({
+        provider: "facebook", stage: "oauth_start", category: "unexpected",
+        errorCode: err?.code || "FACEBOOK_OAUTH_START_FAILED", error: err,
+      });
+      const message = err?.message || "Facebook authentication failed.";
+      setError(formatAuthError(referenceId && !message.includes(referenceId)
+        ? `${message} Reference: ${referenceId}`
+        : message, "Facebook authentication failed."));
+    }
   }, [clearSocialAuthError, isBusy, isOnline, startFacebookAuth]);
 
   /* ═══════════════════════════════════════════════════════════
@@ -2016,10 +2055,10 @@ export default function AuthModal() {
                     </button>
                     <button
                       type="button"
-                      disabled={!FACEBOOK_LOGIN_ENABLED || facebookLoading || isBusy || !isOnline}
+                      disabled={facebookLoading || isBusy || !isOnline}
                       onClick={handleFacebookAuth}
                       className="am-method-option am-method-option--facebook"
-                      aria-disabled={!FACEBOOK_LOGIN_ENABLED}
+                      aria-disabled={false}
                     >
                       <span className="am-method-icon"><FaFacebookF className="h-5 w-5" aria-hidden="true" /></span>
                       <span className="am-method-copy">
