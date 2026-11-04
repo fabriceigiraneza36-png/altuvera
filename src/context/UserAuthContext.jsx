@@ -1284,6 +1284,7 @@ export function UserAuthProvider({ children }) {
     if (!credential) throw new Error("Google sign-in was cancelled.");
     setGoogleLoading(true);
     setSocialAuthError("");
+    setSocialAuthProfile(null);
 
     try {
       const data = await authFetch("/users/google", {
@@ -1318,7 +1319,7 @@ export function UserAuthProvider({ children }) {
           sub:     decoded?.sub     || "",
         };
         setGoogleUser(pending);
-        store.setJSON(KEYS.GOOGLE_PENDING, pending);
+        store.remove(KEYS.GOOGLE_PENDING);
         setModalView("register");
         openModal("register", { skipNotLoggedInMessage: true });
         return { ...data, requiresProfile: true, googleUser: pending };
@@ -1375,6 +1376,8 @@ export function UserAuthProvider({ children }) {
         setModalView("register");
         openModal("register", { skipNotLoggedInMessage: true });
       } else {
+        setGoogleUser(null);
+        store.remove(KEYS.GOOGLE_PENDING);
         setModalView("login");
         openModal("login", { skipNotLoggedInMessage: true });
       }
@@ -1475,6 +1478,7 @@ export function UserAuthProvider({ children }) {
           return reject(new Error("Google Sign-In is not configured."));
 
         setSocialAuthError("");
+        setSocialAuthProfile(null);
         setGoogleLoading(true);
 
         let settled = false;
@@ -1712,6 +1716,7 @@ export function UserAuthProvider({ children }) {
     if (!code) throw new Error("GitHub authorization code is required.");
     setGithubLoading(true);
     setSocialAuthError("");
+    setSocialAuthProfile(null);
 
     try {
       const data = await authFetch("/users/github", {
@@ -1786,6 +1791,7 @@ export function UserAuthProvider({ children }) {
     }
 
     setSocialAuthError("");
+    setSocialAuthProfile(null);
     const redirectUri = resolveGithubRedirectUri();
     const state       = randomState();
 
@@ -1861,7 +1867,9 @@ export function UserAuthProvider({ children }) {
     try {
       if (oauthErr) {
         const oauthMessages = {
-          account_removed: "This Altuvera account has been removed and is no longer available. If you believe this is a mistake, contact Altuvera support.",
+          account_removed: "Your previous Altuvera account was removed. You can create a fresh account using this same email address.",
+          account_recreate_required: "We couldn't find an active Altuvera account for these details. Create an account to continue.",
+          account_not_found: "We couldn't find an Altuvera account for this GitHub identity. Create an account to continue.",
           account_deactivated: "This Altuvera account is currently deactivated. Contact Altuvera support if you need help restoring access.",
           verification_rate_limited: "A verification code was recently sent. Wait for the current code or try again when the resend limit resets.",
           github_auth_failed: "GitHub could not start sign-in. Please try again.",
@@ -1875,7 +1883,11 @@ export function UserAuthProvider({ children }) {
       }
       await githubSignIn(code, { mode: githubIntent });
     } catch (err) {
-      const code = err?.code || err?.data?.code || "";
+      const callbackCode = err?.code || err?.data?.code || (
+        ["account_removed", "account_recreate_required", "account_not_found"].includes(oauthErr)
+          ? oauthErr.toUpperCase()
+          : ""
+      );
       const profile = err?.data?.data?.profile || err?.data?.profile || null;
       if (profile?.email) {
         setSocialAuthProfile({
@@ -1883,11 +1895,11 @@ export function UserAuthProvider({ children }) {
           email: trim(profile.email),
           fullName: trim(profile.fullName || profile.name),
           avatar: trim(profile.avatar || profile.picture),
-          code,
+          code: callbackCode,
         });
       }
       setSocialAuthError(err?.message || "GitHub sign-in failed.");
-      const needsSignup = ["ACCOUNT_REMOVED", "ACCOUNT_RECREATE_REQUIRED", "ACCOUNT_NOT_FOUND"].includes(code);
+      const needsSignup = ["ACCOUNT_REMOVED", "ACCOUNT_RECREATE_REQUIRED", "ACCOUNT_NOT_FOUND"].includes(callbackCode);
       setModalView(needsSignup ? "register" : "login");
       openModal(needsSignup ? "register" : "login", { skipNotLoggedInMessage: true });
     } finally {
