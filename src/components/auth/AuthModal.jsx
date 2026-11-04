@@ -782,9 +782,9 @@ export default function AuthModal() {
   }, [form, modalView, transientPrefill]);
 
   useEffect(() => {
-    if (modalView !== "login") return;
+    if (transientPrefill || modalView !== "login") return;
     persistLoginDraft(form);
-  }, [form.email, form.fullName, form.keepSignedIn, modalView]);
+  }, [form.email, form.fullName, form.keepSignedIn, modalView, transientPrefill]);
 
   useEffect(() => {
     setPendingPromptDismissed(false);
