@@ -93,8 +93,31 @@ export default defineConfig(({ mode }) => {
       assetsInlineLimit:     8192,
       reportCompressedSize:  isProd,
       chunkSizeWarningLimit: 1000,
-      rollupOptions: {
+      rolldownOptions: {
         output: {
+          // Split large third-party dependencies into cacheable, bounded chunks.
+          // Entry-aware groups avoid making every route download every vendor.
+          strictExecutionOrder: true,
+          codeSplitting: {
+            groups: [
+              {
+                name: "react-vendor",
+                test: /node_modules[\\/]react(?:-dom)?[\\/]/,
+                priority: 20,
+                minSize: 20_000,
+                maxSize: 250_000,
+                entriesAware: true,
+              },
+              {
+                name: "vendor",
+                test: /node_modules[\\/]/,
+                priority: 10,
+                minSize: 20_000,
+                maxSize: 250_000,
+                entriesAware: true,
+              },
+            ],
+          },
           chunkFileNames: "assets/js/[name]-[hash].js",
           entryFileNames: "assets/js/[name]-[hash].js",
           assetFileNames: ({ name = "" }) => {
