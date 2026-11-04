@@ -1813,9 +1813,15 @@ export function UserAuthProvider({ children }) {
 
     try {
       if (oauthErr) {
-        throw new Error(
-          errDesc ? decodeURIComponent(errDesc) : "GitHub sign-in was cancelled.",
-        );
+        const oauthMessages = {
+          account_removed: "This Altuvera account has been removed and is no longer available. If you believe this is a mistake, contact Altuvera support.",
+          account_deactivated: "This Altuvera account is currently deactivated. Contact Altuvera support if you need help restoring access.",
+          verification_rate_limited: "A verification code was recently sent. Wait for the current code or try again when the resend limit resets.",
+          github_auth_failed: "GitHub could not start sign-in. Please try again.",
+          github_token_failed: "GitHub did not complete authorization. Please try again.",
+          github_profile_failed: "Altuvera could not retrieve the verified GitHub profile details needed to continue.",
+        };
+        throw new Error(oauthMessages[oauthErr] || (errDesc ? decodeURIComponent(errDesc) : "GitHub sign-in was cancelled."));
       }
       if (!code || !state || !expectedState || expectedState !== state) {
         throw new Error("GitHub sign-in could not be verified. Please try again.");
