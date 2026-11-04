@@ -995,7 +995,12 @@ export function UserAuthProvider({ children }) {
       throw err;
     }
 
-    const finalData = resData || {};
+    let finalData = resData || {};
+    if (diagnosticProvider && finalData?.success === false && finalData?.diagnosticReference) {
+      const reference = finalData.diagnosticReference;
+      const message = String(finalData.message || "Authentication could not be completed.");
+      if (!message.includes(reference)) finalData = { ...finalData, message: `${message} Reference: ${reference}` };
+    }
     if (cacheable) {
       userDataCache.set(cacheKey, finalData, opts.cacheTime || 30 * 1000);
     } else {
@@ -2107,7 +2112,7 @@ export function UserAuthProvider({ children }) {
 
     // Clean URL immediately
     const clean = new URL(window.location.href);
-    ["code", "state", "error", "error_description", "auth_provider"]
+    ["code", "state", "error", "error_description", "auth_provider", "auth_ref"]
       .forEach((p) => clean.searchParams.delete(p));
     window.history.replaceState(
       {}, document.title,
