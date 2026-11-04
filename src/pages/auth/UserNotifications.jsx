@@ -7,7 +7,6 @@ import { Helmet } from "react-helmet-async";
 import { getNotificationActionUrl, getNotificationPresentation } from "../../utils/notificationPresentation";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "../../components/auth/DashboardLayout";
-import UserPushReminder from "../../components/auth/UserPushReminder";
 import { useNotifications } from "../../hooks/useNotifications";
 import { useBrowserPush } from "../../hooks/useBrowserPush";
 
