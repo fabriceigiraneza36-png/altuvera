@@ -97,7 +97,7 @@ const MAX_FILE = 10 * 1024 * 1024;
 const CODE_TTL_LOGIN_REGISTER = 10 * 60;
 const CODE_TTL_RESEND = 10 * 60;
 const SIGNUP_DRAFT_KEY = "altuvera_signup_draft_v1";
-const SIGNUP_DRAFT_TTL_MS = 10 * 60 * 1000;
+const SIGNUP_DRAFT_TTL_MS = 30 * 60 * 1000;
 
 const LOGIN_DRAFT_KEY = "altuvera_login_draft_v1";
 const LOGIN_DRAFT_TTL_MS = 30 * 60 * 1000;
@@ -763,7 +763,26 @@ export default function AuthModal() {
       email: previous.email || pendingVerification.email,
       fullName: previous.fullName || pendingVerification.fullName || "",
     }));
-  }, [pendingVerification?.email, pendingVerification?.fullName]);
+
+    // Keep the non-secret identity details available even after an OAuth OTP
+    // expires, so the visitor can return to the form and request a fresh code.
+    if (pendingVerification.purpose !== "signup") {
+      persistLoginDraft({
+        email: pendingVerification.email,
+        fullName: pendingVerification.fullName || "",
+        keepSignedIn: persistSession,
+      });
+    } else {
+      const savedSignup = readSignupDraft();
+      if (savedSignup?.data) {
+        const expiresAt = Date.now() + SIGNUP_DRAFT_TTL_MS;
+        signupDraftExpiresAtRef.current = expiresAt;
+        persistSignupDraft(savedSignup.data, expiresAt);
+      }
+    }
+
+    setVerifySource(pendingVerification.purpose === "signup" ? "register" : "login");
+  }, [pendingVerification?.email, pendingVerification?.fullName, pendingVerification?.purpose, persistSession]);
 
   useEffect(() => {
     if (transientPrefill || modalView !== "register" || !form.email.trim()) return;
@@ -775,6 +794,25 @@ export default function AuthModal() {
     if (transientPrefill || modalView !== "login") return;
     persistLoginDraft(form);
   }, [form.email, form.fullName, form.keepSignedIn, modalView, transientPrefill]);
+
+  const closeAuthModal = useCallback(() => {
+    // Save the visible form before dismissing the modal. This is intentionally
+    // limited to ordinary profile details; never persist passwords, OTPs,
+    // OAuth credentials, or recovery/security codes.
+    if (modalView === "register" ||
+        (modalView === "verify" && pendingVerification?.purpose === "signup")) {
+      const expiresAt = Date.now() + SIGNUP_DRAFT_TTL_MS;
+      signupDraftExpiresAtRef.current = expiresAt;
+      persistSignupDraft(form, expiresAt);
+    } else if (modalView === "login" || modalView === "verify") {
+      persistLoginDraft({
+        ...form,
+        email: pendingVerification?.email || form.email,
+        fullName: pendingVerification?.fullName || form.fullName,
+      });
+    }
+    closeModal();
+  }, [closeModal, form, modalView, pendingVerification?.email, pendingVerification?.fullName, pendingVerification?.purpose]);
 
   useEffect(() => {
     setPendingPromptDismissed(false);
@@ -998,10 +1036,10 @@ export default function AuthModal() {
 
   useEffect(() => {
     if (!isModalOpen) return;
-    const h = (e) => { if (e.key === "Escape" && !professionOpen) closeModal(); };
+    const h = (e) => { if (e.key === "Escape" && !professionOpen) closeAuthModal(); };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [closeModal, isModalOpen, professionOpen]);
+  }, [closeAuthModal, isModalOpen, professionOpen]);
 
   useEffect(() => {
     if (!isModalOpen || !isVerify || !pendingVerification?.expiresAt) return undefined;
@@ -1017,6 +1055,14 @@ export default function AuthModal() {
       expiryTimerRef.current = null;
     };
   }, [isModalOpen, isVerify, pendingVerification?.expiresAt, startExpiryCountdown]);
+
+  // When a valid challenge is restored or reopened, place the cursor in the
+  // first code box immediately so the user can paste/type without extra taps.
+  useEffect(() => {
+    if (!isModalOpen || !isVerify || codeExpired || codeState === "success") return undefined;
+    const focusTimer = window.setTimeout(() => codeRefs.current[0]?.focus(), 280);
+    return () => window.clearTimeout(focusTimer);
+  }, [isModalOpen, isVerify, codeExpired, codeState, pendingVerification?.expiresAt]);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -1450,10 +1496,29 @@ export default function AuthModal() {
      OTP HANDLERS (main)
   ═══════════════════════════════════════════════════════════ */
   const handleCodeChange = useCallback((i, val) => {
-    if (!/^[0-9]?$/.test(val)) return;
-    setCode((p) => { const n = [...p]; n[i] = val; return n; });
-    setError(""); setCodeState("");
-    if (val && i < 5) codeRefs.current[i + 1]?.focus();
+    const digits = String(val || "").replace(/\D/g, "").slice(0, 6);
+    if (!digits && val !== "") return;
+
+    // Mobile OTP autofill may insert all six digits into the first field.
+    // Distribute that value across the six boxes rather than rejecting it.
+    if (digits.length > 1) {
+      const next = emptyCode();
+      digits.split("").forEach((digit, index) => { next[index] = digit; });
+      setCode(next);
+      setError("");
+      setCodeState("");
+      codeRefs.current[Math.min(digits.length, 5)]?.focus();
+      return;
+    }
+
+    setCode((previous) => {
+      const next = [...previous];
+      next[i] = digits;
+      return next;
+    });
+    setError("");
+    setCodeState("");
+    if (digits && i < 5) codeRefs.current[i + 1]?.focus();
   }, []);
 
   const handleCodeKey = useCallback((i, e) => {
@@ -1586,7 +1651,7 @@ export default function AuthModal() {
       {/* Backdrop */}
       <div
         className="am-fadeIn fixed inset-0 z-[9990] flex items-center justify-center p-0 sm:p-4 lg:p-6 bg-black/55"
-        onClick={closeModal}
+        onClick={closeAuthModal}
       >
         {/* Modal */}
         <div
@@ -1627,7 +1692,7 @@ export default function AuthModal() {
                   <h3 className="text-base font-bold text-gray-900 tracking-tight">Altuvera</h3>
                 </div>
               </div>
-              <button onClick={closeModal}
+              <button onClick={closeAuthModal}
                 className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
                 aria-label="Close"
               >
