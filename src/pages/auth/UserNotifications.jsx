@@ -139,7 +139,7 @@ export default function UserNotifications() {
         <meta name="description" content="View your Altuvera booking, travel and account notifications." />
       </Helmet>
 
-      <DashboardLayout title="Notifications" subtitle="Your booking, travel and account updates in one place.">
+      <DashboardLayout>
         <div className="notifications-page">
           <header className="notifications-page-header">
             <div className="notifications-page-heading">
@@ -485,7 +485,9 @@ export default function UserNotifications() {
           .notification-entry-actions{position:relative;flex:0 0 32px}
           .notification-more-button{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:9px;background:transparent;color:#718178;cursor:pointer}
           .notification-more-button:hover,.notification-more-button[aria-expanded="true"]{background:#edf6f0;color:#087b54}
-          .notification-action-menu{position:absolute;z-index:30;top:37px;right:0;width:min(228px,calc(100vw - 54px));padding:5px;border:1px solid #e2ebe5;border-radius:12px;background:#fff;box-shadow:0 14px 38px rgba(13,43,28,.15)}
+          .notification-entry:has(.notification-action-menu){z-index:1000;isolation:isolate}
+          .notification-action-menu{position:absolute;z-index:1001;top:37px;right:0;width:min(228px,calc(100vw - 54px));padding:5px;border:1px solid #e2ebe5;border-radius:12px;background:#fff;box-shadow:0 14px 38px rgba(13,43,28,.15)}
+          .notifications-date-group:last-child .notification-entry:last-child .notification-action-menu{top:auto;bottom:37px;transform-origin:bottom right}
           .notification-action-menu button,.notification-action-menu a{display:flex;align-items:center;gap:10px;width:100%;min-height:38px;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:#344e40;text-align:left;text-decoration:none;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
           .notification-action-menu button:hover,.notification-action-menu a:hover{background:#f4f8f5}
           .notification-action-menu .notification-action-danger{color:#b34e55}
@@ -507,6 +509,7 @@ export default function UserNotifications() {
           .notifications-spin{animation:notifications-spin 1s linear infinite}
           @keyframes notifications-spin{to{transform:rotate(360deg)}}
           @media(max-width:700px){
+            .notifications-date-group:last-child .notification-entry:last-child .notification-action-menu{top:auto;bottom:34px;}
             .notifications-page-header{align-items:flex-start;gap:12px;margin-bottom:16px}
             .notifications-stats{gap:6px}
             .notifications-stat{min-width:59px;padding:8px 9px}
