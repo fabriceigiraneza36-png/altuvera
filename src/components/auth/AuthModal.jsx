@@ -747,6 +747,7 @@ export default function AuthModal() {
   const forgotEmailRef    = useRef(null);
   const expiryTimerRef    = useRef(null);
   const forgotExpiryTimerRef = useRef(null);
+  const authViewPersistedOnceRef = useRef(false);
 
   /* ── Derived ── */
   const isLogin    = modalView === "login";
@@ -755,6 +756,20 @@ export default function AuthModal() {
   const isFactor   = modalView === "factor";
 
   const activeEmail   = (pendingEmail || form.email || googleUser?.email || "").trim();
+
+  // Remember whether the visitor was working in sign-in or registration.
+  // Skip the first render so the context's default "login" value cannot
+  // overwrite a saved registration intent during page restoration.
+  useEffect(() => {
+    if (!authViewPersistedOnceRef.current) {
+      authViewPersistedOnceRef.current = true;
+      return;
+    }
+    if (modalView === "login" || modalView === "register") {
+      try { sessionStorage.setItem("altuvera_auth_resume_view_v1", modalView); }
+      catch { /* Form recovery still works in memory when storage is disabled. */ }
+    }
+  }, [modalView]);
 
   useEffect(() => {
     if (!pendingVerification?.email) return;
@@ -818,14 +833,9 @@ export default function AuthModal() {
     setPendingPromptDismissed(false);
   }, [pendingVerification?.email, pendingVerification?.expiresAt]);
 
-  useEffect(() => {
-    if (
-      isVerify &&
-      codeExpired &&
-      pendingVerification &&
-      Number(pendingVerification.expiresAt) <= Date.now()
-    ) clearPendingVerification();
-  }, [isVerify, codeExpired, pendingVerification, clearPendingVerification]);
+  // Keep the expired challenge metadata in memory until the visitor requests a
+  // replacement code or dismisses the modal. This preserves its original
+  // provider/purpose so a resend continues the same sign-in or sign-up flow.
   const emailOk       = EMAIL_RE.test(form.email.trim());
   const nameOk        = form.fullName.trim().length >= 2;
   const bioOk         = form.bio.trim().length <= MAX_BIO;
