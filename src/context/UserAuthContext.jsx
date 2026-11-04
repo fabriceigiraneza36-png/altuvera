@@ -569,6 +569,7 @@ export function UserAuthProvider({ children }) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
   const [socialAuthError, setSocialAuthError] = useState("");
+  const [socialAuthProfile, setSocialAuthProfile] = useState(null);
 
   // ── Refs ──────────────────────────────────────────────────────────────────
   const fetchingRef     = useRef(false);
@@ -799,6 +800,7 @@ export function UserAuthProvider({ children }) {
     setIsModalOpen(false);
     setPendingEmail(savedVerification?.email || "");
     setSocialAuthError("");
+    setSocialAuthProfile(null);
     setGoogleUser(null);
     store.remove(KEYS.GOOGLE_PENDING);
     document.body.style.overflow = "";
@@ -1349,12 +1351,42 @@ export function UserAuthProvider({ children }) {
       }
 
       const msg = err?.message || "Google sign-in failed.";
+      const decoded = decodeJWT(credential);
+      const providerProfile = errData?.data?.profile || errData?.profile || {};
+      const profile = {
+        provider: "google",
+        email: trim(providerProfile.email || decoded?.email),
+        fullName: trim(providerProfile.fullName || providerProfile.name || decoded?.name),
+        avatar: trim(providerProfile.avatar || providerProfile.picture || decoded?.picture),
+        code: errData?.code || "",
+      };
+      setSocialAuthProfile(profile);
+      const needsSignup = ["ACCOUNT_REMOVED", "ACCOUNT_RECREATE_REQUIRED", "ACCOUNT_NOT_FOUND"].includes(errData?.code);
+      if (needsSignup && profile.email) {
+        const pending = {
+          credential,
+          email: profile.email,
+          name: profile.fullName,
+          picture: profile.avatar,
+          sub: decoded?.sub || "",
+        };
+        setGoogleUser(pending);
+        store.setJSON(KEYS.GOOGLE_PENDING, pending);
+        setModalView("register");
+        openModal("register", { skipNotLoggedInMessage: true });
+      } else {
+        setModalView("login");
+        openModal("login", { skipNotLoggedInMessage: true });
+      }
       setSocialAuthError(msg);
-      throw new Error(msg);
+      const surfaced = new Error(msg);
+      surfaced.code = errData?.code || "";
+      surfaced.data = errData;
+      throw surfaced;
     } finally {
       setGoogleLoading(false);
     }
-  }, [authFetch, clearPendingVerification, closeModal, openModal, persistPendingVerification, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, clearPendingVerification, closeModal, openModal, persistPendingVerification, persistSession, saveAuth, triggerCongratulation, setModalView]);
 
   // ============================================================================
   // One Tap Response Handler
@@ -1670,7 +1702,7 @@ export function UserAuthProvider({ children }) {
     store.remove(KEYS.GOOGLE_PENDING);
   }, []);
 
-  const clearSocialAuthError = useCallback(() => setSocialAuthError(""), []);
+  const clearSocialAuthError = useCallback(() => { setSocialAuthError(""); setSocialAuthProfile(null); }, []);
 
   // ============================================================================
   // GitHub Auth
@@ -1686,6 +1718,7 @@ export function UserAuthProvider({ children }) {
         method: "POST",
         body:   JSON.stringify({
           code,
+          mode: profileData?.mode === "signup" ? "signup" : "signin",
           phone: trim(profileData?.phone),
           bio:   trim(profileData?.bio),
         }),
@@ -1723,8 +1756,21 @@ export function UserAuthProvider({ children }) {
       }
 
       const msg = err?.message || "GitHub sign-in failed.";
+      const providerProfile = errData?.data?.profile || errData?.profile || {};
+      if (providerProfile.email) {
+        setSocialAuthProfile({
+          provider: "github",
+          email: trim(providerProfile.email),
+          fullName: trim(providerProfile.fullName || providerProfile.name),
+          avatar: trim(providerProfile.avatar || providerProfile.picture),
+          code: errData?.code || "",
+        });
+      }
       setSocialAuthError(msg);
-      throw new Error(msg);
+      const surfaced = new Error(msg);
+      surfaced.code = errData?.code || "";
+      surfaced.data = errData;
+      throw surfaced;
     } finally {
       setGithubLoading(false);
     }
@@ -1798,6 +1844,7 @@ export function UserAuthProvider({ children }) {
     if (provider && provider !== "github") return;
 
     const expectedState = sessionStorage.getItem(KEYS.GITHUB_STATE);
+    const githubIntent = sessionStorage.getItem(KEYS.GITHUB_INTENT) || "signin";
 
     // Clean URL immediately
     const clean = new URL(window.location.href);
@@ -1826,10 +1873,23 @@ export function UserAuthProvider({ children }) {
       if (!code || !state || !expectedState || expectedState !== state) {
         throw new Error("GitHub sign-in could not be verified. Please try again.");
       }
-      await githubSignIn(code);
+      await githubSignIn(code, { mode: githubIntent });
     } catch (err) {
+      const code = err?.code || err?.data?.code || "";
+      const profile = err?.data?.data?.profile || err?.data?.profile || null;
+      if (profile?.email) {
+        setSocialAuthProfile({
+          provider: "github",
+          email: trim(profile.email),
+          fullName: trim(profile.fullName || profile.name),
+          avatar: trim(profile.avatar || profile.picture),
+          code,
+        });
+      }
       setSocialAuthError(err?.message || "GitHub sign-in failed.");
-      openModal("login");
+      const needsSignup = ["ACCOUNT_REMOVED", "ACCOUNT_RECREATE_REQUIRED", "ACCOUNT_NOT_FOUND"].includes(code);
+      setModalView(needsSignup ? "register" : "login");
+      openModal(needsSignup ? "register" : "login", { skipNotLoggedInMessage: true });
     } finally {
       sessionStorage.removeItem(KEYS.GITHUB_STATE);
       sessionStorage.removeItem(KEYS.GITHUB_INTENT);
@@ -1965,7 +2025,7 @@ export function UserAuthProvider({ children }) {
     user, token, isAuthenticated, authLoading,
     isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
     googleUser, googleLoaded, googleLoading, githubLoading,
-    hasGooglePending, socialAuthError, persistSession,
+    hasGooglePending, socialAuthError, socialAuthProfile, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation, pendingVerification,
     openModal, closeModal, setModalView, persistPendingVerification, clearPendingVerification,
@@ -1981,7 +2041,7 @@ export function UserAuthProvider({ children }) {
     user, token, isAuthenticated, authLoading,
     isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
     googleUser, googleLoaded, googleLoading, githubLoading,
-    hasGooglePending, socialAuthError, persistSession,
+    hasGooglePending, socialAuthError, socialAuthProfile, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation,
     openModal, closeModal, setModalView,
