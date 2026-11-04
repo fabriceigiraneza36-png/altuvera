@@ -37,7 +37,7 @@ const writeQueue = (items) => {
 };
 
 const postDiagnostic = async (item) => {
-  const response = await fetch(`${API_BASE.replace(/\\/+$/, "")}/users/auth-diagnostics`, {
+  const response = await fetch(`${API_BASE}/users/auth-diagnostics`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(item),
