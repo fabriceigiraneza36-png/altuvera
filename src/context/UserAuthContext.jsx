@@ -774,10 +774,31 @@ export function UserAuthProvider({ children }) {
   // ============================================================================
 
   const openModal = useCallback((view = "login", options = {}) => {
-    const { skipNotLoggedInMessage = false } = options;
+    const {
+      skipNotLoggedInMessage = false,
+      resumePendingVerification = true,
+    } = options;
+
+    // A valid code challenge takes priority when a visitor opens the normal
+    // sign-in entry point again. This prevents a closed/refreshed OTP flow from
+    // silently looking like a brand-new login and avoids sending another code.
+    const storedPending = readPendingVerification();
+    const inMemoryPending = pendingVerification &&
+      Number(pendingVerification.expiresAt) > Date.now()
+      ? pendingVerification
+      : null;
+    const resumablePending = storedPending || inMemoryPending;
+    const nextView = resumePendingVerification && view === "login" && resumablePending
+      ? "verify"
+      : view;
+
+    if (nextView === "verify" && resumablePending) {
+      setPendingVerification(resumablePending);
+      setPendingEmail(resumablePending.email);
+    }
 
     if (skipNotLoggedInMessage) {
-      setModalView(view);
+      setModalView(nextView);
       setIsModalOpen(true);
       document.body.style.overflow = "hidden";
       return;
@@ -787,12 +808,12 @@ export function UserAuthProvider({ children }) {
     setShowNotLoggedInMessage(true);
     notLoggedInRef.current = setTimeout(() => {
       setShowNotLoggedInMessage(false);
-      setModalView(view);
+      setModalView(nextView);
       setIsModalOpen(true);
       document.body.style.overflow = "hidden";
       notLoggedInRef.current = null;
     }, 1500);
-  }, []);
+  }, [pendingVerification]);
 
   const closeModal = useCallback(() => {
     const savedVerification = readPendingVerification();
