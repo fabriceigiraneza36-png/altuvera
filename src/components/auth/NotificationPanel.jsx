@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BellRing, RefreshCw, Trash2, X, MoreHorizontal, Check, ExternalLink } from 'lucide-react'
 import { getNotificationActionUrl, getNotificationPresentation } from '../../utils/notificationPresentation'
@@ -22,7 +22,24 @@ const formatAgo = (value) => {
 // are kept behind the three-dot menu so the preview remains calm and readable.
 const NotifItem = ({ notif, onMarkRead, onDelete }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const actionsRef = useRef(null);
   const swipeStartX = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const closeOutside = (event) => {
+      if (!actionsRef.current?.contains(event.target)) setMenuOpen(false);
+    };
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
   const swipeDeltaX = useRef(0);
   const meta = getNotificationPresentation(notif);
   const Icon = meta.icon;
@@ -58,6 +75,7 @@ const NotifItem = ({ notif, onMarkRead, onDelete }) => {
         boxShadow: "0 2px 8px rgba(15,75,51,.035)",
         background: notif.is_read ? "#fff" : "#f8fcf9",
         position: "relative",
+        zIndex: menuOpen ? 12 : 1,
         minWidth: 0,
         cursor: "pointer",
         touchAction: "pan-y",
@@ -130,6 +148,7 @@ const NotifItem = ({ notif, onMarkRead, onDelete }) => {
         </div>
 
         <div
+          ref={actionsRef}
           className="alt-notification-actions"
           style={{ position: "relative", flex: "0 0 28px" }}
           onClick={(event) => event.stopPropagation()}
