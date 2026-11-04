@@ -291,10 +291,9 @@ const formatAuthError = (error, fallback = "Something went wrong. Please try aga
 /* ═══════════════════════════════════════════════════════════════
    GALLERY SLIDESHOW
 ═══════════════════════════════════════════════════════════════ */
-const GallerySlideshow = ({ intervalMs = 5000 }) => {
+const GallerySlideshow = ({ intervalMs = 4600 }) => {
   const [gallery, setGallery] = useState(GALLERY);
   const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -434,10 +433,10 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
   );
 
   useEffect(() => {
-    if (isPaused || !isPageVisible || reducedMotion || gallery.length < 2) return undefined;
+    if (!isPageVisible || reducedMotion || gallery.length < 2) return undefined;
     const timer = setInterval(advance, intervalMs);
     return () => clearInterval(timer);
-  }, [advance, gallery.length, intervalMs, isPaused, isPageVisible, reducedMotion]);
+  }, [advance, gallery.length, intervalMs, isPageVisible, reducedMotion]);
 
   useEffect(() => {
     const next = gallery[(current + 1) % gallery.length];
@@ -452,8 +451,6 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
   return (
     <div
       className="am-auth-slideshow relative h-full w-full overflow-hidden"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
       role="region"
       aria-label="Featured African destinations"
     >
@@ -462,10 +459,12 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
           key={item.src + "-" + index}
           style={{
             position: "absolute", inset: 0,
-            transition: "opacity 1200ms ease-in-out, transform 1200ms ease-in-out",
+            transition: "opacity 780ms cubic-bezier(.22,.61,.36,1), transform 900ms cubic-bezier(.2,.7,.2,1)",
             opacity: index === current ? 1 : 0,
-            transform: index === current ? "scale(1)" : "scale(1.045)",
+            transform: index === current ? "scale(1)" : "scale(1.035)",
             pointerEvents: index === current ? "auto" : "none",
+            willChange: "opacity, transform",
+            backfaceVisibility: "hidden",
           }}
           aria-hidden={index !== current}
         >
@@ -1610,11 +1609,6 @@ export default function AuthModal() {
           onClick={(e) => e.stopPropagation()}
           role="dialog" aria-modal="true" aria-labelledby="auth-title"
         >
-          {switchingView && (
-            <div className="am-switch-transition" role="status" aria-live="polite" aria-label="Switching authentication form">
-              <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} className="am-switch-transition__logo" />
-            </div>
-          )}
 
           {/* Top accent bar */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
@@ -1626,6 +1620,11 @@ export default function AuthModal() {
 
           {/* Form panel */}
           <div className="am-form-panel flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
+            {switchingView && (
+              <div className="am-switch-transition" role="status" aria-live="polite" aria-label="Switching authentication form">
+                <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} className="am-switch-transition__logo" />
+              </div>
+            )}
             {/* Header */}
             <div className="am-header flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex-shrink-0">
               <div className="flex items-center gap-2.5">
