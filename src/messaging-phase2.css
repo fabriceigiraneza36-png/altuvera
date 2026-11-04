@@ -32,3 +32,34 @@
 @media (prefers-reduced-motion:reduce) {
   .msg-sidebar-list button, .msg-chat button { transition:none!important; scroll-behavior:auto!important; }
 }
+/* Altuvera messaging refresh — traveller workspace */
+.msg-layout{--altu-green:#087a55;--altu-deep:#07513d;--altu-line:#e2ece6;--altu-ink:#14251e;background:#f6faf7;border-color:rgba(211,229,218,.9);isolation:isolate}
+.msg-sidebar{width:clamp(286px,31%,360px);background:linear-gradient(180deg,#fff,#fbfefc);border-right-color:var(--altu-line)}
+.msg-sidebar-head{padding:18px 16px 12px;background:linear-gradient(145deg,#fff,#f5fbf7);border-bottom:1px solid var(--altu-line)}
+.msg-sidebar-head h3,.msg-chat-title{color:var(--altu-ink);letter-spacing:-.025em}
+.msg-sidebar-list{scrollbar-width:thin;scrollbar-color:#c6d8cd transparent;background:#fff}
+.msg-sidebar-list>div[role=listitem]{border-bottom:1px solid #f0f4f1}
+.msg-sidebar-list button{min-height:76px;transition:background-color .18s,border-color .18s,transform .18s}
+.msg-sidebar-list button:active{transform:scale(.992)}
+.msg-sidebar-list button[aria-current=true],.msg-sidebar-list button[aria-selected=true]{background:linear-gradient(100deg,#eaf7ef,#f8fcf9 75%,#fff);box-shadow:inset 3px 0 #0a8a5d}
+.msg-chat{background:radial-gradient(ellipse at 12% 0%,rgba(210,239,222,.28),transparent 34%),linear-gradient(180deg,#f7fbf8,#f3f8f5)}
+.msg-chat-head{min-height:76px;padding-block:12px;background:rgba(255,255,255,.94);border-bottom:1px solid #e4ede7;box-shadow:0 8px 24px rgba(10,52,34,.045);backdrop-filter:blur(14px)}
+.msg-chat-body{padding:clamp(14px,2.3vw,28px);scrollbar-width:thin;scrollbar-color:#c7d9cd transparent;background:radial-gradient(circle at 1px 1px,rgba(16,94,58,.035) 1px,transparent 0) 0 0/22px 22px,transparent}
+.msg-bubble-wrap{max-width:min(82%,720px)}
+.msg-bubble-wrap>div{border-radius:18px;box-shadow:0 4px 14px rgba(16,53,34,.055);animation:altu-message-rise .22s cubic-bezier(.2,.75,.25,1) both}
+.msg-chat-foot{padding-top:12px;padding-bottom:max(12px,env(safe-area-inset-bottom));border-top:1px solid #e2ece6;background:linear-gradient(180deg,rgba(255,255,255,.97),#fff);box-shadow:0 -10px 28px rgba(15,55,34,.035)}
+.msg-composer-row{border:1px solid #dfeae3;background:#f8fbf9;box-shadow:0 3px 12px rgba(13,72,44,.045);transition:border-color .18s,box-shadow .18s,background .18s}
+.msg-composer-row:focus-within{border-color:#79c9a1;background:#fff;box-shadow:0 0 0 4px rgba(16,145,88,.08),0 6px 18px rgba(13,72,44,.055)}
+.msg-composer-row textarea{min-height:40px!important;font-size:14px!important;line-height:1.55;color:var(--altu-ink)}
+.msg-composer-row button,.msg-chat-head button{transition:transform .16s,background-color .16s,box-shadow .16s}
+.msg-composer-row button:active,.msg-chat-head button:active{transform:scale(.96)}
+.msg-composer-row .msg-send-button,.msg-send-button{min-width:44px;min-height:42px;border-radius:13px;background:linear-gradient(135deg,#0b8b5d,#066544);box-shadow:0 6px 15px rgba(7,120,77,.18)}
+.msg-chat-foot [role=status]{border-radius:15px;border-color:#c9e8d5;background:linear-gradient(120deg,#f0fbf4,#fff)}
+.msg-resource-picker-scroll{scrollbar-width:thin;scrollbar-color:#c9dacf transparent}
+.msg-resource-picker-scroll button{transition:transform .16s,border-color .16s,background-color .16s,box-shadow .16s}
+.msg-resource-picker-scroll button:active{transform:scale(.99)}
+.msg-resource-picker-scroll input:focus-visible,.msg-resource-picker-scroll button:focus-visible{outline:3px solid rgba(13,143,88,.22);outline-offset:2px}
+.msg-bubble-wrap a{text-underline-offset:3px}
+@keyframes altu-message-rise{from{opacity:0;transform:translateY(5px) scale(.992)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:767px){.msg-layout{border:0;border-radius:0;box-shadow:none}.msg-sidebar{width:100%;border-right:0}.msg-sidebar-head{padding:13px 12px 10px}.msg-sidebar-list button{min-height:72px}.msg-chat-head{min-height:66px;padding:9px 12px;gap:8px}.msg-chat-body{padding:12px 10px 18px}.msg-bubble-wrap{max-width:92%}.msg-chat-foot{padding:9px 9px max(10px,env(safe-area-inset-bottom))}.msg-composer-row{gap:6px;border-radius:17px;padding:5px}.msg-composer-row textarea{font-size:16px!important}.msg-chat-foot>p{font-size:9px}.msg-resource-picker-scroll{overscroll-behavior:contain}}
+@media(prefers-reduced-motion:reduce){.msg-bubble-wrap>div{animation:none!important}.msg-sidebar-list button,.msg-composer-row,.msg-composer-row button,.msg-chat-head button{transition:none!important}}

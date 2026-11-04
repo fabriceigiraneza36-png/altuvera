@@ -2108,11 +2108,15 @@ export default function Messages() {
     isTypingRef.current = false;
     emitTyping(activeId, false);
     setDraft(""); setReplyToId(null); setAtBottom(true);
-    const contextMetadata = isResourceSupport && (bookingContext || selectedResource) ? {
-      ...(bookingContext ? { bookingId: bookingContext.id } : selectedResource?.type === "itinerary" && selectedResource?.bookingId ? { bookingId: selectedResource.bookingId } : {}),
+    const contextMetadata = (selectedResource || (isResourceSupport && bookingContext)) ? {
+      ...(isResourceSupport && bookingContext ? { bookingId: bookingContext.id } : selectedResource?.type === "itinerary" && selectedResource?.bookingId ? { bookingId: selectedResource.bookingId } : {}),
       ...(selectedResource ? { resource: { type: selectedResource.type, id: selectedResource.id, name: selectedResource.name, slug: selectedResource.slug || null, imageUrl: selectedResource.imageUrl || null, country: selectedResource.country || null } } : {}),
     } : null;
-    await sendMessage(activeId, text, replyToId, contextMetadata);
+    const wasSent = await sendMessage(activeId, text, replyToId, contextMetadata);
+    if (wasSent === false) return;
+    setDraft("");
+    setReplyToId(null);
+    setAtBottom(true);
     if (contextMetadata) setSelectedResource(null);
   }, [draft, activeId, sending, replyToId, sendMessage, emitTyping, isResourceSupport, bookingContext, selectedResource]);
 
@@ -2632,21 +2636,19 @@ export default function Messages() {
 
                   {/* Input row */}
                   <div className="msg-composer-row relative flex items-end gap-2 rounded-2xl p-1.5">
-                    {isResourceSupport && (
-                      <button type="button"
-                        onClick={() => {
-                          setResourceType(selectedResource?.type || "destination");
-                          setResourceQuery("");
-                          setResourceResults([]);
-                          setResourceSearchError("");
-                          setShowResourcePicker(true);
-                        }}
-                        aria-label="Attach a destination, country or package"
-                        title="Attach destination, country or package"
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                        <Plus size={17}/>
-                      </button>
-                    )}
+                    <button type="button"
+                      onClick={() => {
+                        setResourceType(selectedResource?.type || "destination");
+                        setResourceQuery("");
+                        setResourceResults([]);
+                        setResourceSearchError("");
+                        setShowResourcePicker(true);
+                      }}
+                      aria-label="Attach a destination, country or package"
+                      title="Attach a destination, country or package"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                      <Plus size={17}/>
+                    </button>
                     {/* Emoji toggle */}
                     <div className="relative flex-shrink-0">
                       <button
@@ -2756,7 +2758,7 @@ export default function Messages() {
           />
         )}
       </DashboardLayout>
-      {isResourceSupport && showResourcePicker && createPortal(
+      {showResourcePicker && createPortal(
         <div
           className="fixed inset-0 z-[11000] flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-5"
           role="presentation"
@@ -2767,8 +2769,8 @@ export default function Messages() {
             <header className="flex shrink-0 items-start gap-3 border-b border-slate-100 bg-gradient-to-r from-white to-emerald-50/70 px-4 py-3.5 sm:px-5">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800"><FileText size={19}/></div>
               <div className="min-w-0 flex-1">
-                <h2 id="resource-picker-title" className="text-sm font-extrabold text-slate-900 sm:text-base">Booking &amp; travel workspace</h2>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">Verify your booking to share its live status with the coordinator. Search destinations, packages, and itineraries to ask specific questions.</p>
+                <h2 id="resource-picker-title" className="text-sm font-extrabold text-slate-900 sm:text-base">Attach a travel subject</h2>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">Choose an Altuvera destination, country or safari package to give your message clear context. Media uploads are not available.</p>
               </div>
               <button type="button" onClick={closeResourcePicker} aria-label="Close booking and travel workspace"
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"><X size={17}/></button>
@@ -2776,7 +2778,8 @@ export default function Messages() {
 
             <div className="msg-resource-picker-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <div className="space-y-3 px-4 pb-3 pt-3 sm:px-5">
-                <section className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3">
+                {isResourceSupport && (
+                  <section className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3">
                   <div className="flex items-start gap-2">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-100 bg-white"><FileText size={15} className="text-emerald-700"/></div>
                     <div className="min-w-0 flex-1">
@@ -2807,6 +2810,7 @@ export default function Messages() {
                     </div>
                   )}
                 </section>
+                  )}
 
                 <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Travel item type">
                   {[

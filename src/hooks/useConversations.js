@@ -766,7 +766,7 @@ export function useConversations() {
   /* ── Send message ────────────────────────────────────────── */
   const sendMessage = useCallback(
     async (conversationId, body, replyToId = null, metadata = null) => {
-      if (!body?.trim() || !conversationId) return;
+      if (!body?.trim() || !conversationId) return false;
 
       setSaving(true);
 
@@ -856,10 +856,12 @@ export function useConversations() {
               : c,
           ),
         );
+        return true;
       } catch (err) {
         /* Rollback */
         setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
         setError(err.message || "Failed to send message.");
+        return false;
       } finally {
         setSaving(false);
       }
