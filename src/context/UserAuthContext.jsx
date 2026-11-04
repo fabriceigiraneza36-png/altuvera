@@ -69,6 +69,7 @@ const KEYS = {
   LAST_LOGOUT:          "altuvera_last_logout",
   WELCOME_SHOWN_PREFIX: "altuvera_welcome_shown:",
   PENDING_VERIFICATION: "altuvera_pending_email_verification_v1",
+  AUTH_RESUME_VIEW: "altuvera_auth_resume_view_v1",
 };
 
 const PENDING_VERIFICATION_TTL_MS = 10 * 60 * 1000;
@@ -102,6 +103,7 @@ const clearStoredPendingVerification = () => {
   try {
     sessionStorage.removeItem(KEYS.PENDING_VERIFICATION);
     sessionStorage.removeItem("altuvera_signup_draft_v1");
+    sessionStorage.removeItem(KEYS.AUTH_RESUME_VIEW);
   } catch { /* storage unavailable */ }
 };
 
@@ -777,6 +779,7 @@ export function UserAuthProvider({ children }) {
     const {
       skipNotLoggedInMessage = false,
       resumePendingVerification = true,
+      resumeSavedForm = true,
     } = options;
 
     // A valid code challenge takes priority when a visitor opens the normal
@@ -788,9 +791,25 @@ export function UserAuthProvider({ children }) {
       ? pendingVerification
       : null;
     const resumablePending = storedPending || inMemoryPending;
-    const nextView = resumePendingVerification && view === "login" && resumablePending
+    let nextView = resumePendingVerification && view === "login" && resumablePending
       ? "verify"
       : view;
+
+    // If the visitor refreshed or dismissed the modal while filling the
+    // registration form (before an OTP was issued), reopen that form rather
+    // than dropping them into a blank sign-in screen.
+    if (resumeSavedForm && nextView === "login" && !resumablePending) {
+      try {
+        const savedView = sessionStorage.getItem(KEYS.AUTH_RESUME_VIEW);
+        const rawSignupDraft = JSON.parse(sessionStorage.getItem("altuvera_signup_draft_v1") || "null");
+        const hasUsableSignupDraft = Boolean(
+          rawSignupDraft?.data &&
+          Number(rawSignupDraft.expiresAt) > Date.now() &&
+          String(rawSignupDraft.data.email || "").trim()
+        );
+        if (savedView === "register" && hasUsableSignupDraft) nextView = "register";
+      } catch { /* Storage can be unavailable in private browsing. */ }
+    }
 
     if (nextView === "verify" && resumablePending) {
       setPendingVerification(resumablePending);
