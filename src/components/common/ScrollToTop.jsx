@@ -7,6 +7,8 @@ const ScrollToTop = () => {
   const [isVisible, setIsVisible]         = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const { pathname, hash } = useLocation();
+  const dashboardPaths = ["/dashboard", "/reviews", "/profile", "/my-bookings", "/wishlist", "/settings", "/account/security", "/notifications", "/messages"];
+  const isUserDashboardPage = dashboardPaths.some(path => pathname === path || pathname.startsWith(path + "/")) || pathname.startsWith("/booking-verification/");
 
   /* ── Scroll to top (or to hash target) on route change ── */
   useEffect(() => {
