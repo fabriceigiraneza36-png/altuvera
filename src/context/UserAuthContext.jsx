@@ -1297,16 +1297,25 @@ export function UserAuthProvider({ children }) {
     if (returnedName && pendingRef.current) {
       pendingRef.current = { ...pendingRef.current, fullName: returnedName };
     }
-    const previous = readPendingVerification();
+    // readPendingVerification intentionally rejects expired challenges. Keep
+    // the in-memory metadata as a fallback for a resend initiated from the
+    // still-open expired-code screen, preserving whether this was signup,
+    // login, Google, or GitHub verification.
+    const storedPrevious = readPendingVerification();
+    const memoryPrevious = pendingVerification &&
+      trim(pendingVerification.email).toLowerCase() === e.toLowerCase()
+      ? pendingVerification
+      : null;
+    const previous = storedPrevious || memoryPrevious;
     persistPendingVerification(e, {
       purpose: previous?.purpose || "login",
       provider: previous?.provider || "email",
-      fullName: returnedName || pendingRef.current?.fullName || "",
+      fullName: returnedName || previous?.fullName || pendingRef.current?.fullName || "",
       expiresAt: getCodeExpiryTimestamp(data),
     });
 
     return data;
-  }, [authFetch, pendingEmail, persistPendingVerification]);
+  }, [authFetch, pendingEmail, pendingVerification, persistPendingVerification]);
 
   const checkEmail = useCallback(async (email) => {
     const e = trim(email);
