@@ -446,8 +446,6 @@ const GallerySlideshow = ({ intervalMs = 4600 }) => {
     return () => { image.onload = null; image.onerror = null; };
   }, [current, gallery]);
 
-  const slide = gallery[current] || GALLERY[0];
-
   return (
     <div
       className="am-auth-slideshow relative h-full w-full overflow-hidden"
@@ -492,14 +490,7 @@ const GallerySlideshow = ({ intervalMs = 4600 }) => {
         </div>
       ))}
 
-      <div className="am-auth-slideshow__shade am-auth-slideshow__shade--bottom" aria-hidden="true" />
-      <div className="am-auth-slideshow__shade am-auth-slideshow__shade--side" aria-hidden="true" />
 
-      <div className="am-auth-slideshow__content">
-        <p className="am-auth-slideshow__single-phrase" key={current}>
-          {slide.subtitle || slide.caption || "Discover Africa"}
-        </p>
-      </div>
     </div>
   );
 };
