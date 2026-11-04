@@ -35,13 +35,13 @@ import CongratulationWindow from "./components/auth/CongratulationWindow";
 import NotLoggedInMessage   from "./components/auth/NotLoggedInMessage";
 import ProtectedRoute       from "./components/auth/ProtectedRoute";
 import PageWrapper          from "./components/common/PageWrapper";
-import ConfirmBookingRequest from "./pages/Booking/ConfirmBookingRequest";
+const ConfirmBookingRequest = React.lazy(() => import("./pages/Booking/ConfirmBookingRequest"));
 import WhatsAppButton       from "./components/common/WhatsAppButton";
-import UserNotifications    from "./pages/auth/UserNotifications";
+const UserNotifications = React.lazy(() => import("./pages/auth/UserNotifications"));
 import GlobalUserNotifications from "./components/auth/GlobalUserNotifications";
-import Messages             from "./pages/auth/Messages";
-import Explore              from "./pages/Explore";
-import BookingIdentityVerification from "./pages/auth/BookingIdentityVerification";
+const Messages = React.lazy(() => import("./pages/auth/Messages"));
+const Explore = React.lazy(() => import("./pages/Explore"));
+const BookingIdentityVerification = React.lazy(() => import("./pages/auth/BookingIdentityVerification"));
 
 // ── Lazy imports ──────────────────────────────────────────────────────────────
 const PersistentVideoPlayer = React.lazy(() =>
