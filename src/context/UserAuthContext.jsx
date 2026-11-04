@@ -570,6 +570,7 @@ export function UserAuthProvider({ children }) {
   const [googleLoaded,  setGoogleLoaded]  = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
   const [socialAuthError, setSocialAuthError] = useState("");
   const [socialAuthProfile, setSocialAuthProfile] = useState(null);
 
@@ -1861,6 +1862,63 @@ export function UserAuthProvider({ children }) {
     window.location.assign(url.toString());
   }, []);
 
+  const startFacebookAuth = useCallback(() => {
+    setSocialAuthError("");
+    setSocialAuthProfile(null);
+    setFacebookLoading(true);
+    const endpoint = API_BASE.replace(/\\/+$/, "") + "/users/facebook/signin";
+    window.location.assign(endpoint);
+  }, []);
+
+  const consumeFacebookCallback = useCallback(() => {
+    if (typeof window === "undefined" || window.location.pathname !== "/auth/facebook/callback") return;
+
+    const url = new URL(window.location.href);
+    const emailOtpRequired = url.searchParams.get("emailOtpRequired");
+    const email = String(url.searchParams.get("email") || "").trim();
+    const fullName = String(url.searchParams.get("fullName") || "").trim();
+    const expiresAt = Number(url.searchParams.get("expiresAt"));
+    const errorCode = url.searchParams.get("error") || "";
+
+    ["emailOtpRequired", "email", "fullName", "provider", "expiresAt", "error"]
+      .forEach((key) => url.searchParams.delete(key));
+    window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+
+    setFacebookLoading(false);
+    if (emailOtpRequired === "1" && email) {
+      persistPendingVerification(email, {
+        purpose: "login",
+        provider: "facebook",
+        fullName,
+        expiresAt: Number.isFinite(expiresAt) && expiresAt > Date.now()
+          ? expiresAt
+          : Date.now() + PENDING_VERIFICATION_TTL_MS,
+      });
+      setSocialAuthError("");
+      setSocialAuthProfile({ provider: "facebook", email, fullName });
+      setModalView("verify");
+      openModal("verify", { skipNotLoggedInMessage: true });
+      return;
+    }
+
+    const messages = {
+      facebook_cancelled: "Facebook sign-in was cancelled. You can choose another method.",
+      facebook_not_configured: "Facebook sign-in is not configured yet. Altuvera needs its Meta app credentials first.",
+      facebook_email_required: "Facebook did not return an email address. Grant the email permission and use a Facebook account with a confirmed email.",
+      facebook_state_invalid: "Facebook sign-in could not be verified securely. Please try again.",
+      facebook_token_failed: "Facebook could not complete authorization. Please try again.",
+      verification_rate_limited: "A verification code was recently sent. Wait for the current code or try again when the resend limit resets.",
+      account_removed: "Your previous Altuvera account was removed. Contact Altuvera support if you need to recreate it.",
+      account_recreate_required: "We couldn't find an active Altuvera account. Choose account creation to continue.",
+      account_not_found: "We couldn't find an Altuvera account for this Facebook identity.",
+      account_deactivated: "This Altuvera account is currently deactivated. Contact Altuvera support.",
+    };
+    setSocialAuthProfile(null);
+    setSocialAuthError(messages[errorCode] || (errorCode ? "Facebook sign-in could not be completed. Please try again." : ""));
+    setModalView("login");
+    openModal("login", { skipNotLoggedInMessage: true });
+  }, [openModal, persistPendingVerification, setModalView]);
+
   const consumeGithubCallback = useCallback(async () => {
     const url      = new URL(window.location.href);
     const code     = url.searchParams.get("code");
@@ -1870,6 +1928,7 @@ export function UserAuthProvider({ children }) {
     const provider = url.searchParams.get("auth_provider");
     const emailOtpRequired = url.searchParams.get("emailOtpRequired");
     const emailOtpAddress = url.searchParams.get("email");
+    const emailOtpFullName = url.searchParams.get("fullName") || "";
     const emailOtpExpiry = Number(url.searchParams.get("expiresAt"));
 
     if (emailOtpRequired === "1" && emailOtpAddress) {
@@ -1879,7 +1938,7 @@ export function UserAuthProvider({ children }) {
       // render the callback page, so its redirect guard sees the pending OTP.
       [
         "code", "state", "error", "error_description", "auth_provider",
-        "emailOtpRequired", "email", "provider", "expiresAt",
+        "emailOtpRequired", "email", "fullName", "provider", "expiresAt",
       ].forEach((p) => url.searchParams.delete(p));
       window.history.replaceState(
         {}, document.title,
@@ -1889,7 +1948,7 @@ export function UserAuthProvider({ children }) {
       persistPendingVerification(emailOtpAddress, {
         purpose: "login",
         provider: "github",
-        fullName: "",
+        fullName: emailOtpFullName,
         expiresAt: Number.isFinite(emailOtpExpiry) && emailOtpExpiry > Date.now()
           ? emailOtpExpiry
           : Date.now() + PENDING_VERIFICATION_TTL_MS,
@@ -2061,6 +2120,7 @@ export function UserAuthProvider({ children }) {
   useEffect(() => { fetchUser(); },            [fetchUser]);
   useEffect(() => { initGoogleSdk(); },        [initGoogleSdk]);
   useEffect(() => { consumeGithubCallback(); }, [consumeGithubCallback]);
+  useEffect(() => { consumeFacebookCallback(); }, [consumeFacebookCallback]);
 
   // Offer Google's native One Tap prompt without forcing a login modal or
   // opening a popup. A visitor who dismisses it can continue browsing normally.
@@ -2089,7 +2149,7 @@ export function UserAuthProvider({ children }) {
   const value = useMemo(() => ({
     user, token, isAuthenticated, authLoading,
     isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
-    googleUser, googleLoaded, googleLoading, githubLoading,
+    googleUser, googleLoaded, googleLoading, githubLoading, facebookLoading,
     hasGooglePending, socialAuthError, socialAuthProfile, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation, pendingVerification,
@@ -2097,7 +2157,7 @@ export function UserAuthProvider({ children }) {
     login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, loginWithSecurityCode, startPasskeyLogin, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
-    githubSignIn, startGithubAuth,
+    githubSignIn, startGithubAuth, startFacebookAuth,
     updateProfile, uploadAvatar,
     setSessionPreference, refreshAuthToken,
     logout, deleteAccount, resetPassword, changePassword,
@@ -2105,7 +2165,7 @@ export function UserAuthProvider({ children }) {
   }), [
     user, token, isAuthenticated, authLoading,
     isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
-    googleUser, googleLoaded, googleLoading, githubLoading,
+    googleUser, googleLoaded, googleLoading, githubLoading, facebookLoading,
     hasGooglePending, socialAuthError, socialAuthProfile, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation,
@@ -2113,7 +2173,7 @@ export function UserAuthProvider({ children }) {
     login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, loginWithSecurityCode, startPasskeyLogin, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
-    githubSignIn, startGithubAuth,
+    githubSignIn, startGithubAuth, startFacebookAuth,
     updateProfile, uploadAvatar,
     setSessionPreference, refreshAuthToken,
     logout, deleteAccount, resetPassword, changePassword,
