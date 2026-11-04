@@ -813,7 +813,14 @@ export function UserAuthProvider({ children }) {
       ? endpoint
       : `${API_BASE}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
-    const tok    = token || store.get(KEYS.TOKEN);
+    // Public authentication endpoints must never inherit an old bearer token.
+    // Otherwise an expired session can intercept a fresh login/OTP/OAuth attempt
+    // and incorrectly trigger the authenticated-session refresh path.
+    const authPath = endpoint.startsWith("http")
+      ? new URL(endpoint).pathname
+      : (endpoint.startsWith("/") ? endpoint : `/${endpoint}`).split("?")[0];
+    const isPublicAuthRequest = /^\/users\/(?:login|register|verify-code|resend-code|check-email|google(?:\/signup-complete)?|github|forgot-username|forgot-password)(?:\/|$)/i.test(authPath);
+    const tok    = isPublicAuthRequest ? null : (token || store.get(KEYS.TOKEN));
     const isForm = opts.body instanceof FormData;
 
     const makeHeaders = (t) => ({
@@ -844,7 +851,7 @@ export function UserAuthProvider({ children }) {
     }
 
     // 401 → try token refresh
-    if (res.status === 401 && !opts._retry) {
+    if (res.status === 401 && !opts._retry && !isPublicAuthRequest) {
       const rt = store.get(KEYS.REFRESH);
       if (rt) {
         try {
@@ -887,7 +894,7 @@ export function UserAuthProvider({ children }) {
     } catch { resData = {}; }
 
     if (!res.ok) {
-      if (res.status === 401) clearAuth();
+      if (res.status === 401 && !isPublicAuthRequest) clearAuth();
       const msg =
         resData?.message || resData?.error || resData?.data?.message ||
         `Request failed (${res.status})`;
