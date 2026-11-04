@@ -1245,25 +1245,55 @@ export function UserAuthProvider({ children }) {
   }, [authFetch, finishStandaloneSecurityLogin]);
 
   const startPasskeyLogin = useCallback(async (email = "") => {
-    if (!window.PublicKeyCredential || !navigator.credentials)
-      throw new Error("Passkeys are not supported in this browser or device.");
-    const optionsResponse = await authFetch("/users/login/passkey/options", {
-      method: "POST",
-      body: JSON.stringify(email ? { email: trim(email) } : {}),
-    });
-    const source = optionsResponse?.data || optionsResponse || {};
-    const challengeToken = source.challengeToken;
-    if (!challengeToken) throw new Error("Altuvera could not start passkey sign-in. Please try another method.");
-    const optionsJSON = { ...source };
-    delete optionsJSON.challengeToken;
-    delete optionsJSON.success;
-    const assertion = await startAuthentication({ optionsJSON });
-    const data = await authFetch("/users/login/passkey/verify", {
-      method: "POST",
-      body: JSON.stringify({ challengeToken, response: assertion }),
-    });
-    if (data?.success === false) throw new Error(data.message || "Passkey verification failed.");
-    return finishStandaloneSecurityLogin(data);
+    let stage = "passkey_options";
+    try {
+      if (!window.PublicKeyCredential || !navigator.credentials) {
+        const unsupported = new Error("Passkeys are not supported in this browser or device.");
+        unsupported.code = "PASSKEY_UNSUPPORTED";
+        throw unsupported;
+      }
+      const optionsResponse = await authFetch("/users/login/passkey/options", {
+        method: "POST",
+        body: JSON.stringify(email ? { email: trim(email) } : {}),
+      });
+      const source = optionsResponse?.data || optionsResponse || {};
+      const challengeToken = source.challengeToken;
+      if (!challengeToken) {
+        const missing = new Error("Altuvera could not start passkey sign-in. Please try another method.");
+        missing.code = "PASSKEY_OPTIONS_MISSING";
+        throw missing;
+      }
+      const optionsJSON = { ...source };
+      delete optionsJSON.challengeToken;
+      delete optionsJSON.success;
+      stage = "passkey_assertion";
+      const assertion = await startAuthentication({ optionsJSON });
+      stage = "passkey_verify";
+      const data = await authFetch("/users/login/passkey/verify", {
+        method: "POST",
+        body: JSON.stringify({ challengeToken, response: assertion }),
+      });
+      if (data?.success === false) throw new Error(data.message || "Passkey verification failed.");
+      return finishStandaloneSecurityLogin(data);
+    } catch (err) {
+      const category = err?.code === "PASSKEY_UNSUPPORTED" || err?.name === "NotSupportedError"
+        ? "passkey_unsupported"
+        : err?.name === "NotAllowedError" || err?.name === "AbortError"
+          ? "passkey_cancelled"
+          : /expired/i.test(err?.message || "") ? "challenge_expired" : "unexpected";
+      const referenceId = err?.diagnosticReference || reportAuthDiagnostic({
+        provider: "passkey",
+        stage,
+        category,
+        errorCode: err?.code || err?.name || "PASSKEY_SIGNIN_FAILED",
+        error: err,
+      });
+      err.diagnosticReference = referenceId;
+      if (referenceId && !String(err.message || "").includes(referenceId)) {
+        err.message = `${err.message || "Passkey sign-in failed."} Reference: ${referenceId}`;
+      }
+      throw err;
+    }
   }, [authFetch, finishStandaloneSecurityLogin]);
 
   const beginFactorChallenge = useCallback((challenge, methods = []) => {
