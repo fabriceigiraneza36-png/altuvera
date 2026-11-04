@@ -1,20 +1,43 @@
 import React, { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BellRing, RefreshCw, Trash2, X } from 'lucide-react'
-import { getNotificationContextRows, getNotificationActionUrl, getNotificationPresentation } from '../../utils/notificationPresentation'
+import { BellRing, RefreshCw, Trash2, X, MoreHorizontal, Check, ExternalLink } from 'lucide-react'
+import { getNotificationActionUrl, getNotificationPresentation } from '../../utils/notificationPresentation'
 
-// ─── Single notification item ──────────────────────────────────────────────────
+const formatAgo = (value) => {
+  if (!value) return "Recently";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Recently";
+  const elapsed = Math.max(0, Date.now() - date.getTime());
+  const minutes = Math.floor(elapsed / 60000);
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return minutes + "m ago";
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + "h ago";
+  const days = Math.floor(hours / 24);
+  if (days < 7) return days + "d ago";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+// Compact item: the content opens the notifications centre; secondary actions
+// are kept behind the three-dot menu so the preview remains calm and readable.
 const NotifItem = ({ notif, onMarkRead, onDelete }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
   const swipeStartX = useRef(null);
   const swipeDeltaX = useRef(0);
   const meta = getNotificationPresentation(notif);
   const Icon = meta.icon;
-  const contextRows = getNotificationContextRows(notif);
   const actionUrl = getNotificationActionUrl(notif);
   const hasAction = Boolean(notif.action_url || notif.actionUrl || meta.isMessage);
   const title = notif.title || meta.label;
   const body = notif.message || notif.body || "You have a new update from Altuvera.";
   const createdAt = notif.created_at || notif.createdAt;
+
+  const openNotifications = () => {
+    if (!notif.is_read) onMarkRead(notif.id);
+    if (window.location.pathname !== "/notifications") {
+      window.location.assign("/notifications");
+    }
+  };
 
   return (
     <motion.article
@@ -24,18 +47,28 @@ const NotifItem = ({ notif, onMarkRead, onDelete }) => {
       exit={{ opacity: 0, x: 22, scale: 0.985 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       className="alt-notification-item"
+      role="link"
+      tabIndex={0}
+      aria-label={title + ". Open notifications"}
       style={{
         margin: "5px 12px",
         padding: "11px 12px",
-        borderRadius: 14,
-        border: "none",
-        boxShadow: notif.is_read ? "0 1px 7px rgba(15,75,51,.035)" : "0 4px 14px rgba(7,132,91,.055)",
-        background: notif.is_read ? "#fff" : "linear-gradient(120deg,#f1faf4,#ffffff 76%)",
+        borderRadius: 13,
+        border: "1px solid " + (notif.is_read ? "#edf1ee" : "#d9eee2"),
+        boxShadow: "0 2px 8px rgba(15,75,51,.035)",
+        background: notif.is_read ? "#fff" : "#f8fcf9",
         position: "relative",
         minWidth: 0,
-        cursor: "default",
+        cursor: "pointer",
         touchAction: "pan-y",
-        overflow: "hidden",
+        overflow: "visible",
+      }}
+      onClick={openNotifications}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openNotifications();
+        }
       }}
       onTouchStart={(event) => {
         swipeStartX.current = event.touches?.[0]?.clientX ?? null;
@@ -56,9 +89,8 @@ const NotifItem = ({ notif, onMarkRead, onDelete }) => {
         const delta = swipeDeltaX.current;
         swipeStartX.current = null;
         swipeDeltaX.current = 0;
-        if (Math.abs(delta) > 95) {
-          onDelete(notif.id);
-        } else {
+        if (Math.abs(delta) > 95) onDelete(notif.id);
+        else {
           event.currentTarget.style.transform = "";
           event.currentTarget.style.opacity = "";
         }
@@ -69,105 +101,82 @@ const NotifItem = ({ notif, onMarkRead, onDelete }) => {
         event.currentTarget.style.transform = "";
         event.currentTarget.style.opacity = "";
       }}
-      onClick={() => { if (!notif.is_read) onMarkRead(notif.id); }}
     >
-      {!notif.is_read && (
-        <span
-          aria-label="Unread notification"
-          style={{ position: "absolute", top: 17, left: 7, width: 7, height: 7, borderRadius: 99, background: "#079669", boxShadow: "0 0 0 4px rgba(7,150,105,.10)" }}
-        />
-      )}
-
-      <div className="alt-notification-item-row" style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0 }}>
+      <div className="alt-notification-item-row" style={{ display: "flex", gap: 10, alignItems: "flex-start", minWidth: 0 }}>
         <span style={{
-          width: 38, height: 38, flex: "0 0 38px", borderRadius: 12,
+          width: 36, height: 36, flex: "0 0 36px", borderRadius: 11,
           display: "grid", placeItems: "center", color: meta.color,
-          background: `linear-gradient(145deg,${meta.color}1c,${meta.color}09)`,
-          border: `1px solid ${meta.color}20`,
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,.9), 0 3px 10px rgba(15,23,42,.035)",
+          background: meta.color + "12",
         }}>
-          <Icon size={18} strokeWidth={1.9} aria-hidden="true"/>
+          <Icon size={17} strokeWidth={1.9} aria-hidden="true" />
         </span>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, minWidth: 0 }}>
-            <div style={{ minWidth: 0, flex: "1 1 auto" }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: notif.is_read ? 650 : 800, color: "#123b2c", lineHeight: 1.4, overflowWrap: "anywhere", wordBreak: "break-word" }}>
-                {title}
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 5 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 7px", borderRadius: 999, background: `${meta.color}12`, color: meta.color, fontSize: 9, fontWeight: 850, letterSpacing: ".055em", textTransform: "uppercase" }}>
-                  {meta.label}
-                </span>
-                {!notif.is_read && <span style={{ display: "inline-flex", padding: "3px 7px", borderRadius: 999, background: "#dff7e9", color: "#047857", fontSize: 9, fontWeight: 900, textTransform: "uppercase" }}>New</span>}
-                {meta.isUrgent && <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 7px", borderRadius: 999, background: "#fff0ef", color: "#b42332", fontSize: 9, fontWeight: 900, textTransform: "uppercase" }}><X size={10}/> Important</span>}
-              </div>
-            </div>
-            <span style={{ fontSize: 10, color: "#8ba096", flex: "0 0 auto", whiteSpace: "nowrap", paddingTop: 2 }}>
+            <p style={{ margin: 0, minWidth: 0, fontSize: 12, fontWeight: notif.is_read ? 650 : 800, color: "#19372a", lineHeight: 1.45, overflowWrap: "anywhere" }}>
+              {title}
+              {!notif.is_read && <span style={{ display: "inline-block", marginLeft: 7, verticalAlign: "middle", width: 6, height: 6, borderRadius: "50%", background: "#078456" }} />}
+            </p>
+            <time style={{ fontSize: 10, color: "#8a9991", flex: "0 0 auto", whiteSpace: "nowrap", paddingTop: 2 }}>
               {formatAgo(createdAt)}
-            </span>
+            </time>
           </div>
-
-          <p style={{ margin: "6px 0 0", fontSize: 12, color: "#53675d", lineHeight: 1.5, whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }}>
+          <p style={{ margin: "5px 0 0", fontSize: 11, color: "#5d7066", lineHeight: 1.5, whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word" }}>
             {body}
           </p>
+          <span style={{ display: "block", marginTop: 6, color: meta.color, fontSize: 9, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase" }}>
+            {meta.label}
+          </span>
+        </div>
 
-          {contextRows.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 9 }}>
-              {contextRows.map(([label, value]) => (
-                <span key={label} style={{ display: "inline-flex", alignItems: "baseline", flexWrap: "wrap", gap: 4, maxWidth: "100%", padding: "4px 7px", borderRadius: 8, background: "#f5faf7", border: "none", color: "#52675c", fontSize: 10, lineHeight: 1.4 }}>
-                  <strong style={{ color: "#82948a", fontWeight: 750 }}>{label}</strong>
-                  <span style={{ fontWeight: 750, overflowWrap: "anywhere" }}>{String(value)}</span>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {notif.admin_reply && (
-            <div style={{ marginTop: 10, padding: "10px 11px", borderRadius: 12, background: "#f0faf4", border: "1px solid #d7efdf" }}>
-              <p style={{ margin: 0, fontSize: 10, fontWeight: 850, color: "#08734f", letterSpacing: ".06em", textTransform: "uppercase" }}>Reply from Altuvera</p>
-              <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: 1.55, color: "#315b45", whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{notif.admin_reply}</p>
-            </div>
-          )}
-
-          {(notif.reply_text || notif.replyText) && (
-            <div style={{ marginTop: 9, padding: "9px 11px", borderRadius: 11, background: "#f7f9fb", border: "1px solid #e6ebef" }}>
-              <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: 1.5 }}>
-                Your reply: {notif.reply_text || notif.replyText}
-                {!notif.admin_reply && <span style={{ marginLeft: 5, color: "#94a3b8", fontStyle: "italic" }}>Awaiting response</span>}
-              </p>
-            </div>
-          )}
-
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 7, marginTop: 8 }}>
-            {hasAction && (
-              <a
-                href={actionUrl}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  if (!notif.is_read) onMarkRead(notif.id);
-                }}
-                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, minHeight: 31, padding: "6px 10px", borderRadius: 11, background: meta.color, color: "#fff", boxShadow: `0 4px 11px ${meta.color}22`, fontSize: 11, fontWeight: 850, textDecoration: "none", maxWidth: "100%" }}
+        <div
+          className="alt-notification-actions"
+          style={{ position: "relative", flex: "0 0 28px" }}
+          onClick={(event) => event.stopPropagation()}
+          onTouchStart={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            aria-label={"Actions for " + title}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+            style={{ display: "grid", placeItems: "center", width: 28, height: 28, border: 0, borderRadius: 8, background: menuOpen ? "#edf7f1" : "transparent", color: "#718178", cursor: "pointer" }}
+          >
+            <MoreHorizontal size={18} />
+          </button>
+          {menuOpen && (
+            <div role="menu" className="alt-notification-action-menu" style={{ position: "absolute", zIndex: 60, top: 32, right: 0, width: "min(218px, calc(100vw - 64px))", padding: 5, border: "1px solid #e3ebe5", borderRadius: 11, background: "#fff", boxShadow: "0 12px 30px rgba(13,43,28,.16)" }}>
+              {hasAction && (
+                <a
+                  role="menuitem"
+                  href={actionUrl}
+                  onClick={(event) => { event.stopPropagation(); if (!notif.is_read) onMarkRead(notif.id); setMenuOpen(false); }}
+                  style={{ display: "flex", alignItems: "center", gap: 9, width: "100%", minHeight: 36, padding: "8px 9px", borderRadius: 8, color: "#344e40", textDecoration: "none", fontSize: 11, fontWeight: 700, boxSizing: "border-box" }}
+                >
+                  <ExternalLink size={14} /> Open related item
+                </a>
+              )}
+              {!notif.is_read && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => { onMarkRead(notif.id); setMenuOpen(false); }}
+                  style={{ display: "flex", alignItems: "center", gap: 9, width: "100%", minHeight: 36, padding: "8px 9px", border: 0, borderRadius: 8, background: "transparent", color: "#087b54", textAlign: "left", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                >
+                  <Check size={14} /> Mark as read
+                </button>
+              )}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => { onDelete(notif.id); setMenuOpen(false); }}
+                style={{ display: "flex", alignItems: "center", gap: 9, width: "100%", minHeight: 36, padding: "8px 9px", border: 0, borderRadius: 8, background: "transparent", color: "#ad555a", textAlign: "left", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
               >
-                {notif.action_label || notif.actionLabel || (meta.isMessage ? "Open conversation" : "View details")}
-                <span aria-hidden="true">↗</span>
-              </a>
-            )}
-            {!notif.is_read && (
-              <button type="button" onClick={(event) => { event.stopPropagation(); onMarkRead(notif.id); }} style={{ minHeight: 31, padding: "6px 9px", borderRadius: 10, border: "1px solid #dcebe1", background: "#fff", color: "#087c53", fontSize: 10, fontWeight: 800, cursor: "pointer" }}>
-                Mark as read
+                <Trash2 size={14} /> Dismiss notification
               </button>
-            )}
-            <button
-              type="button"
-              onClick={(event) => { event.stopPropagation(); onDelete(notif.id); }}
-              aria-label="Dismiss notification"
-              title="Dismiss notification"
-              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minHeight: 31, padding: "6px 8px", border: "1px solid #f0e1e1", borderRadius: 10, color: "#a65d63", background: "#fffafa", fontSize: 10, fontWeight: 750, cursor: "pointer" }}
-            >
-              <Trash2 size={14}/> Dismiss
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </motion.article>
