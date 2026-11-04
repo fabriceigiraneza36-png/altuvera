@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { API_URL } from "../../utils/apiBase";
 import { startRegistration } from "@simplewebauthn/browser";
-import { Fingerprint, KeyRound, Key, MonitorSmartphone, ShieldAlert } from "lucide-react";
+import { MailCheck, Fingerprint, KeyRound, Key, MonitorSmartphone, ShieldAlert } from "lucide-react";
 
 const api = async (path, body, method) => {
   const token = localStorage.getItem("altuvera_auth_token") || sessionStorage.getItem("altuvera_auth_token");
@@ -73,13 +73,13 @@ export default function AccountSecurity() {
     <header className="mb-8"><p className="text-sm font-semibold uppercase tracking-widest text-emerald-700">Account protection</p><h1 className="mt-2 text-3xl font-bold">Security & recovery</h1><p className="mt-3 text-gray-600">Email verification is used whenever you sign in. Add an authenticator and save recovery codes so you have another way to prove account ownership.</p></header>
     {error && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}
     {message && <p role="status" className="mb-4 rounded-xl bg-emerald-50 p-3 text-emerald-800">{message}</p>}
-    <section className="mb-5 rounded-2xl border border-gray-200 p-5"><h2 className="text-lg font-semibold">Email verification</h2><p className="mt-1 text-sm text-gray-600">Enabled — Altuvera emails a one-time code for each passwordless sign-in, including after logout.</p></section>
-    <section className="mb-5 rounded-2xl border border-gray-200 p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-semibold as-section-title"><Fingerprint size={19}/> Authenticator app</h2><p className="mt-1 text-sm text-gray-600">Use Google Authenticator, Microsoft Authenticator, Aegis or another TOTP app. Free; no SMS charges.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-sm">{status?.authenticatorEnabled ? "Enabled" : "Not enabled"}</span></div>
+    <section className="as-compact-card mb-5 rounded-2xl border border-gray-200 p-5"><div className="as-card-heading"><h2 className="text-lg font-semibold as-section-title"><MailCheck size={19}/> Email verification</h2><span className="as-status-pill">Enabled</span></div><p className="mt-2 text-sm text-gray-600">Altuvera emails a one-time code for each passwordless sign-in, including after logout.</p></section>
+    <section className="mb-5 rounded-2xl border border-gray-200 p-5"><div className="as-card-heading"><div className="as-card-copy"><h2 className="text-lg font-semibold as-section-title"><Fingerprint size={19}/> Authenticator app</h2><p className="mt-1 text-sm text-gray-600">Use Google Authenticator, Microsoft Authenticator, Aegis or another TOTP app. Free; no SMS charges.</p></div><span className="as-status-pill">{status?.authenticatorEnabled ? "Enabled" : "Not enabled"}</span></div>
     {!secret ? <button disabled={busy || status?.authenticatorEnabled} onClick={()=>run(async()=>{const r=await api("/security/totp/setup",{});setSecret(r.data);})} className="mt-4 rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-50">Set up authenticator</button> : <div className="mt-4 space-y-3"><p className="text-sm">Add this key manually in your authenticator app:</p><code className="block break-all rounded-lg bg-gray-100 p-3">{secret.secret}</code><a className="inline-block text-sm font-semibold text-emerald-700 underline" href={secret.otpauthUrl}>Open authenticator link</a><label className="block text-sm font-medium" htmlFor="totp-code">6-digit code</label><input id="totp-code" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border p-3" placeholder="000000"/><button disabled={busy || code.length!==6} onClick={()=>run(async()=>{const r=await api("/security/totp/confirm",{code});setSecret(null);setCode("");setMessage(r.message);await refresh();})} className="rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-50">Verify and enable</button><button onClick={()=>{setSecret(null);setCode("");}} className="ml-3 rounded-xl border px-4 py-2">Cancel</button></div>}
     {status?.authenticatorEnabled && <div className="mt-4 flex flex-wrap gap-2"><input aria-label="Authenticator code to disable" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" className="min-w-0 flex-1 rounded-xl border p-3" placeholder="Current 6-digit code"/><button disabled={busy||code.length!==6} onClick={()=>run(async()=>{const r=await api("/security/totp/disable",{code});setCode("");setMessage(r.message);await refresh();})} className="rounded-xl border border-red-300 px-4 py-2 text-red-700">Disable</button></div>}
     </section>
     <section className="mb-5 rounded-2xl border border-gray-200 p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-semibold as-section-title"><KeyRound size={19}/> Passkeys</h2><p className="mt-1 text-sm text-gray-600">Use your device screen lock, fingerprint, face recognition or a security key. You can skip this and continue using email verification.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-sm">{passkeys.length} saved</span></div>
+      <div className="as-card-heading"><div className="as-card-copy"><h2 className="text-lg font-semibold as-section-title"><KeyRound size={19}/> Passkeys</h2><p className="mt-1 text-sm text-gray-600">Use your device screen lock, fingerprint, face recognition or a security key. You can skip this and continue using email verification.</p></div><span className="as-status-pill">{passkeys.length} saved</span></div>
       <label htmlFor="passkey-name" className="mt-4 block text-sm font-medium">Device label</label>
       <input id="passkey-name" value={passkeyName} onChange={e=>{setDeviceNameEdited(true);setPasskeyName(e.target.value.slice(0,120));}} className="mt-1 w-full rounded-xl border p-3" placeholder="Detected device name"/>
       <button disabled={busy} onClick={()=>run(async()=>{if(!window.PublicKeyCredential||!navigator.credentials)throw new Error("Passkeys are not supported in this browser. Try a recent browser on HTTPS.");const o=await api("/security/passkeys/register/options",{});const response=await startRegistration({optionsJSON:o.data});const saved=await api("/security/passkeys/register/verify",{response,deviceName:passkeyName});setMessage(saved.message);await refresh();})} className="mt-3 rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-50">{busy?"Please wait…":"Add a passkey"}</button>
@@ -127,5 +127,27 @@ export default function AccountSecurity() {
 @keyframes as-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:640px){.as-page{padding:14px 12px 60px}.as-page>header{padding:22px 18px!important;border-radius:20px}.as-page>header h1{font-size:clamp(26px,8vw,34px)!important}.as-page>header p:last-child{font-size:12px!important}.as-page>section{padding:16px!important}.as-page .grid.grid-cols-2{grid-template-columns:minmax(0,1fr)!important}.as-page .flex.flex-wrap{align-items:stretch}.as-page .flex.flex-wrap input{min-width:0}.as-page button{max-width:100%}}
 @media(prefers-reduced-motion:reduce){.as-page *, .as-page *:before,.as-page *:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-`}</style></main>;
+`}
+/* Compact, consistent card headers and icon alignment */
+.as-page>section{padding:16px 18px!important;margin-bottom:11px!important}
+.as-page>section h2.as-section-title{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;margin:0!important;line-height:1.25!important;vertical-align:middle}
+.as-page>section h2.as-section-title svg{display:block;flex:0 0 20px;width:20px;height:20px;align-self:center;color:#13845b;stroke-width:1.9}
+.as-page .as-card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.as-page .as-card-copy{flex:1 1 auto;min-width:0}
+.as-page .as-card-copy>p{margin-top:5px!important}
+.as-page .as-status-pill{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;white-space:nowrap;padding:5px 10px!important;border:1px solid #dceee3;background:#f2faf5;color:#16734f;font-size:11px;font-weight:750;line-height:1.2}
+.as-page .as-compact-card>p{margin-bottom:0!important}
+.as-page>section>p{margin-top:6px!important}
+.as-page>section>h2.as-section-title{margin:0!important}
+.as-page>section>button,.as-page>section>form{margin-top:11px}
+.as-page>section>div.mt-4{margin-top:11px!important}
+@media(max-width:640px){
+ .as-page>section{padding:14px 15px!important}
+ .as-page .as-card-heading{align-items:center;gap:8px}
+ .as-page .as-card-copy{flex-basis:0}
+ .as-page .as-card-copy>p{font-size:11px!important;line-height:1.5!important}
+ .as-page .as-status-pill{padding:5px 8px!important;font-size:10px!important}
+ .as-page>section h2.as-section-title{gap:8px!important}
+}
+</style></main>;
 }
