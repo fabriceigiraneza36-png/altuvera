@@ -1332,29 +1332,56 @@ export function UserAuthProvider({ children }) {
 
 
   const verifyLoginPasskey = useCallback(async () => {
-    if (!pendingFactorChallenge) throw new Error("Your verification session expired. Please sign in again.");
-    if (!window.PublicKeyCredential || !navigator.credentials) throw new Error("Passkeys are not supported in this browser.");
-    const options = await authFetch("/users/login/passkey/options", {
-      method: "POST",
-      body: JSON.stringify({ challengeToken: pendingFactorChallenge }),
-    });
-    const assertion = await startAuthentication({ optionsJSON: options.data || options });
-    const data = await authFetch("/users/login/passkey/verify", {
-      method: "POST",
-      body: JSON.stringify({ challengeToken: pendingFactorChallenge, response: assertion }),
-    });
-    if (data?.success === false) throw new Error(data.message || "Passkey verification failed.");
-    const payload = extractPayload(data);
-    saveAuth(data, { persist: persistSession });
-    const newCounter = payload.loginCounter ?? data?.data?.loginCounter ?? 0;
-    setLoginCounter(newCounter);
-    store.setLoginCounter(newCounter);
-    setPendingFactorChallenge("");
-    setPendingFactorMethods([]);
-    setPendingEmail("");
-    closeModal();
-    triggerCongratulation("login");
-    return data;
+    let stage = "factor_passkey_options";
+    try {
+      if (!pendingFactorChallenge) throw new Error("Your verification session expired. Please sign in again.");
+      if (!window.PublicKeyCredential || !navigator.credentials) {
+        const unsupported = new Error("Passkeys are not supported in this browser.");
+        unsupported.code = "PASSKEY_UNSUPPORTED";
+        throw unsupported;
+      }
+      const options = await authFetch("/users/login/passkey/options", {
+        method: "POST",
+        body: JSON.stringify({ challengeToken: pendingFactorChallenge }),
+      });
+      stage = "factor_passkey_assertion";
+      const assertion = await startAuthentication({ optionsJSON: options.data || options });
+      stage = "factor_passkey_verify";
+      const data = await authFetch("/users/login/passkey/verify", {
+        method: "POST",
+        body: JSON.stringify({ challengeToken: pendingFactorChallenge, response: assertion }),
+      });
+      if (data?.success === false) throw new Error(data.message || "Passkey verification failed.");
+      const payload = extractPayload(data);
+      saveAuth(data, { persist: persistSession });
+      const newCounter = payload.loginCounter ?? data?.data?.loginCounter ?? 0;
+      setLoginCounter(newCounter);
+      store.setLoginCounter(newCounter);
+      setPendingFactorChallenge("");
+      setPendingFactorMethods([]);
+      setPendingEmail("");
+      closeModal();
+      triggerCongratulation("login");
+      return data;
+    } catch (err) {
+      const category = err?.code === "PASSKEY_UNSUPPORTED" || err?.name === "NotSupportedError"
+        ? "passkey_unsupported"
+        : err?.name === "NotAllowedError" || err?.name === "AbortError"
+          ? "passkey_cancelled"
+          : /expired/i.test(err?.message || "") ? "challenge_expired" : "unexpected";
+      const referenceId = err?.diagnosticReference || reportAuthDiagnostic({
+        provider: "passkey",
+        stage,
+        category,
+        errorCode: err?.code || err?.name || "PASSKEY_FACTOR_FAILED",
+        error: err,
+      });
+      err.diagnosticReference = referenceId;
+      if (referenceId && !String(err.message || "").includes(referenceId)) {
+        err.message = `${err.message || "Passkey verification failed."} Reference: ${referenceId}`;
+      }
+      throw err;
+    }
   }, [pendingFactorChallenge, authFetch, persistSession, saveAuth, closeModal, triggerCongratulation]);
 
   // ============================================================================
