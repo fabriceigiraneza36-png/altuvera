@@ -88,7 +88,9 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
     <div
       className={`dashboard-layout ${noPadding ? "dashboard-layout-no-padding" : ""}`}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
     >
       <style>{`
         .dashboard-layout {
@@ -110,7 +112,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           padding: 24px 16px; display: flex; flex-direction: column;
           position: sticky; top: 80px; height: calc(100vh - 80px);
           overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none;
-          overscroll-behavior: contain; z-index: 10; transition: transform 0.3s ease;
+          overscroll-behavior: contain; z-index: 10; transition: transform 360ms cubic-bezier(.22,1,.36,1);
         }
         .dashboard-sidebar::-webkit-scrollbar { display: none; width: 0; height: 0; }
         .dashboard-user-card {
@@ -280,7 +282,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
         }
         .dashboard-overlay {
           display: none; position: fixed; inset: 0;
-          background: rgba(15,23,42,0.45); backdrop-filter: blur(4px); z-index: 40;
+          background: rgba(15,23,42,0.45); backdrop-filter: blur(4px); z-index: 40; transition: opacity 260ms ease;
         }
         .dashboard-version {
           font-size: 10px; color: #cbd5e1; text-align: center;
@@ -289,10 +291,12 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
         @media (max-width: 768px) {
           .dashboard-layout { height: auto; min-height: calc(100dvh - 80px); overflow: visible; }
           .dashboard-sidebar {
-            position: fixed; inset: 0; width: 100vw; max-width: none;
-            height: 100vh; height: 100dvh; box-sizing: border-box;
+            position: fixed; top: 0; right: 0; bottom: 0; left: 0; width: 100vw; max-width: none;
+            height: 100vh; height: 100dvh; min-height: 100svh; box-sizing: border-box;
             transform: translateX(-100%); z-index: 50;
             padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+            padding-top: max(20px, env(safe-area-inset-top)); padding-bottom: max(20px, env(safe-area-inset-bottom));
+            touch-action: pan-y;
             overflow-y: auto; overscroll-behavior: contain;
           }
           .dashboard-sidebar.open { transform: translateX(0); }
