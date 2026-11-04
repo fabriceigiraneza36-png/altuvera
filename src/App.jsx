@@ -798,6 +798,7 @@ function useDevPerfLog(pathname) {
 function App() {
   const location = useLocation();
   const { isLoading, setIsLoading } = useApp();
+  const { showCongratulation, congratulationType, dismissCongratulation, showNotLoggedInMessage } = useUserAuth();
 const {
      isAuthenticated,
      user,
@@ -919,12 +920,15 @@ useEffect(injectAppStyles, []);
       </Routes>
 
       {/* ── Global overlays ── */}
-<OverlayLayer
-           isLoading={isLoading}
-           showCelebration={showCelebration}
-           userName={userName}
-           onDismissCelebration={dismissCelebration}
-         />
+         <ScrollToTop />
+         <Suspense fallback={null}>
+           <PersistentVideoPlayer />
+           <PersistentMapViewer />
+         </Suspense>
+         <CookieConsent />
+         <CookieDocumentation />
+         <AuthModal />
+         <WhatsAppButton />
          <ToastContainer toasts={toasts} />
 
          <CongratulationWindow
