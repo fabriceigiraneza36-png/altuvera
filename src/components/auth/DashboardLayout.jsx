@@ -1,5 +1,5 @@
 // src/components/auth/DashboardLayout.jsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import {
@@ -18,6 +18,12 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
   const { user, logout }    = useUserAuth();
   const navigate             = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Hide every navbar presentation while the dashboard drawer is open,
+  // independent of the navbar's current scroll/compact state.
+  useEffect(() => {
+    document.body.classList.toggle("dashboard-sidebar-open", mobileMenuOpen);
+    return () => document.body.classList.remove("dashboard-sidebar-open");
+  }, [mobileMenuOpen]);
   const touchStartRef = useRef(null);
   const [sidebarDragX, setSidebarDragX] = useState(0);
   const sidebarDraggingRef = useRef(false);
@@ -261,6 +267,16 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           background: #059669; color: white; border: none;
           box-shadow: 0 4px 14px rgba(5,150,105,0.4); z-index: 50;
           align-items: center; justify-content: center; cursor: pointer;
+        }
+        /* The drawer owns the screen while open; restore the navbar's own
+           scroll behaviour untouched as soon as the drawer closes. */
+        body.dashboard-sidebar-open .nav,
+        body.dashboard-sidebar-open .nav__floating-brand,
+        body.dashboard-sidebar-open .nav__floating-account,
+        body.dashboard-sidebar-open .nav__floating-account-backdrop {
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
         }
         .dashboard-overlay {
           display: none; position: fixed; inset: 0;
