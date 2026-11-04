@@ -1046,8 +1046,23 @@ export default function AuthModal() {
   useEffect(() => {
     if (!socialAuthError) return;
     if (isDismissalError(socialAuthError)) { clearSocialAuthError?.(); return; }
-    setError(socialAuthError);
-  }, [socialAuthError, clearSocialAuthError]);
+    const lower = String(socialAuthError).toLowerCase();
+    const shouldOfferSignup = /account_removed|account_not_found|account (was )?(removed|deleted)|no account|user not found/.test(lower);
+    if (shouldOfferSignup) {
+      setForm((previous) => ({
+        ...previous,
+        email: googleUser?.email || previous.email,
+        fullName: googleUser?.name || previous.fullName,
+        avatarPreview: googleUser?.picture || previous.avatarPreview,
+      }));
+      setModalView("register");
+      setSignUpStep(1);
+      setError("Your previous profile is not active. Create a new Altuvera account to continue; your email address can be reused.");
+      clearSocialAuthError?.();
+      return;
+    }
+    setError(formatAuthError(socialAuthError));
+  }, [socialAuthError, clearSocialAuthError, googleUser, setModalView]);
 
   useEffect(() => {
     if (googleUser && isRegister) {
