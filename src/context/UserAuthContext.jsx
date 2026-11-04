@@ -14,6 +14,7 @@ import React, {
 import { connectSocket, disconnectSocket, getSocket } from "../utils/socket";
 import userDataCache from "../utils/userDataCache";
 import { startAuthentication } from "@simplewebauthn/browser";
+import { reportAuthDiagnostic } from "../utils/authDiagnostics";
 
 // ============================================================================
 // Configuration
@@ -25,6 +26,26 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "";
 const GITHUB_SCOPE =
   import.meta.env.VITE_GITHUB_SCOPE || "read:user user:email";
+
+const resolveAuthDiagnosticProvider = (path, body = null) => {
+  if (/\/users\/google/i.test(path)) return "google";
+  if (/\/users\/github/i.test(path)) return "github";
+  if (/\/users\/facebook/i.test(path)) return "facebook";
+  if (/passkey/i.test(path)) return "passkey";
+  if (/\/users\/login\/(?:factor|verify-factor)/i.test(path)) {
+    try {
+      const method = typeof body === "string" ? JSON.parse(body)?.method : body?.method;
+      return method === "recovery_code" ? "recovery_code" : "authenticator";
+    } catch { return "authenticator"; }
+  }
+  if (/\/users\/(?:login|register|verify-code|verify|resend-code|forgot-username)/i.test(path)) return "email";
+  return null;
+};
+
+const authDiagnosticStage = (path) =>
+  String(path || "unknown").replace(/^\/users\//i, "").split("?")[0].replace(/\//g, "_").slice(0, 80) || "unknown";
+
+
 
 // ── Re-verification threshold — must match backend REVERIFICATION_THRESHOLD ──
 const REVERIFICATION_THRESHOLD = 3;
@@ -862,7 +883,8 @@ export function UserAuthProvider({ children }) {
     const authPath = endpoint.startsWith("http")
       ? new URL(endpoint).pathname
       : (endpoint.startsWith("/") ? endpoint : `/${endpoint}`).split("?")[0];
-    const isPublicAuthRequest = /^\/users\/(?:login|register|verify-code|resend-code|check-email|google(?:\/signup-complete)?|github|forgot-username|forgot-password)(?:\/|$)/i.test(authPath);
+    const isPublicAuthRequest = /^\/users\/(?:login(?:\/(?:passkey\/(?:options|verify)|factor|verify-factor))?|register|verify-code|resend-code|check-email|google(?:\/signup-complete)?|github|facebook|forgot-username|forgot-password)(?:\/|$)/i.test(authPath);
+    const diagnosticProvider = resolveAuthDiagnosticProvider(authPath, opts.body);
     const tok    = isPublicAuthRequest ? null : (token || store.get(KEYS.TOKEN));
     const isForm = opts.body instanceof FormData;
 
@@ -889,8 +911,22 @@ export function UserAuthProvider({ children }) {
     try {
       const request = execute(tok);
       res = await request;
-    } catch {
-      throw new Error("Network error. Please check your connection.");
+    } catch (networkError) {
+      const message = "Network error. Please check your connection and try again.";
+      const referenceId = diagnosticProvider
+        ? reportAuthDiagnostic({
+            provider: diagnosticProvider,
+            stage: authDiagnosticStage(authPath),
+            category: "network",
+            errorCode: networkError?.name || "NETWORK_ERROR",
+            error: networkError,
+            message,
+          })
+        : "";
+      const surfaced = new Error(referenceId ? `${message} Reference: ${referenceId}` : message);
+      surfaced.code = "AUTH_NETWORK_ERROR";
+      surfaced.diagnosticReference = referenceId;
+      throw surfaced;
     }
 
     // 401 → try token refresh
@@ -944,6 +980,18 @@ export function UserAuthProvider({ children }) {
       const err  = new Error(msg);
       err.status = res.status;
       err.data   = resData;
+      err.diagnosticReference = resData?.diagnosticReference || "";
+      if (diagnosticProvider && !err.diagnosticReference) {
+        err.diagnosticReference = reportAuthDiagnostic({
+          provider: diagnosticProvider,
+          stage: authDiagnosticStage(authPath),
+          category: res.status === 429 ? "rate_limited" : "unexpected",
+          errorCode: resData?.code || `HTTP_${res.status}`,
+          httpStatus: res.status,
+          message: msg,
+        });
+      }
+      if (err.diagnosticReference) err.message = `${msg} Reference: ${err.diagnosticReference}`;
       throw err;
     }
 
