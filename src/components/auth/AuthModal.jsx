@@ -1610,6 +1610,12 @@ export default function AuthModal() {
           onClick={(e) => e.stopPropagation()}
           role="dialog" aria-modal="true" aria-labelledby="auth-title"
         >
+          {switchingView && (
+            <div className="am-switch-transition" role="status" aria-live="polite" aria-label="Switching authentication form">
+              <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} className="am-switch-transition__logo" />
+            </div>
+          )}
+
           {/* Top accent bar */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
 
@@ -1620,13 +1626,6 @@ export default function AuthModal() {
 
           {/* Form panel */}
           <div className="am-form-panel flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
-            {switchingView && (
-              <div className="am-switch-transition" role="status" aria-live="polite" aria-label="Switching authentication form">
-                <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} className="am-switch-transition__logo" />
-                <span className="am-switch-transition__label">Altuvera</span>
-              </div>
-            )}
-
             {/* Header */}
             <div className="am-header flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex-shrink-0">
               <div className="flex items-center gap-2.5">
@@ -1864,9 +1863,9 @@ export default function AuthModal() {
                           <button
                             type="button" onClick={handleForgotResend}
                             disabled={forgotResendTimer > 0 || loading}
-                            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-emerald-600 font-semibold text-sm border-2 border-emerald-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="am-resend-btn flex-1"
                           >
-                            <HiRefresh className={`w-4 h-4 ${forgotResendTimer > 0 || loading ? "animate-spin" : ""}`} />
+                            <HiRefresh className="w-4 h-4" />
                             {forgotResendTimer > 0 ? `Resend in ${forgotResendTimer}s` : "Resend Code"}
                           </button>
                         </div>
@@ -2771,9 +2770,9 @@ export default function AuthModal() {
                         <HiArrowLeft className="w-4 h-4" /> Back
                       </button>
                       <button type="button" onClick={handleResend} disabled={resendTimer > 0 || loading}
-                        className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-emerald-600 font-semibold text-sm border-2 border-emerald-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="am-resend-btn flex-1"
                       >
-                        <HiRefresh className={`w-4 h-4 ${resendTimer > 0 || loading ? "animate-spin" : ""}`} />
+                        <HiRefresh className="w-4 h-4" />
                         {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend Code"}
                       </button>
                     </div>
