@@ -1453,7 +1453,22 @@ export function UserAuthProvider({ children }) {
         return { requiresVerification: true };
       }
 
-      const msg = err?.message || "Google sign-in failed.";
+      const baseMessage = err?.message || "Google sign-in failed.";
+      const googleReference = err?.diagnosticReference || (
+        !err?.status
+          ? reportAuthDiagnostic({
+              provider: "google",
+              stage: "identity_verification",
+              category: /audience|mismatch|different account/i.test(baseMessage) ? "identity_mismatch" : "unexpected",
+              errorCode: err?.code || err?.name || "GOOGLE_SIGNIN_FAILED",
+              error: err,
+              message: baseMessage,
+            })
+          : ""
+      );
+      const msg = googleReference && !baseMessage.includes(googleReference)
+        ? `${baseMessage} Reference: ${googleReference}`
+        : baseMessage;
       const decoded = decodeJWT(credential);
       const providerProfile = errData?.data?.profile || errData?.profile || {};
       const profile = {
@@ -1487,6 +1502,7 @@ export function UserAuthProvider({ children }) {
       const surfaced = new Error(msg);
       surfaced.code = errData?.code || "";
       surfaced.data = errData;
+      surfaced.diagnosticReference = googleReference;
       throw surfaced;
     } finally {
       setGoogleLoading(false);
