@@ -271,6 +271,9 @@ const formatAuthError = (error, fallback = "Something went wrong. Please try aga
   const message = String(raw).replace(/\s+/g, " ").trim();
   if (!message) return fallback;
   const lower = message.toLowerCase();
+  if (/account_removed|account (was )?(removed|deleted)|deleted account|no longer available/.test(lower)) return "This Altuvera account has been removed and is no longer available. If you believe this is a mistake, contact Altuvera support.";
+  if (/account_deactivated|account (is )?(deactivated|disabled)|inactive account/.test(lower)) return "This Altuvera account is currently deactivated. Contact Altuvera support if you need help restoring access.";
+  if (/account_not_found|account not found|no account exists|user not found/.test(lower)) return "We couldn't find an Altuvera account for these details. Check the email address or create a new account.";
   if (/failed to fetch|networkerror|network request failed|load failed|offline|internet connection/.test(lower)) return "We couldn't reach Altuvera. Check your internet connection and try again.";
   if (/timeout|timed out|aborted/.test(lower)) return "The request took too long. Please try again.";
   if (/429|too many requests|rate.?limit|too many attempts/.test(lower)) return "There have been too many attempts. Please wait a little before trying again.";
