@@ -11,6 +11,10 @@
     "lint": "eslint \"src/**/*.{js,jsx}\" --report-unused-disable-directives --max-warnings 1000",
     "preview": "vite preview"
   },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "core-js@3.49.0": true
+  },
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",
     "@reduxjs/toolkit": "^2.12.0",
