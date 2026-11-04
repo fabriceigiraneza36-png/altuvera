@@ -37,8 +37,8 @@ const S = {
   modal: {
     pointerEvents:  "auto",
     width:          "100%",
-    maxWidth:       460,
-    maxHeight:      "min(88dvh, 760px)",
+    maxWidth:       520,
+    maxHeight:      "min(88dvh, 680px)",
     background:     "#ffffff",
     borderRadius:   24,
     display:        "flex",
@@ -51,7 +51,7 @@ const S = {
   /* Top gradient strip */
   topStrip: {
     background:     "linear-gradient(135deg, #064e3b 0%, #065f46 50%, #059669 100%)",
-    padding:        "22px 24px 20px",
+    padding:        "15px 24px 14px",
     position:       "relative",
     overflow:       "hidden",
     textAlign:      "center",
@@ -120,7 +120,7 @@ const S = {
   },
 
   /* Body */
-  body: { padding: "16px 22px 20px" },
+  body: { padding: "12px 22px 14px" },
 
   greeting: {
     textAlign:    "center",
@@ -236,12 +236,28 @@ const S = {
 const KEYFRAMES = `
   @keyframes cgProfileReveal { 0% { transform: translateY(10px) scale(.82); opacity: 0; } 65% { transform: translateY(-3px) scale(1.04); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
   @keyframes cgBubbleDrift { 0%,100% { transform:translate3d(0,0,0) scale(1); } 50% { transform:translate3d(-10px,8px,0) scale(1.06); } }
+
+  .cg-security-panel { width:100%; max-width:100%; margin:0 auto; text-align:center; }
+  .cg-security-icon { width:52px;height:52px;margin:0 auto 9px;border-radius:17px;display:grid;place-items:center;color:#047857;background:linear-gradient(145deg,#ecfdf5,#d1fae5);box-shadow:inset 0 0 0 1px #ccebd8,0 7px 18px rgba(5,150,105,.09); }
+  .cg-security-title { margin:0 0 5px;color:#102a20;font-size:clamp(1.04rem,3.5vw,1.2rem);line-height:1.25;font-weight:850;letter-spacing:-.02em; }
+  .cg-security-copy { margin:0 auto 12px;max-width:390px;color:#64756b;font-size:.81rem;line-height:1.45; }
+  .cg-security-methods { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:left;margin:0 0 13px; }
+  .cg-security-method { display:flex;align-items:center;gap:8px;min-width:0;padding:9px 8px;border:1px solid #dcefe4;background:linear-gradient(145deg,#fbfefc,#f4fbf6);border-radius:12px; }
+  .cg-security-method-icon { width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:9px;background:#e4f7eb;color:#047857; }
+  .cg-security-method-title { display:block;color:#153b2d;font-size:.73rem;font-weight:800;line-height:1.2; }
+  .cg-security-method-detail { display:block;margin-top:3px;color:#64756b;font-size:.64rem;line-height:1.25; }
+  .cg-security-primary { display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:44px;padding:10px 16px;border:0;border-radius:12px;background:linear-gradient(120deg,#059669,#047857);color:#fff;font:800 .86rem inherit;box-shadow:0 7px 18px rgba(5,150,105,.2);cursor:pointer; }
+  .cg-security-skip { display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:42px;margin-top:7px;padding:9px 14px;border:1px solid #d7e7dd;border-radius:12px;background:#fff;color:#456153;font:750 .82rem inherit;white-space:nowrap;cursor:pointer; }
+  .cg-security-note { margin:8px 0 0;color:#7b8c82;font-size:.67rem;line-height:1.3; }
+  @media(max-width:520px) { .cg-security-methods { gap:6px; } .cg-security-method { flex-direction:column;align-items:center;text-align:center;padding:8px 5px;gap:5px; } .cg-security-method-detail { font-size:.61rem; } .cg-security-copy { font-size:.77rem;margin-bottom:9px; } .cg-security-icon { width:46px;height:46px;margin-bottom:7px; } }
+  @media(max-width:360px) { .cg-security-method-title { font-size:.68rem; } .cg-security-method-detail { font-size:.57rem; } .cg-security-method-icon { width:27px;height:27px;flex-basis:27px; } }
+
   .cg-modal { display:flex; flex-direction:column; min-height:0; overflow:hidden; scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior:contain; }
   .cg-modal::-webkit-scrollbar { display:none; width:0; height:0; }
-  .cg-user-sticky { position:relative; z-index:30; display:flex; flex:0 0 auto; align-items:center; justify-content:center; width:100%; min-height:68px; box-sizing:border-box; padding:9px 16px; background:transparent; pointer-events:auto; }
+  .cg-user-sticky { position:relative; z-index:30; display:flex; flex:0 0 auto; align-items:center; justify-content:center; width:100%; min-height:62px; box-sizing:border-box; padding:7px 16px; background:transparent!important; pointer-events:auto; }
   .cg-user-sticky__identity { display:flex; align-items:center; justify-content:center; min-width:0; flex:0 0 auto; }
-  .cg-profile { width:clamp(42px, 11vw, 50px)!important; height:clamp(42px, 11vw, 50px)!important; }
-  .cg-modal-scroll { position:relative; flex:1 1 auto; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; scrollbar-width:none; -ms-overflow-style:none; }
+  .cg-profile { width:clamp(42px, 11vw, 50px)!important; height:clamp(42px, 11vw, 50px)!important; background:transparent!important; border-color:rgba(5,150,105,.3)!important; box-shadow:0 5px 18px rgba(6,78,59,.10)!important; }
+  .cg-modal-scroll { position:relative; flex:1 1 auto; min-height:0; overflow:hidden; overscroll-behavior:contain; }
   .cg-modal-scroll::-webkit-scrollbar { display:none; width:0; height:0; }
   .cg-top { position:relative; z-index:1; isolation:isolate; }
   .cg-top__close { position:absolute; top:12px; right:14px; z-index:5; }
@@ -263,7 +279,7 @@ const KEYFRAMES = `
   .cg-quick-link:focus-visible { transform:translateY(-2px); background:#ecfdf5; border-color:#059669; outline:2px solid #34d399; outline-offset:2px; box-shadow:0 6px 14px rgba(5,150,105,.12); }
   .cg-quick-link:focus-visible .cg-quick-icon { background:#047857; color:#fff; }
   .cg-quick-links:hover .cg-marquee-track,.cg-quick-links:focus-within .cg-marquee-track { animation-play-state:paused; }
-  @media (max-width: 520px) { .cg-modal { max-height:min(90dvh,720px)!important; border-radius:20px!important; } .cg-user-sticky { min-height:62px; padding:8px 12px; } .cg-profile { width:clamp(42px, 12vw, 48px)!important;height:clamp(42px, 12vw, 48px)!important; } .cg-top { padding:22px 18px 18px!important; } .cg-top__close { top:10px; right:10px; } .cg-body { padding:14px 16px 16px!important; } .cg-tips { gap:7px!important;margin-bottom:10px!important; } .cg-tip { padding:8px 10px!important; } .cg-cta { margin-bottom:8px!important; } .cg-quick-link { min-width:122px; } }
+  @media (max-width: 520px) { .cg-modal { max-height:min(88dvh,660px)!important; border-radius:20px!important; } .cg-user-sticky { min-height:62px; padding:8px 12px; } .cg-profile { width:clamp(42px, 12vw, 48px)!important;height:clamp(42px, 12vw, 48px)!important; } .cg-top { padding:22px 18px 18px!important; } .cg-top__close { top:10px; right:10px; } .cg-body { padding:10px 16px 12px!important; } .cg-tips { gap:7px!important;margin-bottom:10px!important; } .cg-tip { padding:8px 10px!important; } .cg-cta { margin-bottom:8px!important; } .cg-quick-link { min-width:122px; } }
   @media (prefers-reduced-motion: reduce) { .cg-profile { animation:none!important; } .cg-marquee-track { animation:none!important; transform:none!important; width:auto; } .cg-marquee-group[aria-hidden="true"] { display:none!important; } .cg-quick-links { overflow-x:auto!important; scrollbar-width:none; } .cg-quick-links::-webkit-scrollbar { display:none; } }
 `;
 
@@ -618,31 +634,32 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                 <div className="cg-body" style={S.body}>
 
                   {(type === "signup" || type === "login") && showSecurityPrompt ? (
-                    <div style={{ textAlign: "center", padding: "8px 0 12px" }}>
-                      <div style={{ width: 62, height: 62, margin: "0 auto 16px", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "#047857", background: "#ecfdf5" }}>
-                        <ShieldCheck size={30} />
-                      </div>
-                      <h3 style={{ margin: "0 0 8px", color: "#102a20", fontSize: "clamp(1.08rem, 4vw, 1.2rem)", lineHeight: 1.3, fontWeight: 850 }}>Add another way to sign in?</h3>
-                      <p style={{ margin: "0 auto 16px", maxWidth: 340, color: "#64756b", fontSize: "0.88rem", lineHeight: 1.6 }}>Your account is ready. Add a backup sign-in method for extra protection. This is optional, and you can continue without setting anything up.</p>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 9, textAlign: "left", margin: "0 0 18px" }}>
+                    <div className="cg-security-panel">
+                      <div className="cg-security-icon"><ShieldCheck size={26} strokeWidth={2.1} /></div>
+                      <h3 className="cg-security-title">Add another way to sign in?</h3>
+                      <p className="cg-security-copy">Your account is ready. Add a backup sign-in method for extra protection. This is optional, and you can continue without setting anything up.</p>
+                      <div className="cg-security-methods">
                         {[
                           { Icon: ShieldCheck, title: "Authenticator app", detail: "Free 6-digit codes" },
-                          { Icon: CheckCircle, title: "Passkey", detail: "Device PIN, face or fingerprint" },
-                          { Icon: Clock, title: "Recovery codes", detail: "A backup if you lose access" },
+                          { Icon: CheckCircle, title: "Passkey", detail: "PIN, face or fingerprint" },
+                          { Icon: Clock, title: "Recovery codes", detail: "Backup access" },
                         ].map(({ Icon: MethodIcon, title, detail }) => (
-                          <div key={title} style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, padding: "11px 10px", border: "1px solid #dcefe4", background: "#fbfefc", borderRadius: 13 }}>
-                            <span style={{ width: 34, height: 34, flex: "0 0 34px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, background: "#ecfdf5", color: "#047857" }}><MethodIcon size={17} /></span>
-                            <span style={{ minWidth: 0 }}><strong style={{ display: "block", color: "#153b2d", fontSize: "0.79rem" }}>{title}</strong><span style={{ display: "block", color: "#64756b", fontSize: "0.7rem", lineHeight: 1.4 }}>{detail}</span></span>
+                          <div key={title} className="cg-security-method">
+                            <span className="cg-security-method-icon"><MethodIcon size={16} /></span>
+                            <span style={{ minWidth: 0 }}>
+                              <strong className="cg-security-method-title">{title}</strong>
+                              <span className="cg-security-method-detail">{detail}</span>
+                            </span>
                           </div>
                         ))}
                       </div>
-                      <button type="button" onClick={() => { rememberSecurityPromptDismissal(); setShowSecurityPrompt(false); onClose?.(); window.location.assign("/account/security"); }} style={{ ...S.cta, marginBottom: 10 }}>
-                        Set up account security <ArrowRight size={18} />
+                      <button type="button" className="cg-security-primary" onClick={() => { rememberSecurityPromptDismissal(); setShowSecurityPrompt(false); onClose?.(); window.location.assign("/account/security"); }}>
+                        <span>Set up account security</span><ArrowRight size={17} aria-hidden="true" />
                       </button>
-                      <button type="button" onClick={() => { rememberSecurityPromptDismissal(); setShowSecurityPrompt(false); }} style={{ width: "100%", minHeight: 46, border: "1px solid #dbe8e0", borderRadius: 13, background: "#fff", color: "#456153", fontSize: "0.88rem", fontWeight: 750, cursor: "pointer", transition: "background .2s, border-color .2s" }}>
-                        Skip for now and continue <ArrowRight size={15} style={{ marginLeft: 5, verticalAlign: "middle" }} />
+                      <button type="button" className="cg-security-skip" onClick={() => { rememberSecurityPromptDismissal(); setShowSecurityPrompt(false); }}>
+                        <span>Skip for now and continue</span><ArrowRight size={15} aria-hidden="true" />
                       </button>
-                      <p style={{ margin: "10px 0 0", color: "#7b8c82", fontSize: "0.72rem", lineHeight: 1.4 }}>You can add or change these methods anytime in Account Security.</p>
+                      <p className="cg-security-note">You can add or change these methods anytime in Account Security.</p>
                     </div>
                   ) : (
                     <>
