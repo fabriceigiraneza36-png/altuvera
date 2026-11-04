@@ -1319,7 +1319,7 @@ export function UserAuthProvider({ children }) {
           sub:     decoded?.sub     || "",
         };
         setGoogleUser(pending);
-        store.remove(KEYS.GOOGLE_PENDING);
+        store.setJSON(KEYS.GOOGLE_PENDING, pending);
         setModalView("register");
         openModal("register", { skipNotLoggedInMessage: true });
         return { ...data, requiresProfile: true, googleUser: pending };
@@ -1372,7 +1372,7 @@ export function UserAuthProvider({ children }) {
           sub: decoded?.sub || "",
         };
         setGoogleUser(pending);
-        store.setJSON(KEYS.GOOGLE_PENDING, pending);
+        store.remove(KEYS.GOOGLE_PENDING);
         setModalView("register");
         openModal("register", { skipNotLoggedInMessage: true });
       } else {
