@@ -237,8 +237,8 @@ export default function NotificationPanel({
       flexDirection:'column',
       flex:         '1 1 auto',
       minHeight:    0,
-      height:       '100%',
-      maxHeight:    '100%',
+      height:       'auto',
+      maxHeight:    'min(78dvh, 680px)',
     }}>
 
       {/* Header */}
@@ -327,10 +327,7 @@ export default function NotificationPanel({
                     padding:    '10px 16px',
                     background: alert.type === 'urgent' ? '#fef2f2' :
                                 alert.type === 'warning' ? '#fffbeb' : '#f0fdf4',
-                    borderLeft: `4px solid ${
-                      alert.type === 'urgent' ? '#ef4444' :
-                      alert.type === 'warning' ? '#f59e0b' : '#059669'
-                    }`,
+                    borderLeft: 'none',
                     display:    'flex',
                     justifyContent: 'space-between',
                     alignItems: 'flex-start',
