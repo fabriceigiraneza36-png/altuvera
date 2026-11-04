@@ -127,8 +127,31 @@ export default function AccountSecurity() {
 @keyframes as-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:640px){.as-page{padding:14px 12px 60px}.as-page>header{padding:22px 18px!important;border-radius:20px}.as-page>header h1{font-size:clamp(26px,8vw,34px)!important}.as-page>header p:last-child{font-size:12px!important}.as-page>section{padding:16px!important}.as-page .grid.grid-cols-2{grid-template-columns:minmax(0,1fr)!important}.as-page .flex.flex-wrap{align-items:stretch}.as-page .flex.flex-wrap input{min-width:0}.as-page button{max-width:100%}}
 @media(prefers-reduced-motion:reduce){.as-page *, .as-page *:before,.as-page *:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-`}
+
 /* Compact, consistent card headers and icon alignment */
+.as-page>section{padding:16px 18px!important;margin-bottom:11px!important}
+.as-page>section h2.as-section-title{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;margin:0!important;line-height:1.25!important;vertical-align:middle}
+.as-page>section h2.as-section-title svg{display:block;flex:0 0 20px;width:20px;height:20px;align-self:center;color:#13845b;stroke-width:1.9}
+.as-page .as-card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.as-page .as-card-copy{flex:1 1 auto;min-width:0}
+.as-page .as-card-copy>p{margin-top:5px!important}
+.as-page .as-status-pill{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;white-space:nowrap;padding:5px 10px!important;border:1px solid #dceee3;background:#f2faf5;color:#16734f;font-size:11px;font-weight:750;line-height:1.2}
+.as-page .as-compact-card>p{margin-bottom:0!important}
+.as-page>section>p{margin-top:6px!important}
+.as-page>section>h2.as-section-title{margin:0!important}
+.as-page>section>button,.as-page>section>form{margin-top:11px}
+.as-page>section>div.mt-4{margin-top:11px!important}
+@media(max-width:640px){
+ .as-page>section{padding:14px 15px!important}
+ .as-page .as-card-heading{align-items:center;gap:8px}
+ .as-page .as-card-copy{flex-basis:0}
+ .as-page .as-card-copy>p{font-size:11px!important;line-height:1.5!important}
+ .as-page .as-status-pill{padding:5px 8px!important;font-size:10px!important}
+ .as-page>section h2.as-section-title{gap:8px!important}
+}
+
+`}
+
 .as-page>section{padding:16px 18px!important;margin-bottom:11px!important}
 .as-page>section h2.as-section-title{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;margin:0!important;line-height:1.25!important;vertical-align:middle}
 .as-page>section h2.as-section-title svg{display:block;flex:0 0 20px;width:20px;height:20px;align-self:center;color:#13845b;stroke-width:1.9}
