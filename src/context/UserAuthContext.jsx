@@ -2308,7 +2308,19 @@ export function UserAuthProvider({ children }) {
     const promptTimer = setTimeout(() => {
       if (!isAuthenticated && !isModalOpen) {
         promptGoogleAuth({ mode: "signin", autoPrompt: true }).catch((err) => {
-          if (import.meta.env.DEV) console.info("[Auth] One Tap unavailable:", err?.message || err);
+          const message = err?.message || "Google One Tap could not initialize.";
+          if (!isDismissalError(message)) {
+            reportAuthDiagnostic({
+              provider: "google",
+              stage: "one_tap_prompt",
+              category: /not configured|missing/i.test(message) ? "configuration"
+                : /network|fetch|offline/i.test(message) ? "network" : "unexpected",
+              errorCode: err?.code || err?.name || "GOOGLE_ONE_TAP_FAILED",
+              error: err,
+              message,
+            });
+          }
+          if (import.meta.env.DEV) console.info("[Auth] One Tap unavailable:", message);
         });
       }
     }, 900);
