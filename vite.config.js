@@ -97,6 +97,14 @@ export default defineConfig(({ mode }) => {
         output: {
           // Split large third-party dependencies into cacheable, bounded chunks.
           // Entry-aware groups avoid making every route download every vendor.
+          // Vite 8 uses Rolldown/Oxc for JS minification. Keep production
+          // console/debugger removal here rather than the deprecated esbuild option.
+          minify: {
+            compress: {
+              dropConsole: isProd,
+              dropDebugger: isProd,
+            },
+          },
           strictExecutionOrder: true,
           codeSplitting: {
             groups: [
@@ -157,9 +165,5 @@ export default defineConfig(({ mode }) => {
       modules: { localsConvention: "camelCase" },
     },
 
-    // ✅ FIXED: Vite 8 uses top-level esbuild (for transforms only, not deps)
-    esbuild: {
-      drop: isProd ? ["console", "debugger"] : [],
-    },
   };
 });
