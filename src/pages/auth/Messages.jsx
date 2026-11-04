@@ -133,6 +133,11 @@ const isResourceSupportConversation = (item) =>
   item?.metadata?.conversationType === "resource_support" ||
   item?.metadata?.channel === "booking_support";
 
+const isSafariPlanningConversation = (item) =>
+  item?.conversationType === "safari_planning" ||
+  item?.channel === "safari_planning" ||
+  item?.metadata?.conversationPurpose === "safari_planning";
+
 const getConversationLastMessagePreview = (conv, currentUserId) => {
   const body = String(conv.lastMessage || "").trim();
   if (!body) return "No messages yet";
@@ -1354,19 +1359,31 @@ const MsgBubble = React.memo(function MsgBubble({
 ══════════════════════════════════════════════════════════════════════════ */
 
 function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConversation = () => {}, initialContext = null }) {
+  const initialPurpose = initialContext?.type === "booking"
+    ? "resource_support"
+    : ["destination", "package", "country"].includes(initialContext?.type)
+      ? "safari_planning" : "personal";
+  const [conversationPurpose, setConversationPurpose] = useState(initialPurpose);
   const [subject, setSubject] = useState(initialContext?.title ? `Question about ${initialContext.title}` : "");
-  const [inquiryType, setInquiryType] = useState(initialContext?.type || "general");
+  const [inquiryType, setInquiryType] = useState(
+    ["destination", "package", "country"].includes(initialContext?.type)
+      ? initialContext.type : (initialContext?.type === "booking" ? "booking" : "general")
+  );
   const [relatedReference, setRelatedReference] = useState(initialContext?.title || "");
   const [importedContext, setImportedContext] = useState(initialContext);
   const inquiryConfig = {
-    general: { label: "General question", subject: "General enquiry", referenceLabel: "Related details", referenceHint: "Optional details", placeholder: "Tell us how we can help…" },
-    booking: { label: "Booking", subject: "Booking enquiry", referenceLabel: "Booking reference", referenceHint: "Booking number or reference", placeholder: "Ask about your booking, dates, status, guests, or changes…" },
-    destination: { label: "Destination", subject: "Destination enquiry", referenceLabel: "Destination", referenceHint: "Destination name", placeholder: "Ask about activities, seasons, permits, or destination details…" },
-    package: { label: "Safari package", subject: "Safari package enquiry", referenceLabel: "Package name or reference", referenceHint: "Package name or reference", placeholder: "Ask about itinerary, price, availability, or inclusions…" },
-    country: { label: "Country", subject: "Country travel enquiry", referenceLabel: "Country", referenceHint: "Country name", placeholder: "Ask about entry requirements, travel logistics, or local experiences…" },
-    post: { label: "Post or article", subject: "Post enquiry", referenceLabel: "Post title or link", referenceHint: "Post title or URL", placeholder: "Ask about a post, its recommendations, or a place mentioned…" },
+    general: { label: "General enquiry", subject: "General enquiry", referenceLabel: "Related details", referenceHint: "Optional context", placeholder: "Ask a general question about Altuvera, our services, or your account…" },
+    booking: { label: "Booking support", subject: "Booking support", referenceLabel: "Booking reference", referenceHint: "Your booking number or ID", placeholder: "Tell us what you need help with on your existing booking…" },
+    destination: { label: "Destination", subject: "Safari planning", referenceLabel: "Destination", referenceHint: "Destination name", placeholder: "Describe the kind of safari experience you are planning…" },
+    package: { label: "Safari package", subject: "Safari package planning", referenceLabel: "Package", referenceHint: "Package name (optional)", placeholder: "Tell us what you would like to adjust or understand about this safari package…" },
+    country: { label: "Country", subject: "Country travel planning", referenceLabel: "Country", referenceHint: "Country name (optional)", placeholder: "Tell us which experiences, regions, or travel details you would like to explore…" },
+    post: { label: "Post or article", subject: "General enquiry", referenceLabel: "Related details", referenceHint: "Optional context", placeholder: "Tell us what you would like to ask…" },
   };
-  const activeInquiry = inquiryConfig[inquiryType] || inquiryConfig.general;
+  const activeInquiry = conversationPurpose === "personal"
+    ? inquiryConfig.general
+    : conversationPurpose === "resource_support"
+      ? inquiryConfig.booking
+      : (inquiryConfig[inquiryType] || inquiryConfig.destination);
   const [destinationName, setDestinationName] = useState(initialContext?.type === "destination" ? (initialContext.title || "") : "");
   const [destinationOptions, setDestinationOptions] = useState([]);
   const [selectedDestination, setSelectedDestination] = useState(initialContext?.type === "destination" && initialContext.id ? { id: initialContext.id, name: initialContext.title, country: initialContext.country || "" } : null);
@@ -1428,13 +1445,23 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
       const res  = await authFetch(`${API_BASE}/messages/conversations`, {
         method:"POST",
         body: JSON.stringify({
-          subject: subject.trim() || (validDestination ? `Destination enquiry: ${validDestination.name}` : (relatedReference.trim() ? `${activeInquiry.subject}: ${relatedReference.trim()}` : activeInquiry.subject)),
+          conversationType: conversationPurpose,
+          channel: conversationPurpose === "personal" ? "general_enquiries" : conversationPurpose === "safari_planning" ? "safari_planning" : "booking_support",
+          subject: subject.trim() || (validDestination ? `Safari planning: ${validDestination.name}` : (relatedReference.trim() ? `${activeInquiry.subject}: ${relatedReference.trim()}` : activeInquiry.subject)),
           body: body.trim(),
           firstMessage: body.trim(),
-          destinationName: (inquiryType === "destination" ? (validDestination?.name || relatedReference.trim()) : validDestination?.name) || null,
+          destinationName: (conversationPurpose === "safari_planning" && inquiryType === "destination" ? (validDestination?.name || relatedReference.trim()) : validDestination?.name) || null,
           destinationId: validDestination?.id || null,
-          metadata: { inquiryType, inquiryLabel: activeInquiry.label, relatedReference: relatedReference.trim() || null, ...(validDestination ? { destinationName: validDestination.name, destinationId: validDestination.id } : {}), ...(importedContext ? { relatedResource: importedContext } : {}) },
-          kind: inquiryType,
+          metadata: {
+            conversationPurpose,
+            inquiryType,
+            inquiryLabel: activeInquiry.label,
+            enquirySubject: subject.trim() || activeInquiry.subject,
+            relatedReference: relatedReference.trim() || null,
+            ...(conversationPurpose === "resource_support" && relatedReference.trim() ? { bookingReference: relatedReference.trim() } : {}),
+            ...(validDestination ? { destinationName: validDestination.name, destinationId: validDestination.id } : {}),
+            ...(importedContext && conversationPurpose === "safari_planning" ? { relatedResource: importedContext } : {}),
+          },
         }),
       });
       const data = await res.json();
@@ -1485,20 +1512,60 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
             </p>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Inquiry type</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {Object.entries(inquiryConfig).map(([value, config]) => (
-                <button key={value} type="button" onClick={() => { setInquiryType(value); setImportedContext(current => current?.type === value ? current : null); setSubject(current => !current || Object.values(inquiryConfig).some(item => item.subject === current) ? config.subject : current); setRelatedReference(""); if (value !== "destination") { setDestinationName(""); setSelectedDestination(null); } }} aria-pressed={inquiryType === value}
-                  className={"rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition " + (inquiryType === value ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-100" : "border-slate-200 bg-white text-slate-600 hover:border-emerald-300")}>
-                  {config.label}
+          <section aria-label="Conversation purpose" className="space-y-2.5">
+            <p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-500">Choose a support workspace</p>
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                { type: "personal", title: "General Enquiries", detail: "Questions about Altuvera, our services, your account, or general assistance.", icon: <MessageSquare size={17}/> },
+                { type: "safari_planning", title: "Safari Planning", detail: "Explore destinations, countries, packages, experiences, and custom safari ideas.", icon: <MapPin size={17}/> },
+                { type: "resource_support", title: "Booking Support", detail: "Help with an existing booking, confirmation, itinerary, documents, or travel changes.", icon: <FileText size={17}/> },
+              ].map(item => (
+                <button key={item.type} type="button" onClick={() => {
+                  setConversationPurpose(item.type);
+                  const nextInquiry = item.type === "personal" ? "general" : item.type === "resource_support" ? "booking" : (["destination","package","country"].includes(inquiryType) ? inquiryType : "destination");
+                  setInquiryType(nextInquiry);
+                  setSubject(item.type === "personal" ? "General enquiry" : item.type === "resource_support" ? "Booking support" : "Safari planning");
+                  setRelatedReference("");
+                  if (item.type !== "safari_planning") {
+                    setImportedContext(null); setDestinationName(""); setSelectedDestination(null);
+                  } else if (!["destination","package","country"].includes(importedContext?.type)) {
+                    setImportedContext(null);
+                  }
+                }} aria-pressed={conversationPurpose === item.type}
+                  className={"flex w-full items-start gap-3 rounded-2xl border p-3.5 text-left transition " + (conversationPurpose === item.type ? "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-100" : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40")}>
+                  <span className={"flex h-9 w-9 shrink-0 items-center justify-center rounded-xl " + (conversationPurpose === item.type ? "bg-emerald-700 text-white" : "bg-slate-100 text-slate-600")}>{item.icon}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-extrabold text-slate-900">{item.title}</span>
+                    <span className="mt-1 block text-[11px] leading-relaxed text-slate-500">{item.detail}</span>
+                  </span>
+                  {conversationPurpose === item.type && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-600"/>}
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[11px] text-slate-500">Choose a category so the support team can handle your inquiry in the right context.</p>
-          </div>
+          </section>
+          {conversationPurpose === "safari_planning" && (
+            <section className="space-y-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-slate-500">Planning focus</p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  {type:"destination",label:"Destination"},
+                  {type:"country",label:"Country"},
+                  {type:"package",label:"Package"},
+                ].map(item => (
+                  <button key={item.type} type="button" aria-pressed={inquiryType === item.type}
+                    onClick={() => {
+                      setInquiryType(item.type); setRelatedReference("");
+                      if (item.type !== "destination") { setDestinationName(""); setSelectedDestination(null); }
+                      if (importedContext && importedContext.type !== item.type) setImportedContext(null);
+                      setSubject(item.type === "destination" ? "Safari destination planning" : item.type === "country" ? "Country travel planning" : "Safari package planning");
+                    }}
+                    className={"rounded-xl border px-2 py-2 text-[10px] font-bold transition " + (inquiryType === item.type ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-600 hover:border-emerald-300")}>{item.label}</button>
+                ))}
+              </div>
+            </section>
+          )}
 
-          {importedContext && (
+          {importedContext && conversationPurpose === "safari_planning" && (
             <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
               {importedContext.image && <img src={importedContext.image} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" />}
               <div className="min-w-0 flex-1">
@@ -1521,61 +1588,62 @@ function NewConvModal({ onClose, onCreated, groupConversations = [], onOpenConve
                          transition placeholder:text-slate-400" />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-              {inquiryType === "destination" ? "Destination" : activeInquiry.referenceLabel} <span className="text-slate-300 normal-case font-normal">(optional)</span>
-            </label>
-            {inquiryType === "destination" ? <div className="relative">
-              <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
-              <input value={destinationName}
-                onFocus={() => setDestinationPickerOpen(true)}
-                onChange={e => { setDestinationName(e.target.value); setSelectedDestination(null); setImportedContext(null); setDestinationPickerOpen(true); }}
-                onKeyDown={e => { if (e.key === "Escape") setDestinationPickerOpen(false); }}
-                autoComplete="off"
-                placeholder="Search live destinations…"
-                aria-label="Search destinations in Altuvera"
-                aria-expanded={destinationPickerOpen && destinationMatches.length > 0}
-                className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
-              {destinationPickerOpen && destinationMatches.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
-                  {destinationMatches.map((destination, index) => (
-                    <button key={String(destination.id ?? destination.name) + index} type="button"
-                      onClick={() => {
-                        setDestinationName(destination.name);
-                        setSelectedDestination(destination);
-                        setImportedContext({ type: "destination", id: destination.id, title: destination.name, slug: destination.slug || null, image: destination.image || destination.imageUrl || null, country: destination.country || null });
-                        setDestinationPickerOpen(false);
-                        if (!subject.trim()) setSubject(`Question about ${destination.name}`);
-                      }}
-                      className="flex w-full items-start gap-2 px-3 py-2.5 text-left hover:bg-emerald-50 border-b border-slate-100 last:border-0">
-                      <MapPin size={14} className="mt-0.5 text-emerald-600 flex-shrink-0" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-semibold text-slate-800">{destination.name}</span>
-                        {destination.country && <span className="block truncate text-[10px] text-slate-400">{destination.country}</span>}
-                      </span>
-                    </button>
-                  ))}
+          {conversationPurpose !== "personal" && (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                {conversationPurpose === "resource_support" ? "Booking reference" : inquiryType === "destination" ? "Destination" : activeInquiry.referenceLabel}
+                <span className="text-slate-300 normal-case font-normal"> (optional)</span>
+              </label>
+              {conversationPurpose === "safari_planning" && inquiryType === "destination" ? <div className="relative">
+                <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
+                <input value={destinationName}
+                  onFocus={() => setDestinationPickerOpen(true)}
+                  onChange={e => { setDestinationName(e.target.value); setSelectedDestination(null); setImportedContext(null); setDestinationPickerOpen(true); }}
+                  onKeyDown={e => { if (e.key === "Escape") setDestinationPickerOpen(false); }}
+                  autoComplete="off" placeholder="Search live destinations…" aria-label="Search destinations in Altuvera"
+                  aria-expanded={destinationPickerOpen && destinationMatches.length > 0}
+                  className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
+                {destinationPickerOpen && destinationMatches.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                    {destinationMatches.map((destination, index) => (
+                      <button key={String(destination.id ?? destination.name) + index} type="button"
+                        onClick={() => {
+                          setDestinationName(destination.name);
+                          setSelectedDestination(destination);
+                          setImportedContext({ type: "destination", id: destination.id, title: destination.name, slug: destination.slug || null, image: destination.image || destination.imageUrl || null, country: destination.country || null });
+                          setDestinationPickerOpen(false);
+                          if (!subject.trim()) setSubject(`Question about ${destination.name}`);
+                        }}
+                        className="flex w-full items-start gap-2 border-b border-slate-100 px-3 py-2.5 text-left last:border-0 hover:bg-emerald-50">
+                        <MapPin size={14} className="mt-0.5 shrink-0 text-emerald-600"/>
+                        <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-slate-800">{destination.name}</span>{destination.country && <span className="block truncate text-[10px] text-slate-400">{destination.country}</span>}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div> : (
+                <div>
+                  <input value={relatedReference} onChange={e => setRelatedReference(e.target.value)}
+                    placeholder={conversationPurpose === "resource_support" ? "Booking ID or booking number" : activeInquiry.referenceHint}
+                    aria-label={conversationPurpose === "resource_support" ? "Booking reference" : activeInquiry.referenceLabel}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"/>
+                  {conversationPurpose === "resource_support" && <p className="mt-1.5 text-[11px] text-slate-400">This channel is for an existing booking. You can verify the reference after opening the conversation.</p>}
                 </div>
               )}
-  
-            </div> : <div>
-              <input value={relatedReference} onChange={e => setRelatedReference(e.target.value)} placeholder={activeInquiry.referenceHint} aria-label={activeInquiry.referenceLabel}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
-              {inquiryType === "booking" && <p className="mt-1.5 text-[11px] text-slate-400">Include your booking reference when available. Never include passwords or payment card details.</p>}
-            </div>}
-          </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
               Quick start
             </label>
             <div className="flex flex-wrap gap-2">
-              {[
-                "I'd like help planning my safari.",
-                "Can you help me with my booking?",
-                "I'd like to ask about availability.",
-                "Can you recommend a destination?",
-              ].map((suggestion) => (
+              {(conversationPurpose === "personal"
+                ? ["I have a general question about Altuvera.", "I need help with my account or the website.", "How can I contact your team?"]
+                : conversationPurpose === "resource_support"
+                  ? ["I need an update on my existing booking.", "I'd like to request a change to my travel arrangements.", "I need help with my itinerary or travel documents."]
+                  : ["I'd like help designing a custom safari.", "Please help me choose a destination or country.", "I'd like to understand a safari package."]
+              ).map((suggestion) => (
                 <button
                   key={suggestion}
                   type="button"
@@ -1953,7 +2021,9 @@ export default function Messages() {
       // leave a traveller staring at an empty chat pane just because an older
       // conversation has the legacy "direct" type or no channel metadata.
       const preferred = conversations.find(item =>
-        item.conversationType === "personal" || item.channel === "personal_support"
+        item.conversationType === "personal" || item.channel === "general_enquiries" || item.channel === "personal_support"
+      ) || conversations.find(item =>
+        item.conversationType === "safari_planning" || item.channel === "safari_planning"
       ) || conversations.find(item =>
         item.conversationType === "resource_support" || item.channel === "booking_support"
       );
