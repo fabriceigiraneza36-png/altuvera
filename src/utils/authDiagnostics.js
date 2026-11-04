@@ -45,7 +45,8 @@ const flushAuthDiagnostics = () => {
           body: JSON.stringify(item),
           keepalive: true,
         });
-        if (!response.ok) remaining.push(item);
+        const result = await response.json().catch(() => null);
+        if (!response.ok || result?.success !== true) remaining.push(item);
       } catch {
         remaining.push(item);
       }
