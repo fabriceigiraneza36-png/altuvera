@@ -17,7 +17,44 @@ const api = async (path, body, method) => {
 export default function AccountSecurity() {
   const [status,setStatus] = useState(null);
   const [passkeys,setPasskeys] = useState([]);
-  const [passkeyName,setPasskeyName] = useState("This device");
+  const [passkeyName,setPasskeyName] = useState("");
+  const [deviceNameEdited,setDeviceNameEdited] = useState(false);
+  useEffect(() => {
+    let active = true;
+    const ua = navigator.userAgent || "";
+    const platform = navigator.userAgentData?.platform || navigator.platform || "";
+    const detect = (model = "") => {
+      const text = [model, ua, platform].join(" ");
+      if (/smart.?tv|hbbtv|web0s|tizen.*tv|netcast|googletv|appletv/i.test(text)) return model || "Smart TV";
+      if (/watch|wear.?os|watchos/i.test(text)) return model || "Smartwatch";
+      if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return model || "iPad";
+      if (/iPhone/i.test(ua)) return model || "iPhone";
+      if (/iPod/i.test(ua)) return model || "iPod touch";
+      const android = /Android/i.test(text);
+      const tablet = /tablet/i.test(text) || (android && !/mobile/i.test(ua));
+      if (model) return model + (android ? (tablet ? " tablet" : " phone") : "");
+      const androidModel = ua.match(/Android[^;)]*;\s*([^;)]+?)(?:\s+Build\/[^;)]+)?\s*[;)]/i);
+      if (androidModel?.[1] && !/wv|linux/i.test(androidModel[1])) return androidModel[1].trim();
+      if (android) return tablet ? "Android tablet" : "Android phone";
+      if (/Windows/i.test(text)) return "Windows desktop";
+      if (/Mac/i.test(text)) return "Mac desktop";
+      if (/CrOS/i.test(text)) return "Chromebook";
+      if (/Linux/i.test(text)) return "Linux desktop";
+      return "Web device";
+    };
+    const initial = detect();
+    setPasskeyName(current => current || initial);
+    if (navigator.userAgentData?.getHighEntropyValues) {
+      navigator.userAgentData.getHighEntropyValues(["model", "platform", "platformVersion"])
+        .then(info => {
+          if (!active || deviceNameEdited) return;
+          const detected = detect(info.model || "");
+          if (detected && detected !== "Web device") setPasskeyName(detected);
+        })
+        .catch(() => {});
+    }
+    return () => { active = false; };
+  }, [deviceNameEdited]);
   const [secret,setSecret] = useState(null);
   const [code,setCode] = useState("");
   const [recoveryCodes,setRecoveryCodes] = useState([]);
@@ -43,7 +80,7 @@ export default function AccountSecurity() {
     <section className="mb-5 rounded-2xl border border-gray-200 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-semibold">Passkeys</h2><p className="mt-1 text-sm text-gray-600">Use your device screen lock, fingerprint, face recognition or a security key. You can skip this and continue using email verification.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-sm">{passkeys.length} saved</span></div>
       <label htmlFor="passkey-name" className="mt-4 block text-sm font-medium">Device label</label>
-      <input id="passkey-name" value={passkeyName} onChange={e=>setPasskeyName(e.target.value.slice(0,120))} className="mt-1 w-full rounded-xl border p-3" placeholder="e.g. My phone"/>
+      <input id="passkey-name" value={passkeyName} onChange={e=>{setDeviceNameEdited(true);setPasskeyName(e.target.value.slice(0,120));}} className="mt-1 w-full rounded-xl border p-3" placeholder="Detected device name"/>
       <button disabled={busy} onClick={()=>run(async()=>{if(!window.PublicKeyCredential||!navigator.credentials)throw new Error("Passkeys are not supported in this browser. Try a recent browser on HTTPS.");const o=await api("/security/passkeys/register/options",{});const response=await startRegistration({optionsJSON:o.data});const saved=await api("/security/passkeys/register/verify",{response,deviceName:passkeyName});setMessage(saved.message);await refresh();})} className="mt-3 rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-50">{busy?"Please wait…":"Add a passkey"}</button>
       {passkeys.length>0 && <ul className="mt-4 divide-y">{passkeys.map(p=><li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-medium">{p.device_name||"Passkey"}</p><p className="text-xs text-gray-500">Added {p.created_at?new Date(p.created_at).toLocaleDateString():""}{p.last_used_at?" · Last used "+new Date(p.last_used_at).toLocaleDateString():""}</p></div><button disabled={busy} onClick={()=>{if(!window.confirm("Remove this passkey from your Altuvera account?"))return;run(async()=>{const r=await api("/security/passkeys/"+p.id,null,"DELETE");setMessage(r.message);await refresh();})}} className="rounded-lg border border-red-300 px-3 py-2 text-sm text-red-700">Remove</button></li>)}</ul>}
     </section>
