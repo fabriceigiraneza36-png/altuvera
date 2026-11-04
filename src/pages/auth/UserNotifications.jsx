@@ -285,6 +285,8 @@
                 {displayed.map((n, idx) => {
                   const meta = getNotificationPresentation(n);
                   const contextRows = getNotificationContextRows(n);
+                  // Only critical booking notifications receive the urgent booking treatment.
+                  const isUrgentBooking = Boolean(meta.isUrgent && (meta.category === 'booking' || String(meta.type || '').startsWith('booking')));
                   const hasAction = Boolean(n.action_url || n.actionUrl || meta.isMessage);
                   return (
                     <motion.div
