@@ -1856,23 +1856,27 @@ export function UserAuthProvider({ children }) {
     form.append("image", file);
     form.append("type",  "avatar");
 
-    const data      = await authFetch("/uploads/image", { method: "POST", body: form });
+    const data      = await authFetch("/uploads/image/avatar", { method: "POST", body: form });
     const p         = data?.data || data || {};
     const avatarUrl = p.url || p.imageUrl || p.avatar || p.avatarUrl;
     if (!avatarUrl)
       throw new Error("Upload succeeded but no image URL was returned.");
 
-    const norm = normalizeUser(
-      { ...(user || {}), avatar: avatarUrl },
-      { cache: getCache() },
-    );
-    if (norm) { setUser(norm); cacheProfile(norm); }
-
-    try { await updateProfile({ avatar: avatarUrl }); }
-    catch (err) { console.warn("[Auth] Avatar sync failed:", err.message); }
+    // Persist the new URL first. Never replace the visible/cached avatar until
+    // the database confirms the update; if persistence fails, remove the newly
+    // uploaded orphan so the old profile photo remains intact.
+    try {
+      await updateProfile({ avatar: avatarUrl });
+    } catch (error) {
+      const publicId = p.publicId || p.public_id;
+      if (publicId) {
+        await authFetch("/uploads/asset/" + encodeURIComponent(publicId), { method: "DELETE" }).catch(() => {});
+      }
+      throw error;
+    }
 
     return avatarUrl;
-  }, [authFetch, cacheProfile, getCache, updateProfile, user]);
+  }, [authFetch, updateProfile]);
 
   // ============================================================================
   // Logout & Account
