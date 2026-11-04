@@ -799,15 +799,6 @@ function App() {
   const location = useLocation();
   const { isLoading, setIsLoading } = useApp();
   const { showCongratulation, congratulationType, dismissCongratulation, showNotLoggedInMessage } = useUserAuth();
-const {
-     isAuthenticated,
-     user,
-     showCongratulation,
-     congratulationType,
-     showNotLoggedInMessage,
-     dismissCongratulation,
-   } = useUserAuth();
-
    // Toast state
    const [toasts, setToasts] = useState([]);
    const addToast = (message, type = "info") => {
