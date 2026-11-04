@@ -1056,6 +1056,13 @@ export default function AuthModal() {
       fullName: googleUser.name,
       avatar: googleUser.picture,
     } : null);
+    // Social identity prefills belong to this live modal interaction only.
+    // Remove any older persisted draft so a page reload starts cleanly.
+    try {
+      sessionStorage.removeItem(LOGIN_DRAFT_KEY);
+      sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
+    } catch {}
+    setTransientPrefill(true);
     if (profile?.email || profile?.fullName || profile?.avatar) {
       setForm((previous) => ({
         ...previous,
@@ -1072,8 +1079,6 @@ export default function AuthModal() {
     ].includes(code) || /account_removed|account_not_found|account_recreate_required|account (was )?(removed|deleted)|no active account|couldn't find an active account|no account|user not found/.test(lower);
 
     if (shouldOfferSignup) {
-      try { sessionStorage.removeItem(SIGNUP_DRAFT_KEY); } catch {}
-      setTransientPrefill(true);
       setAuthMethod(googleUser?.credential ? "google" : "email");
       setModalView("register");
       setSignUpStep(googleUser?.credential ? 2 : 1);
@@ -1186,7 +1191,7 @@ export default function AuthModal() {
       const code = err?.code || err?.data?.code || "";
       const profile = err?.data?.data?.profile || err?.data?.profile || {};
       if (["ACCOUNT_REMOVED", "ACCOUNT_RECREATE_REQUIRED", "ACCOUNT_NOT_FOUND"].includes(code)) {
-        try { sessionStorage.removeItem(SIGNUP_DRAFT_KEY); } catch {}
+        try { sessionStorage.removeItem(LOGIN_DRAFT_KEY); sessionStorage.removeItem(SIGNUP_DRAFT_KEY); } catch {}
         setTransientPrefill(true);
         setForm((previous) => ({
           ...previous,
