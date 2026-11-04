@@ -21,6 +21,7 @@ import { useUserAuth }     from "./context/UserAuthContext";
 import ErrorBoundary       from "./components/common/ErrorBoundary";
 import countryService      from "./services/countryService";
 import GoogleCallbackPage  from "./pages/GoogleCallbackPage";
+import { FaFacebookF } from "react-icons/fa";
 import { initConsentMode } from "./utils/cookiePreferences";
 
 // ── Eager imports ─────────────────────────────────────────────────────────────
@@ -651,31 +652,29 @@ function injectAppStyles() {
 // ============================================================================
 // GITHUB CALLBACK PAGE
 // ============================================================================
-const GitHubCallbackPage = React.memo(() => {
+const GitHubCallbackPage = React.memo(({ provider = "github" }) => {
   const {
-    githubLoading, isAuthenticated, socialAuthError,
+    githubLoading, facebookLoading, isAuthenticated, socialAuthError,
     pendingEmail, pendingVerification, isModalOpen, modalView,
   } = useUserAuth();
   const navigate = useNavigate();
+  const isFacebook = provider === "facebook";
+  const providerName = isFacebook ? "Facebook" : "GitHub";
+  const providerLoading = isFacebook ? facebookLoading : githubLoading;
 
   useEffect(() => {
-    if (githubLoading) return;
-    // Never navigate away while the verification UI is active, even if a
-    // previous session token exists. This avoids closing a fresh OTP flow.
+    if (providerLoading) return;
     if (pendingVerification?.email || (isModalOpen && modalView === "verify")) return;
-    // Keep the callback route mounted while an email OTP is pending. A hard
-    // redirect here destroys the just-opened verification modal and its input.
-    // We only return home after a real session is created or OAuth fails.
     if (!isAuthenticated && !socialAuthError) return;
     const delay = socialAuthError
       ? CALLBACK_ERROR_REDIRECT_DELAY_MS
       : CALLBACK_REDIRECT_DELAY_MS;
     const t = setTimeout(() => navigate("/", { replace: true }), delay);
     return () => clearTimeout(t);
-  }, [githubLoading, isAuthenticated, socialAuthError, pendingVerification?.email, isModalOpen, modalView, navigate]);
+  }, [providerLoading, isAuthenticated, socialAuthError, pendingVerification?.email, isModalOpen, modalView, navigate]);
 
   const isError = Boolean(socialAuthError);
-  const isDone  = !githubLoading && isAuthenticated && !isError;
+  const isDone  = !providerLoading && isAuthenticated && !isError;
 
   const statusClass = isError
     ? "gh-status--error"
@@ -692,8 +691,8 @@ const GitHubCallbackPage = React.memo(() => {
     ? (isModalOpen && modalView === "verify"
         ? `Enter the code sent to ${pendingVerification?.email || pendingEmail} to finish signing in.`
         : "Your email verification is saved for 10 minutes. Resume it to finish signing in.")
-    : githubLoading
-    ? "Verifying your GitHub account…"
+    : providerLoading
+    ? `Verifying your ${providerName} account…`
     : "Completing sign-in…";
 
   const spinnerClass = [
@@ -707,8 +706,10 @@ const GitHubCallbackPage = React.memo(() => {
     <div className="gh-page">
       <div className="gh-card">
         <div className={spinnerClass} aria-hidden="true" />
-        <GitHubMark size={44} />
-        <h1 className="gh-title">GitHub Sign‑In</h1>
+        {isFacebook
+          ? <FaFacebookF size={44} color="#0866ff" aria-hidden="true" style={{ marginBottom: 14 }} />
+          : <GitHubMark size={44} />}
+        <h1 className="gh-title">{providerName} Sign‑In</h1>
         <p className={`gh-status ${statusClass}`}>{statusMsg}</p>
         {isError && <p className="gh-error-detail">{socialAuthError}</p>}
         {!isError && (
@@ -895,6 +896,10 @@ useEffect(injectAppStyles, []);
         <Route
           path="/auth/google/callback"
           element={<PageWrapper title="Signing in with Google…" noindex><GoogleCallbackPage /></PageWrapper>}
+        />
+        <Route
+          path="/auth/facebook/callback"
+          element={<PageWrapper title="Signing in with Facebook…" noindex><GitHubCallbackPage provider="facebook" /></PageWrapper>}
         />
 
         <Route path="/account/recovery/complete" element={<PageWrapper title="Complete Account Recovery" noindex><AccountRecoveryComplete /></PageWrapper>} />
