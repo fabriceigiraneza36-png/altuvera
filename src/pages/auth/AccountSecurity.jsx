@@ -150,8 +150,8 @@ export default function AccountSecurity() {
  .as-page>section h2.as-section-title{gap:8px!important}
 }
 
-`}
 
+/* Compact, consistent card headers and icon alignment */
 .as-page>section{padding:16px 18px!important;margin-bottom:11px!important}
 .as-page>section h2.as-section-title{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;margin:0!important;line-height:1.25!important;vertical-align:middle}
 .as-page>section h2.as-section-title svg{display:block;flex:0 0 20px;width:20px;height:20px;align-self:center;color:#13845b;stroke-width:1.9}
@@ -172,5 +172,7 @@ export default function AccountSecurity() {
  .as-page .as-status-pill{padding:5px 8px!important;font-size:10px!important}
  .as-page>section h2.as-section-title{gap:8px!important}
 }
+
+`}
 </style></main>;
 }
