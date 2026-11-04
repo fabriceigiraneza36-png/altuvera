@@ -1866,7 +1866,8 @@ export function UserAuthProvider({ children }) {
     setSocialAuthError("");
     setSocialAuthProfile(null);
     setFacebookLoading(true);
-    const endpoint = API_BASE.replace(/\\/+$/, "") + "/users/facebook/signin";
+    const apiRoot = API_BASE.endsWith("/") ? API_BASE.slice(0, -1) : API_BASE;
+    const endpoint = apiRoot + "/users/facebook/signin";
     window.location.assign(endpoint);
   }, []);
 
@@ -1920,6 +1921,7 @@ export function UserAuthProvider({ children }) {
   }, [openModal, persistPendingVerification, setModalView]);
 
   const consumeGithubCallback = useCallback(async () => {
+    if (typeof window === "undefined" || window.location.pathname !== "/auth/github/callback") return;
     const url      = new URL(window.location.href);
     const code     = url.searchParams.get("code");
     const state    = url.searchParams.get("state");
