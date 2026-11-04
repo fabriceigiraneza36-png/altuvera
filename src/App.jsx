@@ -649,15 +649,6 @@ function injectAppStyles() {
 }
 
 // ============================================================================
-// FEATURE BADGES
-// ============================================================================
-const FEATURE_BADGES = [
-  { id: "explore",  label: "Explore",  Icon: GlobeIcon    },
-  { id: "book",     label: "Book",     Icon: CalendarIcon },
-  { id: "wishlist", label: "Wishlist", Icon: HeartIcon    },
-];
-
-// ============================================================================
 // GITHUB CALLBACK PAGE
 // ============================================================================
 const GitHubCallbackPage = React.memo(() => {
@@ -732,63 +723,6 @@ const GitHubCallbackPage = React.memo(() => {
 GitHubCallbackPage.displayName = "GitHubCallbackPage";
 
 // ============================================================================
-// CELEBRATION OVERLAY
-// ============================================================================
-const CelebrationOverlay = React.memo(({ userName, onDismiss }) => {
-  const displayName = useMemo(() => {
-    if (!userName) return "Traveler";
-    return userName
-      .split(" ")
-      .map((w) => (w[0]?.toUpperCase() ?? "") + w.slice(1).toLowerCase())
-      .join(" ");
-  }, [userName]);
-
-  return (
-    <div
-      className="cel-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Welcome celebration"
-      onClick={onDismiss}
-    >
-      <div className="cel-card" onClick={(e) => e.stopPropagation()}>
-        <div className="cel-blob cel-blob--tl" aria-hidden="true" />
-        <div className="cel-blob cel-blob--br" aria-hidden="true" />
-
-        <div className="cel-checkmark-wrap">
-          <div className="cel-checkmark-ring" aria-hidden="true" />
-          <div className="cel-checkmark-circle">
-            <CheckIcon size={30} color="#fff" />
-          </div>
-        </div>
-
-        <h2 className="cel-title">Welcome, {displayName}!</h2>
-        <p className="cel-subtitle">Your adventure starts now</p>
-        <p className="cel-desc">
-          You now have full access to plan your dream safari, save stunning
-          destinations, and explore the wonders of East Africa.
-        </p>
-
-        <div className="cel-badges">
-          {FEATURE_BADGES.map(({ id, label, Icon }) => (
-            <span key={id} className="cel-badge">
-              <Icon size={13} />
-              {label}
-            </span>
-          ))}
-        </div>
-
-         <a href="/packages" className="cel-cta">
-           <ArrowRightIcon size={16} />
-           Discover Journeys
-         </a>
-      </div>
-    </div>
-  );
-});
-CelebrationOverlay.displayName = "CelebrationOverlay";
-
-// ============================================================================
 // LAYOUT COMPONENTS
 // ============================================================================
 const AppLayout = React.memo(() => (
@@ -811,91 +745,9 @@ AppLayout.displayName = "AppLayout";
 // ============================================================================
 // OVERLAY LAYER
 // ============================================================================
-const OverlayLayer = React.memo(
-  ({ isLoading, showCelebration, userName, onDismissCelebration }) => (
-    <>
-      <ScrollToTop />
-      <Suspense fallback={null}>
-        <PersistentVideoPlayer />
-        <PersistentMapViewer />
-      </Suspense>
-      <CookieConsent />
-      <CookieDocumentation />
-      <AuthModal />
-      <WhatsAppButton />
-      {showCelebration && (
-        <CelebrationOverlay
-          userName={userName}
-          onDismiss={onDismissCelebration}
-        />
-      )}
-      {isLoading && <Loader fullScreen />}
-    </>
-  ),
-);
-OverlayLayer.displayName = "OverlayLayer";
-
-// ============================================================================
-// SMART REDIRECT
-// ============================================================================
-const SmartRedirect = React.memo(() => {
-  const { pathname } = useLocation();
-  const redirectUrl  = useMemo(() => getRedirectUrl(pathname), [pathname]);
-
-  if (redirectUrl) return <Navigate to={redirectUrl} replace />;
-
-  return (
-    <PageWrapper title="Page Not Found" noindex>
-      <Suspense fallback={<Loader />}>
-        <NotFound />
-      </Suspense>
-    </PageWrapper>
-  );
-});
-SmartRedirect.displayName = "SmartRedirect";
-
 // ============================================================================
 // CUSTOM HOOKS
 // ============================================================================
-function useCelebration({ isAuthenticated, user }) {
-  const [showCelebration, setShowCelebration] = useState(false);
-  const prevAuthRef = useRef(false);
-  const dismiss = useCallback(() => setShowCelebration(false), []);
-
-  useEffect(() => {
-    const wasAuthenticated = prevAuthRef.current;
-
-    if (isAuthenticated && !wasAuthenticated && user) {
-      const email = (user?.email ?? "").toLowerCase().trim();
-      const key   = email ? `${WELCOME_KEY_PREFIX}${email}` : null;
-      let shouldShow = false;
-
-      try {
-        if (!key || !localStorage.getItem(key)) {
-          shouldShow = true;
-          if (key) localStorage.setItem(key, String(Date.now()));
-        }
-      } catch {
-        shouldShow = true;
-      }
-
-      if (shouldShow) {
-        setShowCelebration(true);
-        const t = setTimeout(
-          () => setShowCelebration(false),
-          CELEBRATION_DURATION_MS,
-        );
-        prevAuthRef.current = isAuthenticated;
-        return () => clearTimeout(t);
-      }
-    }
-
-    prevAuthRef.current = isAuthenticated;
-  }, [isAuthenticated, user]);
-
-  return { showCelebration, dismiss };
-}
-
 function usePrefetchCountries() {
   useEffect(() => {
     countryService.getAll({}).catch(() => {});
@@ -1016,13 +868,6 @@ useEffect(injectAppStyles, []);
        </>
      );
    };
-
-  const { showCelebration, dismiss: dismissCelebration } = useCelebration({
-    isAuthenticated,
-    user,
-  });
-
-  const userName = user?.fullName || user?.name || null;
 
   return (
     <div className="app-shell">
