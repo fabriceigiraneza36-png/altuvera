@@ -1180,7 +1180,11 @@ export default function AuthModal() {
   ═══════════════════════════════════════════════════════════ */
   const handleGoogleAuth = useCallback(async (mode = "signin") => {
     if (isBusy) return;
-    if (!isOnline) { setError("You appear to be offline. Reconnect before using social sign-in."); return; }
+    if (!isOnline) {
+      const referenceId = reportAuthDiagnostic({ provider: "google", stage: "provider_sdk", category: "network", errorCode: "BROWSER_OFFLINE", message: "The device is offline." });
+      setError(`Reconnect to the internet before using Google sign-in. Reference: ${referenceId}`);
+      return;
+    }
     clearSocialAuthError?.(); setError(""); setSuccess("");
     try {
       const result = await promptGoogleAuth({ mode, skipOneTap: true });
@@ -1206,7 +1210,11 @@ export default function AuthModal() {
 
   const handleGithubAuth = useCallback((mode = "signin") => {
     if (isBusy) return;
-    if (!isOnline) { setError("You appear to be offline. Reconnect before using social sign-in."); return; }
+    if (!isOnline) {
+      const referenceId = reportAuthDiagnostic({ provider: "github", stage: "oauth_start", category: "network", errorCode: "BROWSER_OFFLINE", message: "The device is offline." });
+      setError(`Reconnect to the internet before using GitHub sign-in. Reference: ${referenceId}`);
+      return;
+    }
     clearSocialAuthError?.(); setError(""); setSuccess("");
     try { startGithubAuth(mode); }
     catch (err) {
@@ -1226,7 +1234,11 @@ export default function AuthModal() {
 
   const handlePasskeyAuth = useCallback(async () => {
     if (isBusy) return;
-    if (!isOnline) { setError("You appear to be offline. Reconnect before using a passkey."); return; }
+    if (!isOnline) {
+      const referenceId = reportAuthDiagnostic({ provider: "passkey", stage: "passkey_options", category: "network", errorCode: "BROWSER_OFFLINE", message: "The device is offline." });
+      setError(`Reconnect to the internet before using a passkey. Reference: ${referenceId}`);
+      return;
+    }
     setError(""); setSuccess(""); setLoading(true);
     try { await startPasskeyLogin(form.email.trim()); }
     catch (err) {
