@@ -271,7 +271,8 @@ const formatAuthError = (error, fallback = "Something went wrong. Please try aga
   const message = String(raw).replace(/\s+/g, " ").trim();
   if (!message) return fallback;
   const lower = message.toLowerCase();
-  if (/account_removed|account (was )?(removed|deleted)|deleted account|no longer available/.test(lower)) return "This Altuvera account has been removed and is no longer available. If you believe this is a mistake, contact Altuvera support.";
+  if (/account_removed|account (was )?(removed|deleted)|deleted account/.test(lower)) return "Your previous Altuvera account was removed. You can create a fresh account using this same email address.";
+  if (/account_recreate_required|account_not_found|no active account/.test(lower)) return "We could not find an active Altuvera account for these details. Create an account to continue.";
   if (/account_deactivated|account (is )?(deactivated|disabled)|inactive account/.test(lower)) return "This Altuvera account is currently deactivated. Contact Altuvera support if you need help restoring access.";
   if (/account_not_found|account not found|no account exists|user not found/.test(lower)) return "We couldn't find an Altuvera account for these details. Check the email address or create a new account.";
   if (/failed to fetch|networkerror|network request failed|load failed|offline|internet connection/.test(lower)) return "We couldn't reach Altuvera. Check your internet connection and try again.";
@@ -665,7 +666,7 @@ export default function AuthModal() {
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, promptGoogleAuth, startGithubAuth,
     completeGoogleSignUp, clearGooglePending,
-    socialAuthError, clearSocialAuthError, uploadAvatar,
+    socialAuthError, socialAuthProfile, clearSocialAuthError, uploadAvatar,
     /* ✅ NEW — used by doForgotUsernameVerify for immediate login */
     saveAuth,
   } = useUserAuth();
@@ -688,6 +689,7 @@ export default function AuthModal() {
     keepSignedIn: restoredSignupDraft?.data?.keepSignedIn ?? restoredLoginDraft?.keepSignedIn ?? persistSession,
   }));
   const [pendingPromptDismissed, setPendingPromptDismissed] = useState(false);
+  const [transientPrefill, setTransientPrefill] = useState(false);
   const [pendingClockNow, setPendingClockNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -774,10 +776,10 @@ export default function AuthModal() {
   }, [pendingVerification?.email, pendingVerification?.fullName]);
 
   useEffect(() => {
-    if (modalView !== "register" || !form.email.trim()) return;
+    if (transientPrefill || modalView !== "register" || !form.email.trim()) return;
     const expiresAt = signupDraftExpiresAtRef.current;
     if (expiresAt > Date.now()) persistSignupDraft(form, expiresAt);
-  }, [form, modalView]);
+  }, [form, modalView, transientPrefill]);
 
   useEffect(() => {
     if (modalView !== "login") return;
@@ -924,6 +926,7 @@ export default function AuthModal() {
       stopExpiryCountdown();
       resetForgotUsername();
       setModalView(view);
+      setTransientPrefill(false);
       setError(""); setSuccess("");
       setCode(emptyCode());
       setAuthMethod("email");
@@ -1046,23 +1049,43 @@ export default function AuthModal() {
   useEffect(() => {
     if (!socialAuthError) return;
     if (isDismissalError(socialAuthError)) { clearSocialAuthError?.(); return; }
-    const lower = String(socialAuthError).toLowerCase();
-    const shouldOfferSignup = /account_removed|account_not_found|account (was )?(removed|deleted)|no account|user not found/.test(lower);
-    if (shouldOfferSignup) {
+
+    const profile = socialAuthProfile || (googleUser ? {
+      provider: "google",
+      email: googleUser.email,
+      fullName: googleUser.name,
+      avatar: googleUser.picture,
+    } : null);
+    if (profile?.email || profile?.fullName || profile?.avatar) {
       setForm((previous) => ({
         ...previous,
-        email: googleUser?.email || previous.email,
-        fullName: googleUser?.name || previous.fullName,
-        avatarPreview: googleUser?.picture || previous.avatarPreview,
+        email: profile.email || previous.email,
+        fullName: profile.fullName || profile.name || previous.fullName,
+        avatarPreview: profile.avatar || profile.picture || previous.avatarPreview,
       }));
+    }
+
+    const lower = String(socialAuthError).toLowerCase();
+    const code = String(profile?.code || "").toUpperCase();
+    const shouldOfferSignup = [
+      "ACCOUNT_REMOVED", "ACCOUNT_RECREATE_REQUIRED", "ACCOUNT_NOT_FOUND",
+    ].includes(code) || /account_removed|account_not_found|account_recreate_required|account (was )?(removed|deleted)|no active account|couldn't find an active account|no account|user not found/.test(lower);
+
+    if (shouldOfferSignup) {
+      try { sessionStorage.removeItem(SIGNUP_DRAFT_KEY); } catch {}
+      setTransientPrefill(true);
+      setAuthMethod(googleUser?.credential ? "google" : "email");
       setModalView("register");
-      setSignUpStep(1);
-      setError("Your previous profile is not active. Create a new Altuvera account to continue; your email address can be reused.");
+      setSignUpStep(googleUser?.credential ? 2 : 1);
+      setError(code === "ACCOUNT_REMOVED" || /previous altuvera account was removed|account_removed/.test(lower)
+        ? "Your previous Altuvera account was removed. You can create a fresh account using this same email address."
+        : "We couldn't find an active Altuvera account for these details. Create an account to continue.");
       clearSocialAuthError?.();
       return;
     }
+
     setError(formatAuthError(socialAuthError));
-  }, [socialAuthError, clearSocialAuthError, googleUser, setModalView]);
+  }, [socialAuthError, socialAuthProfile, clearSocialAuthError, googleUser, setModalView]);
 
   useEffect(() => {
     if (googleUser && isRegister) {
@@ -1160,7 +1183,25 @@ export default function AuthModal() {
       });
       setSuccess("Verification code sent. Check your inbox, including the spam folder.");
     } catch (err) {
-      setError(formatAuthError(err, "We could not start sign-in. Please try again."));
+      const code = err?.code || err?.data?.code || "";
+      const profile = err?.data?.data?.profile || err?.data?.profile || {};
+      if (["ACCOUNT_REMOVED", "ACCOUNT_RECREATE_REQUIRED", "ACCOUNT_NOT_FOUND"].includes(code)) {
+        try { sessionStorage.removeItem(SIGNUP_DRAFT_KEY); } catch {}
+        setTransientPrefill(true);
+        setForm((previous) => ({
+          ...previous,
+          email: profile.email || previous.email,
+          fullName: profile.fullName || profile.name || previous.fullName,
+        }));
+        setAuthMethod("email");
+        setModalView("register");
+        setSignUpStep(1);
+        setError(code === "ACCOUNT_REMOVED"
+          ? "Your previous Altuvera account was removed. You can create a fresh account using this same email address."
+          : "We couldn't find an active Altuvera account for these details. Create an account to continue.");
+      } else {
+        setError(formatAuthError(err, "We could not start sign-in. Please try again."));
+      }
     } finally {
       setLoading(false);
     }
