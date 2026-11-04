@@ -26,8 +26,23 @@ const readQueue = () => {
 };
 
 const writeQueue = (items) => {
-  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(items.slice(-MAX_QUEUED))); }
-  catch { /* diagnostics remain best-effort when storage is unavailable */ }
+  try {
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(items.slice(-MAX_QUEUED)));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const postDiagnostic = async (item) => {
+  const response = await fetch(`${API_BASE.replace(/\\/+$/, "")}/users/auth-diagnostics`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(item),
+    keepalive: true,
+  });
+  const result = await response.json().catch(() => null);
+  return response.ok && result?.success === true;
 };
 
 let flushPromise = null;
@@ -39,14 +54,8 @@ const flushAuthDiagnostics = () => {
     const remaining = [];
     for (const item of queue) {
       try {
-        const response = await fetch(`${API_BASE.replace(/\/+$/, "")}/users/auth-diagnostics`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(item),
-          keepalive: true,
-        });
-        const result = await response.json().catch(() => null);
-        if (!response.ok || result?.success !== true) remaining.push(item);
+        const stored = await postDiagnostic(item);
+        if (!stored) remaining.push(item);
       } catch {
         remaining.push(item);
       }
@@ -88,8 +97,13 @@ export const reportAuthDiagnostic = ({
 
   const queue = readQueue();
   queue.push(payload);
-  writeQueue(queue);
-  void flushAuthDiagnostics();
+  const persisted = writeQueue(queue);
+  if (persisted) {
+    void flushAuthDiagnostics();
+  } else if (typeof navigator === "undefined" || navigator.onLine !== false) {
+    // Online reports can still be delivered when privacy settings block storage.
+    void postDiagnostic(payload).catch(() => {});
+  }
   return referenceId;
 };
 
