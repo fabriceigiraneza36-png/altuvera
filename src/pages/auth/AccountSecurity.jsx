@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { API_URL } from "../../utils/apiBase";
 import { startRegistration } from "@simplewebauthn/browser";
-import { ShieldCheck, MailCheck, Fingerprint, KeyRound, Key, MonitorSmartphone, ShieldAlert, CheckCircle2, LockKeyhole, ArrowUpRight } from "lucide-react";
+import { Fingerprint, KeyRound, Key, MonitorSmartphone, ShieldAlert } from "lucide-react";
 
 const api = async (path, body, method) => {
   const token = localStorage.getItem("altuvera_auth_token") || sessionStorage.getItem("altuvera_auth_token");
@@ -73,14 +73,7 @@ export default function AccountSecurity() {
     <header className="mb-8"><p className="text-sm font-semibold uppercase tracking-widest text-emerald-700">Account protection</p><h1 className="mt-2 text-3xl font-bold">Security & recovery</h1><p className="mt-3 text-gray-600">Email verification is used whenever you sign in. Add an authenticator and save recovery codes so you have another way to prove account ownership.</p></header>
     {error && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}
     {message && <p role="status" className="mb-4 rounded-xl bg-emerald-50 p-3 text-emerald-800">{message}</p>}
-    <section className="as-hero-card mb-5 rounded-2xl border border-gray-200 p-5">
-      <span className="as-orbit as-orbit-one" aria-hidden="true"/><span className="as-orbit as-orbit-two" aria-hidden="true"/><span className="as-orbit as-orbit-three" aria-hidden="true"/>
-      <div className="as-hero-content">
-        <div className="as-hero-top"><div className="as-hero-icon"><ShieldCheck size={24} strokeWidth={1.8}/></div><span className="as-live-pill"><span/>Protection active</span></div>
-        <div className="as-hero-copy"><p className="as-eyebrow">Your account’s first line of defence</p><h2 className="text-lg font-semibold"><MailCheck size={19}/> Email verification</h2><p className="mt-1 text-sm text-gray-600">Enabled — Altuvera emails a one-time code for each passwordless sign-in, including after logout.</p></div>
-        <div className="as-hero-foot"><span><CheckCircle2 size={15}/> One-time sign-in codes</span><span><LockKeyhole size={15}/> Identity protected</span></div>
-      </div>
-    </section>
+    <section className="mb-5 rounded-2xl border border-gray-200 p-5"><h2 className="text-lg font-semibold">Email verification</h2><p className="mt-1 text-sm text-gray-600">Enabled — Altuvera emails a one-time code for each passwordless sign-in, including after logout.</p></section>
     <section className="mb-5 rounded-2xl border border-gray-200 p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-semibold as-section-title"><Fingerprint size={19}/> Authenticator app</h2><p className="mt-1 text-sm text-gray-600">Use Google Authenticator, Microsoft Authenticator, Aegis or another TOTP app. Free; no SMS charges.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-sm">{status?.authenticatorEnabled ? "Enabled" : "Not enabled"}</span></div>
     {!secret ? <button disabled={busy || status?.authenticatorEnabled} onClick={()=>run(async()=>{const r=await api("/security/totp/setup",{});setSecret(r.data);})} className="mt-4 rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-50">Set up authenticator</button> : <div className="mt-4 space-y-3"><p className="text-sm">Add this key manually in your authenticator app:</p><code className="block break-all rounded-lg bg-gray-100 p-3">{secret.secret}</code><a className="inline-block text-sm font-semibold text-emerald-700 underline" href={secret.otpauthUrl}>Open authenticator link</a><label className="block text-sm font-medium" htmlFor="totp-code">6-digit code</label><input id="totp-code" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border p-3" placeholder="000000"/><button disabled={busy || code.length!==6} onClick={()=>run(async()=>{const r=await api("/security/totp/confirm",{code});setSecret(null);setCode("");setMessage(r.message);await refresh();})} className="rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-50">Verify and enable</button><button onClick={()=>{setSecret(null);setCode("");}} className="ml-3 rounded-xl border px-4 py-2">Cancel</button></div>}
     {status?.authenticatorEnabled && <div className="mt-4 flex flex-wrap gap-2"><input aria-label="Authenticator code to disable" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" className="min-w-0 flex-1 rounded-xl border p-3" placeholder="Current 6-digit code"/><button disabled={busy||code.length!==6} onClick={()=>run(async()=>{const r=await api("/security/totp/disable",{code});setCode("");setMessage(r.message);await refresh();})} className="rounded-xl border border-red-300 px-4 py-2 text-red-700">Disable</button></div>}
@@ -96,44 +89,16 @@ export default function AccountSecurity() {
     <section className="mt-5 rounded-2xl border border-red-200 p-5"><h2 className="text-lg font-semibold as-section-title"><MonitorSmartphone size={19}/> Active sessions</h2><p className="mt-1 text-sm text-gray-600">If you think someone else may have access, revoke all active sessions. You will need to sign in again on this device and your other devices.</p><button disabled={busy} onClick={()=>{if(!window.confirm("Revoke every active Altuvera session? You will need to sign in again."))return;run(async()=>{const r=await api("/security/revoke-sessions",{});setMessage(r.message);});}} className="mt-4 rounded-xl border border-red-300 px-4 py-2 font-semibold text-red-700 disabled:opacity-50">Revoke all sessions</button></section>
     <section className="rounded-2xl border border-gray-200 p-5"><h2 className="text-lg font-semibold as-section-title"><ShieldAlert size={19}/> Can’t access your account?</h2><p className="mt-1 text-sm text-gray-600">Request a manual recovery review. For your safety, a request never grants access automatically; the Altuvera team must verify ownership. If you can access your registered email, use it below. If not, contact Altuvera support for a manual identity review.</p><form className="mt-4 space-y-3" onSubmit={e=>{e.preventDefault();run(async()=>{const r=await fetch(`${API_URL}/users/account-recovery/request`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:recoveryEmail,recoveryContactEmail})});const d=await r.json().catch(()=>({}));if(!r.ok||d.success===false)throw new Error(d.message||"Could not submit recovery request.");setRecoveryRequested(true);setMessage(d.message||"If eligible, the support team will review your request.");});}}><label htmlFor="recovery-email" className="block text-sm font-medium">Registered email address</label><input id="recovery-email" type="email" required autoComplete="email" value={recoveryEmail} onChange={e=>{setRecoveryEmail(e.target.value);setRecoveryRequested(false);}} className="w-full rounded-xl border p-3" placeholder="you@example.com"/><label htmlFor="recovery-contact-email" className="block text-sm font-medium">Alternate email you can access (required for manual recovery)</label><input id="recovery-contact-email" type="email" required autoComplete="email" value={recoveryContactEmail} onChange={e=>{setRecoveryContactEmail(e.target.value);setRecoveryRequested(false);}} className="w-full rounded-xl border p-3" placeholder="trusted-address@example.com"/><p className="text-xs text-gray-500">An administrator must verify your identity before sending a one-time recovery link to this address.</p><button disabled={busy||recoveryRequested} type="submit" className="rounded-xl border border-emerald-700 px-4 py-2 font-semibold text-emerald-800 disabled:opacity-50">{recoveryRequested?"Request submitted":"Request recovery review"}</button></form><p className="mt-3 text-sm">Recovery codes remaining: {status?.recoveryCodesRemaining ?? "—"}</p></section>
   <style>{`
-/* Polished account security experience */
-.as-page{max-width:1120px;padding-top:clamp(18px,3.4vw,42px);--as-green:#087b54}
-.as-page>header{background:linear-gradient(125deg,#f4fbf6 0%,#fff 58%,#f2faf5 100%);box-shadow:0 18px 46px rgba(17,75,45,.07)}
-.as-page>header:before{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(110deg,transparent 20%,rgba(8,123,84,.055) 48%,transparent 72%);background-size:220% 100%;animation:as-header-sweep 12s ease-in-out infinite}
-.as-page>section{position:relative;overflow:hidden;transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease}
-.as-page>section:not(.as-hero-card):hover{transform:translateY(-2px);border-color:#cfe5d7!important;box-shadow:0 14px 34px rgba(20,60,38,.07)}
-.as-section-title{display:flex;align-items:center;gap:10px}
-.as-section-title svg{flex:none;color:#087b54;padding:7px;width:34px;height:34px;border-radius:11px;background:#edf8f1;box-shadow:inset 0 0 0 1px #dcefe3}
-.as-hero-card{isolation:isolate;min-height:190px;padding:0!important;border:1px solid rgba(8,123,84,.22)!important;border-radius:23px!important;background:linear-gradient(120deg,#073d2d 0%,#07543c 52%,#08724e 100%)!important;color:#f2fff7;box-shadow:0 20px 48px rgba(4,69,43,.2)!important}
-.as-hero-card:before{content:"";position:absolute;z-index:-2;inset:-45%;background:conic-gradient(from 0deg,transparent 0 18%,rgba(183,255,213,.12) 27%,transparent 38% 57%,rgba(112,233,168,.13) 68%,transparent 81%);animation:as-hero-rotate 30s linear infinite}
-.as-hero-card:after{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(ellipse at 14% 18%,rgba(151,255,194,.15),transparent 34%),radial-gradient(ellipse at 88% 80%,rgba(112,230,164,.16),transparent 38%),linear-gradient(100deg,rgba(2,35,24,.14),transparent 70%);pointer-events:none}
-.as-hero-content{position:relative;z-index:2;padding:clamp(21px,3.4vw,32px)}
-.as-hero-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
-.as-hero-icon{display:grid;place-items:center;width:50px;height:50px;border:1px solid rgba(225,255,237,.3);border-radius:16px;background:rgba(236,255,244,.12);color:#e6fff0;box-shadow:0 8px 26px rgba(0,20,12,.12);animation:as-icon-hover 5s ease-in-out infinite}
-.as-live-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid rgba(219,255,231,.24);border-radius:99px;background:rgba(240,255,246,.1);color:#e6fff0;font-size:10px;font-weight:800;letter-spacing:.04em}
-.as-live-pill span{width:7px;height:7px;border-radius:50%;background:#8cf0b2;box-shadow:0 0 0 4px rgba(140,240,178,.13);animation:as-live-pulse 2s ease-out infinite}
-.as-hero-copy{max-width:700px;margin-top:20px}
-.as-hero-copy .as-eyebrow{margin:0 0 7px;color:#a9e9c2;font-size:9px;font-weight:850;letter-spacing:.17em;text-transform:uppercase}
-.as-hero-copy h2{display:flex;align-items:center;gap:9px;color:#f5fff8!important;font-size:clamp(19px,3vw,23px)!important}
-.as-hero-copy h2 svg{color:#a8edc3}
-.as-hero-copy>p:last-child{max-width:680px;color:rgba(238,255,244,.79)!important;font-size:12px!important}
-.as-hero-foot{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:20px;padding-top:14px;border-top:1px solid rgba(229,255,238,.15)}
-.as-hero-foot span{display:inline-flex;align-items:center;gap:7px;color:#d8f7e3;font-size:10px;font-weight:700}
-.as-hero-foot svg{color:#9be8b8}
-.as-orbit{position:absolute;z-index:0;display:block;pointer-events:none;border:1px solid rgba(215,255,231,.18);border-radius:50%;will-change:transform}
-.as-orbit-one{width:260px;height:260px;right:4%;top:-155px;box-shadow:0 0 0 22px rgba(218,255,231,.035),0 0 0 54px rgba(218,255,231,.025);animation:as-drift-one 17s ease-in-out infinite alternate}
-.as-orbit-two{width:175px;height:175px;right:22%;bottom:-125px;border-color:rgba(191,255,215,.15);box-shadow:0 0 0 18px rgba(218,255,231,.03);animation:as-drift-two 13s ease-in-out infinite alternate}
-.as-orbit-three{width:92px;height:92px;right:11%;top:34%;background:radial-gradient(circle,rgba(167,255,198,.12),transparent 72%);border-color:rgba(215,255,231,.2);animation:as-drift-three 10s ease-in-out infinite alternate}
-@keyframes as-hero-rotate{to{transform:rotate(360deg)}}
-@keyframes as-drift-one{0%{transform:translate3d(0,0,0) rotate(-8deg)}35%{transform:translate3d(-30px,18px,0) rotate(7deg)}70%{transform:translate3d(14px,38px,0) rotate(15deg)}100%{transform:translate3d(-18px,-12px,0) rotate(3deg)}}
-@keyframes as-drift-two{0%{transform:translate3d(0,0,0) scale(.92)}40%{transform:translate3d(30px,-22px,0) scale(1.08)}75%{transform:translate3d(-18px,-42px,0) scale(.98)}100%{transform:translate3d(20px,8px,0) scale(1.04)}}
-@keyframes as-drift-three{0%{transform:translate3d(0,0,0) scale(.85);opacity:.55}50%{transform:translate3d(-25px,20px,0) scale(1.2);opacity:1}100%{transform:translate3d(16px,-24px,0) scale(.92);opacity:.7}}
-@keyframes as-live-pulse{0%{box-shadow:0 0 0 0 rgba(140,240,178,.3)}70%{box-shadow:0 0 0 7px rgba(140,240,178,0)}100%{box-shadow:0 0 0 0 rgba(140,240,178,0)}}
-@keyframes as-icon-hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-@keyframes as-header-sweep{0%,100%{background-position:120% 0}50%{background-position:-120% 0}}
-@media(max-width:600px){.as-hero-content{padding:20px 17px}.as-hero-card{min-height:0}.as-orbit-one{right:-14%;top:-130px}.as-orbit-two{right:12%;bottom:-120px}.as-hero-foot{gap:9px 14px}.as-hero-foot span{font-size:9px}}
-@media(prefers-reduced-motion:reduce){.as-hero-card:before,.as-orbit,.as-hero-icon,.as-live-pill span,.as-page>header:before{animation:none!important}}
-
+/* The top heading keeps its original colours and layout; only its existing ring moves. */
+.as-page>header{isolation:isolate}
+.as-page>header:after{animation:as-heading-orbit 19s ease-in-out infinite alternate;will-change:transform}
+@keyframes as-heading-orbit{
+  0%{transform:translate3d(0,0,0) rotate(0deg)}
+  35%{transform:translate3d(-24px,-12px,0) rotate(9deg)}
+  70%{transform:translate3d(-8px,18px,0) rotate(-7deg)}
+  100%{transform:translate3d(18px,-8px,0) rotate(4deg)}
+}
+@media(prefers-reduced-motion:reduce){.as-page>header:after{animation:none!important}}
 .as-page{max-width:1080px;width:100%;margin:0 auto;padding:clamp(18px,3.2vw,38px) clamp(14px,3vw,30px) 72px;color:#193629;box-sizing:border-box;--as-green:#087b54}
 .as-page *{box-sizing:border-box}
 .as-page>header{position:relative;isolation:isolate;overflow:hidden;margin:0 0 22px!important;padding:clamp(22px,4vw,38px)!important;border:1px solid #dceee3;border-radius:25px;background:radial-gradient(circle at 88% 12%,rgba(35,174,111,.14),transparent 34%),linear-gradient(135deg,#f5fcf7,#fff 70%);box-shadow:0 14px 38px rgba(17,75,45,.055);animation:as-rise .55s ease both}
