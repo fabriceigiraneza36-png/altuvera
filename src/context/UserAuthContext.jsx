@@ -1928,8 +1928,9 @@ export function UserAuthProvider({ children }) {
     const fullName = String(url.searchParams.get("fullName") || "").trim();
     const expiresAt = Number(url.searchParams.get("expiresAt"));
     const errorCode = url.searchParams.get("error") || "";
+    const authReference = url.searchParams.get("auth_ref") || "";
 
-    ["emailOtpRequired", "email", "fullName", "provider", "expiresAt", "error"]
+    ["emailOtpRequired", "email", "fullName", "provider", "expiresAt", "error", "auth_ref"]
       .forEach((key) => url.searchParams.delete(key));
     window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
 
@@ -1952,7 +1953,8 @@ export function UserAuthProvider({ children }) {
 
     const messages = {
       facebook_cancelled: "Facebook sign-in was cancelled. You can choose another method.",
-      facebook_not_configured: "Facebook sign-in is not configured yet. Altuvera needs its Meta app credentials first.",
+      facebook_not_configured: "Facebook sign-in is not configured yet. Connect Altuvera’s Meta app credentials before using this method.",
+      facebook_auth_failed: "Facebook could not complete sign-in. Check the Meta app settings and try again.",
       facebook_email_required: "Facebook did not return an email address. Grant the email permission and use a Facebook account with a confirmed email.",
       facebook_state_invalid: "Facebook sign-in could not be verified securely. Please try again.",
       facebook_token_failed: "Facebook could not complete authorization. Please try again.",
@@ -1963,7 +1965,22 @@ export function UserAuthProvider({ children }) {
       account_deactivated: "This Altuvera account is currently deactivated. Contact Altuvera support.",
     };
     setSocialAuthProfile(null);
-    setSocialAuthError(messages[errorCode] || (errorCode ? "Facebook sign-in could not be completed. Please try again." : ""));
+    const facebookReference = errorCode
+      ? (authReference || reportAuthDiagnostic({
+          provider: "facebook",
+          stage: "oauth_callback",
+          category: errorCode.includes("state") ? "identity_mismatch"
+            : errorCode.includes("email") ? "email_missing"
+              : errorCode.includes("not_configured") ? "configuration"
+                : errorCode.includes("cancel") ? "provider_denied" : "unexpected",
+          errorCode,
+          message: messages[errorCode] || "Facebook sign-in could not be completed.",
+        }))
+      : "";
+    const facebookMessage = messages[errorCode] || (errorCode ? "Facebook sign-in could not be completed. Please try again." : "");
+    setSocialAuthError(facebookReference
+      ? `${facebookMessage} Reference: ${facebookReference}`
+      : facebookMessage);
     setModalView("login");
     openModal("login", { skipNotLoggedInMessage: true });
   }, [openModal, persistPendingVerification, setModalView]);
@@ -1980,6 +1997,7 @@ export function UserAuthProvider({ children }) {
     const emailOtpAddress = url.searchParams.get("email");
     const emailOtpFullName = url.searchParams.get("fullName") || "";
     const emailOtpExpiry = Number(url.searchParams.get("expiresAt"));
+    const authReference = url.searchParams.get("auth_ref") || "";
 
     if (emailOtpRequired === "1" && emailOtpAddress) {
       // The backend has ALREADY sent the OTP before redirecting here. Never call
@@ -1988,7 +2006,7 @@ export function UserAuthProvider({ children }) {
       // render the callback page, so its redirect guard sees the pending OTP.
       [
         "code", "state", "error", "error_description", "auth_provider",
-        "emailOtpRequired", "email", "fullName", "provider", "expiresAt",
+        "emailOtpRequired", "email", "fullName", "provider", "expiresAt", "auth_ref",
       ].forEach((p) => url.searchParams.delete(p));
       window.history.replaceState(
         {}, document.title,
@@ -2029,6 +2047,8 @@ export function UserAuthProvider({ children }) {
     try {
       if (oauthErr) {
         const oauthMessages = {
+          github_not_configured: "GitHub sign-in is not configured yet. Verify the OAuth client ID and secret on the server.",
+          access_denied: "GitHub sign-in was cancelled. You can choose another sign-in method.",
           account_removed: "Your previous Altuvera account was removed. You can create a fresh account using this same email address.",
           account_recreate_required: "We couldn't find an active Altuvera account for these details. Create an account to continue.",
           account_not_found: "We couldn't find an Altuvera account for this GitHub identity. Create an account to continue.",
@@ -2041,7 +2061,9 @@ export function UserAuthProvider({ children }) {
         throw new Error(oauthMessages[oauthErr] || (errDesc ? decodeURIComponent(errDesc) : "GitHub sign-in was cancelled."));
       }
       if (!code || !state || !expectedState || expectedState !== state) {
-        throw new Error("GitHub sign-in could not be verified. Please try again.");
+        const mismatch = new Error("GitHub sign-in could not be verified because its security state did not match. Start again from Altuvera.");
+        mismatch.code = "GITHUB_STATE_MISMATCH";
+        throw mismatch;
       }
       await githubSignIn(code, { mode: githubIntent });
     } catch (err) {
@@ -2060,7 +2082,31 @@ export function UserAuthProvider({ children }) {
           code: callbackCode,
         });
       }
-      setSocialAuthError(err?.message || "GitHub sign-in failed.");
+      const githubMessage = err?.message || "GitHub sign-in failed.";
+      const githubReference = err?.diagnosticReference || authReference || (
+        !err?.status && !oauthErr
+          ? reportAuthDiagnostic({
+              provider: "github",
+              stage: "oauth_callback",
+              category: err?.code === "GITHUB_STATE_MISMATCH" ? "identity_mismatch" : "unexpected",
+              errorCode: err?.code || "GITHUB_CALLBACK_FAILED",
+              error: err,
+              message: githubMessage,
+            })
+          : (oauthErr && !authReference
+              ? reportAuthDiagnostic({
+                  provider: "github",
+                  stage: "oauth_callback",
+                  category: oauthErr === "access_denied" ? "provider_denied" : "unexpected",
+                  errorCode: oauthErr,
+                  error: err,
+                  message: githubMessage,
+                })
+              : "")
+      );
+      setSocialAuthError(githubReference
+        ? `${githubMessage} Reference: ${githubReference}`
+        : githubMessage);
       const needsSignup = ["ACCOUNT_REMOVED", "ACCOUNT_RECREATE_REQUIRED", "ACCOUNT_NOT_FOUND"].includes(callbackCode);
       setModalView(needsSignup ? "register" : "login");
       openModal(needsSignup ? "register" : "login", { skipNotLoggedInMessage: true });
