@@ -1,470 +1,555 @@
-  // src/pages/Notifications.jsx
-  import React, { useState, useMemo, useRef, useEffect } from 'react';
-  import {
-    Bell, CalendarDays, Pencil, CheckCircle2, XCircle, Trash2,
-    CreditCard, Wallet, Map as MapIcon, Globe2, FileText, Package, ClipboardList,
-    PartyPopper, Newspaper, AlertTriangle, Siren, Settings, MessageCircle,
-    ShieldCheck, CheckCheck, Search, Filter, Clock3, Check, BellOff, Inbox, ArrowUpRight,
-  } from 'lucide-react';
-  import { Helmet }     from 'react-helmet-async';
-  import { getNotificationContextRows, getNotificationActionUrl, getNotificationPresentation } from '../../utils/notificationPresentation';
-  import { motion, AnimatePresence } from 'framer-motion';
-  import DashboardLayout from '../../components/auth/DashboardLayout';
-  import UserPushReminder from '../../components/auth/UserPushReminder';
-  import { useNotifications } from '../../hooks/useNotifications';
-  import { useBrowserPush } from '../../hooks/useBrowserPush';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Bell, CalendarDays, Check, CheckCheck, ChevronDown, ExternalLink,
+  Filter, Inbox, MessageCircle, MoreHorizontal, RefreshCw, Search, Trash2, X,
+} from "lucide-react";
+import { Helmet } from "react-helmet-async";
+import { getNotificationActionUrl, getNotificationPresentation } from "../../utils/notificationPresentation";
+import { motion, AnimatePresence } from "framer-motion";
+import DashboardLayout from "../../components/auth/DashboardLayout";
+import UserPushReminder from "../../components/auth/UserPushReminder";
+import { useNotifications } from "../../hooks/useNotifications";
+import { useBrowserPush } from "../../hooks/useBrowserPush";
 
-  const readSessionExpiry = (notification) => {
-    const metadata = notification?.metadata || notification?.metadata_json || {};
-    const value = metadata?.sessionExpiresAt || metadata?.session_expires_at;
-    const parsed = value ? new Date(value).getTime() : 0;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  };
+const notificationDate = (notification) => {
+  const value = notification?.created_at || notification?.createdAt;
+  const parsed = value ? new Date(value) : null;
+  return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+};
 
-  const formatRemaining = (expiry, now) => {
-    if (!expiry) return '';
-    const seconds = Math.max(0, Math.floor((expiry - now) / 1000));
-    if (!seconds) return 'Session expired';
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return 'Session expires in ' + (days ? days + 'd ' : '') + hours + 'h ' + minutes + 'm';
-  };
+const dateGroupLabel = (date, now = new Date()) => {
+  if (!date) return "Earlier";
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayDiff = Math.round((today.getTime() - day.getTime()) / 86400000);
+  if (dayDiff <= 0) return "Today";
+  if (dayDiff === 1) return "Yesterday";
+  if (dayDiff < 7) return "This week";
+  if (date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) return "This month";
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+};
 
-  const formatDate = (d) => {
-    if (!d) return '';
-    const dt   = new Date(d);
-    if (Number.isNaN(dt.getTime())) return "Recently";
-    const diff = Date.now() - dt.getTime();
-    const m    = Math.floor(diff / 60_000);
-    if (m < 1)   return 'Just now';
-    if (m < 60)  return `${m}m ago`;
-    const h = Math.floor(m / 60);
-    if (h < 24)  return `${h}h ago`;
-    const days = Math.floor(h / 24);
-    if (days < 7) return `${days}d ago`;
-    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+const formatNotificationTime = (date) => {
+  if (!date) return "Recently";
+  const sameDay = date.toDateString() === new Date().toDateString();
+  return date.toLocaleString("en-US", sameDay
+    ? { hour: "numeric", minute: "2-digit" }
+    : { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+};
 
-  const btnStyle = (color) => ({
-    padding:    '5px 12px', borderRadius: 7,
-    border:     `1.5px solid ${color}30`,
-    background: `${color}0a`, color, fontSize: 12,
-    fontWeight: 600, cursor: 'pointer',
-  });
+const actionButtonStyle = {
+  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+  minHeight: 38, padding: "9px 12px", border: "1px solid #dce8e1", borderRadius: 11,
+  background: "#fff", color: "#456155", fontSize: 12, fontWeight: 700, cursor: "pointer",
+};
 
-  export default function UserNotifications() {
-    const {
-      notifications, groupedNotifications, unreadCount,
-      loading, hasMore, total, tripAlerts,
-      dismissTripAlert, dismissAllTripAlerts,
-      markRead, markAllRead, deleteOne, clearAll, loadMore, refresh, reply,
-    } = useNotifications();
+export default function UserNotifications() {
+  const {
+    notifications = [], groupedNotifications, unreadCount = 0, loading = false,
+    hasMore, total = 0, tripAlerts = [], dismissTripAlert, dismissAllTripAlerts,
+    markRead, markAllRead, deleteOne, clearAll, loadMore, refresh, reply,
+  } = useNotifications();
+  const browserPush = useBrowserPush();
+  const grouped = useMemo(() => groupedNotifications || { all: [], booking: [], system: [] }, [groupedNotifications]);
 
-    const grouped = useMemo(() => groupedNotifications || { all: [], booking: [], system: [] }, [groupedNotifications]);
-    const browserPush = useBrowserPush();
+  const [tab, setTab] = useState("all");
+  const [searchText, setSearchText] = useState("");
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [replyingId, setReplyingId] = useState(null);
+  const [replyTexts, setReplyTexts] = useState({});
+  const [sending, setSending] = useState({});
+  const menuRef = useRef(null);
 
-    const [tab,        setTab]        = useState('all');
-    const [searchText, setSearchText] = useState('');
-    const [unreadOnly, setUnreadOnly] = useState(false);
-    const [replyingId, setReplyingId] = useState(null);
-    const [replyTexts, setReplyTexts] = useState({});
-    const [sending,    setSending]    = useState({});
-    const swipeStarts = useRef(new Map());
-    const [swipeOffsets, setSwipeOffsets] = useState({});
-    const [clockNow, setClockNow] = useState(Date.now());
-    useEffect(() => {
-      const timer = window.setInterval(() => setClockNow(Date.now()), 30_000);
-      return () => window.clearInterval(timer);
-    }, []);
-
-    const displayed = useMemo(() => {
-      const source = tab === 'bookings' ? grouped.booking : tab === 'updates' ? grouped.system : grouped.all;
-      // Booking updates are time-sensitive customer actions: pin them first,
-      // with unread booking messages ahead of older/read notifications.
-      const query = searchText.trim().toLowerCase();
-      return [...source]
-        .filter((n) => !unreadOnly || !n.is_read)
-        .filter((n) => !query || [n.title, n.message, n.type, n.admin_reply].some((value) => String(value || '').toLowerCase().includes(query)))
-        .sort((a, b) => {
-          if (Boolean(a.is_read) !== Boolean(b.is_read)) return Number(Boolean(a.is_read)) - Number(Boolean(b.is_read));
-          const aBooking = String(a.type || '').startsWith('booking_') ? 1 : 0;
-          const bBooking = String(b.type || '').startsWith('booking_') ? 1 : 0;
-          if (aBooking !== bBooking) return bBooking - aBooking;
-          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-        });
-    }, [tab, grouped, searchText, unreadOnly]);
-
-    const tabs = useMemo(() => [
-      { key: 'all',      label: 'All',         count: grouped.all.length     },
-      { key: 'bookings', label: 'Bookings', count: grouped.booking.length },
-      { key: 'updates', label: 'Updates', count: grouped.system.length },
-    ], [grouped]);
-
-    const handleReply = async (id) => {
-      const text = replyTexts[id]?.trim();
-      if (!text) return;
-      setSending(p => ({ ...p, [id]: true }));
-      try {
-        await reply(id, text);
-        setReplyingId(null);
-        setReplyTexts(p => ({ ...p, [id]: '' }));
-      } catch { /* shown by hook */ }
-      finally { setSending(p => ({ ...p, [id]: false })); }
+  useEffect(() => {
+    if (!openMenuId) return undefined;
+    const closeOutside = (event) => {
+      if (!menuRef.current?.contains(event.target)) setOpenMenuId(null);
     };
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setOpenMenuId(null);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [openMenuId]);
 
-    return (
-      <>
-        <Helmet><title>Notifications | Altuvera</title></Helmet>
+  const displayed = useMemo(() => {
+    const source = tab === "bookings" ? grouped.booking : tab === "updates" ? grouped.system : grouped.all;
+    const query = searchText.trim().toLowerCase();
+    return [...source]
+      .filter((item) => !unreadOnly || !item.is_read)
+      .filter((item) => !query || [item.title, item.message, item.type].some((value) => String(value || "").toLowerCase().includes(query)))
+      .sort((a, b) => (notificationDate(b)?.getTime() || 0) - (notificationDate(a)?.getTime() || 0));
+  }, [tab, grouped, searchText, unreadOnly]);
 
-        <DashboardLayout
-          title="Notifications"
-          subtitle="Stay up to date with your bookings, trips, and updates."
-        >
-          <UserPushReminder />
-          {/* ── Trip Alerts ── */}
-          <AnimatePresence>
-            {tripAlerts.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                style={{ marginBottom: 24, borderRadius: 16, overflow: 'hidden', border: '1.5px solid #fde68a' }}
-              >
-                <div style={{ padding: '12px 18px', background: '#fffbeb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#92400e' }}>
-                    Upcoming Trip Reminders ({tripAlerts.length})
-                  </h4>
-                  <button onClick={dismissAllTripAlerts} style={btnStyle('#92400e')}>Dismiss all</button>
-                </div>
-                {tripAlerts.map(alert => (
-                  <div key={alert.id} style={{
-                    padding: '14px 18px', borderTop: '1px solid #fde68a',
-                    background: alert.type === 'urgent' ? '#fef2f2' : alert.type === 'warning' ? '#fffbeb' : '#f0fdf4',
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
-                  }}>
-                    <div>
-                      <p style={{ margin: 0, fontWeight: 700, fontSize: 14,
-                        color: alert.type === 'urgent' ? '#991b1b' : alert.type === 'warning' ? '#92400e' : '#166534' }}>
-                        {alert.message}
-                      </p>
-                      {alert.travelDate && (
-                        <p style={{ margin: '4px 0 0', fontSize: 12, color: '#94a3b8' }}>
-                          Departure: {new Date(alert.travelDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                        </p>
-                      )}
-                    </div>
-                    <button onClick={() => dismissTripAlert(alert.id)}
-                      style={{ background: 'transparent', border: 'none', fontSize: 18, cursor: 'pointer', color: '#9ca3af' }}>
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+  const dateGroups = useMemo(() => {
+    const groups = [];
+    const indexByLabel = new Map();
+    displayed.forEach((item) => {
+      const label = dateGroupLabel(notificationDate(item));
+      let index = indexByLabel.get(label);
+      if (index === undefined) {
+        index = groups.length;
+        indexByLabel.set(label, index);
+        groups.push({ label, items: [] });
+      }
+      groups[index].items.push(item);
+    });
+    return groups;
+  }, [displayed]);
+
+  const tabs = useMemo(() => [
+    { key: "all", label: "All", count: grouped.all.length, icon: Inbox },
+    { key: "bookings", label: "Bookings", count: grouped.booking.length, icon: CalendarDays },
+    { key: "updates", label: "Updates", count: grouped.system.length, icon: Bell },
+  ], [grouped]);
+
+  const handleReply = async (id) => {
+    const message = replyTexts[id]?.trim();
+    if (!message || !reply) return;
+    setSending((previous) => ({ ...previous, [id]: true }));
+    try {
+      await reply(id, message);
+      setReplyingId(null);
+      setReplyTexts((previous) => ({ ...previous, [id]: "" }));
+    } catch {
+      // The notification hook exposes and logs its request failure.
+    } finally {
+      setSending((previous) => ({ ...previous, [id]: false }));
+    }
+  };
+
+  const handleOpenNotification = (item) => {
+    if (!item.is_read) markRead(item.id);
+  };
+
+  const openRelatedItem = (item) => {
+    if (!item.is_read) markRead(item.id);
+    setOpenMenuId(null);
+  };
+
+  return (
+    <>
+      <Helmet>
+        <title>Notifications | Altuvera Safaris</title>
+        <meta name="description" content="View your Altuvera booking, travel and account notifications." />
+      </Helmet>
+
+      <DashboardLayout title="Notifications" subtitle="Your booking, travel and account updates in one place.">
+        <div className="notifications-page">
+          <header className="notifications-page-header">
+            <div className="notifications-page-heading">
+              <span className="notifications-eyebrow">ACCOUNT ACTIVITY</span>
+              <h1>Notifications</h1>
+              <p>Important updates, arranged by the time they arrived.</p>
+            </div>
+            <div className="notifications-stats" aria-label="Notification totals">
+              <div className="notifications-stat">
+                <strong>{total || notifications.length}</strong>
+                <span>Total</span>
+              </div>
+              <div className="notifications-stat notifications-stat-unread">
+                <strong>{unreadCount}</strong>
+                <span>Unread</span>
+              </div>
+            </div>
+          </header>
 
           {browserPush.showReminder && (
             <motion.section
-              initial={{ opacity: 0, y: -8 }}
+              className="notifications-push-reminder"
+              initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
               role="status"
               aria-live="polite"
-              style={{
-                display: 'flex', alignItems: 'flex-start', gap: 14,
-                padding: '17px 18px', marginBottom: 18, borderRadius: 18,
-                border: '1px solid #bde5cf',
-                background: 'linear-gradient(120deg,#f0fbf5 0%,#ffffff 100%)',
-                boxShadow: '0 8px 24px rgba(4,120,87,.07)',
-              }}
             >
-              <span style={{
-                display: 'grid', placeItems: 'center', width: 42, height: 42,
-                flex: '0 0 42px', borderRadius: 14, color: '#047857',
-                background: '#dcfce7', border: '1px solid #bbf7d0',
-              }}>
-                <Bell size={20} />
-              </span>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h3 style={{ margin: 0, color: '#123b2c', fontSize: 14, fontWeight: 800 }}>
-                  Stay updated with browser notifications
-                </h3>
-                <p style={{ margin: '5px 0 0', color: '#52685d', fontSize: 12, lineHeight: 1.65 }}>
-                  Enable notifications to receive important booking, message, and account updates even when Altuvera is not open.
+              <span className="notifications-push-icon"><Bell size={18} /></span>
+              <div className="notifications-push-copy">
+                <strong>Receive important updates</strong>
+                <p>
+                  Enable browser notifications for booking, message and account alerts.
+                  {browserPush.permission === "denied" ? " Allow notifications in your browser settings, then check again." : ""}
                 </p>
-                {browserPush.permission === 'denied' && (
-                  <p style={{ margin: '8px 0 0', color: '#92400e', fontSize: 12, lineHeight: 1.6 }}>
-                    Notifications are blocked by your browser. Open this site’s settings from your browser address bar or site permissions, change Notifications to Allow, then come back and check again.
-                  </p>
-                )}
-                {browserPush.error && (
-                  <p role="alert" style={{ margin: '8px 0 0', color: '#b91c1c', fontSize: 12, lineHeight: 1.6 }}>
-                    {browserPush.error}
-                  </p>
-                )}
+                {browserPush.error && <small role="alert">{browserPush.error}</small>}
               </div>
               <button
                 type="button"
-                onClick={browserPush.permission === 'denied' ? browserPush.refresh : browserPush.enablePush}
+                onClick={browserPush.permission === "denied" ? browserPush.refresh : browserPush.enablePush}
                 disabled={browserPush.loading}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  gap: 7, flex: '0 0 auto', alignSelf: 'center',
-                  padding: '10px 14px', border: 0, borderRadius: 11,
-                  background: '#047857', color: '#fff', fontSize: 12,
-                  fontWeight: 800, cursor: browserPush.loading ? 'wait' : 'pointer',
-                  opacity: browserPush.loading ? .65 : 1, whiteSpace: 'nowrap',
-                }}
               >
-                {browserPush.loading ? 'Enabling…' : browserPush.permission === 'denied' ? 'Check again' : browserPush.browserSubscribed ? 'Finish setup' : 'Enable'}
-                <ArrowUpRight size={14} />
+                {browserPush.loading ? "Enabling…" : browserPush.permission === "denied" ? "Check again" : "Enable"}
               </button>
             </motion.section>
           )}
 
-          {/* ── Notification centre header ── */}
-          <section style={{ marginBottom: 22, padding: 'clamp(20px, 4vw, 30px)', borderRadius: 24, color: '#fff', background: 'linear-gradient(125deg,#064e3b 0%,#047857 55%,#10a37f 100%)', boxShadow: '0 16px 40px rgba(4,120,87,.18)', position: 'relative', overflow: 'hidden' }}>
-            <div aria-hidden="true" style={{ position: 'absolute', width: 230, height: 230, borderRadius: '50%', border: '1px solid rgba(255,255,255,.13)', right: -65, top: -115, pointerEvents: 'none' }} />
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 18 }}>
-              <div style={{ minWidth: 0, flex: '1 1 230px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <span style={{ display: 'grid', placeItems: 'center', width: 44, height: 44, borderRadius: 15, background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.18)' }}><Bell size={23} /></span>
-                  <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.14em', textTransform: 'uppercase', color: '#a7f3d0' }}>Your activity</span>
+          {tripAlerts.length > 0 && (
+            <section className="notifications-trip-alerts" aria-label="Upcoming trip reminders">
+              <div className="notifications-trip-heading">
+                <div>
+                  <strong>Upcoming trip reminders</strong>
+                  <span>{tripAlerts.length} active</span>
                 </div>
-                <h2 style={{ margin: '0 0 7px', fontSize: 'clamp(24px,4vw,32px)', lineHeight: 1.15, letterSpacing: '-.035em', fontWeight: 850 }}>Notification centre</h2>
-                <p style={{ margin: 0, maxWidth: 520, fontSize: 14, lineHeight: 1.65, color: 'rgba(255,255,255,.8)' }}>Booking updates, trip reminders, and important news from Altuvera—all in one place.</p>
+                <button type="button" onClick={dismissAllTripAlerts}>Dismiss all</button>
               </div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <div style={{ minWidth: 92, padding: '12px 15px', borderRadius: 15, background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.14)' }}>
-                  <div style={{ fontSize: 25, fontWeight: 850, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{total}</div><div style={{ marginTop: 5, fontSize: 11, color: 'rgba(255,255,255,.78)' }}>Total</div>
+              {tripAlerts.map((alert) => (
+                <div className={"notifications-trip-row notifications-trip-" + (alert.type || "info")} key={alert.id}>
+                  <div>
+                    <p>{alert.message}</p>
+                    {alert.travelDate && <time>{new Date(alert.travelDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</time>}
+                  </div>
+                  <button type="button" onClick={() => dismissTripAlert(alert.id)} aria-label="Dismiss trip reminder"><X size={16} /></button>
                 </div>
-                <div style={{ minWidth: 92, padding: '12px 15px', borderRadius: 15, background: unreadCount ? 'rgba(167,243,208,.17)' : 'rgba(255,255,255,.12)', border: '1px solid rgba(167,243,208,.25)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 25, fontWeight: 850, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{unreadCount}{unreadCount > 0 && <span style={{ width: 7, height: 7, borderRadius: 99, background: '#a7f3d0' }} />}</div><div style={{ marginTop: 5, fontSize: 11, color: '#d1fae5' }}>Unread</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section style={{ background: '#fff', border: '1px solid #e5eee9', borderRadius: 20, padding: 'clamp(12px, 3vw, 18px)', marginBottom: 18, boxShadow: '0 5px 20px rgba(15,23,42,.035)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
-              <div style={{ flex: '1 1 220px', minWidth: 0, display: 'flex', alignItems: 'center', gap: 9, padding: '0 13px', border: '1px solid #dce8e1', borderRadius: 12, background: '#f9fcfa' }}>
-                <Search size={18} color="#6b8277" />
-                <input aria-label="Search notifications" value={searchText} onChange={e => setSearchText(e.target.value)} placeholder="Search notifications…" style={{ width: '100%', minWidth: 0, padding: '12px 0', border: 0, outline: 0, background: 'transparent', color: '#10231d', fontSize: 14 }} />
-                {searchText && <button aria-label="Clear search" onClick={() => setSearchText('')} style={{ border: 0, background: 'transparent', color: '#64748b', cursor: 'pointer', fontSize: 18 }}>×</button>}
-              </div>
-              <button onClick={() => setUnreadOnly(v => !v)} aria-pressed={unreadOnly} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 14px', borderRadius: 12, border: '1px solid ' + (unreadOnly ? '#047857' : '#dce8e1'), background: unreadOnly ? '#e8f7ef' : '#fff', color: unreadOnly ? '#047857' : '#52645b', fontWeight: 750, fontSize: 13, cursor: 'pointer' }}><Filter size={16} /> Unread only</button>
-              {unreadCount > 0 && <button onClick={markAllRead} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 14px', borderRadius: 12, border: '1px solid #b8e6d0', background: '#effaf4', color: '#047857', fontWeight: 750, fontSize: 13, cursor: 'pointer' }}><CheckCheck size={16} /> Mark all read</button>}
-              <button onClick={refresh} disabled={loading} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 14px', borderRadius: 12, border: '1px solid #dce8e1', background: '#fff', color: '#52645b', fontWeight: 700, fontSize: 13, cursor: loading ? 'wait' : 'pointer', opacity: loading ? .6 : 1 }}><Clock3 size={16} /> {loading ? 'Refreshing…' : 'Refresh'}</button>
-              {notifications.length > 0 && <button onClick={clearAll} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 14px', borderRadius: 12, border: '1px solid #fecaca', background: '#fff7f7', color: '#b91c1c', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}><Trash2 size={15} /> Clear all</button>}
-            </div>
-            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-              {tabs.map(t => (
-                <button key={t.key} onClick={() => setTab(t.key)} aria-pressed={tab === t.key} style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 15px', borderRadius: 11, border: '1px solid ' + (tab === t.key ? '#b8e6d0' : 'transparent'), background: tab === t.key ? '#eaf8f0' : '#f7faf8', color: tab === t.key ? '#047857' : '#64756d', fontWeight: tab === t.key ? 800 : 650, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  {t.key === 'all' ? <Inbox size={16} /> : t.key === 'bookings' ? <CalendarDays size={16} /> : <Bell size={16} />}
-                  {t.label}<span style={{ minWidth: 21, padding: '2px 6px', textAlign: 'center', borderRadius: 999, background: tab === t.key ? '#c9f0dc' : '#e8efeb', color: tab === t.key ? '#065f46' : '#607168', fontSize: 11, fontWeight: 850 }}>{t.count}</span>
-                </button>
               ))}
-            </div>
-          </section>
+            </section>
+          )}
 
-          {/* ── List ── */}
-          {loading && displayed.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '64px 24px' }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', border: '4px solid #e5e7eb', borderTopColor: '#059669', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-              <p style={{ color: '#6b7280' }}>Loading notifications…</p>
+          <section className="notifications-tools" aria-label="Notification filters and actions">
+            <div className="notifications-search-row">
+              <label className="notifications-search">
+                <Search size={17} aria-hidden="true" />
+                <input
+                  type="search"
+                  aria-label="Search notifications"
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder="Search notifications"
+                />
+                {searchText && (
+                  <button type="button" onClick={() => setSearchText("")} aria-label="Clear search"><X size={15} /></button>
+                )}
+              </label>
+              <button
+                type="button"
+                className="notifications-filter-toggle"
+                onClick={() => setFiltersExpanded((value) => !value)}
+                aria-expanded={filtersExpanded}
+              >
+                <Filter size={16} />
+                Filters and actions
+                <ChevronDown size={15} className={filtersExpanded ? "is-expanded" : ""} />
+              </button>
             </div>
-          ) : displayed.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '64px 24px', background: '#fff', borderRadius: 20, border: '1px dashed #e2e8f0' }}>
-              <Bell size={44} color="#94a3b8" style={{ margin: "0 auto 12px" }} />
-              <h3 style={{ margin: '0 0 8px', color: '#0f172a' }}>All caught up!</h3>
-              <p style={{ color: '#64748b', margin: 0 }}>{searchText ? 'No notifications match your search.' : unreadOnly ? 'You have no unread notifications.' : `No ${tab === 'all' ? '' : tab + ' '}notifications yet.`}</p>
-            </div>
-          ) : (
-            <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-              <AnimatePresence initial={false}>
-                {displayed.map((n, idx) => {
-                  const meta = getNotificationPresentation(n);
-                  const contextRows = getNotificationContextRows(n);
-                  // Only critical booking notifications receive the urgent booking treatment.
-                  const isUrgentBooking = Boolean(meta.isUrgent && (meta.category === 'booking' || String(meta.type || '').startsWith('booking')));
-                  const hasAction = Boolean(n.action_url || n.actionUrl || meta.isMessage);
+
+            <div className="notifications-filter-controls" data-open={filtersExpanded}>
+              <div className="notifications-action-row">
+                <button
+                  type="button"
+                  style={{
+                    ...actionButtonStyle,
+                    background: unreadOnly ? "#eaf7f0" : "#fff",
+                    borderColor: unreadOnly ? "#b6dfc9" : "#dce8e1",
+                    color: unreadOnly ? "#087b54" : "#456155",
+                  }}
+                  onClick={() => setUnreadOnly((value) => !value)}
+                  aria-pressed={unreadOnly}
+                >
+                  <Filter size={15} /> {unreadOnly ? "Unread only: On" : "Unread only"}
+                </button>
+                {unreadCount > 0 && (
+                  <button type="button" style={{ ...actionButtonStyle, color: "#087b54", background: "#eff9f3", borderColor: "#c5e8d4" }} onClick={markAllRead}>
+                    <CheckCheck size={15} /> Mark all read
+                  </button>
+                )}
+                <button type="button" style={actionButtonStyle} onClick={refresh} disabled={loading}>
+                  <RefreshCw size={15} className={loading ? "notifications-spin" : ""} /> {loading ? "Refreshing…" : "Refresh"}
+                </button>
+                {notifications.length > 0 && (
+                  <button type="button" className="notifications-clear-button" onClick={clearAll}>
+                    <Trash2 size={15} /> Clear all
+                  </button>
+                )}
+              </div>
+
+              <div className="notifications-tabs" role="tablist" aria-label="Notification categories">
+                {tabs.map((item) => {
+                  const Icon = item.icon;
                   return (
-                    <motion.div
-                      key={n.id} layout
-                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: 80, scale: 0.98 }}
-                      onPointerDown={(event) => { swipeStarts.current.set(n.id, { x: event.clientX, y: event.clientY, dx: 0 }); event.currentTarget.setPointerCapture?.(event.pointerId); }}
-                      onPointerMove={(event) => { const start = swipeStarts.current.get(n.id); if (!start) return; const dx = event.clientX - start.x; const dy = event.clientY - start.y; if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 5) { start.dx = dx; setSwipeOffsets(p => ({ ...p, [n.id]: { x: dx, opacity: Math.max(.18, 1 - Math.abs(dx) / 260) } })); } }}
-                      onPointerUp={() => { const start = swipeStarts.current.get(n.id); swipeStarts.current.delete(n.id); if (!start) return; if (Math.abs(start.dx) > 95) { setSwipeOffsets(p => ({ ...p, [n.id]: { x: start.dx < 0 ? -window.innerWidth : window.innerWidth, opacity: 0 } })); window.setTimeout(() => deleteOne(n.id), 180); } else setSwipeOffsets(p => ({ ...p, [n.id]: { x: 0, opacity: 1 } })); }}
-                      onPointerCancel={() => { swipeStarts.current.delete(n.id); setSwipeOffsets(p => ({ ...p, [n.id]: { x: 0, opacity: 1 } })); }}
-                      className="notification-card"
-                      style={{
-                        padding: 'clamp(15px, 3vw, 22px) clamp(14px, 3vw, 24px)',
-                        borderBottom: idx < displayed.length - 1 ? '1px solid #f1f5f9' : 'none',
-                        background: !n.is_read ? (isUrgentBooking ? '#fff7f6' : '#f0fbf5') : '#fff',
-                        boxShadow: !n.is_read ? (isUrgentBooking ? 'inset 4px 0 0 #e11d48' : 'inset 4px 0 0 #059669') : 'none',
-                        borderBottom: idx < displayed.length - 1 ? '1px solid #edf2ef' : 'none',
-                        position: 'relative', touchAction: 'pan-y', willChange: 'transform, opacity',
-                        transform: 'translate3d(' + (swipeOffsets[n.id]?.x || 0) + 'px,0,0)', opacity: swipeOffsets[n.id]?.opacity ?? 1,
-                        transition: swipeStarts.current.has(n.id) ? 'none' : 'transform 220ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease',
-                      }}
+                    <button
+                      type="button"
+                      key={item.key}
+                      role="tab"
+                      aria-selected={tab === item.key}
+                      onClick={() => setTab(item.key)}
+                      className={tab === item.key ? "active" : ""}
                     >
-                      {!n.is_read && (
-                        <div style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', width: 7, height: 7, borderRadius: '50%', background: '#059669' }} />
-                      )}
-
-                      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                        {/* Icon */}
-                        <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: `${meta.color}14`, border: `1px solid ${meta.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <meta.icon size={20} color={meta.color} strokeWidth={2} aria-hidden="true" />
-                        </div>
-
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          {/* Title + time */}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                            <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                              <p style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#10231d', letterSpacing: n.is_read ? 0 : '-.01em', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
-                                {n.title}
-                              </p>
-                              {!n.is_read && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 999, background: '#d1fae5', color: '#047857', fontSize: 10, fontWeight: 900, letterSpacing: '.04em', textTransform: 'uppercase' }}><span style={{ width: 5, height: 5, borderRadius: 99, background: '#059669' }} />New</span>}
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 999, background: `${meta.color}12`, color: meta.color, fontSize: 9, fontWeight: 850, textTransform: 'uppercase', letterSpacing: '.045em' }}>{meta.label}</span>
-                              {meta.isUrgent && <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 7px',borderRadius:999,background:'#fff0ef',color:'#b42332',fontSize:9,fontWeight:900,textTransform:'uppercase',letterSpacing:'.04em'}}><Siren size={11}/> Important</span>}
-                            </div>
-                            <span style={{ fontSize: 12, color: '#819188', flexShrink: 0, fontSize: 11 }}>
-                              {formatDate(n.created_at)}
-                            </span>
-                          </div>
-
-                          {/* Message */}
-                          <p style={{ margin: '8px 0 0', fontSize: 13, color: '#475569', lineHeight: 1.65, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
-                            {n.message || n.body || 'You have a new update from Altuvera.'}
-                          </p>
-
-                          {contextRows.length > 0 && (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-                              {contextRows.map(([label, value]) => (
-                                <span key={label} style={{ display: 'inline-flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 4, maxWidth: '100%', padding: '6px 8px', borderRadius: 9, background: '#f5faf7', border: '1px solid #e4f0e8', color: '#52675c', fontSize: 10, lineHeight: 1.4 }}>
-                                  <strong style={{ color: '#82948a', fontWeight: 750 }}>{label}</strong>
-                                  <span style={{ fontWeight: 750, overflowWrap: 'anywhere' }}>{String(value)}</span>
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          {readSessionExpiry(n) && (
-                            <div role="status" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 10, padding: "7px 10px", borderRadius: 9, background: "#eff6ff", color: "#1d4ed8", fontSize: 12, fontWeight: 700 }}>
-                              <ShieldCheck size={14} />
-                              {formatRemaining(readSessionExpiry(n), clockNow)}
-                            </div>
-                          )}
-
-                          {/* Action link */}
-                          {hasAction && (
-                            <a href={getNotificationActionUrl(n)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 11, padding: '9px 12px', borderRadius: 11, background: meta.color, color: '#fff', boxShadow: `0 4px 12px ${meta.color}22`, fontSize: 11, fontWeight: 850, textDecoration: 'none', maxWidth: '100%' }}
-                              onClick={() => !n.is_read && markRead(n.id)}>
-                              {n.action_label || n.actionLabel || (meta.isMessage ? 'Open conversation' : 'View details')} <ArrowUpRight size={14}/>
-                            </a>
-                          )}
-
-                          {/* Admin reply */}
-                          {n.admin_reply && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                              style={{ marginTop: 12, padding: '10px 14px', background: '#f0fdf4', borderRadius: 10, border: '1px solid #bbf7d0' }}
-                            >
-                              <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 800, color: '#166534', textTransform: 'uppercase' }}>
-                                Reply from Altuvera Team
-                              </p>
-                              <p style={{ margin: 0, fontSize: 14, color: '#166534', lineHeight: 1.6 }}>
-                                {n.admin_reply}
-                              </p>
-                            </motion.div>
-                          )}
-
-                          {/* User's reply */}
-                          {(n.reply_text || n.replyText) && (
-                            <div style={{ marginTop: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                              <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>
-                                Your reply: {n.reply_text || n.replyText}
-                                {!n.admin_reply && (
-                                  <span style={{ marginLeft: 8, color: '#94a3b8', fontStyle: 'italic' }}>(awaiting response)</span>
-                                )}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Reply form */}
-                          <AnimatePresence>
-                            {replyingId === n.id && !(n.reply_text || n.replyText) && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                style={{ marginTop: 12, overflow: 'hidden' }}
-                              >
-                                <textarea
-                                  value={replyTexts[n.id] || ''}
-                                  onChange={e => setReplyTexts(p => ({ ...p, [n.id]: e.target.value }))}
-                                  placeholder="Write your reply to the team…"
-                                  rows={3}
-                                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none', boxSizing: 'border-box' }}
-                                  autoFocus
-                                  onKeyDown={e => {
-                                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleReply(n.id);
-                                    if (e.key === 'Escape') setReplyingId(null);
-                                  }}
-                                />
-                                <p style={{ margin: '4px 0 8px', fontSize: 11, color: '#94a3b8' }}>
-                                  Press Ctrl+Enter to send
-                                </p>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                  <button
-                                    onClick={() => handleReply(n.id)}
-                                    disabled={!replyTexts[n.id]?.trim() || sending[n.id]}
-                                    style={{ padding: '8px 18px', borderRadius: 8, background: '#059669', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: replyTexts[n.id]?.trim() ? 'pointer' : 'not-allowed', opacity: replyTexts[n.id]?.trim() ? 1 : 0.5 }}
-                                  >
-                                    {sending[n.id] ? 'Sending…' : 'Send Reply'}
-                                  </button>
-                                  <button
-                                    onClick={() => setReplyingId(null)}
-                                    style={{ padding: '8px 14px', borderRadius: 8, background: '#f1f5f9', color: '#64748b', border: 'none', fontSize: 13, cursor: 'pointer' }}
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-
-                          {/* Action buttons */}
-                          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                            {!n.is_read && (
-                              <button onClick={() => markRead(n.id)} style={btnStyle('#059669')}>
-                                ✓ Mark read
-                              </button>
-                            )}
-                            <button onClick={() => deleteOne(n.id)} style={btnStyle('#ef4444')}>
-                              Dismiss
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
+                      <Icon size={16} />
+                      {item.label}
+                      <span>{item.count}</span>
+                    </button>
                   );
                 })}
+              </div>
+            </div>
+          </section>
+
+          {loading && displayed.length === 0 ? (
+            <div className="notifications-empty">
+              <span className="notifications-loader" />
+              <p>Loading notifications…</p>
+            </div>
+          ) : displayed.length === 0 ? (
+            <div className="notifications-empty">
+              <span className="notifications-empty-icon"><Inbox size={26} /></span>
+              <strong>{searchText || unreadOnly ? "No matching notifications" : "You’re all caught up"}</strong>
+              <p>{searchText ? "Try a different search phrase." : unreadOnly ? "There are no unread notifications right now." : "New booking, travel and account updates will appear here."}</p>
+            </div>
+          ) : (
+            <div className="notifications-list">
+              <AnimatePresence initial={false}>
+                {dateGroups.map((group) => (
+                  <section className="notifications-date-group" key={group.label}>
+                    <div className="notifications-date-heading">
+                      <span>{group.label}</span>
+                      <span>{group.items.length}</span>
+                    </div>
+                    {group.items.map((item) => {
+                      const meta = getNotificationPresentation(item);
+                      const Icon = meta.icon;
+                      const actionUrl = getNotificationActionUrl(item);
+                      const hasAction = Boolean(item.action_url || item.actionUrl || meta.isMessage);
+                      const isMenuOpen = openMenuId === item.id;
+                      const canReply = String(item.type || "").toLowerCase() === "contact_message" && !(item.reply_text || item.replyText);
+
+                      return (
+                        <motion.article
+                          key={item.id}
+                          layout
+                          initial={{ opacity: 0, y: 7 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className={"notification-entry" + (!item.is_read ? " is-unread" : "")}
+                          onClick={() => handleOpenNotification(item)}
+                        >
+                          <span className="notification-entry-icon" style={{ color: meta.color, background: meta.color + "12" }}>
+                            <Icon size={19} strokeWidth={1.9} aria-hidden="true" />
+                          </span>
+
+                          <div className="notification-entry-content">
+                            <div className="notification-entry-heading">
+                              <div className="notification-entry-title-wrap">
+                                <h3>{item.title || meta.label}</h3>
+                                {!item.is_read && <span className="notification-unread-label">New</span>}
+                              </div>
+                              <time dateTime={notificationDate(item)?.toISOString() || undefined}>
+                                {formatNotificationTime(notificationDate(item))}
+                              </time>
+                            </div>
+                            <p className="notification-entry-message">{item.message || item.body || "You have a new update from Altuvera."}</p>
+                            <span className="notification-entry-category">{meta.label}</span>
+
+                            {replyingId === item.id && canReply && (
+                              <div className="notification-reply" onClick={(event) => event.stopPropagation()}>
+                                <textarea
+                                  rows={3}
+                                  value={replyTexts[item.id] || ""}
+                                  onChange={(event) => setReplyTexts((previous) => ({ ...previous, [item.id]: event.target.value }))}
+                                  placeholder="Write a reply to the Altuvera team…"
+                                  aria-label="Reply to notification"
+                                />
+                                <div>
+                                  <button type="button" onClick={() => handleReply(item.id)} disabled={!replyTexts[item.id]?.trim() || sending[item.id]}>
+                                    {sending[item.id] ? "Sending…" : "Send reply"}
+                                  </button>
+                                  <button type="button" className="secondary" onClick={() => setReplyingId(null)}>Cancel</button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div
+                            className="notification-entry-actions"
+                            ref={isMenuOpen ? menuRef : null}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              className="notification-more-button"
+                              aria-label={"Actions for " + (item.title || "notification")}
+                              aria-haspopup="menu"
+                              aria-expanded={isMenuOpen}
+                              onClick={() => setOpenMenuId((current) => current === item.id ? null : item.id)}
+                            >
+                              <MoreHorizontal size={19} />
+                            </button>
+                            {isMenuOpen && (
+                              <div className="notification-action-menu" role="menu">
+                                {hasAction && (
+                                  <a role="menuitem" href={actionUrl} onClick={() => openRelatedItem(item)}>
+                                    <ExternalLink size={15} /> Open related item
+                                  </a>
+                                )}
+                                {canReply && (
+                                  <button type="button" role="menuitem" onClick={() => { setReplyingId(item.id); setOpenMenuId(null); }}>
+                                    <MessageCircle size={15} /> Reply to Altuvera
+                                  </button>
+                                )}
+                                {!item.is_read && (
+                                  <button type="button" role="menuitem" onClick={() => { markRead(item.id); setOpenMenuId(null); }}>
+                                    <Check size={15} /> Mark as read
+                                  </button>
+                                )}
+                                <button type="button" role="menuitem" className="notification-action-danger" onClick={() => { deleteOne(item.id); setOpenMenuId(null); }}>
+                                  <Trash2 size={15} /> Dismiss notification
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </motion.article>
+                      );
+                    })}
+                  </section>
+                ))}
               </AnimatePresence>
 
               {hasMore && (
-                <div style={{ textAlign: 'center', padding: '16px 24px', borderTop: '1px solid #f1f5f9' }}>
-                  <button onClick={loadMore} disabled={loading} style={{ padding: '10px 28px', borderRadius: 10, border: '1.5px solid #059669', background: '#fff', color: '#059669', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-                    {loading ? 'Loading…' : 'Load More'}
+                <div className="notifications-load-more">
+                  <button type="button" onClick={loadMore} disabled={loading}>
+                    {loading ? "Loading…" : "Load older notifications"}
                   </button>
                 </div>
               )}
             </div>
           )}
+        </div>
 
-          <style>{`@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }`}</style>
-        </DashboardLayout>
-      </>
-    );
-  }
+        <style>{`
+          .notifications-page{width:100%;max-width:1120px;margin:0 auto;color:#142a20}
+          .notifications-page-header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:0 0 22px;padding:4px 2px}
+          .notifications-page-heading{min-width:0}
+          .notifications-eyebrow{display:block;margin-bottom:7px;color:#16845d;font-size:10px;font-weight:800;letter-spacing:.15em}
+          .notifications-page-heading h1{margin:0;color:#152b21;font-size:clamp(25px,3.2vw,34px);line-height:1.15;letter-spacing:-.04em;font-weight:800}
+          .notifications-page-heading p{margin:7px 0 0;color:#718178;font-size:13px;line-height:1.55}
+          .notifications-stats{display:flex;gap:8px;flex:0 0 auto}
+          .notifications-stat{min-width:76px;padding:10px 13px;border:1px solid #e5eee8;border-radius:13px;background:#fff}
+          .notifications-stat strong{display:block;color:#183d2d;font-size:20px;line-height:1.15;font-weight:800;font-variant-numeric:tabular-nums}
+          .notifications-stat span{display:block;margin-top:4px;color:#84938b;font-size:10px;font-weight:650}
+          .notifications-stat-unread strong{color:#078456}
+          .notifications-push-reminder{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding:13px 15px;border:1px solid #d9ece1;border-radius:14px;background:#f8fcf9}
+          .notifications-push-icon{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border-radius:11px;background:#e6f5ec;color:#087b54}
+          .notifications-push-copy{min-width:0;flex:1}
+          .notifications-push-copy strong{display:block;color:#204233;font-size:12px;font-weight:800}
+          .notifications-push-copy p{margin:3px 0 0;color:#718178;font-size:11px;line-height:1.5}
+          .notifications-push-copy small{display:block;margin-top:4px;color:#b42332;font-size:11px}
+          .notifications-push-reminder>button{flex:0 0 auto;min-height:34px;padding:8px 13px;border:0;border-radius:10px;background:#087b54;color:#fff;font-size:11px;font-weight:800;cursor:pointer}
+          .notifications-push-reminder>button:disabled{opacity:.6;cursor:wait}
+          .notifications-trip-alerts{margin:0 0 16px;border:1px solid #e7eee8;border-radius:14px;background:#fff;overflow:hidden}
+          .notifications-trip-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;background:#fbfdfb}
+          .notifications-trip-heading>div{display:flex;align-items:center;gap:9px;min-width:0}
+          .notifications-trip-heading strong{color:#29483a;font-size:12px;font-weight:800}
+          .notifications-trip-heading span{color:#8b9a92;font-size:10px}
+          .notifications-trip-heading button{border:0;background:transparent;color:#8a9890;font-size:11px;font-weight:700;cursor:pointer}
+          .notifications-trip-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid #eef3ef}
+          .notifications-trip-row p{margin:0;color:#455a4e;font-size:12px;line-height:1.5}
+          .notifications-trip-row time{display:block;margin-top:3px;color:#8c9a92;font-size:10px}
+          .notifications-trip-row>button{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border:0;border-radius:9px;background:transparent;color:#87958d;cursor:pointer}
+          .notifications-trip-urgent p{color:#9f2f36}
+          .notifications-trip-warning p{color:#936b20}
+          .notifications-tools{margin:0 0 17px;padding:13px;border:1px solid #e5eee8;border-radius:16px;background:#fff;box-shadow:0 3px 13px rgba(17,54,36,.025)}
+          .notifications-search-row{display:flex;align-items:center;gap:9px}
+          .notifications-search{display:flex;align-items:center;gap:9px;flex:1;min-width:0;padding:0 12px;border:1px solid #e2ebe5;border-radius:11px;background:#fafcfb;color:#819189}
+          .notifications-search input{width:100%;min-width:0;padding:11px 0;border:0;outline:0;background:transparent;color:#18382a;font:inherit;font-size:13px}
+          .notifications-search input::placeholder{color:#9aa79f}
+          .notifications-search>button{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:8px;background:transparent;color:#819189;cursor:pointer}
+          .notifications-filter-toggle{display:none;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 11px;border:1px solid #dfeae3;border-radius:11px;background:#fff;color:#426052;font-size:11px;font-weight:750;white-space:nowrap;cursor:pointer}
+          .notifications-filter-toggle .is-expanded{transform:rotate(180deg)}
+          .notifications-filter-controls{display:flex;flex-direction:column;gap:11px;margin-top:11px}
+          .notifications-action-row{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+          .notifications-clear-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:8px 12px;border:1px solid #f0dede;border-radius:11px;background:#fffafa;color:#ac4d52;font-size:12px;font-weight:700;cursor:pointer}
+          .notifications-tabs{display:flex;gap:6px;overflow-x:auto;padding:1px 0 2px;scrollbar-width:none}
+          .notifications-tabs::-webkit-scrollbar{display:none}
+          .notifications-tabs button{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;min-height:36px;padding:8px 12px;border:1px solid transparent;border-radius:10px;background:#f7faf8;color:#67796f;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer}
+          .notifications-tabs button.active{border-color:#c7e6d3;background:#edf8f1;color:#087b54}
+          .notifications-tabs button span{min-width:19px;padding:2px 5px;border-radius:99px;background:#e8efea;color:#718078;text-align:center;font-size:10px}
+          .notifications-tabs button.active span{background:#d4efdf;color:#087b54}
+          .notifications-list{display:flex;flex-direction:column;gap:15px}
+          .notifications-date-group{min-width:0}
+          .notifications-date-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 3px 7px;color:#87968e;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+          .notifications-date-heading span:last-child{font-weight:650;letter-spacing:0}
+          .notification-entry{position:relative;display:flex;align-items:flex-start;gap:12px;min-width:0;margin:0;padding:15px 14px;border:1px solid #e8eee9;border-radius:14px;background:#fff;transition:border-color .16s ease,background .16s ease,box-shadow .16s ease;cursor:pointer}
+          .notification-entry+.notification-entry{margin-top:7px}
+          .notification-entry:hover{border-color:#d3e7da;box-shadow:0 4px 16px rgba(20,70,45,.035)}
+          .notification-entry.is-unread{border-color:#d6eadc;background:#fbfefc}
+          .notification-entry-icon{display:grid;place-items:center;width:39px;height:39px;flex:0 0 39px;border-radius:12px}
+          .notification-entry-content{flex:1;min-width:0;padding-right:2px}
+          .notification-entry-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-width:0}
+          .notification-entry-title-wrap{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+          .notification-entry-title-wrap h3{margin:0;color:#1c3528;font-size:13px;line-height:1.45;font-weight:750;overflow-wrap:anywhere}
+          .notification-unread-label{padding:3px 6px;border-radius:99px;background:#e5f5eb;color:#087b54;font-size:9px;font-weight:850;letter-spacing:.03em;text-transform:uppercase}
+          .notification-entry-heading time{flex:0 0 auto;padding-top:2px;color:#8c9a92;font-size:10px;white-space:nowrap}
+          .notification-entry-message{margin:6px 0 0;color:#586b61;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+          .notification-entry-category{display:block;margin-top:7px;color:#91a097;font-size:9px;font-weight:750;letter-spacing:.07em;text-transform:uppercase}
+          .notification-entry-actions{position:relative;flex:0 0 32px}
+          .notification-more-button{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:9px;background:transparent;color:#718178;cursor:pointer}
+          .notification-more-button:hover,.notification-more-button[aria-expanded="true"]{background:#edf6f0;color:#087b54}
+          .notification-action-menu{position:absolute;z-index:30;top:37px;right:0;width:min(228px,calc(100vw - 54px));padding:5px;border:1px solid #e2ebe5;border-radius:12px;background:#fff;box-shadow:0 14px 38px rgba(13,43,28,.15)}
+          .notification-action-menu button,.notification-action-menu a{display:flex;align-items:center;gap:10px;width:100%;min-height:38px;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:#344e40;text-align:left;text-decoration:none;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+          .notification-action-menu button:hover,.notification-action-menu a:hover{background:#f4f8f5}
+          .notification-action-menu .notification-action-danger{color:#b34e55}
+          .notification-action-menu .notification-action-danger:hover{background:#fff5f5}
+          .notification-reply{margin-top:12px}
+          .notification-reply textarea{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #dce8e0;border-radius:10px;outline:none;color:#21392c;font:inherit;font-size:12px;resize:vertical}
+          .notification-reply>div{display:flex;gap:7px;margin-top:7px}
+          .notification-reply button{min-height:32px;padding:7px 11px;border:0;border-radius:9px;background:#087b54;color:#fff;font-size:11px;font-weight:750;cursor:pointer}
+          .notification-reply button:disabled{opacity:.5;cursor:not-allowed}
+          .notification-reply button.secondary{background:#f1f5f2;color:#64756b}
+          .notifications-load-more{display:flex;justify-content:center;padding:17px 0 4px}
+          .notifications-load-more button{min-height:38px;padding:9px 16px;border:1px solid #cfe6d7;border-radius:10px;background:#fff;color:#087b54;font-size:11px;font-weight:750;cursor:pointer}
+          .notifications-load-more button:disabled{opacity:.5;cursor:wait}
+          .notifications-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:210px;padding:28px 20px;border:1px dashed #dce7e0;border-radius:16px;background:#fff;text-align:center}
+          .notifications-empty-icon{display:grid;place-items:center;width:54px;height:54px;margin-bottom:12px;border-radius:16px;background:#eff8f2;color:#087b54}
+          .notifications-empty strong{color:#294638;font-size:14px;font-weight:800}
+          .notifications-empty p{max-width:360px;margin:6px 0 0;color:#85938b;font-size:12px;line-height:1.6}
+          .notifications-loader{width:28px;height:28px;margin:0 auto 10px;border:3px solid #e5eee8;border-top-color:#07855a;border-radius:50%;animation:notifications-spin 1s linear infinite}
+          .notifications-spin{animation:notifications-spin 1s linear infinite}
+          @keyframes notifications-spin{to{transform:rotate(360deg)}}
+          @media(max-width:700px){
+            .notifications-page-header{align-items:flex-start;gap:12px;margin-bottom:16px}
+            .notifications-stats{gap:6px}
+            .notifications-stat{min-width:59px;padding:8px 9px}
+            .notifications-stat strong{font-size:17px}
+            .notifications-stat span{font-size:9px}
+            .notifications-page-heading p{font-size:12px}
+            .notifications-filter-toggle{display:inline-flex}
+            .notifications-filter-controls{display:none}
+            .notifications-filter-controls[data-open="true"]{display:flex}
+            .notifications-filter-controls[data-open="true"] .notifications-action-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+            .notifications-action-row button{min-width:0;width:100%;justify-content:center;font-size:10px!important}
+            .notifications-clear-button{grid-column:span 2}
+            .notifications-tabs{width:100%}
+            .notifications-tabs button{flex:1 0 auto;justify-content:center}
+            .notifications-push-reminder{align-items:flex-start;gap:9px;padding:11px}
+            .notifications-push-copy p{font-size:10px}
+            .notifications-push-reminder>button{padding:8px 10px;font-size:10px}
+            .notification-entry{gap:9px;padding:12px 10px}
+            .notification-entry-icon{width:35px;height:35px;flex-basis:35px;border-radius:10px}
+            .notification-entry-title-wrap h3{font-size:12px}
+            .notification-entry-message{font-size:11px;line-height:1.55}
+            .notification-entry-heading{gap:6px}
+            .notification-entry-heading time{font-size:9px}
+            .notification-entry-actions{flex-basis:30px}
+            .notification-more-button{width:30px;height:30px}
+            .notification-action-menu{right:0;top:34px}
+          }
+          @media(max-width:420px){
+            .notifications-page-header{flex-wrap:wrap}
+            .notifications-stats{margin-left:auto}
+            .notifications-search-row{align-items:stretch}
+            .notifications-filter-toggle{font-size:0;gap:5px;padding:8px 10px}
+            .notifications-filter-toggle svg{flex:0 0 auto}
+            .notification-entry{padding:11px 9px}
+            .notification-entry-heading{flex-direction:column;gap:2px}
+            .notification-entry-heading time{order:2;padding-top:0}
+          }
+          @media(prefers-reduced-motion:reduce){
+            .notifications-page *, .notifications-page *::before, .notifications-page *::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+          }
+        `}</style>
+      </DashboardLayout>
+    </>
+  );
+}
