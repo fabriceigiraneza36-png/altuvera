@@ -1818,6 +1818,8 @@ export default function Messages() {
 
   const resourceSupportConversation = conversations.find(isResourceSupportConversation);
   const activeIsResourceSupport = isResourceSupportConversation(activeConversation);
+  const safariPlanningConversation = conversations.find(isSafariPlanningConversation);
+  const activeIsSafariPlanning = isSafariPlanningConversation(activeConversation);
 
   useEffect(() => {
     if (resourceSupportConversation?.id != null) {
@@ -1827,15 +1829,20 @@ export default function Messages() {
     }
   }, [resourceSupportConversation?.id, activeIsResourceSupport, activeId]);
 
-  // The inbox list and active-thread object can temporarily disagree while polling
-  // or reconnecting. Keep this action tied to the selected support-thread ID.
-  const isResourceSupport = Boolean(
+  const isBookingSupport = Boolean(
     activeId != null && (
       activeIsResourceSupport ||
       (resourceSupportConversation?.id != null &&
         String(resourceSupportConversation.id) === String(activeId)) ||
       (resourceSupportIdRef.current != null &&
         String(resourceSupportIdRef.current) === String(activeId))
+    )
+  );
+  const isSafariPlanning = Boolean(
+    activeId != null && (
+      activeIsSafariPlanning ||
+      (safariPlanningConversation?.id != null &&
+        String(safariPlanningConversation.id) === String(activeId))
     )
   );
 
@@ -1857,7 +1864,7 @@ export default function Messages() {
   }, [bookingReference]);
 
   useEffect(() => {
-    if (!isResourceSupport || resourceQuery.trim().length < 2) {
+    if (!isSafariPlanning || resourceQuery.trim().length < 2) {
       setResourceResults([]);
       setResourceSearchBusy(false);
       setResourceSearchError("");
@@ -1879,13 +1886,15 @@ export default function Messages() {
       }
     }, 250);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [isResourceSupport, resourceQuery, resourceType]);
+  }, [isSafariPlanning, resourceQuery, resourceType]);
 
   useEffect(() => {
-    if (!isResourceSupport) {
+    if (!isBookingSupport) {
       setBookingReference("");
       setBookingContext(null);
       setBookingLookupError("");
+    }
+    if (!isSafariPlanning) {
       setResourceType("destination");
       setResourceQuery("");
       setResourceResults([]);
@@ -1893,7 +1902,7 @@ export default function Messages() {
       setSelectedResource(null);
       setShowResourcePicker(false);
     }
-  }, [isResourceSupport]);
+  }, [isBookingSupport, isSafariPlanning]);
 
   useEffect(() => {
     if (!showResourcePicker) return undefined;
@@ -2178,8 +2187,8 @@ export default function Messages() {
     isTypingRef.current = false;
     emitTyping(activeId, false);
     setDraft(""); setReplyToId(null); setAtBottom(true);
-    const contextMetadata = (selectedResource || (isResourceSupport && bookingContext)) ? {
-      ...(isResourceSupport && bookingContext ? { bookingId: bookingContext.id } : selectedResource?.type === "itinerary" && selectedResource?.bookingId ? { bookingId: selectedResource.bookingId } : {}),
+    const contextMetadata = (selectedResource || (isBookingSupport && bookingContext)) ? {
+      ...(isBookingSupport && bookingContext ? { bookingId: bookingContext.id } : selectedResource?.type === "itinerary" && selectedResource?.bookingId ? { bookingId: selectedResource.bookingId } : {}),
       ...(selectedResource ? { resource: { type: selectedResource.type, id: selectedResource.id, name: selectedResource.name, slug: selectedResource.slug || null, imageUrl: selectedResource.imageUrl || null, country: selectedResource.country || null } } : {}),
     } : null;
     const wasSent = await sendMessage(activeId, text, replyToId, contextMetadata);
@@ -2188,7 +2197,7 @@ export default function Messages() {
     setReplyToId(null);
     setAtBottom(true);
     if (contextMetadata) setSelectedResource(null);
-  }, [draft, activeId, sending, replyToId, sendMessage, emitTyping, isResourceSupport, bookingContext, selectedResource]);
+  }, [draft, activeId, sending, replyToId, sendMessage, emitTyping, isBookingSupport, bookingContext, selectedResource]);
 
   /* ── Reactions ── */
   const toggleReaction = useCallback(async (messageId, emoji) => {
@@ -2684,7 +2693,49 @@ export default function Messages() {
                     </div>
                   )}
 
-                  {isResourceSupport && selectedResource && (
+                  {activeConversation && !isGroupConversation(activeConversation) && (
+                    <div className={`mb-2 flex items-center gap-2 rounded-xl border px-3 py-2 ${isBookingSupport ? "border-emerald-200 bg-emerald-50 text-emerald-900" : isSafariPlanning ? "border-teal-200 bg-teal-50 text-teal-900" : "border-slate-200 bg-slate-50 text-slate-800"}`}>
+                      {isBookingSupport ? <FileText size={15}/> : isSafariPlanning ? <MapPin size={15}/> : <MessageSquare size={15}/>}
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider">{isBookingSupport ? "Booking Support" : isSafariPlanning ? "Safari Planning" : "General Enquiries"}</p>
+                        <p className="text-[10px] opacity-75">{isBookingSupport ? "Existing bookings, itinerary and travel arrangements" : isSafariPlanning ? "Destinations, countries, packages and custom safari ideas" : "General questions about Altuvera and account assistance"}</p>
+                      </div>
+                    </div>
+                  )}
+                {isBookingSupport && (
+                  <section className="mb-3 rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-3">
+                  <div className="flex items-start gap-2">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-100 bg-white"><FileText size={15} className="text-emerald-700"/></div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-extrabold text-slate-900">Booking verification</p>
+                      <p className="mt-0.5 text-[10px] leading-relaxed text-slate-600">Verify a booking linked to your account before discussing its status or itinerary.</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <input value={bookingReference} onChange={e=>{setBookingReference(e.target.value);setBookingLookupError("");}} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();verifyBooking();}}} placeholder="Booking ID or reference" aria-label="Booking ID or reference" className="min-w-0 flex-1 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"/>
+                    <button type="button" onClick={verifyBooking} disabled={bookingLookupBusy} className="shrink-0 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{bookingLookupBusy ? "Checking…" : "Verify"}</button>
+                  </div>
+                  {bookingLookupError && <p role="alert" className="mt-2 text-[11px] leading-relaxed text-rose-700">{bookingLookupError}</p>}
+                  {bookingContext && (
+                    <div className="mt-3 rounded-xl border border-emerald-200 bg-white p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-extrabold text-slate-900">Booking #{bookingContext.bookingNumber || bookingContext.id}</p>
+                          <p className="mt-0.5 text-xs font-bold text-emerald-800">{bookingContext.destinationName || "Safari booking"}{bookingContext.countryName ? ` · ${bookingContext.countryName}` : ""}</p>
+                          <p className="mt-1 text-[10px] text-slate-500">{bookingContext.travelDate || "Flexible dates"}{bookingContext.returnDate ? ` → ${bookingContext.returnDate}` : ""} · {bookingContext.travelers || "—"} traveler(s)</p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-extrabold uppercase text-emerald-800">{bookingContext.status || "verified"}</span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                        <span>Itinerary: {String(bookingContext.itineraryStatus || "not_started").replaceAll("_"," ")}</span>
+                        <span>· Email: {bookingContext.itineraryEmailStatus || "not_sent"}</span>
+                      </div>
+                      {bookingContext.itineraryEmailStatus === "failed" && bookingContext.itineraryEmailError && <p className="mt-1 break-words text-[10px] text-rose-700">{bookingContext.itineraryEmailError}</p>}
+                    </div>
+                  )}
+                </section>
+                  )}
+                  {isSafariPlanning && selectedResource && (
                     <div className="mb-2 flex min-w-0 items-center gap-2 rounded-xl border border-emerald-200 bg-white px-2.5 py-2 shadow-sm">
                       {(["destination", "country"].includes(selectedResource.type)) && (
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-emerald-50 text-emerald-700">
@@ -2706,19 +2757,21 @@ export default function Messages() {
 
                   {/* Input row */}
                   <div className="msg-composer-row relative flex items-end gap-2 rounded-2xl p-1.5">
-                    <button type="button"
-                      onClick={() => {
-                        setResourceType(selectedResource?.type || "destination");
-                        setResourceQuery("");
-                        setResourceResults([]);
-                        setResourceSearchError("");
-                        setShowResourcePicker(true);
-                      }}
-                      aria-label="Attach a destination, country or package"
-                      title="Attach a destination, country or package"
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                      <Plus size={17}/>
-                    </button>
+                    {isSafariPlanning && (
+                      <button type="button"
+                        onClick={() => {
+                          setResourceType(selectedResource?.type || "destination");
+                          setResourceQuery("");
+                          setResourceResults([]);
+                          setResourceSearchError("");
+                          setShowResourcePicker(true);
+                        }}
+                        aria-label="Attach a destination, country or package"
+                        title="Attach a destination, country or package"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                        <Plus size={17}/>
+                      </button>
+                    )}
                     {/* Emoji toggle */}
                     <div className="relative flex-shrink-0">
                       <button
@@ -2828,7 +2881,7 @@ export default function Messages() {
           />
         )}
       </DashboardLayout>
-      {showResourcePicker && createPortal(
+      {showResourcePicker && isSafariPlanning && createPortal(
         <div
           className="fixed inset-0 z-[11000] flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-5"
           role="presentation"
@@ -2848,39 +2901,7 @@ export default function Messages() {
 
             <div className="msg-resource-picker-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <div className="space-y-3 px-4 pb-3 pt-3 sm:px-5">
-                {isResourceSupport && (
-                  <section className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3">
-                  <div className="flex items-start gap-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-100 bg-white"><FileText size={15} className="text-emerald-700"/></div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-extrabold text-slate-900">Verify a booking</p>
-                      <p className="mt-0.5 text-[10px] leading-relaxed text-slate-600">Enter your booking ID or reference to share its current status with the coordinator.</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <input value={bookingReference} onChange={e=>{setBookingReference(e.target.value);setBookingLookupError("");}} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();verifyBooking();}}} placeholder="Booking ID or reference" aria-label="Booking ID or reference" className="min-w-0 flex-1 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"/>
-                    <button type="button" onClick={verifyBooking} disabled={bookingLookupBusy} className="shrink-0 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60">{bookingLookupBusy ? "Checking…" : "Verify"}</button>
-                  </div>
-                  {bookingLookupError && <p role="alert" className="mt-2 text-[11px] leading-relaxed text-rose-700">{bookingLookupError}</p>}
-                  {bookingContext && (
-                    <div className="mt-3 rounded-xl border border-emerald-200 bg-white p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-extrabold text-slate-900">Booking #{bookingContext.bookingNumber || bookingContext.id}</p>
-                          <p className="mt-0.5 text-xs font-bold text-emerald-800">{bookingContext.destinationName || "Safari booking"}{bookingContext.countryName ? ` · ${bookingContext.countryName}` : ""}</p>
-                          <p className="mt-1 text-[10px] text-slate-500">{bookingContext.travelDate || "Flexible dates"}{bookingContext.returnDate ? ` → ${bookingContext.returnDate}` : ""} · {bookingContext.travelers || "—"} traveler(s)</p>
-                        </div>
-                        <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-extrabold uppercase text-emerald-800">{bookingContext.status || "verified"}</span>
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
-                        <span>Itinerary: {String(bookingContext.itineraryStatus || "not_started").replaceAll("_"," ")}</span>
-                        <span>· Email: {bookingContext.itineraryEmailStatus || "not_sent"}</span>
-                      </div>
-                      {bookingContext.itineraryEmailStatus === "failed" && bookingContext.itineraryEmailError && <p className="mt-1 break-words text-[10px] text-rose-700">{bookingContext.itineraryEmailError}</p>}
-                    </div>
-                  )}
-                </section>
-                  )}
+
 
                 <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Travel item type">
                   {[
