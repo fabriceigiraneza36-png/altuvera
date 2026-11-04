@@ -88,9 +88,9 @@ export default function NotificationBell({ style = {} }) {
               display:         'flex',
               alignItems:      'center',
               justifyContent:  'center',
-              padding:         0,
-              background:      'rgba(7,25,20,0.62)',
-              backdropFilter:  'blur(8px)',
+              padding:         12,
+              background:      'rgba(7,25,20,0.34)',
+              backdropFilter:  'blur(5px)',
               WebkitBackdropFilter: 'blur(8px)',
             }}
           >
@@ -100,19 +100,9 @@ export default function NotificationBell({ style = {} }) {
               exit={{    opacity: 0, y: 16, scale: 0.96 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
               className="notification-dialog"
-              style={{ position:'relative', width:'min(100%, 520px)', maxWidth:'100%', height:'100%', maxHeight:'100%', display:'flex', flexDirection:'column' }}
+              style={{ position:'relative', width:'min(440px, 100%)', maxWidth:'100%', height:'auto', maxHeight:'min(78dvh, 680px)', display:'flex', flexDirection:'column' }}
             >
-              {/* Close button */}
-              <button
-                onClick={() => setOpen(false)}
-                aria-label="Close notifications"
-                className="notification-dialog-close"
-                style={{ position:'absolute', top:'max(12px, env(safe-area-inset-top))', right:14, width:40, height:40, display:'grid', placeItems:'center', borderRadius:14, border:'1px solid rgba(255,255,255,.16)', background:'#0f2922', color:'#fff', cursor:'pointer', boxShadow:'0 8px 22px rgba(0,0,0,.22)', zIndex:10 }}
-              >
-                <X size={20} />
-              </button>
-
-              <style>{`.notification-dialog > div { height:100%; max-height:100%; border-radius:24px; } @media (max-width:640px) { .notification-dialog { width:100%!important; height:100dvh!important; height:100vh!important; max-width:none!important; } .notification-dialog > div { height:100%; max-height:100%; border-radius:0!important; border:0!important; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); box-sizing:border-box; } .notification-dialog-close { top:max(10px,env(safe-area-inset-top))!important; right:12px!important; } }`}</style>
+              <style>{`.notification-dialog > div { height:auto; max-height:min(78dvh,680px); border-radius:20px; } @media (max-width:640px) { .notification-dialog { width:calc(100vw - 24px)!important; height:auto!important; max-width:440px!important; max-height:82dvh!important; } .notification-dialog > div { height:auto; max-height:82dvh; border-radius:18px!important; border:0!important; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); box-sizing:border-box; } }`}</style>
               <NotificationPanel {...notifs} onClose={() => setOpen(false)} />
             </motion.div>
           </motion.div>
