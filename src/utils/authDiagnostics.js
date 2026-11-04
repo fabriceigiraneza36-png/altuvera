@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
+import { API_URL } from "./apiBase";
+
+const API_BASE = API_URL;
 const QUEUE_KEY = "altuvera_auth_diagnostics_queue_v1";
 const MAX_QUEUED = 20;
 
