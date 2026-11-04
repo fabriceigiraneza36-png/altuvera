@@ -996,7 +996,11 @@ export function UserAuthProvider({ children }) {
       }),
     }).catch((err) => {
       pendingRef.current = null;
-      throw new Error(err?.message || "Failed to send verification code.");
+      const surfaced = new Error(err?.message || "Failed to send verification code.");
+      surfaced.status = err?.status;
+      surfaced.code = err?.data?.code || err?.code || "";
+      surfaced.data = err?.data || null;
+      throw surfaced;
     });
 
     // ✅ FIX: If the backend returns the user's stored fullName in the
