@@ -746,6 +746,25 @@ AppLayout.displayName = "AppLayout";
 // OVERLAY LAYER
 // ============================================================================
 // ============================================================================
+// SMART REDIRECT
+// ============================================================================
+const SmartRedirect = React.memo(() => {
+  const { pathname } = useLocation();
+  const redirectUrl = useMemo(() => getRedirectUrl(pathname), [pathname]);
+
+  if (redirectUrl) return <Navigate to={redirectUrl} replace />;
+
+  return (
+    <PageWrapper title="Page Not Found" noindex>
+      <Suspense fallback={<Loader />}>
+        <NotFound />
+      </Suspense>
+    </PageWrapper>
+  );
+});
+SmartRedirect.displayName = "SmartRedirect";
+
+// ============================================================================
 // CUSTOM HOOKS
 // ============================================================================
 function usePrefetchCountries() {
