@@ -33,8 +33,9 @@ import {
   HiPencil,
   HiQuestionMarkCircle,
 } from "react-icons/hi";
-import { FiGithub, FiZap } from "react-icons/fi";
-import { FaGoogle } from "react-icons/fa";
+import { FiZap } from "react-icons/fi";
+import { FaGithub, FaFacebookF } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 import { MdVerified, MdOutlineSecurityUpdateGood } from "react-icons/md";
 import { RiShieldKeyholeLine } from "react-icons/ri";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -130,6 +131,7 @@ const persistLoginDraft = (form) => {
 };
 
 const API_BASE = API_URL;
+const FACEBOOK_LOGIN_ENABLED = import.meta.env.VITE_FACEBOOK_LOGIN_ENABLED === "true";
 
 const ROLES = [
   { value: "user",         label: "Traveler",      icon: HiGlobe,      desc: "Explore & discover",   color: "#3b82f6" },
@@ -618,32 +620,40 @@ const SelectField = ({
 );
 
 const SocialButtons = ({
-  mode, googleLoaded, googleLoading, githubLoading, loading, isOnline, onGoogle, onGithub,
-}) => (
-  <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3" role="group" aria-label="Continue with a social account">
-    <button
-      type="button" onClick={() => onGoogle(mode)}
-      disabled={googleLoading || githubLoading || loading || !isOnline}
-      aria-busy={googleLoading}
-      title={!googleLoaded ? "Google sign-in may still be initializing; email sign-in remains available." : "Continue with Google"}
-      aria-label={googleLoading ? "Connecting to Google" : "Continue with Google"}
-      className="flex items-center justify-center gap-2.5 min-h-12 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-semibold hover:bg-emerald-50 hover:border-emerald-200 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-all duration-200"
+  mode, googleLoaded, googleLoading, loading, isOnline, onGoogle, onPasskey,
+}) => {
+  const canUsePasskey = mode === "signin";
+  return (
+    <div
+      className={canUsePasskey ? "grid grid-cols-1 min-[380px]:grid-cols-2 gap-3" : "grid grid-cols-1 gap-3"}
+      role="group"
+      aria-label="Continue with Google or a passkey"
     >
-      {googleLoading ? <Spinner /> : <FaGoogle className="w-5 h-5" aria-hidden="true" />}
-      <span>{googleLoading ? "Connecting…" : "Google"}</span>
-    </button>
-    <button
-      type="button" onClick={() => onGithub(mode)}
-      disabled={githubLoading || googleLoading || loading || !isOnline}
-      aria-busy={githubLoading}
-      aria-label={githubLoading ? "Connecting to GitHub" : "Continue with GitHub"}
-      className="flex items-center justify-center gap-2.5 min-h-12 rounded-xl bg-[#102c23] text-white text-sm font-semibold hover:bg-[#174838] hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-all duration-200"
-    >
-      {githubLoading ? <Spinner /> : <FiGithub className="w-5 h-5" />}
-      <span>{githubLoading ? "Connecting…" : "GitHub"}</span>
-    </button>
-  </div>
-);
+      <button
+        type="button" onClick={() => onGoogle(mode)}
+        disabled={googleLoading || loading || !isOnline}
+        aria-busy={googleLoading}
+        title={!googleLoaded ? "Google sign-in may still be initializing; email sign-in remains available." : "Continue with Google"}
+        aria-label={googleLoading ? "Connecting to Google" : "Continue with Google"}
+        className="flex items-center justify-center gap-2.5 min-h-12 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-semibold hover:bg-emerald-50 hover:border-emerald-200 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-all duration-200"
+      >
+        {googleLoading ? <Spinner /> : <FcGoogle className="w-5 h-5" aria-hidden="true" />}
+        <span>{googleLoading ? "Connecting…" : "Google"}</span>
+      </button>
+      {canUsePasskey && (
+        <button
+          type="button" onClick={onPasskey}
+          disabled={loading || !isOnline}
+          aria-label={loading ? "Connecting with passkey" : "Continue with a passkey"}
+          className="flex items-center justify-center gap-2.5 min-h-12 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-sm font-semibold hover:bg-emerald-100 hover:border-emerald-300 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-all duration-200"
+        >
+          {loading ? <Spinner /> : <RiShieldKeyholeLine className="w-5 h-5" aria-hidden="true" />}
+          <span>{loading ? "Verifying…" : "Passkey"}</span>
+        </button>
+      )}
+    </div>
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════
    MAIN COMPONENT
@@ -653,8 +663,8 @@ export default function AuthModal() {
     isModalOpen, modalView, setModalView, closeModal, openModal,
     login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, loginWithSecurityCode, startPasskeyLogin, resendCode,
     pendingEmail, pendingVerification, clearPendingVerification, pendingFactorMethods, persistSession, setSessionPreference, updateProfile,
-    googleUser, googleLoaded, googleLoading, githubLoading,
-    hasGooglePending, promptGoogleAuth, startGithubAuth,
+    googleUser, googleLoaded, googleLoading, githubLoading, facebookLoading,
+    hasGooglePending, promptGoogleAuth, startGithubAuth, startFacebookAuth,
     completeGoogleSignUp, clearGooglePending,
     socialAuthError, socialAuthProfile, clearSocialAuthError, uploadAvatar,
     /* ✅ NEW — used by doForgotUsernameVerify for immediate login */
@@ -839,7 +849,7 @@ export default function AuthModal() {
   const emailOk       = EMAIL_RE.test(form.email.trim());
   const nameOk        = form.fullName.trim().length >= 2;
   const bioOk         = form.bio.trim().length <= MAX_BIO;
-  const isBusy        = googleLoading || githubLoading || loading;
+  const isBusy        = googleLoading || githubLoading || facebookLoading || loading;
   const forgotEmailOk = EMAIL_RE.test(forgotEmail.trim());
 
   const currentRole = useMemo(
@@ -1189,6 +1199,27 @@ export default function AuthModal() {
     try { startGithubAuth(mode); }
     catch (err) { setError(formatAuthError(err, "GitHub authentication failed.")); }
   }, [clearSocialAuthError, isBusy, isOnline, startGithubAuth]);
+
+  const handlePasskeyAuth = useCallback(async () => {
+    if (isBusy) return;
+    if (!isOnline) { setError("You appear to be offline. Reconnect before using a passkey."); return; }
+    setError(""); setSuccess(""); setLoading(true);
+    try { await startPasskeyLogin(form.email.trim()); }
+    catch (err) { setError(formatAuthError(err, "Passkey sign-in failed. Try another enrolled method.")); }
+    finally { setLoading(false); }
+  }, [form.email, isBusy, isOnline, startPasskeyLogin]);
+
+  const handleFacebookAuth = useCallback(() => {
+    if (isBusy) return;
+    if (!FACEBOOK_LOGIN_ENABLED) {
+      setError("Facebook sign-in is prepared but not enabled yet. Altuvera must connect its Meta app credentials first.");
+      return;
+    }
+    if (!isOnline) { setError("You appear to be offline. Reconnect before using Facebook sign-in."); return; }
+    clearSocialAuthError?.(); setError(""); setSuccess("");
+    try { startFacebookAuth(); }
+    catch (err) { setError(formatAuthError(err, "Facebook authentication failed.")); }
+  }, [clearSocialAuthError, isBusy, isOnline, startFacebookAuth]);
 
   /* ═══════════════════════════════════════════════════════════
      AVATAR
@@ -1963,18 +1994,13 @@ export default function AuthModal() {
                     <button
                       type="button"
                       disabled={isBusy || !isOnline || switchingView}
-                      onClick={async () => {
-                        setError(""); setSuccess(""); setLoading(true);
-                        try { await startPasskeyLogin(form.email); }
-                        catch (err) { setError(formatAuthError(err, "Passkey sign-in failed. Try another enrolled method.")); }
-                        finally { setLoading(false); }
-                      }}
-                      className="am-method-option am-method-option--passkey"
+                      onClick={() => handleGithubAuth("signin")}
+                      className="am-method-option am-method-option--github"
                     >
-                      <span className="am-method-icon"><RiShieldKeyholeLine className="h-5 w-5" /></span>
+                      <span className="am-method-icon"><FaGithub className="h-5 w-5" aria-hidden="true" /></span>
                       <span className="am-method-copy">
-                        <strong>Sign in with a passkey</strong>
-                        <small>Use your device PIN, fingerprint, face recognition or security key — no email code</small>
+                        <strong>Continue with GitHub</strong>
+                        <small>Use your GitHub email and profile name to identify your Altuvera account</small>
                       </span>
                       <HiArrowRight className="h-4 w-4 am-method-arrow" />
                     </button>
@@ -1988,14 +2014,20 @@ export default function AuthModal() {
                       <span className="am-method-copy"><strong>Recovery code</strong><small>Use one unused 5-digit recovery code — no email code</small></span>
                       <HiArrowRight className="h-4 w-4 am-method-arrow" />
                     </button>
-                    <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGoogleAuth("signin")} className="am-method-option am-method-option--google">
-                      <span className="am-method-icon"><FaGoogle className="h-5 w-5" aria-hidden="true" /></span>
-                      <span className="am-method-copy"><strong>Continue with Google</strong><small>Use the Google account connected to your profile</small></span>
-                      <HiArrowRight className="h-4 w-4 am-method-arrow" />
-                    </button>
-                    <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGithubAuth("signin")} className="am-method-option am-method-option--github">
-                      <span className="am-method-icon"><FiGithub className="h-5 w-5" aria-hidden="true" /></span>
-                      <span className="am-method-copy"><strong>Continue with GitHub</strong><small>Use your connected GitHub account</small></span>
+                    <button
+                      type="button"
+                      disabled={!FACEBOOK_LOGIN_ENABLED || facebookLoading || isBusy || !isOnline}
+                      onClick={handleFacebookAuth}
+                      className="am-method-option am-method-option--facebook"
+                      aria-disabled={!FACEBOOK_LOGIN_ENABLED}
+                    >
+                      <span className="am-method-icon"><FaFacebookF className="h-5 w-5" aria-hidden="true" /></span>
+                      <span className="am-method-copy">
+                        <strong>Continue with Facebook</strong>
+                        <small>{FACEBOOK_LOGIN_ENABLED
+                          ? "Use your Facebook email and profile name; Altuvera will verify your email"
+                          : "Setup pending — connect Altuvera’s Meta app credentials to enable Facebook sign-in"}</small>
+                      </span>
                       <HiArrowRight className="h-4 w-4 am-method-arrow" />
                     </button>
                     <button type="button" disabled={loading || !isOnline} onClick={() => { setShowAuthMethods(false); setAuthMethod("email"); setError(""); setSuccess(""); window.setTimeout(() => firstInputRef.current?.focus(), 60); }} className="am-method-option am-method-option--email">
@@ -2128,8 +2160,8 @@ export default function AuthModal() {
                     <SocialButtons
                       mode="signin" isOnline={isOnline}
                       googleLoaded={googleLoaded} googleLoading={googleLoading}
-                      githubLoading={githubLoading} loading={loading}
-                      onGoogle={handleGoogleAuth} onGithub={handleGithubAuth}
+                      loading={loading} onGoogle={handleGoogleAuth}
+                      onPasskey={handlePasskeyAuth}
                     />
                   </form>
 
@@ -2260,8 +2292,8 @@ export default function AuthModal() {
                           <SocialButtons
                             mode="signup" isOnline={isOnline}
                             googleLoaded={googleLoaded} googleLoading={googleLoading}
-                            githubLoading={githubLoading} loading={loading}
-                            onGoogle={handleGoogleAuth} onGithub={handleGithubAuth}
+                            loading={loading} onGoogle={handleGoogleAuth}
+                            onPasskey={handlePasskeyAuth}
                           />
                         </>
                       )}
