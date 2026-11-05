@@ -704,7 +704,7 @@ export function UserAuthProvider({ children }) {
 
   const beginActionHandoff = useCallback(({ bookingId, returnTo = "" } = {}) => {
     const id = String(bookingId || "").trim();
-    if (!id || !/^\\d+$/.test(id)) throw new Error("This secure action link is invalid.");
+    if (!id || !/^\d+$/.test(id)) throw new Error("This secure action link is invalid.");
     const now = Date.now();
     const pending = {
       bookingId: id,
@@ -732,7 +732,16 @@ export function UserAuthProvider({ children }) {
   const clearLocalSession = useCallback(() => {
     // Deliberately do not call /users/logout: the server logout endpoint revokes
     // the account's token version and would sign the owner out on their devices.
-    clearAuth();
+    store.clearAuth();
+    setToken(null);
+    setUser(null);
+    setGoogleUser(null);
+    pendingRef.current = null;
+    setRequiresLoginVerification(false);
+    setPendingSocialAuth(null);
+    setLoginCounter(0);
+    store.setLoginCounter(0);
+    try { localStorage.setItem(KEYS.LAST_LOGOUT, Date.now().toString()); } catch {}
     setPendingActionAuth(null);
     setIsActionSession(false);
     setActionSessionToken("");
@@ -745,7 +754,7 @@ export function UserAuthProvider({ children }) {
       sessionStorage.removeItem(KEYS.ACTION_SESSION_ACTIVE);
       sessionStorage.removeItem(KEYS.ACTION_SESSION_ENDED);
     } catch { /* storage unavailable */ }
-  }, [clearAuth]);
+  }, []);
 
   const completeActionHandoff = useCallback(async (bookingId) => {
     const pending = readActionHandoff();
