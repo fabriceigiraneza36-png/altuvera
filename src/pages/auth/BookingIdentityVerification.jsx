@@ -376,7 +376,7 @@ export default function BookingIdentityVerification() {
 
       <div className="biv-container">
         <header className="biv-header">
-          <Link to="/" className="biv-brand" aria-label="Altuvera Safaris home">
+          <Link to="/" className="biv-brand" aria-label="Altuvera home">
             <span className="biv-brand-mark"><img src="/favicon.svg" alt="" /></span>
             <span className="biv-brand-name"><strong>ALTUVERA</strong><small>SAFARIS</small></span>
           </Link>
@@ -583,7 +583,7 @@ export default function BookingIdentityVerification() {
         </div>
 
         <footer className="biv-footer">
-          <span>ALTUVERA SAFARIS</span>
+          <span>ALTUVERA</span>
           <span className="biv-footer-separator" />
           <span>Protected traveller access</span>
           <Link to="/" className="biv-footer-link"><ArrowLeft size={13} /> Back to website</Link>
