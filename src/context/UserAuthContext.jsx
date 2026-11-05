@@ -616,6 +616,7 @@ export function UserAuthProvider({ children }) {
   // ── Modal ─────────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen]   = useState(false);
   const [modalView,   setModalView]     = useState("login");
+  const [modalOptions, setModalOptions] = useState({});
   const [pendingVerification, setPendingVerification] = useState(() => readPendingVerification());
   const [pendingEmail, setPendingEmail] = useState(() => readPendingVerification()?.email || "");
   const [pendingFactorChallenge, setPendingFactorChallenge] = useState("");
@@ -1025,6 +1026,7 @@ export function UserAuthProvider({ children }) {
   // ============================================================================
 
   const openModal = useCallback((view = "login", options = {}) => {
+    setModalOptions(options && typeof options === "object" ? options : {});
     const {
       skipNotLoggedInMessage = false,
       resumePendingVerification = true,
@@ -1087,6 +1089,7 @@ export function UserAuthProvider({ children }) {
     const savedVerification = readPendingVerification();
     setPendingVerification(savedVerification);
     setIsModalOpen(false);
+    setModalOptions({});
     setPendingEmail(savedVerification?.email || "");
     setSocialAuthError("");
     setSocialAuthProfile(null);
@@ -2561,7 +2564,7 @@ export function UserAuthProvider({ children }) {
 
   const value = useMemo(() => ({
     user, token, isAuthenticated, authLoading,
-    isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
+    isModalOpen, modalView, modalOptions, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
     pendingActionAuth, actionHandoffPending, isActionSession, actionSessionToken,
     actionSessionExpiresAt, actionSessionExpired,
     googleUser, googleLoaded, googleLoading, githubLoading, facebookLoading,
@@ -2580,7 +2583,7 @@ export function UserAuthProvider({ children }) {
     fetchUser, authFetch, saveAuth,
   }), [
     user, token, isAuthenticated, authLoading,
-    isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
+    isModalOpen, modalView, modalOptions, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
     pendingActionAuth, actionHandoffPending, isActionSession, actionSessionToken,
     actionSessionExpiresAt, actionSessionExpired,
     googleUser, googleLoaded, googleLoading, githubLoading, facebookLoading,
