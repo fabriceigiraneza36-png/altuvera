@@ -2526,14 +2526,14 @@ export function UserAuthProvider({ children }) {
   // Offer Google's native One Tap prompt without forcing a login modal or
   // opening a popup. A visitor who dismisses it can continue browsing normally.
   useEffect(() => {
-    if (authLoading || isAuthenticated || isModalOpen || !googleLoaded) return;
+    if (authLoading || isAuthenticated || isActionSession || isModalOpen || !googleLoaded) return;
     try {
       if (sessionStorage.getItem("altuvera_google_one_tap_prompted") === "true") return;
       sessionStorage.setItem("altuvera_google_one_tap_prompted", "true");
     } catch { /* session storage may be unavailable */ }
 
     const promptTimer = setTimeout(() => {
-      if (!isAuthenticated && !isModalOpen) {
+      if (!isAuthenticated && !isActionSession && !isModalOpen) {
         promptGoogleAuth({ mode: "signin", autoPrompt: true }).catch((err) => {
           const message = err?.message || "Google One Tap could not initialize.";
           if (!isDismissalError(message)) {
@@ -2553,7 +2553,7 @@ export function UserAuthProvider({ children }) {
     }, 900);
 
     return () => clearTimeout(promptTimer);
-  }, [authLoading, googleLoaded, isAuthenticated, isModalOpen, promptGoogleAuth]);
+  }, [authLoading, googleLoaded, isAuthenticated, isActionSession, isModalOpen, promptGoogleAuth]);
 
   // ============================================================================
   // Context Value
