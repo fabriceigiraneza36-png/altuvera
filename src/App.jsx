@@ -726,21 +726,26 @@ GitHubCallbackPage.displayName = "GitHubCallbackPage";
 // ============================================================================
 // LAYOUT COMPONENTS
 // ============================================================================
-const AppLayout = React.memo(() => (
-  <>
-    <Navbar />
-    <GlobalUserNotifications />
-    <main
-      id="main-content"
-      style={{ flex: 1, display: "flex", flexDirection: "column" }}
-    >
-      <Suspense fallback={<Loader />}>
-        <Outlet />
-      </Suspense>
-    </main>
-    <Footer />
-  </>
-));
+const AppLayout = React.memo(() => {
+  const location = useLocation();
+  const isSecureBookingAction = location.pathname.startsWith("/booking-verification/");
+  return (
+    <>
+      {!isSecureBookingAction && <Navbar />}
+      {!isSecureBookingAction && <GlobalUserNotifications />}
+      <main
+        id="main-content"
+        className={isSecureBookingAction ? "biv-route-shell" : ""}
+        style={{ flex: 1, display: "flex", flexDirection: "column" }}
+      >
+        <Suspense fallback={isSecureBookingAction ? null : <Loader />}>
+          <Outlet />
+        </Suspense>
+      </main>
+      {!isSecureBookingAction && <Footer />}
+    </>
+  );
+});
 AppLayout.displayName = "AppLayout";
 
 // ============================================================================
@@ -924,7 +929,7 @@ useEffect(injectAppStyles, []);
          <CookieConsent />
          <CookieDocumentation />
          <AuthModal />
-         <WhatsAppButton />
+         {!location.pathname.startsWith("/booking-verification/") && <WhatsAppButton />}
          <ToastContainer toasts={toasts} />
 
          <CongratulationWindow
