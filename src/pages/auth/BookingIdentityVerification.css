@@ -465,3 +465,4 @@
 @media (prefers-reduced-motion: reduce) {
   .biv-page *, .biv-page *::before, .biv-page *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important; }
 }
+.biv-route-shell { min-height:100vh; }
