@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
-  Mail, Phone, Home, Check, AlertCircle, MessageSquareText, Smartphone, ChevronDown,
+  Mail, Globe2, Flag, Check, AlertCircle, MessageSquareText, Smartphone, ChevronDown,
 } from "lucide-react";
 import { COUNTRY_PHONE_CODES } from "../../../data/countryPhoneCodes";
 
@@ -133,7 +133,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
       <PhoneField data={data} set={set} touch={touch} errors={errors} touched={touched} />
 
       <div className="bk-field-group" style={{ position: "relative" }}>
-        <Field id="country" label="Country of Residence" icon={Home} autoComplete="country-name" required
+        <Field id="country" label="Country of Residence" icon={Globe2} autoComplete="country-name" required
           value={data.country} onChange={(v) => { set("country", v); setCountrySuggestionsOpen(true); }} onFocus={() => setCountrySuggestionsOpen(true)} onBlur={() => touch("country")}
           placeholder="Start typing your country..." error={touched.country && errors.country}
           valid={touched.country && !errors.country && !!country} />
@@ -141,7 +141,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
       </div>
 
       <div className="bk-field-group" style={{ position: "relative" }}>
-        <Field id="nationality" label="Nationality" icon={Home} autoComplete="country-name" required
+        <Field id="nationality" label="Nationality" icon={Flag} autoComplete="country-name" required
           value={data.nationality} onChange={(v) => { set("nationality", v); setNationalitySuggestionsOpen(true); }} onFocus={() => setNationalitySuggestionsOpen(true)}
           onBlur={() => touch("nationality")} placeholder="Start typing your nationality..."
           error={touched.nationality && errors.nationality}
