@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import {
@@ -8,6 +8,7 @@ import {
 import SEO from "../components/common/SEO";
 import PageHeader from "../components/common/PageHeader";
 import { services } from "../data/services";
+import { useTestimonials } from "../hooks/useTestimonials";
 import "./services-redesign.css";
 
 const ICONS = {
@@ -85,20 +86,29 @@ function Heading({ eyebrow, title, description, light = false }) {
 
 function ServiceCard({ service, index }) {
   const Icon = ICONS[service.iconName] || FiCompass;
+  const images = service.images?.length ? service.images : [service.image].filter(Boolean);
+  const [activeImage, setActiveImage] = useState(0);
+  useEffect(() => {
+    if (images.length < 2) return undefined;
+    const timer = window.setInterval(() => setActiveImage((current) => (current + 1) % images.length), 4200);
+    return () => window.clearInterval(timer);
+  }, [images.length]);
   return (
     <Reveal delay={(index % 3) * 0.07} className="sv-reveal">
       <article className="sv-card">
         <div className="sv-card__image">
-          <img
-            src={service.image}
-            alt={service.imageAlt || service.title}
-            loading="lazy"
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-              event.currentTarget.parentElement.classList.add("sv-card__image--fallback");
-            }}
-          />
+          {images.map((image, imageIndex) => (
+            <img key={image} src={image}
+              alt={imageIndex === 0 ? (service.imageAlt || service.title) : ""}
+              aria-hidden={imageIndex !== 0} loading="lazy"
+              className={"sv-card__slide" + (imageIndex === activeImage ? " is-active" : "")}
+              onError={(event) => { event.currentTarget.style.display = "none"; }}
+            />
+          ))}
           <div className="sv-card__shade" />
+          {images.length > 1 && <div className="sv-card__dots" aria-hidden="true">
+            {images.map((image, dotIndex) => <span key={image} className={dotIndex === activeImage ? "is-active" : ""} />)}
+          </div>}
           <span className="sv-card__fallback-icon" aria-hidden="true"><Icon size={42} /></span>
         </div>
         <div className="sv-card__body">
@@ -150,10 +160,8 @@ export default function Services() {
       <main className="sv-page">
         <PageHeader
           title="Travel Services"
-          tagline="Explore Africa with intention"
           subtitle="From wildlife encounters and mountain trails to cultural journeys and coastal escapes, we help bring your African travel plans together."
           backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=2200&q=88"
-          breadcrumbs={[{ label: "Services", path: "/services" }]}
           height="540px"
           parallax
         >
