@@ -1,4 +1,4 @@
-# Altuvera Safaris public crawl directives
+# Altuvera public crawl directives
 User-agent: *
 Allow: /
 Disallow: /api/
