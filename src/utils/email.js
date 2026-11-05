@@ -124,7 +124,7 @@ exports.sendContactNotification = async (message) => {
   `;
 
   const mailOptions = {
-    from: `"Altuvera Safaris" <${process.env.EMAIL_FROM}>`,
+    from: `"Altuvera" <${process.env.EMAIL_FROM}>`,
     to: process.env.ADMIN_EMAIL,
     subject: `${message.priority === 'urgent' ? '🔴 URGENT: ' : ''}New Contact: ${message.subject || message.full_name}`,
     html: htmlContent,
@@ -156,9 +156,9 @@ exports.sendContactReply = async ({ to, toName, subject, body, originalMessage, 
               <!-- Header -->
               <tr>
                 <td style="background: linear-gradient(135deg, #064e3b, #047857); padding: 32px; text-align: center;">
-                  <img src="${process.env.FRONTEND_URL}/logo-white.png" alt="Altuvera Safaris" style="height: 40px; margin-bottom: 16px;" onerror="this.style.display='none'">
+                  <img src="${process.env.FRONTEND_URL}/logo-white.png" alt="Altuvera" style="height: 40px; margin-bottom: 16px;" onerror="this.style.display='none'">
                   <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 700;">
-                    Altuvera Safaris
+                    Altuvera
                   </h1>
                 </td>
               </tr>
@@ -189,7 +189,7 @@ ${body}
                     <p style="margin: 0; color: #374151; font-size: 15px;">
                       Warm regards,<br>
                       <strong>${fromName}</strong><br>
-                      <span style="color: #047857;">Altuvera Safaris Team</span>
+                      <span style="color: #047857;">Altuvera Team</span>
                     </p>
                   </div>
                 </td>
@@ -222,7 +222,7 @@ ${body}
                     <a href="#" style="display: inline-block; margin: 0 6px; color: #ffffff; text-decoration: none;">Twitter</a>
                   </div>
                   <p style="margin: 0; color: rgba(255,255,255,0.6); font-size: 11px;">
-                    © ${new Date().getFullYear()} Altuvera Safaris. All rights reserved.
+                    © ${new Date().getFullYear()} Altuvera. All rights reserved.
                   </p>
                 </td>
               </tr>
@@ -235,7 +235,7 @@ ${body}
   `;
 
   const mailOptions = {
-    from: `"${fromName} - Altuvera Safaris" <${process.env.EMAIL_FROM}>`,
+    from: `"${fromName} - Altuvera" <${process.env.EMAIL_FROM}>`,
     to: to,
     subject: subject,
     html: htmlContent,
