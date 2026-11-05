@@ -661,7 +661,7 @@ const SocialButtons = ({
 ═══════════════════════════════════════════════════════════════ */
 export default function AuthModal() {
   const {
-    isModalOpen, modalView, setModalView, closeModal, openModal,
+    isModalOpen, modalView, modalOptions, setModalView, closeModal, openModal,
     login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, loginWithSecurityCode, startPasskeyLogin, resendCode,
     pendingEmail, pendingVerification, clearPendingVerification, pendingFactorMethods, persistSession, setSessionPreference, updateProfile,
     googleUser, googleLoaded, googleLoading, githubLoading, facebookLoading,
@@ -1742,14 +1742,14 @@ export default function AuthModal() {
 
       {/* Backdrop */}
       <div
-        className="am-fadeIn fixed inset-0 z-[9990] flex items-center justify-center p-0 sm:p-4 lg:p-6 bg-black/55"
+        className={`am-fadeIn fixed inset-0 z-[9990] flex items-center justify-center p-0 sm:p-4 lg:p-6 bg-black/55 ${modalOptions?.actionFlow ? "am-action-auth" : ""}`}
         onClick={closeAuthModal}
       >
         {/* Modal */}
         <div
           ref={modalRef}
           tabIndex={-1}
-          className="am-modal am-modalIn relative w-full max-w-[1040px] bg-white rounded-none sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
+          className={`am-modal am-modalIn relative w-full max-w-[1040px] bg-white rounded-none sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row ${modalOptions?.actionFlow ? "am-modal--action-flow" : ""}`}
           style={{
             maxHeight: "100dvh", height: "100dvh",
             ...(window.innerWidth >= 640 ? { height: "auto", maxHeight: "92vh" } : {}),
@@ -1761,10 +1761,29 @@ export default function AuthModal() {
           {/* Top accent bar */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
 
-          {/* Single responsive destination slideshow: avoids duplicate API requests and timers */}
-          <div className="am-auth-gallery relative bg-gray-900 flex-shrink-0">
-            <GallerySlideshow />
-          </div>
+          {/* Secure booking handoff uses a focused trust panel instead of the destination slideshow. */}
+          {modalOptions?.actionFlow ? (
+            <aside className="am-auth-action-panel" aria-label="Secure booking sign-in information">
+              <div className="am-auth-action-panel__brand">
+                <span className="am-auth-action-panel__logo"><HiShieldCheck className="w-7 h-7" /></span>
+                <span><strong>ALTUVERA</strong><small>SAFARIS</small></span>
+              </div>
+              <div className="am-auth-action-panel__content">
+                <span className="am-auth-action-panel__eyebrow">SECURE BOOKING ACCESS</span>
+                <h2>One secure step before your journey.</h2>
+                <p>Sign in with the account that received this request. We’ll return you to this exact booking step after we verify ownership.</p>
+                <div className="am-auth-action-panel__rule" />
+                <div className="am-auth-action-panel__feature"><HiLockClosed /><span><strong>Private account check</strong><small>Your booking details stay hidden until ownership is verified.</small></span></div>
+                <div className="am-auth-action-panel__feature"><HiShieldCheck /><span><strong>Limited action access</strong><small>Portrait access is restricted to this booking and a five-minute window.</small></span></div>
+                <div className="am-auth-action-panel__feature"><HiCheckCircle /><span><strong>Your normal login stays separate</strong><small>The temporary action window does not replace your regular sign-in.</small></span></div>
+              </div>
+              <div className="am-auth-action-panel__footer">ALWAYS WITH CARE. ALWAYS SECURE.</div>
+            </aside>
+          ) : (
+            <div className="am-auth-gallery relative bg-gray-900 flex-shrink-0">
+              <GallerySlideshow />
+            </div>
+          )}
 
           {/* Form panel */}
           <div className="am-form-panel flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
