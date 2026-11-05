@@ -1,116 +1,138 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
-  HiCheckCircle, HiExclamationCircle, HiChatAlt2, HiHome, HiMail,
-} from "react-icons/hi";
-import GallerySlideshow from "./components/GallerySlideshow";
-
-const WA = "250785751391";
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  Home,
+  Mail,
+  ShieldCheck,
+  ShieldX,
+} from "lucide-react";
+import "./BookingEmailVerification.css";
 
 const CONFIG = {
   success: {
-    icon: HiCheckCircle, color: "emerald",
-    title: (ref) => ref ? `Booking ${ref} Confirmed!` : "Email Verified!",
-    message: "Your booking is now with our expert travel team. We'll reach out within 24 hours to craft your perfect itinerary.",
+    icon: CheckCircle2,
+    tone: "success",
+    eyebrow: "EMAIL CONFIRMED",
+    title: (ref) => ref ? "Booking request verified" : "Email address verified",
+    message: "Your booking email is confirmed. Altuvera’s travel team can now review your request and prepare the next step in your journey.",
   },
   already_verified: {
-    icon: HiCheckCircle, color: "blue",
-    title: () => "Already Verified",
-    message: "This booking has already been verified. Our team is already working on your itinerary!",
+    icon: ShieldCheck,
+    tone: "success",
+    eyebrow: "ALREADY CONFIRMED",
+    title: () => "Your email is already verified",
+    message: "This booking email was confirmed earlier. Your request remains with Altuvera’s team for review.",
   },
   expired: {
-    icon: HiExclamationCircle, color: "amber",
-    title: () => "Link Expired",
-    message: "For security, verification links expire after 24 hours. Please contact us to resend.",
+    icon: Clock3,
+    tone: "warning",
+    eyebrow: "LINK EXPIRED",
+    title: () => "This confirmation link has expired",
+    message: "For your protection, booking verification links are time-limited. Contact Altuvera and ask for a fresh confirmation email.",
   },
   invalid: {
-    icon: HiExclamationCircle, color: "red",
-    title: () => "Invalid Link",
-    message: "This verification link is invalid or has been used already.",
+    icon: ShieldX,
+    tone: "error",
+    eyebrow: "LINK NOT VALID",
+    title: () => "This link cannot be used",
+    message: "The confirmation link may have been changed, or it may already have been used. Open the latest email from Altuvera or contact our team.",
   },
   error: {
-    icon: HiExclamationCircle, color: "red",
-    title: () => "Something Went Wrong",
-    message: "We couldn't verify your email. Please contact us to sort it out.",
+    icon: AlertTriangle,
+    tone: "error",
+    eyebrow: "CONFIRMATION UNAVAILABLE",
+    title: () => "We could not confirm your email",
+    message: "Something prevented this verification from completing. Please contact Altuvera so our team can help you continue.",
   },
 };
 
 export default function BookingVerifyResult() {
-  const [sp] = useSearchParams();
-  const status = sp.get("status") || "error";
-  const ref = sp.get("ref");
-  const cfg = CONFIG[status] || CONFIG.error;
-  const Icon = cfg.icon;
-
-  const colors = {
-    emerald: { bg: "from-emerald-400 to-emerald-600", ring: "shadow-emerald-200" },
-    blue:    { bg: "from-blue-400 to-blue-600",       ring: "shadow-blue-200" },
-    amber:   { bg: "from-amber-400 to-amber-600",     ring: "shadow-amber-200" },
-    red:     { bg: "from-red-400 to-red-600",         ring: "shadow-red-200" },
-  }[cfg.color];
+  const [params] = useSearchParams();
+  const status = params.get("status") || "error";
+  const reference = params.get("ref") || "";
+  const config = CONFIG[status] || CONFIG.error;
+  const Icon = config.icon;
+  const isSuccess = config.tone === "success";
 
   return (
-    <>
-      <style>{`
-        @keyframes fadeSlideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes progressBar { from{width:0%} to{width:100%} }
-      `}</style>
+    <main className="bev-page">
+      <div className="bev-container">
+        <header className="bev-header">
+          <Link to="/" className="bev-brand" aria-label="Altuvera Safaris home">
+            <span className="bev-brand-mark"><img src="/favicon.svg" alt="" /></span>
+            <span className="bev-brand-name"><strong>ALTUVERA</strong><small>SAFARIS</small></span>
+          </Link>
+          <div className="bev-trust"><ShieldCheck size={16} /><span>Booking email status</span></div>
+        </header>
 
-      <div className="fixed inset-0 z-[80] flex items-center justify-center p-0 sm:p-4 lg:p-6 bg-black/50 backdrop-blur-sm">
-        <div className="relative w-full max-w-[1040px] bg-white rounded-none sm:rounded-2xl lg:rounded-3xl
-                        shadow-2xl overflow-hidden flex flex-col lg:flex-row"
-          style={{ maxHeight: "100dvh", height: "100dvh", ...(window.innerWidth >= 640 ? { height: "auto", maxHeight: "92vh" } : {}) }}>
-
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
-
-          <div className="hidden lg:block lg:w-[46%] xl:w-[48%] relative bg-gray-900 flex-shrink-0">
-            <GallerySlideshow />
-          </div>
-          <div className="lg:hidden relative bg-gray-900 flex-shrink-0" style={{ height: "7rem" }}>
-            <GallerySlideshow intervalMs={6000} />
-          </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 lg:p-14 text-center overflow-y-auto">
-            <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full
-                            bg-gradient-to-br ${colors.bg} shadow-2xl ${colors.ring} mb-6`}>
-              <Icon className="w-12 h-12 text-white" />
+        <div className="bev-layout">
+          <section className="bev-intro">
+            <div className="bev-eyebrow"><span className="bev-live-dot" /> YOUR BOOKING JOURNEY</div>
+            <h1>Good journeys<br /><em>start with clarity.</em></h1>
+            <p>This page shows the result of the email confirmation step linked to your Altuvera booking request. Your next actions are listed clearly below.</p>
+            <div className="bev-trust-list">
+              <div className="bev-trust-item"><span><ShieldCheck size={16} /></span><div><strong>Secure confirmation</strong><small>Your email link is checked before the booking status is updated.</small></div></div>
+              <div className="bev-trust-item"><span><Mail size={16} /></span><div><strong>One clear outcome</strong><small>We’ll tell you whether your email is verified or needs another step.</small></div></div>
+              <div className="bev-trust-item"><span><Home size={16} /></span><div><strong>Support is available</strong><small>Return to Altuvera or contact the team if you need assistance.</small></div></div>
             </div>
+          </section>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">
-              {cfg.title(ref)}
-            </h1>
+          <section className="bev-panel-wrap">
+            <div className="bev-panel" aria-live="polite">
+              <div className="bev-panel-head">
+                <span className="bev-panel-label"><ShieldCheck size={15} /> ALTUVERA VERIFICATION RESULT</span>
+                <span className={"bev-panel-state " + (!isSuccess ? "is-error" : "")}>
+                  {isSuccess ? <><CheckCircle2 size={13} /> Verified</> : <><AlertTriangle size={13} /> Attention needed</>}
+                </span>
+              </div>
 
-            <p className="text-gray-500 text-sm sm:text-base leading-relaxed mb-6 max-w-md">
-              {cfg.message}
-            </p>
+              <div className="bev-state">
+                <div className={"bev-status-icon " + (!isSuccess ? (config.tone === "warning" ? "is-warning" : "is-error") : "")}>
+                  <Icon size={35} strokeWidth={1.8} />
+                </div>
+                <div className="bev-eyebrow">{config.eyebrow}</div>
+                <h2>{config.title(reference)}</h2>
+                <p>{config.message}</p>
 
-            {ref && status === "success" && (
-              <div className="inline-flex items-center gap-2.5 bg-emerald-50 border border-emerald-200
-                              rounded-2xl px-5 py-3 mb-6 shadow-sm">
-                <div className="text-left">
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400">Booking Ref</p>
-                  <p className="text-sm font-extrabold text-emerald-700 tracking-wide font-mono">{ref}</p>
+                {reference && isSuccess && (
+                  <div className="bev-reference">
+                    <ShieldCheck size={18} />
+                    <div><strong>Booking reference</strong><small>{reference}</small></div>
+                  </div>
+                )}
+
+                <div className="bev-actions">
+                  {isSuccess && (
+                    <Link to="/my-bookings" className="bev-button bev-button--primary">View my bookings <ArrowRight size={16} /></Link>
+                  )}
+                  <Link to="/" className={"bev-button " + (isSuccess ? "bev-button--secondary" : "bev-button--primary")}>
+                    Return to Altuvera <ArrowLeft size={16} />
+                  </Link>
+                  {!isSuccess && (
+                    <a href="mailto:info@altuverasafaris.com" className="bev-button bev-button--secondary">Contact support <Mail size={15} /></a>
+                  )}
+                </div>
+
+                <div className="bev-help">
+                  Need help with this booking? <a href="mailto:info@altuverasafaris.com">Contact Altuvera support</a>.
                 </div>
               </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-              <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer"
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d]
-                           text-white font-bold text-sm px-6 py-3.5 rounded-xl shadow-lg shadow-green-100
-                           transition-all hover:-translate-y-0.5">
-                <HiChatAlt2 className="w-5 h-5" /> WhatsApp Us
-              </a>
-              <Link to="/"
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200
-                           hover:border-emerald-300 hover:text-emerald-700 text-gray-600 font-bold text-sm
-                           px-6 py-3.5 rounded-xl transition-all">
-                <HiHome className="w-4 h-4" /> Home
-              </Link>
             </div>
-          </div>
+          </section>
         </div>
+
+        <footer className="bev-footer">
+          <strong>ALTUVERA SAFARIS</strong>
+          <span>·</span>
+          <span>Secure booking communication</span>
+          <Link to="/"><ArrowLeft size={13} /> Back to website</Link>
+        </footer>
       </div>
-    </>
+    </main>
   );
 }
