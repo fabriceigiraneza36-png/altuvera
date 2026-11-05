@@ -17,4 +17,5 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm install --no-audit --no-fund
+      - run: node --input-type=module --check < api/seo-render.js
       - run: npm run build
