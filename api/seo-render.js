@@ -173,7 +173,7 @@ const routeMetaDescription = (route, page) => {
     const subjectWords = subject.toLowerCase().split(/\s+/).filter((word) => word.length > 2);
     const subjectIsPresent = comparable.includes(subject.toLowerCase()) ||
       (subjectWords.length > 0 && subjectWords.every((word) => comparable.includes(word)));
-    if (subject && !subjectIsPresent) description = subject + ": " + description;
+    if (description && subject && !subjectIsPresent) description = subject + ": " + description;
     if (!description) {
       const name = humanizeSlug(dynamic[2]);
       const kind = dynamic[1].toLowerCase();
