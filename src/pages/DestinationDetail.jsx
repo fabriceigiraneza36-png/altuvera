@@ -328,7 +328,7 @@ export default function DestinationDetail() {
     const url = window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: destination?.name || "Altuvera destination", text: destination?.tagline || `Explore ${destination?.name || "this destination"} with Altuvera Safaris.`, url });
+        await navigator.share({ title: destination?.name || "Altuvera destination", text: destination?.tagline || `Explore ${destination?.name || "this destination"} with Altuvera.`, url });
       } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(url);
       }
@@ -393,12 +393,12 @@ export default function DestinationDetail() {
   const highlights = Array.isArray(destination.highlights) ? destination.highlights.map((item) => displayText(item)).filter(Boolean) : [];
   const countryInfo = destination.countryObj || destination.country || {};
 
-  const seoTitle = `${destination.name} Safari & Travel Guide | Altuvera Safaris`;
+  const seoTitle = `${destination.name} Safari & Travel Guide | Altuvera`;
   const seoDescription = String(
     destination.seoDescription ||
     destination.metaDescription ||
     description ||
-    `Explore ${destination.name} with Altuvera Safaris — curated East African wildlife, culture, nature and adventure experiences.`
+    `Explore ${destination.name} with Altuvera — curated East African wildlife, culture, nature and adventure experiences.`
   ).replace(/\s+/g, " ").trim().slice(0, 160);
   const canonicalUrl = `https://www.altuverasafaris.com/destinations/${encodeURIComponent(destination.slug || target)}`;
   const seoImages = heroSlides.slice(0, 3);
@@ -407,7 +407,7 @@ export default function DestinationDetail() {
     destination.countryObj?.name || destination.country?.name || destination.countryName,
     "East Africa safari",
     "East Africa travel",
-    "Altuvera Safaris",
+    "Altuvera",
   ].filter(Boolean).join(", ");
   const destinationSchema = {
     "@context": "https://schema.org",
@@ -420,7 +420,7 @@ export default function DestinationDetail() {
     ...(countryInfo?.name ? { containedInPlace: { "@type": "Country", name: countryInfo.name } } : {}),
     provider: {
       "@type": "TravelAgency",
-      name: "Altuvera Safaris",
+      name: "Altuvera",
       url: "https://www.altuverasafaris.com",
     },
     potentialAction: {
@@ -459,14 +459,14 @@ export default function DestinationDetail() {
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:type" content="place" />
-        <meta property="og:site_name" content="Altuvera Safaris" />
+        <meta property="og:site_name" content="Altuvera" />
         <meta property="og:title" content={seoTitle} />
         <meta property="og:description" content={seoDescription} />
         <meta property="og:url" content={canonicalUrl} />
         {seoImages.map((image, index) => (
           <React.Fragment key={`og-image-${index}`}>
             <meta property="og:image" content={image} />
-            <meta property="og:image:alt" content={`${destination.name} — Altuvera Safaris destination photo ${index + 1}`} />
+            <meta property="og:image:alt" content={`${destination.name} — Altuvera destination photo ${index + 1}`} />
           </React.Fragment>
         ))}
         <meta name="twitter:card" content="summary_large_image" />

@@ -77,7 +77,7 @@ export const PLACEHOLDERS = {
   country: (text = "Country") =>
     getPlaceholderImage(1200, 800, text),
 
-  hero: (text = "Altuvera Safaris") =>
+  hero: (text = "Altuvera") =>
     getPlaceholderImage(1920, 1080, text, { bg: "1a1a2e", color: "ffffff" }),
 
   card: (text = "Safari") =>

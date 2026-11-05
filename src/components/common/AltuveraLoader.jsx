@@ -90,7 +90,7 @@ export default function AltuveraLoader({ title = "Discovering your next journey"
       <div className="altuvera-loading__content">
         <div className="altuvera-loading__brand">
           <div className="altuvera-loading__logo-wrap">
-            <img className="altuvera-loading__logo" src="/altuvera.png" alt="Altuvera Safaris logo" />
+            <img className="altuvera-loading__logo" src="/altuvera.png" alt="Altuvera logo" />
           </div>
           <div className="altuvera-loading__brand-copy">
             <p className="altuvera-loading__wordmark" aria-label="Altuvera">

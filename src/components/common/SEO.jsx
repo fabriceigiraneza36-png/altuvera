@@ -27,36 +27,36 @@ const SEO = ({
   tags,
 }) => {
   const location = useLocation();
-  const siteName = "Altuvera Safaris";
+  const siteName = "Altuvera";
 const COUNTRY_SEO = {
   rwanda: {
     name: "Rwanda",
     title: "Rwanda Safaris & Gorilla Trekking",
-    description: "Discover Rwanda gorilla trekking in Volcanoes National Park, Akagera wildlife safaris and Nyungwe Forest with Altuvera Safaris. Plan a tailor-made Rwanda journey.",
+    description: "Discover Rwanda gorilla trekking in Volcanoes National Park, Akagera wildlife safaris and Nyungwe Forest with Altuvera. Plan a tailor-made Rwanda journey.",
     keywords: ["Rwanda safaris", "gorilla trekking Rwanda", "Volcanoes National Park", "Rwanda wildlife tours"],
   },
   uganda: {
     name: "Uganda",
     title: "Uganda Safaris & Gorilla Trekking",
-    description: "Discover Uganda gorilla trekking in Bwindi, Queen Elizabeth National Park wildlife safaris and tailor-made journeys with Altuvera Safaris.",
+    description: "Discover Uganda gorilla trekking in Bwindi, Queen Elizabeth National Park wildlife safaris and tailor-made journeys with Altuvera.",
     keywords: ["Uganda safaris", "gorilla trekking Uganda", "Bwindi Impenetrable Forest", "Uganda wildlife tours"],
   },
   tanzania: {
     name: "Tanzania",
     title: "Tanzania Safaris, Kilimanjaro & Zanzibar",
-    description: "Explore Tanzania safaris in the Serengeti and Ngorongoro, Kilimanjaro trekking and Zanzibar escapes with Altuvera Safaris.",
+    description: "Explore Tanzania safaris in the Serengeti and Ngorongoro, Kilimanjaro trekking and Zanzibar escapes with Altuvera.",
     keywords: ["Tanzania safaris", "Serengeti safaris", "Ngorongoro Crater", "Kilimanjaro trekking"],
   },
   kenya: {
     name: "Kenya",
     title: "Kenya Safaris & Maasai Mara Wildlife",
-    description: "Plan Kenya safaris in the Maasai Mara and Amboseli, with wildlife encounters and tailor-made East African journeys from Altuvera Safaris.",
+    description: "Plan Kenya safaris in the Maasai Mara and Amboseli, with wildlife encounters and tailor-made East African journeys from Altuvera.",
     keywords: ["Kenya safaris", "Maasai Mara safaris", "Amboseli National Park", "Kenya wildlife tours"],
   },
   ethiopia: {
     name: "Ethiopia",
     title: "Ethiopia Tours, Highlands & Cultural Journeys",
-    description: "Discover Ethiopia's highlands, Lalibela's heritage and the Simien Mountains with Altuvera Safaris. Plan a tailor-made journey with local insight.",
+    description: "Discover Ethiopia's highlands, Lalibela's heritage and the Simien Mountains with Altuvera. Plan a tailor-made journey with local insight.",
     keywords: ["Ethiopia tours", "Lalibela", "Simien Mountains", "Ethiopia cultural travel"],
   },
 };
@@ -168,7 +168,7 @@ const normalizeCountryCanonical = (value) => {
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={fullDescription} />
       <meta property="og:image" content={fullImage} />
-      <meta property="og:image:alt" content={fullTitle + " — Altuvera Safaris"} />
+      <meta property="og:image:alt" content={fullTitle + " — Altuvera"} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:site_name" content={siteName} />
       <meta property="og:locale" content="en_US" />
@@ -178,7 +178,7 @@ const normalizeCountryCanonical = (value) => {
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={fullDescription} />
       <meta name="twitter:image" content={fullImage} />
-      <meta name="twitter:image:alt" content={fullTitle + " — Altuvera Safaris"} />
+      <meta name="twitter:image:alt" content={fullTitle + " — Altuvera"} />
 
       {structuredDataArray.map((data, index) => (
         <script key={index} type="application/ld+json">{JSON.stringify(data)}</script>

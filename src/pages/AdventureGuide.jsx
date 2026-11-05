@@ -265,7 +265,7 @@ export default function AdventureGuide() {
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
             <Link to="/booking" className="adventure-guide-link">Plan your journey</Link>
-            <Link to="/contact" className="adventure-guide-link">Contact Altuvera Safaris</Link>
+            <Link to="/contact" className="adventure-guide-link">Contact Altuvera</Link>
           </div>
         </div>
       </section>

@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * Altuvera Safaris - UTILITY HELPERS
+ * Altuvera - UTILITY HELPERS
  * Comprehensive helper functions for the application
  * ═══════════════════════════════════════════════════════════════════════════════
  */

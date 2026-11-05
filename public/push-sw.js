@@ -1,4 +1,4 @@
-/* Altuvera Safaris — Web Push service worker.
+/* Altuvera — Web Push service worker.
  * Persistent notifications are required for reliable mobile browser delivery.
  */
 self.addEventListener("push", (event) => {
@@ -15,7 +15,7 @@ self.addEventListener("push", (event) => {
     );
     if (websiteIsActive) return;
 
-    const title = data.title || "Altuvera Safaris";
+    const title = data.title || "Altuvera";
     const options = {
       body: data.body || "You have a new update from Altuvera.",
       icon: data.icon || "/favicon.ico",

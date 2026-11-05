@@ -882,10 +882,10 @@ const Navbar = () => {
         <Link
           to="/"
           className="nav__floating-brand"
-          aria-label="Altuvera Safaris home"
-          title="Altuvera Safaris"
+          aria-label="Altuvera home"
+          title="Altuvera"
         >
-          <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT || "Altuvera Safaris"} />
+          <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT || "Altuvera"} />
         </Link>
       )}
 

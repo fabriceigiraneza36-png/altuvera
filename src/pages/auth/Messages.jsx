@@ -2297,8 +2297,8 @@ export default function Messages() {
     <>
       <Helmet>
         <title>{activeId && activeConversation
-          ? `${convTitle} | Messages | Altuvera Safaris`
-          : 'Messages | Altuvera Safaris'}</title>
+          ? `${convTitle} | Messages | Altuvera`
+          : 'Messages | Altuvera'}</title>
       </Helmet>
 
       <DashboardLayout

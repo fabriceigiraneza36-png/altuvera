@@ -135,7 +135,7 @@ export default function UserNotifications() {
   return (
     <>
       <Helmet>
-        <title>Notifications | Altuvera Safaris</title>
+        <title>Notifications | Altuvera</title>
         <meta name="description" content="View your Altuvera booking, travel and account notifications." />
       </Helmet>
 

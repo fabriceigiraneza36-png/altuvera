@@ -844,9 +844,9 @@ const About = () => {
       <style>{ABOUT_STYLES}</style>
 
       <SEO
-        title="About Altuvera Safaris | Authentic East African Adventures"
-        description="Discover why travelers choose Altuvera Safaris — Rwanda-based experts in gorilla trekking, wildlife safaris, and cultural immersions across East Africa and beyond."
-        keywords={['Altuvera Safaris', 'about', 'gorilla trekking', 'East Africa', 'cultural tours', 'safari company Rwanda']}
+        title="About Altuvera | Authentic East African Adventures"
+        description="Discover why travelers choose Altuvera — Rwanda-based experts in gorilla trekking, wildlife safaris, and cultural immersions across East Africa and beyond."
+        keywords={['Altuvera', 'about', 'gorilla trekking', 'East Africa', 'cultural tours', 'safari company Rwanda']}
         url="/about"
         image="/og-about.jpg"
         breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'About', url: '/about' }]}
@@ -890,7 +890,7 @@ const About = () => {
               <em>We connect them with what makes it extraordinary.</em>
             </h2>
             <p className="about-section-lead" style={{ marginBottom: 24 }}>
-              Altuvera Safaris is a Rwandan travel company crafting adventures, wildlife encounters, and cultural immersions across East Africa and beyond.
+              Altuvera is a Rwandan travel company crafting adventures, wildlife encounters, and cultural immersions across East Africa and beyond.
             </p>
             <p className="about-section-lead" style={{ marginBottom: 24 }}>
               Based in <strong style={{ color: '#059669' }}>Musanze, Rwanda</strong>, we design journeys that go far beyond sightseeing. Every itinerary is built around three things that never change: <strong>the wild landscapes</strong>, <strong>the incredible wildlife</strong>, and <strong>the resilient communities</strong> that make East Africa unforgettable.
@@ -962,7 +962,7 @@ const About = () => {
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
             <FadeInSection>
               <h2 className="about-section-title">
-                Why travel with <em>Altuvera Safaris</em>?
+                Why travel with <em>Altuvera</em>?
               </h2>
               <p className="about-section-lead">
                 Four principles guide every decision we make — from the guides we hire to the lodges we recommend.

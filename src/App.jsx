@@ -158,7 +158,7 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/Home")),
     meta: {
       title: "East Africa Safaris & Gorilla Trekking",
-      description: "Plan gorilla trekking, wildlife safaris and cultural journeys across Rwanda and East Africa with Altuvera Safaris. Expert local guidance and thoughtfully planned trips.",
+      description: "Plan gorilla trekking, wildlife safaris and cultural journeys across Rwanda and East Africa with Altuvera. Expert local guidance and thoughtfully planned trips.",
     },
   },
   {
@@ -177,12 +177,12 @@ const publicRoutes = [
   {
     path: "/destinations/:destinationId/attractions/:attractionSlug",
     component: React.lazy(() => import("./pages/AttractionDetail")),
-    meta: { title: "Attraction Guide", description: "Discover the highlights, visitor information and experiences at this East African attraction with Altuvera Safaris." },
+    meta: { title: "Attraction Guide", description: "Discover the highlights, visitor information and experiences at this East African attraction with Altuvera." },
   },
   {
     path: "/destinations/:destinationId",
     component: React.lazy(() => import("./pages/DestinationDetail")),
-    meta: { title: "Destination Guide", description: "Explore this destination’s landscapes, wildlife, things to do and practical travel information with Altuvera Safaris." },
+    meta: { title: "Destination Guide", description: "Explore this destination’s landscapes, wildlife, things to do and practical travel information with Altuvera." },
   },
   {
     path: "/adventures/:slug",
@@ -199,7 +199,7 @@ const publicRoutes = [
   {
     path: "/country/:countryId/destinations",
     component: React.lazy(() => import("./pages/CountryDestinations")),
-    meta: { title: "Destinations by Country", description: "Browse safari destinations, national parks and cultural experiences across this country with Altuvera Safaris." },
+    meta: { title: "Destinations by Country", description: "Browse safari destinations, national parks and cultural experiences across this country with Altuvera." },
   },
   {
     path: "/tips",
@@ -214,72 +214,72 @@ const publicRoutes = [
   {
     path: "/posts",
     component: React.lazy(() => import("./pages/Posts")),
-    meta: { title: "Travel Journal & Safari Guides", description: "Read travel stories, destination guides and practical safari advice from Altuvera Safaris, featuring East Africa and the wider region." },
+    meta: { title: "Travel Journal & Safari Guides", description: "Read travel stories, destination guides and practical safari advice from Altuvera, featuring East Africa and the wider region." },
   },
   {
     path: "/post/:slug",
     component: React.lazy(() => import("./pages/PostDetail")),
-    meta: { title: "Travel Article", description: "Read this Altuvera Safaris travel guide for useful destination context, ideas and practical trip-planning advice." },
+    meta: { title: "Travel Article", description: "Read this Altuvera travel guide for useful destination context, ideas and practical trip-planning advice." },
   },
   {
     path: "/packages",
     component: React.lazy(() => import("./pages/Packages")),
-    meta: { title: "East Africa Safari Packages", description: "Explore Altuvera Safaris journeys and request a tailored itinerary for wildlife, gorilla trekking, mountain and cultural experiences across East Africa." },
+    meta: { title: "East Africa Safari Packages", description: "Explore Altuvera journeys and request a tailored itinerary for wildlife, gorilla trekking, mountain and cultural experiences across East Africa." },
   },
   {
     path: "/packages/:slug",
     component: React.lazy(() => import("./pages/PackageDetail")),
-    meta: { title: "Safari Package Details", description: "Discover the itinerary, destination highlights and travel details for this Altuvera Safaris experience." },
+    meta: { title: "Safari Package Details", description: "Discover the itinerary, destination highlights and travel details for this Altuvera experience." },
   },
   {
     path: "/interactive-map",
     component: React.lazy(() => import("./pages/InteractiveMap")),
-    meta: { title: "East Africa Travel Map", description: "Explore the locations and regions featured in Altuvera Safaris journeys across East Africa." },
+    meta: { title: "East Africa Travel Map", description: "Explore the locations and regions featured in Altuvera journeys across East Africa." },
   },
   {
     path: "/services",
     component: React.lazy(() => import("./pages/Services")),
-    meta: { title: "Safari & Travel Services", description: "Explore Altuvera Safaris services, including wildlife safaris, gorilla trekking, mountain adventures, cultural experiences and tailored travel planning." },
+    meta: { title: "Safari & Travel Services", description: "Explore Altuvera services, including wildlife safaris, gorilla trekking, mountain adventures, cultural experiences and tailored travel planning." },
   },
   {
     path: "/about",
     component: React.lazy(() => import("./pages/About")),
-    meta: { title: "About Altuvera Safaris", description: "Meet Altuvera Safaris, a Rwanda-based travel company connecting guests with East African wildlife, landscapes, culture and local experiences." },
+    meta: { title: "About Altuvera", description: "Meet Altuvera, a Rwanda-based travel company connecting guests with East African wildlife, landscapes, culture and local experiences." },
   },
   {
     path: "/contact",
     component: React.lazy(() => import("./pages/Contact")),
-    meta: { title: "Contact Altuvera Safaris", description: "Contact Altuvera Safaris to discuss East African travel ideas, destination questions and a tailor-made safari or cultural journey." },
+    meta: { title: "Contact Altuvera", description: "Contact Altuvera to discuss East African travel ideas, destination questions and a tailor-made safari or cultural journey." },
   },
   {
     path: "/gallery",
     component: React.lazy(() => import("./pages/Gallery")),
-    meta: { title: "East Africa Safari Gallery", description: "View landscapes, wildlife, destinations and cultural moments from Altuvera Safaris experiences across East Africa." },
+    meta: { title: "East Africa Safari Gallery", description: "View landscapes, wildlife, destinations and cultural moments from Altuvera experiences across East Africa." },
   },
   {
     path: "/faq",
     component: React.lazy(() => import("./pages/FAQ")),
-    meta: { title: "Altuvera Safaris FAQs", description: "Find helpful answers about planning an East African safari with Altuvera Safaris, including destinations, bookings and travel preparation." },
+    meta: { title: "Altuvera FAQs", description: "Find helpful answers about planning an East African safari with Altuvera, including destinations, bookings and travel preparation." },
   },
   {
     path: "/team",
     component: React.lazy(() => import("./pages/Team")),
-    meta: { title: "Meet the Altuvera Safaris Team", description: "Meet the people behind Altuvera Safaris and learn about the local knowledge and care that shape our East African travel experiences." },
+    meta: { title: "Meet the Altuvera Team", description: "Meet the people behind Altuvera and learn about the local knowledge and care that shape our East African travel experiences." },
   },
   {
     path: "/payment-terms",
     component: React.lazy(() => import("./pages/PaymentTerms")),
-    meta: { title: "Booking Terms & Conditions", description: "Read the terms and conditions that apply to using Altuvera Safaris services and website." },
+    meta: { title: "Booking Terms & Conditions", description: "Read the terms and conditions that apply to using Altuvera services and website." },
   },
   {
     path: "/privacy",
     component: React.lazy(() => import("./pages/PrivacyPolicy")),
-    meta: { title: "Privacy Policy | Altuvera Safaris", description: "Learn how Altuvera Safaris handles personal information, privacy and data protection when you use our website and services." },
+    meta: { title: "Privacy Policy | Altuvera", description: "Learn how Altuvera handles personal information, privacy and data protection when you use our website and services." },
   },
   {
     path: "/terms",
     component: React.lazy(() => import("./pages/TermsOfService")),
-    meta: { title: "Terms of Service | Altuvera Safaris", description: "Review the website terms and conditions for using Altuvera Safaris online services and information." },
+    meta: { title: "Terms of Service | Altuvera", description: "Review the website terms and conditions for using Altuvera online services and information." },
   },
   {
     path: "/booking-verification/:id",

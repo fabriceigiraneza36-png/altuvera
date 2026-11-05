@@ -118,10 +118,10 @@ export default async function handler(req, res) {
     destination?.seoDescription, destination?.metaDescription,
     destination?.shortDescription, destination?.short_description,
     destination?.description, destination?.overview,
-  ).slice(0, 240) || `Explore ${name} with Altuvera Safaris — authentic East African travel, culture and wildlife experiences.`;
+  ).slice(0, 240) || `Explore ${name} with Altuvera — authentic East African travel, culture and wildlife experiences.`;
   const image = findDestinationImage(destination) || DEFAULT_IMAGE;
   const canonical = `${SITE_ORIGIN}/destinations/${encodeURIComponent(slug)}`;
-  const title = `${name} | Altuvera Safaris`;
+  const title = `${name} | Altuvera`;
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -132,13 +132,13 @@ export default async function handler(req, res) {
 <meta name="description" content="${escapeHtml(description)}">
 <link rel="canonical" href="${escapeHtml(canonical)}">
 <meta property="og:type" content="place">
-<meta property="og:site_name" content="Altuvera Safaris">
+<meta property="og:site_name" content="Altuvera">
 <meta property="og:url" content="${escapeHtml(canonical)}">
 <meta property="og:title" content="${escapeHtml(title)}">
 <meta property="og:description" content="${escapeHtml(description)}">
 <meta property="og:image" content="${escapeHtml(image)}">
 <meta property="og:image:secure_url" content="${escapeHtml(image)}">
-<meta property="og:image:alt" content="${escapeHtml(name)} — destination photo from Altuvera Safaris">
+<meta property="og:image:alt" content="${escapeHtml(name)} — destination photo from Altuvera">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${escapeHtml(title)}">
 <meta name="twitter:description" content="${escapeHtml(description)}">
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
 <meta http-equiv="refresh" content="0;url=${escapeHtml(canonical)}">
 </head>
 <body>
-<p>Opening <a href="${escapeHtml(canonical)}">${escapeHtml(name)}</a> on Altuvera Safaris…</p>
+<p>Opening <a href="${escapeHtml(canonical)}">${escapeHtml(name)}</a> on Altuvera…</p>
 <script>location.replace(${JSON.stringify(canonical)});</script>
 </body>
 </html>`;

@@ -45,7 +45,7 @@ const TeamCard = ({ member }) => {
         {imageUrl && !imageFailed ? (
           <img
             src={imageUrl}
-            alt={member?.name ? `${member.name} — ${member.role || "Altuvera Safaris team member"}` : "Altuvera Safaris team member"}
+            alt={member?.name ? `${member.name} — ${member.role || "Altuvera team member"}` : "Altuvera team member"}
             loading="lazy"
             onError={() => setImageFailed(true)}
             style={{
@@ -62,7 +62,7 @@ const TeamCard = ({ member }) => {
             <div>
               <FiGlobe size={48} style={{ opacity:.75, marginBottom:12 }} />
               <div style={{ fontWeight:800, fontSize:13, letterSpacing:".12em", textTransform:"uppercase" }}>
-                Altuvera Safaris
+                Altuvera
               </div>
               <div style={{ opacity:.75, fontSize:12, marginTop:6 }}>Team portrait coming soon</div>
             </div>
@@ -87,7 +87,7 @@ const TeamCard = ({ member }) => {
 
         <div style={{ position:"absolute", left:20, right:20, bottom:18, color:"#fff" }}>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:7, fontSize:11, fontWeight:700, letterSpacing:".09em", textTransform:"uppercase", opacity:.9 }}>
-            <FiBriefcase size={13}/> {member?.department || "Altuvera Safaris"}
+            <FiBriefcase size={13}/> {member?.department || "Altuvera"}
           </div>
           <h3 style={{ margin:0, fontFamily:"'Playfair Display',serif", fontSize:"clamp(24px,2.4vw,31px)", lineHeight:1.08, fontWeight:800 }}>
             {member?.name || "Altuvera Travel Specialist"}

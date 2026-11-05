@@ -1403,9 +1403,9 @@ const blurb =
   const shareUrl = destId
     ? `https://www.altuverasafaris.com/destinations/${encodeURIComponent(String(destId))}`
     : "https://www.altuverasafaris.com/destinations";
-  const shareTitle = `Discover ${name} with Altuvera Safaris`;
-  const shareMessage = `${name}${locationStr ? ` — ${locationStr}` : ""}\n${blurb || "Discover this East African experience with Altuvera Safaris."}`;
-  const shareTextWithLink = `${shareMessage}\n\nExplore this destination with Altuvera Safaris:\n${shareUrl}`;
+  const shareTitle = `Discover ${name} with Altuvera`;
+  const shareMessage = `${name}${locationStr ? ` — ${locationStr}` : ""}\n${blurb || "Discover this East African experience with Altuvera."}`;
+  const shareTextWithLink = `${shareMessage}\n\nExplore this destination with Altuvera:\n${shareUrl}`;
 
   const showShareFeedback = useCallback((message) => {
     setShareFeedback(message);
@@ -1789,9 +1789,9 @@ const blurb =
           <div className="dc-share-preview">
             {cardImages[0] ? <img src={cardImages[0]} alt="" className="dc-share-preview-image" /> : <div className="dc-share-preview-placeholder"><FiCompass size={25} /></div>}
             <div className="dc-share-preview-copy">
-              <span>ALTUVERA SAFARIS</span><strong>{name}</strong>
+              <span>ALTUVERA</span><strong>{name}</strong>
               {locationStr && <small><FiMapPin size={12} /> {locationStr}</small>}
-              <p>{blurb || "A destination worth discovering, curated by Altuvera Safaris."}</p>
+              <p>{blurb || "A destination worth discovering, curated by Altuvera."}</p>
             </div>
           </div>
           <div className="dc-share-section-head"><strong>Share using</strong><span>Choose an app</span></div>
