@@ -26,9 +26,15 @@ function Field({
       </label>
 
       <div className="bk-input-wrap">
-        <span className="bk-input-ico">
-          <Icon size={17} />
-        </span>
+        {valid ? (
+          <span className="bk-check-ico bk-check-ico--inside" aria-label="Looks good">
+            <Check size={15} strokeWidth={3} />
+          </span>
+        ) : (
+          <span className="bk-input-ico">
+            <Icon size={17} />
+          </span>
+        )}
 
         <input
           ref={refProp}
@@ -44,11 +50,7 @@ function Field({
           className={`bk-input${error ? " bk-input--err" : ""}${valid ? " bk-input--valid" : ""}`}
         />
 
-        {valid && (
-          <span className="bk-check-ico">
-            <Check size={18} />
-          </span>
-        )}
+
       </div>
 
       {error && (
