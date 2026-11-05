@@ -38,6 +38,9 @@ export default function BookingIdentityVerification() {
   const [error, setError] = useState("");
   const openedModalRef = useRef(false);
   const requestRef = useRef("");
+  const mountedRef = useRef(true);
+
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   useEffect(() => {
     if (authLoading || !id) return undefined;
@@ -64,7 +67,7 @@ export default function BookingIdentityVerification() {
         setLoading(true);
         try {
           const result = await completeActionHandoff(id);
-          if (!cancelled) {
+          if (mountedRef.current) {
             setBooking(result.booking);
             setMismatch(false);
             setError("");
@@ -98,6 +101,7 @@ export default function BookingIdentityVerification() {
       }
 
       finishLoading();
+      if (mismatch) return;
       if (!actionSessionExpired && !actionHandoffPending) {
         try {
           beginActionHandoff({ bookingId: id, returnTo: "/booking-verification/" + id });
@@ -116,7 +120,7 @@ export default function BookingIdentityVerification() {
   }, [
     id, authLoading, isAuthenticated, user?.id, openModal, beginActionHandoff,
     pendingActionAuth, actionHandoffPending, completeActionHandoff,
-    isActionSession, actionSessionExpired,
+    isActionSession, actionSessionExpired, mismatch,
   ]);
 
   useEffect(() => {
