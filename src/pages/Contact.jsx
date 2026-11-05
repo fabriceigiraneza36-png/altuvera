@@ -464,8 +464,8 @@ const Contact = () => {
   return (
     <div className="ct-page">
       <SEO
-        title="Contact Altuvera Safaris | East Africa Safari Planning"
-        description="Discuss gorilla trekking in Rwanda, wildlife safaris and tailor-made East African journeys with Altuvera Safaris. Contact our local team to start planning."
+        title="Contact Altuvera | East Africa Safari Planning"
+        description="Discuss gorilla trekking in Rwanda, wildlife safaris and tailor-made East African journeys with Altuvera. Contact our local team to start planning."
         keywords={["contact Altuvera", "safari booking", "East Africa travel"]}
         url="/contact"
       />
@@ -606,7 +606,7 @@ const Contact = () => {
                       </motion.h3>
                       <motion.p className="ct-success-p"
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
-                        Thank you for reaching out to Altuvera Safaris. Our team has received your message and will follow up as soon as possible.
+                        Thank you for reaching out to Altuvera. Our team has received your message and will follow up as soon as possible.
                       </motion.p>
                       <motion.div className="ct-success-email"
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
@@ -1277,7 +1277,7 @@ html{scroll-behavior:smooth}
 @media(prefers-reduced-motion:reduce){.ct-hero-fog__layer,.ct-contact-card,.ct-social-link,.ct-channel-card,.ct-submit,.ct-btn{animation:none!important;transition:none!important}}
 
 
-/* Premium Altuvera Safaris contact refresh */
+/* Premium Altuvera contact refresh */
 .ct-page{--ct-forest:#064e3b;--ct-green:#087f58;--ct-emerald:#10b981;--ct-mint:#ecf8f0;--ct-ink:#14271f;--ct-muted:#64766d;--ct-border:#e0ebe4;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ct-ink);background:#f7faf8;overflow:clip}
 .ct-page button,.ct-page input,.ct-page select,.ct-page textarea{font:inherit}.ct-page a{-webkit-tap-highlight-color:transparent}
 .ct-hero{min-height:clamp(610px,84svh,860px);height:clamp(610px,84svh,860px);padding-top:clamp(60px,7vw,90px);isolation:isolate;position:relative;background:#073f2d;overflow:hidden}
