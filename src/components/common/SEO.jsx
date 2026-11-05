@@ -84,7 +84,7 @@ const normalizeCountryCanonical = (value) => {
   const requestedCanonical = canonical || url || location.pathname || "/";
   const canonicalPath = normalizeCountryCanonical(requestedCanonical);
   const fullTitle = withBrand(countrySeo?.title || title || siteName);
-  const fullDescription = toMetaDescription(countrySeo?.description || description || DEFAULT_SEO_DESCRIPTION);
+  const routeDescription = getRouteSeoDescription(location.pathname, title);\n  const fullDescription = toMetaDescription(countrySeo?.description || description || routeDescription || DEFAULT_SEO_DESCRIPTION);
   const fullImage = toAbsoluteUrl(image || BRAND_LOGO_PATH);
   const canonicalUrl = toAbsoluteUrl(canonicalPath);
   const suppliedKeywords = Array.isArray(keywords) ? keywords : keywords ? [keywords] : [];
