@@ -478,7 +478,7 @@ function PackageWishlistCard({ pkg, onRemove }) {
       <button className="wl-card-remove" onClick={() => onRemove(id)} aria-label="Remove package from wishlist"><FiTrash2 size={16}/></button>
     </div>
     <div className="wl-card-body"><h3 className="wl-card-name">{pkg.title || pkg.name || "Safari package"}</h3>
-      <p className="wl-card-desc">{pkg.short_description || pkg.description || "Explore this Altuvera safari package."}</p>
+      <p className="wl-card-desc">{pkg.short_description || pkg.description || "Explore this Altuvera package."}</p>
       <div className="wl-card-meta">{pkg.category && <span className="wl-card-tag">{pkg.category}</span>}</div>
       <div className="wl-card-actions"><Link className="wl-card-btn wl-card-btn-primary" to={`/packages/${pkg.slug || id}`}><FiExternalLink size={14}/> View package</Link><button className="wl-card-btn wl-card-btn-ghost" onClick={() => onRemove(id)}><FiTrash2 size={14}/> Remove</button></div>
     </div>
