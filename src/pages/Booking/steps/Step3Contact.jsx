@@ -15,11 +15,14 @@ function Field({ id, label, icon: Icon, value, onChange, onBlur, onFocus, placeh
     <div className="bk-field-group">
       <label htmlFor={id} className="bk-label">{label}{required && <span className="bk-label-req">*</span>}</label>
       <div className="bk-input-wrap">
-        <span className="bk-input-ico"><Icon size={17} /></span>
+        {valid ? (
+          <span className="bk-check-ico bk-check-ico--inside" aria-label="Looks good"><Check size={15} strokeWidth={3} /></span>
+        ) : (
+          <span className="bk-input-ico"><Icon size={17} /></span>
+        )}
         <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} onFocus={onFocus}
           placeholder={placeholder} autoComplete={autoComplete} readOnly={readOnly} aria-readonly={readOnly || undefined}
           className={`bk-input${error ? " bk-input--err" : ""}${valid ? " bk-input--valid" : ""}`} />
-        {valid && <span className="bk-check-ico"><Check size={18} /></span>}
       </div>
       {error && <p className="bk-field-err"><AlertCircle size={13} /> {error}</p>}
       {hint && !error && <p className="bk-hint">{hint}</p>}
@@ -75,7 +78,7 @@ function PhoneField({ data, set, touch, errors, touched }) {
   return (
     <div className="bk-field-group">
       <label htmlFor="phone-number" className="bk-label">Phone / WhatsApp <span className="bk-label-req">*</span></label>
-      <div className={`bk-phone-row${touched.phone && errors.phone ? " bk-phone-row--err" : ""}`}>
+      <div className={`bk-phone-row${touched.phone && errors.phone ? " bk-phone-row--err" : ""}${touched.phone && !errors.phone && displayPhone.replace(/\\D/g, "").length > 5 ? " bk-phone-row--valid" : ""}`}>
         <div className="bk-phone-country">
           <button type="button" className="bk-phone-country__button" onClick={() => setCountryOpen((v) => !v)}
             aria-expanded={countryOpen} aria-label="Choose phone country">
@@ -98,7 +101,7 @@ function PhoneField({ data, set, touch, errors, touched }) {
         <input id="phone-number" type="tel" inputMode="tel" autoComplete="tel-national" value={displayPhone}
           onChange={(e) => changeNumber(e.target.value)} onBlur={() => touch("phone")}
           placeholder="78 123 4567" className={`bk-input bk-phone-number${touched.phone && errors.phone ? " bk-input--err" : ""}`} />
-        {touched.phone && !errors.phone && displayPhone.replace(/\\D/g, "").length > 5 && <span className="bk-check-ico"><Check size={18} /></span>}
+        {touched.phone && !errors.phone && displayPhone.replace(/\\D/g, "").length > 5 && <span className="bk-check-ico bk-check-ico--inside" aria-label="Phone number looks good"><Check size={15} strokeWidth={3} /></span>}
       </div>
       <p className="bk-hint">Select your country code, then enter your local phone number.</p>
       {touched.phone && errors.phone && <p className="bk-field-err"><AlertCircle size={13} /> {errors.phone}</p>}
