@@ -20,7 +20,7 @@ const PageWrapper = ({
 }) => {
   const location = useLocation();
   const baseUrl = getSiteUrl();
-  const metaTitle = withBrand(title || "Altuvera Safaris");
+  const metaTitle = withBrand(title || "Altuvera");
   const metaDescription = toMetaDescription(description || DEFAULT_SEO_DESCRIPTION);
   const metaImage = image ? toAbsoluteUrl(image) : getBrandLogoUrl();
 
@@ -64,19 +64,19 @@ const PageWrapper = ({
         />
         <meta name="googlebot" content={noindex ? "noindex, nofollow" : "index, follow"} />
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Altuvera Safaris" />
+        <meta property="og:site_name" content="Altuvera" />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDescription} />
         <meta property="og:image" content={metaImage} />
-        <meta property="og:image:alt" content={metaTitle + " — Altuvera Safaris"} />
+        <meta property="og:image:alt" content={metaTitle + " — Altuvera"} />
         <meta property="og:locale" content="en_US" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@altuverasafari" />
         <meta name="twitter:title" content={metaTitle} />
         <meta name="twitter:description" content={metaDescription} />
         <meta name="twitter:image" content={metaImage} />
-        <meta name="twitter:image:alt" content={metaTitle + " — Altuvera Safaris"} />
+        <meta name="twitter:image:alt" content={metaTitle + " — Altuvera"} />
         <meta name="theme-color" content="#087a50" />
         <script type="application/ld+json">{JSON.stringify(pageSchema)}</script>
       </Helmet>
