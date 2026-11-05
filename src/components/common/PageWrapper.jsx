@@ -23,7 +23,7 @@ const PageWrapper = ({
   const baseUrl = getSiteUrl();
   const metaTitle = withBrand(title || "Altuvera");
   const routeDescription = getRouteSeoDescription(location.pathname, title);
-  const metaDescription = toMetaDescription(routeDescription || description || DEFAULT_SEO_DESCRIPTION);
+  const metaDescription = toMetaDescription(description || routeDescription || DEFAULT_SEO_DESCRIPTION);
   const metaImage = image ? toAbsoluteUrl(image) : getBrandLogoUrl();
 
   // Canonicals describe the clean page URL, not tracking parameters or fragments.
