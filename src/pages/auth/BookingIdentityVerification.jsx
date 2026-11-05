@@ -185,6 +185,17 @@ export default function BookingIdentityVerification() {
       setDone(true);
       if (isActionSession) endActionSession("completed");
     } catch (err) {
+      if (err?.code === "ACTION_ALREADY_COMPLETED") {
+        const latest = err?.data?.data || {};
+        setBooking((current) => ({
+          ...(current || {}),
+          ...latest,
+          identity_portrait_status: latest.identity_portrait_status || "uploaded",
+        }));
+        setDone(true);
+        if (isActionSession) endActionSession("completed");
+        return;
+      }
       if (isActionSession && (err?.status === 401 || err?.status === 403)) {
         endActionSession("expired");
       }
@@ -247,7 +258,7 @@ export default function BookingIdentityVerification() {
             <div className="py-8 text-center">
               <CheckCircle size={54} className="mx-auto text-emerald-600" />
               <h2 className="mt-4 text-2xl font-extrabold text-emerald-900">Portrait received</h2>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">Thank you. Altuvera has received the portrait for this booking. The secure action window has been closed.</p>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">Thank you. Altuvera has received the portrait for this booking. This one-time request is complete, and its upload link cannot be reused.</p>
               <a href="/my-bookings" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white">View my bookings</a>
             </div>
           ) : booking ? (
