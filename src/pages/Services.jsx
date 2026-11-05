@@ -219,7 +219,7 @@ export default function Services() {
         <PageHeader
           title="Travel Services"
           subtitle="From wildlife encounters and mountain trails to cultural journeys and coastal escapes, we help bring your African travel plans together."
-          backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=2200&q=88"
+          backgroundImage="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=2200&q=88"
           height="540px"
           parallax
         >
