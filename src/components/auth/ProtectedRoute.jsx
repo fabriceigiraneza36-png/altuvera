@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import Loader from "../common/Loader";
 
@@ -44,8 +44,7 @@ export default function ProtectedRoute({ children, requiredRole, fallback = "/" 
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    window.location.replace(fallback);
-    return <Loader />;
+    return <Navigate to={fallback} replace />;
   }
 
   return children;
