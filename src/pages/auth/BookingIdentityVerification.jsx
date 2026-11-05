@@ -1,14 +1,79 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Camera, CheckCircle, ShieldCheck, Upload, ArrowLeft, LockKeyhole, RefreshCw } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Camera,
+  Check,
+  CheckCircle2,
+  Clock3,
+  FileImage,
+  LockKeyhole,
+  RefreshCw,
+  ShieldCheck,
+  UploadCloud,
+  UserRound,
+  X,
+} from "lucide-react";
 import { useUserAuth } from "../../context/UserAuthContext";
 import { bookingIdentityAPI } from "../../api/bookingIdentity";
+import "./BookingIdentityVerification.css";
 
 const authOptions = {
   skipNotLoggedInMessage: true,
   resumePendingVerification: false,
   resumeSavedForm: false,
+  actionFlow: true,
 };
+
+const normalizeBooking = (response) =>
+  response?.data?.data || response?.data || response || null;
+
+const isPortraitComplete = (booking) =>
+  ["uploaded", "verified"].includes(
+    String(booking?.identity_portrait_status || "").toLowerCase()
+  ) || Boolean(booking?.identity_portrait_url);
+
+const formatTime = (totalSeconds) => {
+  const safe = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(safe / 60).toString().padStart(2, "0");
+  const seconds = (safe % 60).toString().padStart(2, "0");
+  return minutes + ":" + seconds;
+};
+
+function SecureLoader({ title = "Checking your secure link", detail = "Verifying the request and preparing your private booking view." }) {
+  return (
+    <div className="biv-state biv-state--loading" role="status" aria-live="polite">
+      <div className="biv-loader-mark">
+        <span className="biv-loader-ring biv-loader-ring--outer" />
+        <span className="biv-loader-ring biv-loader-ring--inner" />
+        <ShieldCheck size={27} strokeWidth={1.8} />
+      </div>
+      <div className="biv-state-copy">
+        <span className="biv-eyebrow">ALTUVERA SECURE ACCESS</span>
+        <h2>{title}</h2>
+        <p>{detail}</p>
+      </div>
+      <div className="biv-loading-track"><span /></div>
+      <div className="biv-skeleton-row"><i /><i /><i /></div>
+    </div>
+  );
+}
+
+function StatusView({ icon: Icon, eyebrow, title, description, tone = "neutral", children }) {
+  return (
+    <div className={"biv-state biv-state--" + tone} role="status">
+      <div className="biv-state-icon"><Icon size={27} strokeWidth={1.8} /></div>
+      <div className="biv-state-copy">
+        <span className="biv-eyebrow">{eyebrow}</span>
+        <h2>{title}</h2>
+        <p>{description}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function BookingIdentityVerification() {
   const { id = "" } = useParams();
@@ -24,6 +89,7 @@ export default function BookingIdentityVerification() {
     completeActionHandoff,
     isActionSession,
     actionSessionToken,
+    actionSessionExpiresAt,
     actionSessionExpired,
     endActionSession,
   } = useUserAuth();
@@ -35,10 +101,16 @@ export default function BookingIdentityVerification() {
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [mismatch, setMismatch] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [sessionClosed, setSessionClosed] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(300);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const openedModalRef = useRef(false);
-  const requestRef = useRef("");
   const mountedRef = useRef(true);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -46,71 +118,99 @@ export default function BookingIdentityVerification() {
   }, []);
 
   useEffect(() => {
+    if (!preview) return undefined;
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
+
+  useEffect(() => {
+    if (!isActionSession || !actionSessionExpiresAt) return undefined;
+    const update = () => {
+      const remaining = Math.max(0, Math.ceil((Number(actionSessionExpiresAt) - Date.now()) / 1000));
+      setRemainingSeconds(remaining);
+    };
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [isActionSession, actionSessionExpiresAt]);
+
+  useEffect(() => {
     if (authLoading || !id) return undefined;
     let cancelled = false;
 
-    const finishLoading = () => { if (!cancelled) setLoading(false); };
-    const handleFailure = (err) => {
+    const showFailure = (err) => {
       if (cancelled) return;
-      if (err?.status === 403 || err?.code === "BOOKING_ACCOUNT_MISMATCH") {
+      if (err?.code === "BOOKING_ACCOUNT_MISMATCH" || err?.status === 403) {
         setMismatch(true);
-        setError("This request belongs to another Altuvera account. No booking information or upload controls have been made available.");
+        setNotFound(false);
+        setLoadError("This request belongs to a different Altuvera account. Booking information remains hidden until the correct traveller signs in.");
+      } else if (err?.status === 404) {
+        setNotFound(true);
+        setMismatch(false);
+        setLoadError("This secure booking link could not be found. Check that you opened the latest link sent by Altuvera.");
       } else {
-        setError(err?.message || "We could not open this secure request.");
+        setLoadError(err?.message || "We could not verify this secure request. Please check your connection and try again.");
       }
     };
 
     const run = async () => {
       if (isActionSession) {
-        finishLoading();
+        setLoading(false);
+        return;
+      }
+
+      if (actionSessionExpired) {
+        setBooking(null);
+        setLoading(false);
         return;
       }
 
       if (pendingActionAuth) {
         setLoading(true);
+        setLoadError("");
         try {
           const result = await completeActionHandoff(id);
-          if (mountedRef.current) {
-            setBooking(result.booking);
+          if (!cancelled && mountedRef.current) {
+            const resolved = result?.booking || null;
+            setBooking(resolved);
+            setDone(isPortraitComplete(resolved));
             setMismatch(false);
-            setError("");
+            setNotFound(false);
           }
         } catch (err) {
-          handleFailure(err);
+          showFailure(err);
         } finally {
-          finishLoading();
+          if (!cancelled) setLoading(false);
         }
         return;
       }
 
       if (isAuthenticated) {
-        const requestKey = id + ":" + String(user?.id || "");
-        if (requestRef.current === requestKey) return;
-        requestRef.current = requestKey;
         setLoading(true);
+        setLoadError("");
         try {
           const result = await bookingIdentityAPI.get(id);
+          const resolved = normalizeBooking(result);
           if (!cancelled) {
-            setBooking(result?.data?.data || result?.data || result);
+            setBooking(resolved);
+            setDone(isPortraitComplete(resolved));
             setMismatch(false);
+            setNotFound(false);
             setError("");
           }
         } catch (err) {
-          handleFailure(err);
+          showFailure(err);
         } finally {
-          finishLoading();
+          if (!cancelled) setLoading(false);
         }
         return;
       }
 
-      finishLoading();
-      if (mismatch) return;
-      if (!actionSessionExpired && !actionHandoffPending) {
-        try {
-          beginActionHandoff({ bookingId: id, returnTo: "/booking-verification/" + id });
-        } catch (err) {
-          setError(err?.message || "This browser could not start a secure sign-in.");
-        }
+      setLoading(false);
+      if (mismatch || actionHandoffPending) return;
+      try {
+        beginActionHandoff({ bookingId: id, returnTo: "/booking-verification/" + id });
+      } catch (err) {
+        setLoadError(err?.message || "This browser could not start a secure sign-in.");
       }
       if (!openedModalRef.current) {
         openedModalRef.current = true;
@@ -121,9 +221,19 @@ export default function BookingIdentityVerification() {
     run();
     return () => { cancelled = true; };
   }, [
-    id, authLoading, isAuthenticated, user?.id, openModal, beginActionHandoff,
-    pendingActionAuth, actionHandoffPending, completeActionHandoff,
-    isActionSession, actionSessionExpired, mismatch,
+    id,
+    authLoading,
+    isAuthenticated,
+    user?.id,
+    openModal,
+    beginActionHandoff,
+    pendingActionAuth,
+    actionHandoffPending,
+    completeActionHandoff,
+    isActionSession,
+    actionSessionExpired,
+    mismatch,
+    loadAttempt,
   ]);
 
   useEffect(() => {
@@ -131,29 +241,43 @@ export default function BookingIdentityVerification() {
     setBooking(null);
     setFile(null);
     setPreview("");
-    setError("Your five-minute secure action window ended. Sign in normally to start a new Altuvera session.");
+    setError("");
   }, [isActionSession, actionSessionExpired, done]);
 
-  useEffect(() => {
-    if (!preview) return undefined;
-    return () => URL.revokeObjectURL(preview);
-  }, [preview]);
-
-  const choose = (event) => {
-    const selected = event.target.files?.[0];
+  const setSelectedFile = useCallback((selected) => {
     if (!selected) return;
     const allowed = ["image/jpeg", "image/png", "image/webp"];
     if (!allowed.includes(selected.type)) {
-      setError("Please choose a JPG, PNG or WEBP image.");
+      setError("Choose a JPG, PNG or WEBP image. Other file types are not accepted.");
       return;
     }
     if (selected.size > 10 * 1024 * 1024) {
-      setError("Your portrait must be 10MB or smaller.");
+      setError("This image is larger than 10MB. Choose a smaller portrait and try again.");
       return;
     }
+    if (preview) URL.revokeObjectURL(preview);
     setFile(selected);
     setPreview(URL.createObjectURL(selected));
     setError("");
+  }, [preview]);
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files?.[0]);
+    event.target.value = "";
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setIsDragging(false);
+    setSelectedFile(event.dataTransfer.files?.[0]);
+  };
+
+  const removeSelectedFile = () => {
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview("");
+    setFile(null);
+    setError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const continueWithRequestedAccount = () => {
@@ -161,18 +285,31 @@ export default function BookingIdentityVerification() {
       clearLocalSession();
       beginActionHandoff({ bookingId: id, returnTo: "/booking-verification/" + id });
       setMismatch(false);
-      setError("");
+      setNotFound(false);
+      setLoadError("");
       setBooking(null);
       setLoading(false);
       openedModalRef.current = true;
       openModal("login", authOptions);
     } catch (err) {
-      setError(err?.message || "We could not safely switch this browser to the requested account.");
+      setLoadError(err?.message || "We could not safely switch this browser to the requested account.");
+    }
+  };
+
+  const startSecureSignIn = () => {
+    try {
+      setSessionClosed(false);
+      setLoadError("");
+      beginActionHandoff({ bookingId: id, returnTo: "/booking-verification/" + id });
+      openedModalRef.current = true;
+      openModal("login", authOptions);
+    } catch (err) {
+      setLoadError(err?.message || "A new secure sign-in could not be started in this browser.");
     }
   };
 
   const submit = async () => {
-    if (!file || sending) return;
+    if (!file || sending || done || isPortraitComplete(booking)) return;
     setSending(true);
     setError("");
     try {
@@ -181,114 +318,277 @@ export default function BookingIdentityVerification() {
         file,
         isActionSession ? actionSessionToken : null
       );
-      setBooking(result?.data?.data || result?.data || result);
+      const resolved = normalizeBooking(result);
+      setBooking(resolved || booking);
       setDone(true);
+      setFile(null);
+      setPreview("");
       if (isActionSession) endActionSession("completed");
     } catch (err) {
       if (err?.code === "ACTION_ALREADY_COMPLETED") {
-        const latest = err?.data?.data || {};
+        const latest = normalizeBooking(err?.data);
         setBooking((current) => ({
           ...(current || {}),
-          ...latest,
-          identity_portrait_status: latest.identity_portrait_status || "uploaded",
+          ...(latest || {}),
+          identity_portrait_status: latest?.identity_portrait_status || "uploaded",
         }));
         setDone(true);
+        setFile(null);
+        setPreview("");
         if (isActionSession) endActionSession("completed");
-        return;
+      } else {
+        if (isActionSession && (err?.status === 401 || err?.status === 403)) {
+          endActionSession("expired");
+        }
+        setError(err?.message || "The portrait could not be uploaded. Your selected image is still available; try again.");
       }
-      if (isActionSession && (err?.status === 401 || err?.status === 403)) {
-        endActionSession("expired");
-      }
-      setError(err?.message || "The portrait could not be uploaded. Please try again.");
     } finally {
       setSending(false);
     }
   };
 
-  const openLoginAgain = () => {
-    openedModalRef.current = true;
-    openModal("login", authOptions);
+  const closeSecureSession = () => {
+    if (isActionSession) endActionSession("closed");
+    setSessionClosed(true);
+    setBooking(null);
+    setFile(null);
+    setPreview("");
+    setError("");
   };
 
-  if (authLoading || loading) {
-    return (
-      <div className="grid min-h-[70vh] place-items-center bg-emerald-50/50 px-5 text-sm font-semibold text-slate-600">
-        <div className="text-center"><RefreshCw className="mx-auto mb-3 animate-spin text-emerald-700" size={28} />Checking the account attached to this secure link…</div>
-      </div>
-    );
-  }
+  const retryLoad = () => {
+    setLoading(true);
+    setMismatch(false);
+    setNotFound(false);
+    setLoadError("");
+    setLoadAttempt((value) => value + 1);
+  };
 
-  const alreadyUploaded = ["uploaded", "verified"].includes(booking?.identity_portrait_status);
+  const alreadyUploaded = isPortraitComplete(booking);
+  const isExpired = (actionSessionExpired || sessionClosed) && !done && !isAuthenticated;
+  const hasActiveRestrictedSession = isActionSession && !done;
+  const completed = done || alreadyUploaded;
 
   return (
-    <main className="min-h-[78vh] bg-gradient-to-b from-emerald-50 to-white px-4 py-8 sm:py-12">
-      <section className="mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-2xl shadow-emerald-950/10">
-        <header className="bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-600 px-6 py-7 text-white sm:px-8">
-          <div className="flex items-center gap-3">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl border border-white/20 bg-white/10"><ShieldCheck size={26} /></div>
-            <div><p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-emerald-100">Altuvera secure action</p><h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">Traveller verification</h1></div>
-          </div>
-          <p className="mt-4 max-w-xl text-sm leading-6 text-emerald-50">Complete the requested portrait step using the Altuvera account that owns this booking.</p>
+    <main className="biv-page">
+      <div className="biv-atmosphere biv-atmosphere--one" />
+      <div className="biv-atmosphere biv-atmosphere--two" />
+
+      <div className="biv-container">
+        <header className="biv-header">
+          <Link to="/" className="biv-brand" aria-label="Altuvera Safaris home">
+            <span className="biv-brand-mark"><img src="/favicon.svg" alt="" /></span>
+            <span className="biv-brand-name"><strong>ALTUVERA</strong><small>SAFARIS</small></span>
+          </Link>
+          <div className="biv-header-trust"><ShieldCheck size={16} /><span>Secure traveller verification</span></div>
         </header>
 
-        <div className="p-5 sm:p-8">
-          {mismatch ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
-              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white text-amber-700"><LockKeyhole size={22} /></div>
-              <h2 className="text-lg font-extrabold text-slate-900">This link belongs to another account</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-700">The account currently open in this browser does not own this booking. Altuvera has blocked access to prevent anyone from viewing or changing another traveller’s information.</p>
-              <p className="mt-2 text-xs leading-5 text-slate-600">Continue only if you are the traveller who received this request. This clears the current sign-in from this browser tab only; it does not sign that person out on their other devices.</p>
-              <button type="button" onClick={continueWithRequestedAccount} className="mt-5 flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800">Continue with the requested account</button>
+        <div className="biv-layout">
+          <section className="biv-intro">
+            <div className="biv-intro-copy">
+              <div className="biv-eyebrow"><span className="biv-live-dot" /> PRIVATE BOOKING CHECKPOINT</div>
+              <h1>A clear portrait.<br /><em>A smoother journey.</em></h1>
+              <p className="biv-lead">Complete this final traveller detail through a secure, booking-specific link. Your information is only shown after Altuvera verifies the account that received the request.</p>
             </div>
-          ) : actionSessionExpired && !isAuthenticated && !done ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-              <h2 className="font-extrabold text-slate-900">Secure action window ended</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-700">{error || "For your privacy, the short-lived action session has ended. Sign in normally to continue."}</p>
-              <button type="button" onClick={openLoginAgain} className="mt-4 min-h-11 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white">Sign in to Altuvera</button>
-            </div>
-          ) : !isAuthenticated && !isActionSession && !pendingActionAuth ? (
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-5 text-center sm:p-7">
-              <LockKeyhole size={30} className="mx-auto text-emerald-700" />
-              <h2 className="mt-3 text-lg font-extrabold text-slate-900">Sign in to continue</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">The original link is saved in this tab. Sign in with the Altuvera account that received the portrait request and you will return here automatically.</p>
-              <button type="button" onClick={openLoginAgain} className="mt-5 min-h-12 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white">Open secure sign-in</button>
-              {error && <p className="mt-3 text-xs text-rose-700">{error}</p>}
-            </div>
-          ) : done || alreadyUploaded ? (
-            <div className="py-8 text-center">
-              <CheckCircle size={54} className="mx-auto text-emerald-600" />
-              <h2 className="mt-4 text-2xl font-extrabold text-emerald-900">Portrait received</h2>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">Thank you. Altuvera has received the portrait for this booking. This one-time request is complete, and its upload link cannot be reused.</p>
-              <a href="/my-bookings" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white">View my bookings</a>
-            </div>
-          ) : booking ? (
-            <>
-              <div className="mb-5 rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Verified booking</p>
-                <h2 className="mt-1 font-extrabold text-slate-900">{booking.destination_name || "Your Altuvera journey"}</h2>
-                <p className="mt-1 text-xs text-slate-500">Booking {booking.booking_number || "#" + booking.id}</p>
-                {user?.email && <p className="mt-2 text-xs text-emerald-700">Signed in as {user.email}</p>}
-              </div>
-              <p className="text-sm leading-6 text-slate-600">Upload one recent, clear face portrait. Choose a photo where your face is visible and well lit.</p>
-              <label className="mt-5 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/60 p-6 text-center transition hover:border-emerald-400">
-                {preview ? <img src={preview} alt="Portrait preview" className="mb-3 h-40 w-40 rounded-2xl object-cover shadow-lg" /> : <Camera size={42} className="mb-3 text-emerald-700" />}
-                <span className="font-extrabold text-emerald-800">{file ? "Change portrait" : "Choose portrait"}</span>
-                <span className="mt-1 text-xs text-slate-500">JPG, PNG or WEBP · up to 10MB</span>
-                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={choose} className="sr-only" />
-              </label>
-              {error && <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
-              {isActionSession && <p className="mt-4 text-xs text-slate-500">This isolated action window expires in five minutes and can only upload the portrait for this booking.</p>}
-              <button type="button" onClick={submit} disabled={!file || sending} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-sm font-extrabold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">
-                <Upload size={17} />{sending ? "Uploading securely…" : "Send portrait to Altuvera"}
-              </button>
-            </>
-          ) : (
-            <div className="rounded-xl bg-rose-50 p-4 text-sm text-rose-700">{error || "This request could not be opened. Please use the original link or contact Altuvera."}</div>
-          )}
 
-          <button type="button" onClick={() => window.history.back()} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-700"><ArrowLeft size={15} />Back</button>
+            <div className="biv-steps" aria-label="Verification progress">
+              <div className={"biv-step " + (booking ? "is-complete" : "is-current")}>
+                <span className="biv-step-icon">{booking ? <Check size={15} /> : <LockKeyhole size={15} />}</span>
+                <span><strong>Secure access</strong><small>Link and account check</small></span>
+              </div>
+              <span className={"biv-step-line " + (booking ? "is-complete" : "")} />
+              <div className={"biv-step " + (completed ? "is-complete" : booking ? "is-current" : "")}>
+                <span className="biv-step-icon">{completed ? <Check size={15} /> : <Camera size={15} />}</span>
+                <span><strong>Portrait</strong><small>One-time submission</small></span>
+              </div>
+              <span className={"biv-step-line " + (completed ? "is-complete" : "")} />
+              <div className={"biv-step " + (completed ? "is-complete" : "")}>
+                <span className="biv-step-icon">{completed ? <Check size={15} /> : <CheckCircle2 size={15} />}</span>
+                <span><strong>Complete</strong><small>Access securely closed</small></span>
+              </div>
+            </div>
+
+            <div className="biv-assurance">
+              <div className="biv-assurance-item"><span><LockKeyhole size={16} /></span><div><strong>Private by design</strong><small>Only the booking owner can continue.</small></div></div>
+              <div className="biv-assurance-item"><span><Clock3 size={16} /></span><div><strong>Short-lived access</strong><small>Temporary action access expires after five minutes.</small></div></div>
+              <div className="biv-assurance-item"><span><CheckCircle2 size={16} /></span><div><strong>One-time action</strong><small>A completed portrait link cannot be reused.</small></div></div>
+            </div>
+          </section>
+
+          <section className="biv-panel-wrap" aria-live="polite">
+            <div className="biv-panel">
+              <div className="biv-panel-topline">
+                <span className="biv-panel-label"><ShieldCheck size={15} /> ALTUVERA SECURE ACTION</span>
+                {hasActiveRestrictedSession && (
+                  <span className={"biv-session-pill " + (remainingSeconds <= 60 ? "is-ending" : "")}>
+                    <span className="biv-session-pulse" /> {formatTime(remainingSeconds)} remaining
+                  </span>
+                )}
+              </div>
+
+              {authLoading || loading ? (
+                <SecureLoader title="Preparing your private booking view" detail="Checking the link, the signed-in account and the status of this one-time action." />
+              ) : mismatch ? (
+                <StatusView
+                  icon={LockKeyhole}
+                  eyebrow="ACCOUNT CHECK REQUIRED"
+                  title="This link belongs to another account"
+                  description={loadError || "The account currently open in this browser does not own this booking. Altuvera has hidden the booking details and blocked all changes."}
+                  tone="warning"
+                >
+                  <div className="biv-security-note"><ShieldCheck size={17} /><p>Switching accounts clears this browser session only. The other person stays signed in on their own devices.</p></div>
+                  <button type="button" className="biv-button biv-button--primary" onClick={continueWithRequestedAccount}>Continue with the requested account <ArrowRight size={17} /></button>
+                </StatusView>
+              ) : isExpired ? (
+                <StatusView
+                  icon={Clock3}
+                  eyebrow="TEMPORARY ACCESS ENDED"
+                  title="Your secure action window has ended"
+                  description="For your privacy, the temporary booking access and its upload token have been cleared. Start a fresh secure sign-in from this link to continue."
+                  tone="warning"
+                >
+                  <div className="biv-security-note"><LockKeyhole size={17} /><p>Your regular Altuvera login is separate from this five-minute action session.</p></div>
+                  <button type="button" className="biv-button biv-button--primary" onClick={startSecureSignIn}>Start a new secure attempt <ArrowRight size={17} /></button>
+                  <Link to="/" className="biv-button biv-button--quiet">Return to Altuvera</Link>
+                </StatusView>
+              ) : notFound ? (
+                <StatusView
+                  icon={AlertCircle}
+                  eyebrow="LINK NOT AVAILABLE"
+                  title="We could not find this booking"
+                  description={loadError || "This link may be incomplete or outdated. Open the latest message from Altuvera or contact our team for help."}
+                  tone="danger"
+                >
+                  <button type="button" className="biv-button biv-button--primary" onClick={retryLoad}>Check link again <RefreshCw size={16} /></button>
+                  <Link to="/" className="biv-button biv-button--quiet">Return to Altuvera</Link>
+                </StatusView>
+              ) : loadError && !booking ? (
+                <StatusView
+                  icon={AlertCircle}
+                  eyebrow="WE COULD NOT FINISH THE CHECK"
+                  title="Your secure link is still protected"
+                  description={loadError}
+                  tone="danger"
+                >
+                  <button type="button" className="biv-button biv-button--primary" onClick={retryLoad}>Try again <RefreshCw size={16} /></button>
+                  <button type="button" className="biv-button biv-button--quiet" onClick={() => openModal("login", authOptions)}>Open secure sign-in</button>
+                </StatusView>
+              ) : completed ? (
+                <StatusView
+                  icon={CheckCircle2}
+                  eyebrow="ONE-TIME ACTION COMPLETE"
+                  title="Portrait received"
+                  description="Thank you. Altuvera has received the portrait for this booking. This one-time request is complete and its upload link cannot be reused."
+                  tone="success"
+                >
+                  <div className="biv-completion-details">
+                    <span className="biv-completion-check"><Check size={16} /></span>
+                    <div><strong>Submission recorded</strong><small>{booking?.booking_number ? "Booking " + booking.booking_number : "Your booking"} · Portrait received</small></div>
+                    <span className="biv-completion-state">Complete</span>
+                  </div>
+                  <Link to="/my-bookings" className="biv-button biv-button--primary">View my bookings <ArrowRight size={17} /></Link>
+                  <Link to="/" className="biv-button biv-button--quiet">Return to Altuvera</Link>
+                </StatusView>
+              ) : !booking ? (
+                <StatusView
+                  icon={LockKeyhole}
+                  eyebrow="SIGN-IN REQUIRED"
+                  title="Verify your Altuvera account"
+                  description="Sign in with the account that received this portrait request. Once verified, you will return to this exact booking step."
+                  tone="neutral"
+                >
+                  <button type="button" className="biv-button biv-button--primary" onClick={() => openModal("login", authOptions)}>Open secure sign-in <ArrowRight size={17} /></button>
+                  {loadError && <div className="biv-inline-alert biv-inline-alert--error"><AlertCircle size={17} /><span>{loadError}</span></div>}
+                </StatusView>
+              ) : (
+                <div className="biv-upload-view">
+                  <div className="biv-upload-heading">
+                    <span className="biv-upload-icon"><Camera size={20} /></span>
+                    <div><span className="biv-eyebrow">TRAVELLER IDENTITY</span><h2>Upload your portrait</h2><p>Choose one recent, clear photo where your face is visible and well lit.</p></div>
+                  </div>
+
+                  <div className="biv-booking-card">
+                    <div className="biv-booking-icon"><UserRound size={18} /></div>
+                    <div className="biv-booking-text">
+                      <span>VERIFIED BOOKING</span>
+                      <strong>{booking.destination_name || "Your Altuvera journey"}</strong>
+                      <small>{booking.booking_number || "Booking #" + booking.id}</small>
+                    </div>
+                    <span className="biv-verified-tag"><CheckCircle2 size={14} /> Verified</span>
+                  </div>
+
+                  {isActionSession && (
+                    <div className={"biv-countdown-card " + (remainingSeconds <= 60 ? "is-ending" : "")}>
+                      <div className="biv-countdown-icon"><Clock3 size={17} /></div>
+                      <div className="biv-countdown-copy"><strong>Temporary secure access</strong><small>This window is limited to this booking and portrait upload.</small></div>
+                      <strong className="biv-countdown-time">{formatTime(remainingSeconds)}</strong>
+                    </div>
+                  )}
+
+                  {user?.email && <div className="biv-account-line"><LockKeyhole size={14} /><span>Signed in as <strong>{user.email}</strong></span></div>}
+
+                  <div
+                    className={"biv-dropzone " + (isDragging ? "is-dragging" : "") + (preview ? " has-file" : "")}
+                    onDragOver={(event) => { event.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                  >
+                    {preview ? (
+                      <div className="biv-preview-wrap">
+                        <img src={preview} alt="Selected traveller portrait preview" className="biv-preview-image" />
+                        <div className="biv-preview-shade" />
+                        <div className="biv-preview-caption"><FileImage size={15} /><span>Portrait preview</span></div>
+                        <button type="button" className="biv-remove-file" onClick={removeSelectedFile} aria-label="Remove selected portrait"><X size={17} /></button>
+                      </div>
+                    ) : (
+                      <div className="biv-dropzone-empty">
+                        <span className="biv-upload-art"><UploadCloud size={29} /></span>
+                        <strong>Choose your portrait</strong>
+                        <span>Drag an image here or browse your device</span>
+                        <button type="button" className="biv-browse-button" onClick={() => fileInputRef.current?.click()}>Browse files</button>
+                        <small>JPG, PNG or WEBP · Maximum 10MB</small>
+                      </div>
+                    )}
+                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} className="biv-file-input" aria-label="Choose a portrait image" />
+                  </div>
+
+                  {file && (
+                    <div className="biv-file-meta">
+                      <span className="biv-file-meta-icon"><FileImage size={15} /></span>
+                      <div><strong>{file.name}</strong><small>{(file.size / (1024 * 1024)).toFixed(2)} MB · Ready to submit</small></div>
+                      <button type="button" onClick={removeSelectedFile} aria-label="Remove selected file"><X size={16} /></button>
+                    </div>
+                  )}
+
+                  {error && <div className="biv-inline-alert biv-inline-alert--error" role="alert"><AlertCircle size={17} /><span>{error}</span></div>}
+
+                  <div className="biv-upload-rules">
+                    <span><Check size={14} /> Face clearly visible</span>
+                    <span><Check size={14} /> Good lighting</span>
+                    <span><Check size={14} /> One submission per booking</span>
+                  </div>
+
+                  <button type="button" className="biv-button biv-button--primary biv-submit" onClick={submit} disabled={!file || sending || remainingSeconds === 0}>
+                    {sending ? <><span className="biv-button-spinner" /> Uploading securely…</> : <>Submit portrait <ArrowRight size={17} /></>}
+                  </button>
+                  <p className="biv-privacy-copy"><LockKeyhole size={13} /> Your portrait is attached only to this verified booking.</p>
+
+                  {isActionSession && (
+                    <button type="button" className="biv-end-session" onClick={closeSecureSession}>End this secure session</button>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
         </div>
-      </section>
+
+        <footer className="biv-footer">
+          <span>ALTUVERA SAFARIS</span>
+          <span className="biv-footer-separator" />
+          <span>Protected traveller access</span>
+          <Link to="/" className="biv-footer-link"><ArrowLeft size={13} /> Back to website</Link>
+        </footer>
+      </div>
     </main>
   );
 }
