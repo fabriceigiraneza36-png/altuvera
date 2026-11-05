@@ -569,12 +569,12 @@ const Loader = () => {
           <div style={styles.logoContainer} className="loader-logo-wrap">
             <img
               src={getBrandLogoUrl()}
-              alt="Altuvera Safaris logo"
+              alt="Altuvera logo"
               style={styles.logo}
               className="loader-logo"
               onError={(e) => {
                 e.currentTarget.src = getBrandLogoUrl();
-                e.currentTarget.alt = "Altuvera Safaris logo";
+                e.currentTarget.alt = "Altuvera logo";
               }}
             />
           </div>
