@@ -40,7 +40,10 @@ export default function BookingIdentityVerification() {
   const requestRef = useRef("");
   const mountedRef = useRef(true);
 
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   useEffect(() => {
     if (authLoading || !id) return undefined;
