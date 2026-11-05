@@ -157,7 +157,7 @@ const FAQ = () => {
     <div>
       <SEO
         title="Frequently Asked Questions"
-        description="Find answers to common questions about Altuvera safaris: booking, payment, travel logistics, health & safety, and more."
+        description="Find answers to common questions about Altuvera: booking, payment, travel logistics, health & safety, and more."
         keywords={["FAQ", "travel questions", "safari booking", "travel advice", "East Africa"]}
         url="/faq"
         type="website"
