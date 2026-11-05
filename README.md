@@ -1,4 +1,4 @@
-# Altuvera Safaris
+# Altuvera
 
 <p align="center">
   <strong>Discover Africa. Travel deeper. Make every journey count.</strong>
@@ -12,7 +12,7 @@
 
 ## Overview
 
-**Altuvera Safaris** is the public-facing web application for exploring African travel experiences. It brings destination discovery, safari packages, travel information, galleries, customer accounts, booking requests, and direct communication together in one responsive experience.
+**Altuvera** is the public-facing web application for exploring African travel experiences. It brings destination discovery, safari packages, travel information, galleries, customer accounts, booking requests, and direct communication together in one responsive experience.
 
 The application is built with React and Vite, uses a shared API backend for dynamic content, and is deployed through Vercel.
 
@@ -289,7 +289,7 @@ No license terms are specified here. Contact the repository owner before redistr
 ---
 
 <p align="center">
-  <strong>Altuvera Safaris</strong><br />
+  <strong>Altuvera</strong><br />
   Thoughtful journeys. Authentic African experiences.
   <br /><br />
   <a href="https://www.altuverasafaris.com">altuverasafaris.com</a>
