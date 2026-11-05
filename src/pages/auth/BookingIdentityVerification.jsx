@@ -120,7 +120,7 @@ export default function BookingIdentityVerification() {
   ]);
 
   useEffect(() => {
-    if (!isActionSession || !actionSessionExpired || done) return;
+    if (isActionSession || !actionSessionExpired || done) return;
     setBooking(null);
     setFile(null);
     setPreview("");
