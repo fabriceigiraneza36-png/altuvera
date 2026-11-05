@@ -232,7 +232,7 @@ export default function CookieDocumentation() {
               {/* Intro */}
               <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3.5 mb-6">
                 <p className="text-[12.5px] text-emerald-800 leading-relaxed">
-                  Altuvera Safaris is committed to your privacy. This policy
+                  Altuvera is committed to your privacy. This policy
                   explains exactly what cookies we use, why we use them, and
                   how you can control them. We comply with GDPR, UK GDPR, and
                   the ePrivacy Directive.
@@ -355,7 +355,7 @@ export default function CookieDocumentation() {
               <DocSection title="Contact">
                 <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
                   <p className="text-[12px] text-slate-600 leading-relaxed">
-                    For privacy enquiries, contact Altuvera Safaris:
+                    For privacy enquiries, contact Altuvera:
                   </p>
                   <a
                     href="mailto:info@altuverasafaris.com"
@@ -364,7 +364,7 @@ export default function CookieDocumentation() {
                     info@altuverasafaris.com
                   </a>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Altuvera Safaris, Musanze, Rwanda
+                    Altuvera, Musanze, Rwanda
                   </p>
                 </div>
               </DocSection>
