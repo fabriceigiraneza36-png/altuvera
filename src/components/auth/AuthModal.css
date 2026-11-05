@@ -3714,10 +3714,6 @@
 }
 .am-action-auth .am-header { padding-top:18px; padding-bottom:18px; }
 .am-action-auth .auth-scroll { padding: clamp(22px, 3vw, 38px) clamp(22px, 3.5vw, 48px); }
-.am-action-auth .am-form-panel > .px-4.sm\\:px-6.py-3 {
-  padding-left: clamp(22px, 3vw, 38px);
-  padding-right: clamp(22px, 3vw, 38px);
-}
 .am-action-auth .am-header > div > div { color:#0b3c2d; }
 @media (max-width: 1023px) {
   .am-action-auth { padding: 0 !important; }
