@@ -122,7 +122,7 @@ function BookingInner({ user }) {
 
   return <div className="bk-page">
     <style>{BK_CSS}</style>
-    <SEO title="Book Your Adventure | Altuvera Safaris" description="Plan your East African adventure with Altuvera Safaris." image="/og-image.jpg"/>
+    <SEO title="Book Your Adventure | Altuvera" description="Plan your East African adventure with Altuvera." image="/og-image.jpg"/>
     <PageHeader title="Book Your Journey" subtitle="Build your East African adventure in a few simple steps"/>
     <div className="bk-wrap">
       <div className="bk-layout">
