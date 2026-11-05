@@ -91,9 +91,47 @@ const KEYS = {
   WELCOME_SHOWN_PREFIX: "altuvera_welcome_shown:",
   PENDING_VERIFICATION: "altuvera_pending_email_verification_v1",
   AUTH_RESUME_VIEW: "altuvera_auth_resume_view_v1",
+  ACTION_HANDOFF_PENDING: "altuvera_action_handoff_pending_v1",
+  ACTION_TOKEN: "altuvera_booking_identity_action_token_v1",
+  ACTION_SESSION_ACTIVE: "altuvera_action_session_active_v1",
+  ACTION_SESSION_ENDED: "altuvera_action_session_ended_v1",
 };
 
 const PENDING_VERIFICATION_TTL_MS = 10 * 60 * 1000;
+const ACTION_HANDOFF_TTL_MS = 15 * 60 * 1000;
+const ACTION_SESSION_TTL_MS = 5 * 60 * 1000;
+
+const readActionHandoff = () => {
+  try {
+    const raw = sessionStorage.getItem(KEYS.ACTION_HANDOFF_PENDING);
+    if (!raw) return null;
+    const value = JSON.parse(raw);
+    const expiresAt = Number(value?.expiresAt);
+    const bookingId = String(value?.bookingId || "").trim();
+    if (!bookingId || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      sessionStorage.removeItem(KEYS.ACTION_HANDOFF_PENDING);
+      return null;
+    }
+    return { ...value, bookingId, expiresAt };
+  } catch { return null; }
+};
+
+// A restricted action session must never survive a hard refresh. It is not a
+// reusable login and is deliberately separate from the normal access-token keys.
+const expireActionSessionOnPageLoad = () => {
+  try {
+    const active = sessionStorage.getItem(KEYS.ACTION_SESSION_ACTIVE);
+    if (!active) return;
+    sessionStorage.removeItem(KEYS.ACTION_TOKEN);
+    sessionStorage.removeItem(KEYS.ACTION_SESSION_ACTIVE);
+    sessionStorage.removeItem(KEYS.ACTION_HANDOFF_PENDING);
+    sessionStorage.setItem(KEYS.ACTION_SESSION_ENDED, JSON.stringify({
+      endedAt: Date.now(),
+      reason: "page_refresh",
+    }));
+  } catch { /* privacy-restricted storage: server token still expires in five minutes */ }
+};
+if (typeof window !== "undefined") expireActionSessionOnPageLoad();
 
 const getCodeExpiryTimestamp = (response) => {
   const raw = response?.data?.codeExpiresAt ?? response?.codeExpiresAt;
@@ -565,6 +603,15 @@ export function UserAuthProvider({ children }) {
   const [token, setToken]                   = useState(() => store.get(KEYS.TOKEN));
   const [authLoading, setAuthLoading]       = useState(true);
   const [persistSession, setPersistSession] = useState(() => store.getPersist());
+  const [pendingActionAuth, setPendingActionAuth] = useState(null);
+  const [isActionSession, setIsActionSession] = useState(false);
+  const [actionSessionToken, setActionSessionToken] = useState("");
+  const [actionSessionExpiresAt, setActionSessionExpiresAt] = useState(null);
+  const [actionSessionExpired, setActionSessionExpired] = useState(() => {
+    try { return Boolean(sessionStorage.getItem(KEYS.ACTION_SESSION_ENDED)); }
+    catch { return false; }
+  });
+  const [actionHandoffPending, setActionHandoffPending] = useState(() => Boolean(readActionHandoff()));
 
   // ── Modal ─────────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen]   = useState(false);
@@ -607,7 +654,7 @@ export function UserAuthProvider({ children }) {
   const otpRestoreAttemptedRef = useRef(false);
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  const isAuthenticated  = useMemo(() => !!user && !!token, [user, token]);
+  const isAuthenticated  = useMemo(() => !!user && !!token && !isActionSession, [user, token, isActionSession]);
 
   const hasGooglePending = useMemo(
     () => !!googleUser?.email && !!googleUser?.credential,
@@ -655,6 +702,152 @@ export function UserAuthProvider({ children }) {
     setPendingEmail("");
   }, []);
 
+  const beginActionHandoff = useCallback(({ bookingId, returnTo = "" } = {}) => {
+    const id = String(bookingId || "").trim();
+    if (!id || !/^\\d+$/.test(id)) throw new Error("This secure action link is invalid.");
+    const now = Date.now();
+    const pending = {
+      bookingId: id,
+      returnTo: String(returnTo || "").startsWith("/") && !String(returnTo).startsWith("//")
+        ? String(returnTo).slice(0, 1000) : "",
+      createdAt: now,
+      expiresAt: now + ACTION_HANDOFF_TTL_MS,
+    };
+    try {
+      sessionStorage.setItem(KEYS.ACTION_HANDOFF_PENDING, JSON.stringify(pending));
+      sessionStorage.removeItem(KEYS.ACTION_SESSION_ENDED);
+      sessionStorage.removeItem(KEYS.ACTION_TOKEN);
+      sessionStorage.removeItem(KEYS.ACTION_SESSION_ACTIVE);
+    } catch { throw new Error("This browser cannot start a secure account handoff. Please enable session storage or open a private browser tab."); }
+    clearPendingVerification();
+    setPendingActionAuth(null);
+    setIsActionSession(false);
+    setActionSessionToken("");
+    setActionSessionExpiresAt(null);
+    setActionSessionExpired(false);
+    setActionHandoffPending(true);
+    return pending;
+  }, [clearPendingVerification]);
+
+  const clearLocalSession = useCallback(() => {
+    // Deliberately do not call /users/logout: the server logout endpoint revokes
+    // the account's token version and would sign the owner out on their devices.
+    clearAuth();
+    setPendingActionAuth(null);
+    setIsActionSession(false);
+    setActionSessionToken("");
+    setActionSessionExpiresAt(null);
+    setActionHandoffPending(false);
+    setActionSessionExpired(false);
+    try {
+      sessionStorage.removeItem(KEYS.ACTION_HANDOFF_PENDING);
+      sessionStorage.removeItem(KEYS.ACTION_TOKEN);
+      sessionStorage.removeItem(KEYS.ACTION_SESSION_ACTIVE);
+      sessionStorage.removeItem(KEYS.ACTION_SESSION_ENDED);
+    } catch { /* storage unavailable */ }
+  }, [clearAuth]);
+
+  const completeActionHandoff = useCallback(async (bookingId) => {
+    const pending = readActionHandoff();
+    const candidate = pendingActionAuth;
+    const id = String(bookingId || "").trim();
+    if (!pending || pending.bookingId !== id || !candidate?.token || candidate.bookingId !== id) {
+      throw new Error("Your sign-in step is missing or expired. Please start again from the original link.");
+    }
+    if (!API_BASE || !candidate.user?.id) throw new Error("We could not verify this Altuvera account.");
+
+    const request = async (path, options = {}) => {
+      const response = await fetch(API_BASE + path, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + candidate.token,
+          ...(options.headers || {}),
+        },
+        credentials: "omit",
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const error = new Error(body?.message || "This account cannot access the requested action.");
+        error.status = response.status;
+        error.code = body?.code || "";
+        throw error;
+      }
+      return body;
+    };
+
+    try {
+      const bookingResponse = await request("/booking-identity/" + encodeURIComponent(id));
+      const tokenResponse = await request("/booking-identity/" + encodeURIComponent(id) + "/action-token", { method: "POST" });
+      const scopedToken = tokenResponse?.data?.token || tokenResponse?.token;
+      const expiresAt = Number(tokenResponse?.data?.expiresAt) || Date.now() + ACTION_SESSION_TTL_MS;
+      if (!scopedToken) throw new Error("Altuvera did not return a secure action token.");
+
+      try {
+        sessionStorage.setItem(KEYS.ACTION_TOKEN, scopedToken);
+        sessionStorage.setItem(KEYS.ACTION_SESSION_ACTIVE, JSON.stringify({
+          bookingId: id,
+          expiresAt,
+        }));
+        sessionStorage.removeItem(KEYS.ACTION_HANDOFF_PENDING);
+        sessionStorage.removeItem(KEYS.ACTION_SESSION_ENDED);
+      } catch {
+        throw new Error("This browser could not store the short-lived secure action. Please try a private browser tab.");
+      }
+
+      setUser(candidate.user);
+      setToken(null);
+      setPendingActionAuth(null);
+      setActionHandoffPending(false);
+      setIsActionSession(true);
+      setActionSessionToken(scopedToken);
+      setActionSessionExpiresAt(expiresAt);
+      setActionSessionExpired(false);
+      return {
+        booking: bookingResponse?.data?.data || bookingResponse?.data || bookingResponse,
+        expiresAt,
+      };
+    } catch (error) {
+      if (error?.status === 403 || error?.status === 404 || error?.code === "BOOKING_ACCOUNT_MISMATCH") {
+        setPendingActionAuth(null);
+        setActionHandoffPending(false);
+        try { sessionStorage.removeItem(KEYS.ACTION_HANDOFF_PENDING); } catch { /* ignore */ }
+        const mismatch = new Error("This link belongs to a different Altuvera account. Please sign in with the account that received the portrait request.");
+        mismatch.status = error.status || 403;
+        mismatch.code = "BOOKING_ACCOUNT_MISMATCH";
+        throw mismatch;
+      }
+      throw error;
+    }
+  }, [pendingActionAuth]);
+
+  const endActionSession = useCallback((reason = "completed") => {
+    try {
+      sessionStorage.removeItem(KEYS.ACTION_TOKEN);
+      sessionStorage.removeItem(KEYS.ACTION_SESSION_ACTIVE);
+      sessionStorage.removeItem(KEYS.ACTION_HANDOFF_PENDING);
+      sessionStorage.setItem(KEYS.ACTION_SESSION_ENDED, JSON.stringify({
+        endedAt: Date.now(),
+        reason: String(reason || "completed").slice(0, 40),
+      }));
+    } catch { /* storage unavailable */ }
+    setUser(null);
+    setToken(null);
+    setPendingActionAuth(null);
+    setActionHandoffPending(false);
+    setIsActionSession(false);
+    setActionSessionToken("");
+    setActionSessionExpiresAt(null);
+    setActionSessionExpired(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isActionSession || !actionSessionExpiresAt) return undefined;
+    const remaining = Math.max(0, Number(actionSessionExpiresAt) - Date.now());
+    const timer = window.setTimeout(() => endActionSession("expired"), remaining);
+    return () => window.clearTimeout(timer);
+  }, [isActionSession, actionSessionExpiresAt, endActionSession]);
+
   // Restore a still-valid email-code flow after a page refresh, including
   // OAuth callbacks where a previous session token may still exist. Closing the
   // modal does not discard the challenge; it can be resumed for the same 10 min.
@@ -678,6 +871,7 @@ export function UserAuthProvider({ children }) {
   // ============================================================================
 
   const triggerCongratulation = useCallback((type) => {
+    if (readActionHandoff()) return;
     if (type === "signup") {
       try {
         const email = (user?.email || pendingRef.current?.email || "").toLowerCase();
@@ -761,35 +955,59 @@ export function UserAuthProvider({ children }) {
       loginCounter: serverCounter,
     } = extractPayload(data);
 
-    const persist = typeof opts.persist === "boolean" ? opts.persist : persistSession;
+    const fallback = {
+      email:  pendingRef.current?.email    || googleUser?.email   || "",
+      name:   pendingRef.current?.fullName || googleUser?.name    || "",
+      avatar: pendingRef.current?.avatar   || googleUser?.picture || "",
+    };
+    const normalized = normalizeUser(raw, {
+      fallbackEmail: fallback.email,
+      fallbackName: fallback.name,
+      fallbackAvatar: fallback.avatar,
+      cache: getCache(),
+    });
 
+    // Authentication completed inside an account-bound action handoff. Keep
+    // these credentials in memory only; they are never installed as a normal
+    // browser login or exposed to other user-specific app features.
+    const handoff = readActionHandoff();
+    if (handoff && tok && normalized) {
+      setPendingActionAuth({
+        token: tok,
+        user: normalized,
+        bookingId: handoff.bookingId,
+        expiresAt: handoff.expiresAt,
+      });
+      pendingRef.current = null;
+      setGoogleUser(null);
+      store.remove(KEYS.GOOGLE_PENDING);
+      return data;
+    }
+
+    const persist = typeof opts.persist === "boolean" ? opts.persist : persistSession;
     if (tok) { store.set(KEYS.TOKEN, tok, persist); setToken(tok); }
-    if (ref)   store.set(KEYS.REFRESH, ref, persist);
+    if (ref) store.set(KEYS.REFRESH, ref, persist);
 
     if (typeof serverCounter === "number") {
       setLoginCounter(serverCounter);
       store.setLoginCounter(serverCounter);
     }
 
-    const fallback = {
-      email:  pendingRef.current?.email    || googleUser?.email   || "",
-      name:   pendingRef.current?.fullName || googleUser?.name    || "",
-      avatar: pendingRef.current?.avatar   || googleUser?.picture || "",
-    };
-
-    const normalized = normalizeUser(raw, {
-      fallbackEmail:  fallback.email,
-      fallbackName:   fallback.name,
-      fallbackAvatar: fallback.avatar,
-      cache:          getCache(),
-    });
-
     if (normalized) { setUser(normalized); cacheProfile(normalized); }
-
     pendingRef.current = null;
     setGoogleUser(null);
     store.remove(KEYS.GOOGLE_PENDING);
-
+    setIsActionSession(false);
+    setActionSessionToken("");
+    setActionSessionExpiresAt(null);
+    setActionHandoffPending(false);
+    setActionSessionExpired(false);
+    try {
+      sessionStorage.removeItem(KEYS.ACTION_TOKEN);
+      sessionStorage.removeItem(KEYS.ACTION_SESSION_ACTIVE);
+      sessionStorage.removeItem(KEYS.ACTION_HANDOFF_PENDING);
+      sessionStorage.removeItem(KEYS.ACTION_SESSION_ENDED);
+    } catch { /* storage unavailable */ }
     return data;
   }, [cacheProfile, getCache, googleUser, persistSession]);
 
@@ -2335,11 +2553,14 @@ export function UserAuthProvider({ children }) {
   const value = useMemo(() => ({
     user, token, isAuthenticated, authLoading,
     isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
+    pendingActionAuth, actionHandoffPending, isActionSession, actionSessionToken,
+    actionSessionExpiresAt, actionSessionExpired,
     googleUser, googleLoaded, googleLoading, githubLoading, facebookLoading,
     hasGooglePending, socialAuthError, socialAuthProfile, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation, pendingVerification,
     openModal, closeModal, setModalView, persistPendingVerification, clearPendingVerification,
+    beginActionHandoff, clearLocalSession, completeActionHandoff, endActionSession,
     login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, loginWithSecurityCode, startPasskeyLogin, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
@@ -2351,11 +2572,14 @@ export function UserAuthProvider({ children }) {
   }), [
     user, token, isAuthenticated, authLoading,
     isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
+    pendingActionAuth, actionHandoffPending, isActionSession, actionSessionToken,
+    actionSessionExpiresAt, actionSessionExpired,
     googleUser, googleLoaded, googleLoading, githubLoading, facebookLoading,
     hasGooglePending, socialAuthError, socialAuthProfile, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification, dismissCongratulation,
-    openModal, closeModal, setModalView,
+    openModal, closeModal, setModalView, beginActionHandoff, clearLocalSession,
+    completeActionHandoff, endActionSession,
     login, register, verifyCode, beginFactorChallenge, cancelPendingFactorChallenge, verifyLoginFactor, verifyLoginPasskey, loginWithSecurityCode, startPasskeyLogin, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
