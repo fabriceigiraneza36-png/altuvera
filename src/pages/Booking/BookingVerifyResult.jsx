@@ -63,7 +63,7 @@ export default function BookingVerifyResult() {
     <main className="bev-page">
       <div className="bev-container">
         <header className="bev-header">
-          <Link to="/" className="bev-brand" aria-label="Altuvera Safaris home">
+          <Link to="/" className="bev-brand" aria-label="Altuvera home">
             <span className="bev-brand-mark"><img src="/favicon.svg" alt="" /></span>
             <span className="bev-brand-name"><strong>ALTUVERA</strong><small>SAFARIS</small></span>
           </Link>
@@ -127,7 +127,7 @@ export default function BookingVerifyResult() {
         </div>
 
         <footer className="bev-footer">
-          <strong>ALTUVERA SAFARIS</strong>
+          <strong>ALTUVERA</strong>
           <span>·</span>
           <span>Secure booking communication</span>
           <Link to="/"><ArrowLeft size={13} /> Back to website</Link>
