@@ -248,7 +248,7 @@ const buildRss = () => {
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<rss version="2.0">',
     "  <channel>",
-    "    <title>Altuvera Safaris Journal</title>",
+    "    <title>Altuvera Journal</title>",
     "    <link>" + escapeXml(toAbs("/posts")) + "</link>",
     "    <description>" + escapeXml("Travel guides, safari tips and stories from East Africa and beyond.") + "</description>",
     "    <language>en</language>",
