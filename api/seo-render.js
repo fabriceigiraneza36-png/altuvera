@@ -2,8 +2,18 @@ import postsFallback from "../src/data/posts.js";
 import { ADVENTURE_CATALOG } from "../src/data/adventureCatalog.js";
 
 const SITE = "https://www.altuverasafaris.com";
-const RAW_API = process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com";
-const API = String(RAW_API).replace(/\/+$/, "").replace(/\/api$/i, "") + "/api";
+const RAW_API = process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com/api";
+const normalizeApiBase = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/api$/i, "") + "/api";
+const API_BASES = [...new Set([
+  normalizeApiBase(RAW_API),
+  "https://backend-jd8f.onrender.com/api",
+  "https://api.altuverasafaris.com/api",
+].filter((value) => /^https:\/\//i.test(value)))];
+const API = API_BASES[0] || "https://backend-jd8f.onrender.com/api";
 const LOGO = SITE + "/altuvera.png";
 
 const STATIC = {
@@ -87,30 +97,24 @@ const unwrap = (payload, preferred = "") => {
   return options.find((x) => x && !Array.isArray(x) && typeof x === "object" && (x.name || x.title || x.slug || x.meta_title)) || {};
 };
 const fetchDestination = async (slug) => {
-  const configured = String(process.env.VITE_API_URL || process.env.API_URL || "").replace(/\/+$/, "");
-  const bases = [];
-  if (configured) {
-    bases.push(configured);
-    try { bases.push(new URL(configured).origin + "/api"); } catch {}
-  }
-  bases.push("https://backend-jd8f.onrender.com/api", "https://api.altuverasafaris.com/api");
-  const unique = Array.from(new Set(bases.map((base) => base.replace(/\/+$/, "").replace(/\/api$/i, "") + "/api")));
-  const results = await Promise.all(unique.map(async (base) => {
+  const attempts = API_BASES.map(async (base) => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 3600);
+    const timer = setTimeout(() => controller.abort(), 6800);
     try {
       const response = await fetch(base + "/destinations/" + encodeURIComponent(slug) + "?include=all", {
         headers: { Accept: "application/json" },
         signal: controller.signal,
       });
-      if (!response.ok) return null;
+      if (!response.ok) throw new Error("Destination API returned HTTP " + response.status);
       const record = unwrap(await response.json(), "destination");
       const recordSlug = String(record.slug || "").trim().toLowerCase();
-      return recordSlug === String(slug).trim().toLowerCase() ? record : null;
-    } catch { return null; }
-    finally { clearTimeout(timer); }
-  }));
-  return results.find(Boolean) || {};
+      if (recordSlug !== String(slug).trim().toLowerCase()) {
+        throw new Error("Destination slug did not match the requested URL");
+      }
+      return record;
+    } finally { clearTimeout(timer); }
+  });
+  try { return await Promise.any(attempts); } catch { return {}; }
 };
 const rows = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -118,14 +122,19 @@ const rows = (payload) => {
   return options.find(Array.isArray) || [];
 };
 const fetchJson = async (endpoint) => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 4800);
-  try {
-    const response = await fetch(API + endpoint, { headers: { Accept: "application/json" }, signal: controller.signal });
-    if (!response.ok) return null;
-    return await response.json();
-  } catch { return null; }
-  finally { clearTimeout(timer); }
+  const attempts = API_BASES.map(async (base) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6800);
+    try {
+      const response = await fetch(base + endpoint, {
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("SEO data API returned HTTP " + response.status);
+      return await response.json();
+    } finally { clearTimeout(timer); }
+  });
+  try { return await Promise.any(attempts); } catch { return null; }
 };
 const imageOf = (item) => {
   const values = item ? [item.hero_image, item.cover_image_url, item.thumbnail_url, item.image_url, item.image, item.featured_image, ...arr(item.images), ...arr(item.gallery), ...arr(item.image_gallery)] : [];
@@ -145,6 +154,68 @@ const listHtml = (items, prefix, label) => {
     return '<article class="card"><a href="' + esc(prefix + encodeURIComponent(slug)) + '">' + (img !== LOGO ? '<img src="' + esc(img) + '" alt="' + esc(name) + '" loading="lazy">' : "") + '<span><strong>' + esc(name) + '</strong>' + (desc ? '<small>' + esc(desc.slice(0, 220)) + '</small>' : "") + '</span></a></article>';
   }).filter(Boolean).join("");
   return cards ? '<section><h2>' + esc(label) + '</h2><div class="cards">' + cards + '</div></section>' : '<p>Explore ' + esc(label) + ' with Altuvera. Contact our team for more information.</p>';
+};
+const humanizeSlug = (value) => {
+  let decoded = String(value || "");
+  try { decoded = decodeURIComponent(decoded); } catch {}
+  return decoded.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+};
+const routeMetaDescription = (route, page) => {
+  const dynamic = String(route || "").match(/^\/(destinations|packages|post|country|adventures)\/([^/]+)/i);
+  let description = textOf(page.description, 2200);
+  if (dynamic && !page.noindex) {
+    const title = textOf(page.title, 500).replace(/\s*[|–—-]\s*Altuvera\s*$/i, "").trim();
+    const subject = title && !/^(destination guide|country guide|travel article|safari package)$/i.test(title)
+      ? title
+      : humanizeSlug(dynamic[2]);
+    const comparable = description.toLowerCase();
+    const subjectWords = subject.toLowerCase().split(/\s+/).filter((word) => word.length > 2);
+    const subjectIsPresent = comparable.includes(subject.toLowerCase()) ||
+      (subjectWords.length > 0 && subjectWords.every((word) => comparable.includes(word)));
+    if (subject && !subjectIsPresent) description = subject + ": " + description;
+    if (!description) {
+      const name = humanizeSlug(dynamic[2]);
+      const kind = dynamic[1].toLowerCase();
+      description = kind === "packages"
+        ? "Explore the " + name + " safari package by Altuvera, including its itinerary, destination and travel highlights."
+        : kind === "post"
+          ? "Read Altuvera's " + name + " guide for travel insights, destination context and practical trip-planning ideas."
+          : kind === "country"
+            ? "Discover " + name + " with Altuvera, including national parks, wildlife, culture and places to visit."
+            : "Discover " + name + " with Altuvera, including local highlights, travel experiences and useful visitor information.";
+    }
+  }
+  if (!description) description = "Explore East African destinations, experiences and travel inspiration with Altuvera.";
+  if (description.length <= 160) return description;
+  const shortened = description.slice(0, 159).trimEnd();
+  const boundary = shortened.lastIndexOf(" ");
+  return (boundary > 105 ? shortened.slice(0, boundary) : shortened).trimEnd() + "…";
+};
+const routeBreadcrumbs = (route, page) => {
+  const cleanTitle = textOf(page.title, 300).replace(/\s*[|–—-]\s*Altuvera\s*$/i, "").trim();
+  const crumbs = [{ name: "Home", url: "/" }];
+  const add = (name, url) => crumbs.push({ name, url });
+  if (/^\/destinations\/[^/]+$/i.test(route)) {
+    add("Safari Destinations", "/destinations");
+  } else if (/^\/packages\/[^/]+$/i.test(route)) {
+    add("Safari Packages", "/packages");
+  } else if (/^\/post\/[^/]+$/i.test(route)) {
+    add("Travel Journal", "/posts");
+  } else if (/^\/adventures\/[^/]+$/i.test(route)) {
+    add("Explore East Africa", "/explore");
+  } else if (/^\/country\/[^/]+/i.test(route)) {
+    add("Safari Destinations", "/destinations");
+    const countrySlug = route.split("/")[2];
+    const countryName = humanizeSlug(countrySlug);
+    if (/\/destinations$/i.test(route)) add(countryName + " Travel Guide", "/country/" + countrySlug);
+  } else if (route !== "/") {
+    const parent = route.replace(/\/+$/, "");
+    add(cleanTitle || "Explore Altuvera", parent);
+    return crumbs;
+  }
+  if (route !== "/") add(cleanTitle || "Explore Altuvera", route);
+  return crumbs;
 };
 const render = async (route) => {
   const page = { title: "", description: "", image: LOGO, body: "", type: "WebPage", noindex: false, status: 200, author: "", published: "" };
@@ -320,7 +391,7 @@ const render = async (route) => {
   }
   page.title = "Page Not Found | Altuvera"; page.description = "The requested Altuvera page could not be found."; page.noindex = true; page.status = 404; page.body = '<h1>Page not found</h1><p>Visit the <a href="/">Altuvera homepage</a> or explore <a href="/destinations">East Africa destinations</a>.</p>'; return page;
 };
-const schema = (page, canonical) => {
+const schema = (page, canonical, route) => {
   const organizationId = SITE + "/#organization";
   const websiteId = SITE + "/#website";
   const webpageId = canonical + "#webpage";
@@ -357,6 +428,19 @@ const schema = (page, canonical) => {
       : undefined
   };
   const data = [organization, website, pageEntity];
+  const crumbs = routeBreadcrumbs(route, page);
+  if (crumbs.length > 1) {
+    data.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": crumbs.map((crumb, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "name": crumb.name,
+        "item": SITE + (crumb.url === "/" ? "/" : crumb.url)
+      }))
+    });
+  }
   if (page.type && page.type !== "WebPage") {
     const entity = {
       "@context": "https://schema.org",
@@ -376,10 +460,13 @@ const schema = (page, canonical) => {
   }
   return JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 };
-const htmlDocument = (page, canonical) => {
+const htmlDocument = (page, canonical, route) => {
   const robots = page.noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large";
   const image = page.image || LOGO;
-  const crumb = '<nav class="crumb" aria-label="Breadcrumb"><a href="/">Home</a><span>/</span><a href="/destinations">East Africa</a></nav>';
+  const crumbs = routeBreadcrumbs(route || "/", page);
+  const crumb = '<nav class="crumb" aria-label="Breadcrumb">' + crumbs.map((item, index) =>
+    (index ? '<span aria-hidden="true">/</span>' : '') + '<a href="' + esc(item.url) + '">' + esc(item.name) + '</a>'
+  ).join("") + '</nav>';
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>' + esc(page.title) + '</title><meta name="description" content="' + esc(page.description) + '">' +
     '<meta name="robots" content="' + robots + '"><meta name="googlebot" content="' + robots + '">' +
@@ -387,10 +474,10 @@ const htmlDocument = (page, canonical) => {
     '<meta property="og:type" content="' + (page.type === "BlogPosting" ? "article" : "website") + '"><meta property="og:site_name" content="Altuvera"><meta property="og:url" content="' + esc(canonical) + '">' +
     '<meta property="og:title" content="' + esc(page.title) + '"><meta property="og:description" content="' + esc(page.description) + '"><meta property="og:image" content="' + esc(image) + '">' +
     '<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="' + esc(page.title) + '"><meta name="twitter:description" content="' + esc(page.description) + '"><meta name="twitter:image" content="' + esc(image) + '">' +
-    '<script type="application/ld+json">' + schema(page, canonical) + '</script><style>' +
+    '<script type="application/ld+json">' + schema(page, canonical, route) + '</script><style>' +
     ':root{font-family:Inter,Arial,sans-serif;color:#17251c;background:#f7faf7}*{box-sizing:border-box}body{margin:0}header,footer{background:#fff;border-bottom:1px solid #e3ece5}.top{max-width:1040px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{color:#155d2c;font-weight:800;text-decoration:none}.top nav{display:flex;flex-wrap:wrap;gap:18px}a{color:#166534;text-decoration:none}main{max-width:1040px;margin:auto;padding:46px 24px;min-height:68vh}.crumb{display:flex;gap:10px;font-size:13px;color:#6b7a6e;margin-bottom:26px}h1{font-size:clamp(30px,5vw,48px);line-height:1.12;color:#123c23;margin:0 0 18px}h2{font-size:23px;color:#17472a;margin:34px 0 16px}p{max-width:780px;line-height:1.8;color:#425247;font-size:17px}.eyebrow{font-size:13px;font-weight:700;color:#31824b}.hero{display:block;width:min(100%,820px);max-height:460px;object-fit:cover;border-radius:18px;margin:24px 0}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.card{background:#fff;border:1px solid #e1ebe3;border-radius:14px;overflow:hidden}.card a{display:flex;align-items:center;gap:14px;padding:12px;color:#1c3927}.card img{width:88px;height:76px;border-radius:9px;object-fit:cover;flex:none}.card span{display:grid;gap:6px}.card small{line-height:1.5;color:#66756a}ul{padding-left:22px;color:#425247;line-height:1.85}footer{border-top:1px solid #e1ebe3;padding:24px}footer div{max-width:1040px;margin:auto;display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;color:#66756a}@media(max-width:600px){.top{align-items:flex-start;flex-direction:column}.top nav{gap:12px}main{padding:32px 18px}}</style>' +
-    '</head><body><header><div class="top"><a class="brand" href="/">ALTUVERA</a><nav aria-label="Main navigation"><a href="/destinations">Destinations</a><a href="/packages">Packages</a><a href="/services">Services</a><a href="/posts">Travel Journal</a><a href="/contact">Contact</a></nav></div></header>' +
-    '<main id="main-content">' + crumb + page.body + '</main><footer><div><span>Altuvera · True Adventure in High Places &amp; Deep Culture</span><span><a href="/about">About</a> · <a href="/contact">Contact</a> · <a href="/privacy">Privacy</a></span></div></footer></body></html>';
+    '</head><body><header><div class="top"><a class="brand" href="/">ALTUVERA</a><nav aria-label="Main navigation"><a href="/destinations">Safari Destinations</a><a href="/packages">Safari Packages</a><a href="/explore">Experiences</a><a href="/services">Travel Services</a><a href="/posts">Travel Journal</a><a href="/about">About Altuvera</a><a href="/contact">Contact</a></nav></div></header>' +
+    '<main id="main-content">' + crumb + page.body + '</main><footer><div><span>Altuvera · True Adventure in High Places &amp; Deep Culture</span><span><a href="/destinations">Safari Destinations</a> · <a href="/packages">Safari Packages</a> · <a href="/posts">Travel Journal</a> · <a href="/faq">FAQs</a> · <a href="/about">About Altuvera</a> · <a href="/contact">Contact</a> · <a href="/privacy">Privacy</a></span></div></footer></body></html>';
 };
 export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "HEAD") { res.setHeader("Allow", "GET, HEAD"); return res.status(405).send("Method not allowed"); }
@@ -401,8 +488,13 @@ export default async function handler(req, res) {
   if (pathname.length > 1) pathname = pathname.replace(/\/+$/, "");
   pathname = normalizeCountryPath(pathname);
   const page = await render(pathname);
+  const originalDescription = textOf(page.description, 2200);
+  page.description = routeMetaDescription(pathname, page);
+  if (page.body && originalDescription && page.description !== originalDescription) {
+    page.body = page.body.replace(esc(originalDescription), esc(page.description));
+  }
   const canonical = SITE + (pathname === "/" ? "/" : pathname);
-  const output = htmlDocument(page, canonical);
+  const output = htmlDocument(page, canonical, pathname);
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
