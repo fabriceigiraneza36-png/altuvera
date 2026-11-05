@@ -136,6 +136,64 @@ function ServiceCard({ service, index }) {
   );
 }
 
+
+function TestimonialsCarousel() {
+  const { testimonials, loading } = useTestimonials("active=all");
+  const trackRef = useRef(null);
+  const scroll = (direction) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const card = track.querySelector(".sv-review-card");
+    const amount = Math.max(280, (card?.getBoundingClientRect().width || 320) + 18);
+    track.scrollBy({ left: direction * amount, behavior: "smooth" });
+  };
+  const approved = testimonials.filter((item) => {
+    const quote = item.testimonial_text || item.testimonialText || item.quote || item.content;
+    return typeof quote === "string" && quote.trim().length > 0;
+  });
+  return (
+    <section className="sv-reviews" aria-label="Traveller testimonials">
+      <div className="sv-container">
+        <div className="sv-reviews-top">
+          <div>
+            <span className="sv-eyebrow">Traveller experiences</span>
+            <h2>Stories from our travellers</h2>
+            <p>Experiences shared by travellers who have journeyed with Altuvera.</p>
+          </div>
+          {approved.length > 1 && <div className="sv-review-controls">
+            <button type="button" aria-label="Previous testimonials" onClick={() => scroll(-1)}><FiArrowRight className="sv-review-prev" /></button>
+            <button type="button" aria-label="Next testimonials" onClick={() => scroll(1)}><FiArrowRight /></button>
+          </div>}
+        </div>
+        {loading ? (
+          <div className="sv-reviews-empty" aria-live="polite">Loading traveller experiences…</div>
+        ) : approved.length ? (
+          <div className="sv-review-track" ref={trackRef}>
+            {approved.map((review) => {
+              const quote = review.testimonial_text || review.testimonialText || review.quote || review.content;
+              const name = review.name || "Traveller";
+              const avatar = review.avatar_url || review.avatarUrl || review.image;
+              const location = [review.location, review.date_text].filter(Boolean).join(" · ");
+              return (
+                <article className="sv-review-card" key={review.id || (name + quote.slice(0, 24))}>
+                  <span className="sv-review-quote" aria-hidden="true">“</span>
+                  <p>{quote}</p>
+                  <div className="sv-review-person">
+                    {avatar ? <img src={avatar} alt="" loading="lazy" /> : <span className="sv-review-initial">{name.charAt(0).toUpperCase()}</span>}
+                    <div><strong>{name}</strong>{location && <small>{location}</small>}</div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="sv-reviews-empty">Traveller stories will appear here when reviews have been published.</div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function Services() {
   return (
     <>
@@ -232,29 +290,7 @@ export default function Services() {
           </div>
         </section>
 
-        <section className="sv-process">
-          <div className="sv-container">
-            <Reveal>
-              <Heading
-                eyebrow="How planning works"
-                title="From your first idea to a confirmed plan"
-                description="A straightforward process keeps the important decisions visible at every stage."
-                light
-              />
-            </Reveal>
-            <div className="sv-process-grid">
-              {STEPS.map((step, index) => (
-                <Reveal key={step.number} delay={index * 0.08}>
-                  <article className="sv-process-card">
-                    <span className="sv-process-number">{step.number}</span>
-                    <h3>{step.title}</h3>
-                    <p>{step.description}</p>
-                  </article>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
+        <TestimonialsCarousel />
 
         <section className="sv-contact">
           <Reveal>
