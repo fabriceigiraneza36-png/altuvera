@@ -1,73 +1,181 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { CheckCircle2, Loader2, ShieldCheck, XCircle } from "lucide-react";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  LoaderCircle,
+  LockKeyhole,
+  ShieldCheck,
+} from "lucide-react";
 import BookingVerifyResult from "./BookingVerifyResult";
+import "./BookingEmailVerification.css";
 
-const API_BASE_RAW = String(import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api").trim().replace(/\/+$/, "");
+const API_BASE_RAW = String(import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api")
+  .trim()
+  .replace(/\/+$/, "");
 const API = API_BASE_RAW.toLowerCase().endsWith("/api") ? API_BASE_RAW : `${API_BASE_RAW}/api`;
 
 export default function ConfirmBookingRequest() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const status = params.get("status");
+  const token = params.get("token");
   const [state, setState] = useState("loading");
   const [message, setMessage] = useState("Confirming your booking request securely…");
 
   useEffect(() => {
-    const token = params.get("token");
     if (!token) {
-      if (status) return;
+      if (status) return undefined;
       setState("error");
-      setMessage("This confirmation link is missing its security token.");
-      return;
+      setMessage("This confirmation link is missing its security token. Open the latest email from Altuvera or contact our team.");
+      return undefined;
     }
-    fetch(`${API}/bookings/verify-email/${encodeURIComponent(token)}?json=1`, {
-      method: "GET",
-      // Verification uses a signed one-time token, not a session cookie.
-      // Omitting credentials avoids browser-specific credentialed-CORS failures.
-      credentials: "omit",
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    })
-      .then(async r => {
-        const contentType = r.headers.get("content-type") || "";
-        const body = contentType.includes("application/json")
-          ? await r.json().catch(() => ({}))
-          : {};
-        if (!contentType.includes("application/json")) {
-          throw new Error("The confirmation service returned an unexpected response. Please reopen the link or contact Altuvera.");
-        }
-        if (!r.ok || !body.success) {
-          throw new Error(body.message || body.error || `Confirmation failed (HTTP ${r.status}).`);
-        }
-        setState("success");
-        setMessage(body.alreadyVerified
-          ? "Your email was already verified. Altuvera can now review your booking request."
-          : "Your booking request email is confirmed. Altuvera can now review and plan your trip.");
-        const reference = body.data?.booking_number || "";
-        setTimeout(() => navigate(`/booking/verify?status=${body.alreadyVerified ? "already_verified" : "success"}&ref=${encodeURIComponent(reference)}`, { replace:true }), 900);
-      })
-      .catch(e => {
-        setState("error");
-        setMessage(e.message || "This confirmation link is invalid or expired. Please contact Altuvera for help.");
-      });
-  }, [params, navigate, status]);
 
-  if (!params.get("token") && status) return <BookingVerifyResult />;
+    let disposed = false;
+    let redirectTimer;
+    const controller = new AbortController();
+
+    const verify = async () => {
+      try {
+        const response = await fetch(
+          `${API}/bookings/verify-email/${encodeURIComponent(token)}?json=1`,
+          {
+            method: "GET",
+            credentials: "omit",
+            cache: "no-store",
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
+          }
+        );
+
+        const contentType = response.headers.get("content-type") || "";
+        const body = contentType.includes("application/json")
+          ? await response.json().catch(() => ({}))
+          : null;
+
+        if (!body) {
+          throw new Error("Altuvera returned an unexpected confirmation response. Reopen the latest email link or contact support.");
+        }
+        if (!response.ok || !body.success) {
+          throw new Error(body.message || body.error || "This confirmation link could not be verified. It may have expired or already been used.");
+        }
+        if (disposed) return;
+
+        setState("success");
+        setMessage(
+          body.alreadyVerified
+            ? "Your email address was already confirmed. Altuvera can continue reviewing your booking request."
+            : "Your booking request email is confirmed. Altuvera can now review your details and plan the next step."
+        );
+
+        const reference = body.data?.booking_number || "";
+        redirectTimer = window.setTimeout(() => {
+          if (disposed) return;
+          navigate(
+            `/booking/verify?status=${body.alreadyVerified ? "already_verified" : "success"}&ref=${encodeURIComponent(reference)}`,
+            { replace: true }
+          );
+        }, 1100);
+      } catch (error) {
+        if (disposed || error?.name === "AbortError") return;
+        setState("error");
+        setMessage(
+          error?.message ||
+          "We could not verify this email. Check your connection and reopen the latest message from Altuvera."
+        );
+      }
+    };
+
+    verify();
+    return () => {
+      disposed = true;
+      controller.abort();
+      if (redirectTimer) window.clearTimeout(redirectTimer);
+    };
+  }, [token, status, navigate]);
+
+  if (!token && status) return <BookingVerifyResult />;
+
+  const isLoading = state === "loading";
+  const isSuccess = state === "success";
 
   return (
-    <div style={{minHeight:"70vh",display:"grid",placeItems:"center",padding:"32px 16px",background:"#f6fbf8"}}>
-      <div style={{width:"min(560px,100%)",background:"#fff",borderRadius:28,padding:"42px 28px",textAlign:"center",boxShadow:"0 24px 70px rgba(15,118,110,.12)",border:"1px solid #e2eee8"}}>
-        <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 18px",display:"grid",placeItems:"center",background:state==="success"?"#ecfdf5":state==="error"?"#fef2f2":"#f1f5f9",color:state==="success"?"#059669":state==="error"?"#dc2626":"#64748b"}}>
-          {state==="loading" ? <Loader2 size={34} className="animate-spin"/> : state==="success" ? <CheckCircle2 size={38}/> : <XCircle size={38}/>}
+    <main className="bev-page">
+      <div className="bev-container">
+        <header className="bev-header">
+          <Link to="/" className="bev-brand" aria-label="Altuvera Safaris home">
+            <span className="bev-brand-mark"><img src="/favicon.svg" alt="" /></span>
+            <span className="bev-brand-name"><strong>ALTUVERA</strong><small>SAFARIS</small></span>
+          </Link>
+          <div className="bev-trust"><ShieldCheck size={16} /><span>Secure email verification</span></div>
+        </header>
+
+        <div className="bev-layout">
+          <section className="bev-intro">
+            <div className="bev-eyebrow"><span className="bev-live-dot" /> BOOKING CONFIRMATION</div>
+            <h1>One quick check.<br /><em>Then we take it from here.</em></h1>
+            <p>Confirm that your booking email belongs to you. This signed link is processed securely and can only be used for its intended verification step.</p>
+            <div className="bev-trust-list">
+              <div className="bev-trust-item"><span><LockKeyhole size={16} /></span><div><strong>Signed verification link</strong><small>No password or browser session is required for this email check.</small></div></div>
+              <div className="bev-trust-item"><span><ShieldCheck size={16} /></span><div><strong>Private booking details</strong><small>Your confirmation is linked to the request that generated this email.</small></div></div>
+              <div className="bev-trust-item"><span><CheckCircle2 size={16} /></span><div><strong>Clear confirmation status</strong><small>We’ll show whether your email was confirmed or the link needs attention.</small></div></div>
+            </div>
+          </section>
+
+          <section className="bev-panel-wrap">
+            <div className="bev-panel" aria-live="polite">
+              <div className="bev-panel-head">
+                <span className="bev-panel-label"><ShieldCheck size={15} /> ALTUVERA BOOKING CHECK</span>
+                <span className={"bev-panel-state " + (state === "error" ? "is-error" : "")}>
+                  {isLoading ? <><LoaderCircle size={13} /> Checking</> : isSuccess ? <><CheckCircle2 size={13} /> Verified</> : <><AlertTriangle size={13} /> Attention needed</>}
+                </span>
+              </div>
+
+              <div className="bev-state">
+                {isLoading ? (
+                  <>
+                    <div className="bev-loader-mark"><span className="bev-spinner" /><ShieldCheck size={29} /></div>
+                    <div className="bev-eyebrow">SECURE EMAIL CHECK</div>
+                    <div className="bev-loader-copy"><h2>Confirming your request</h2><p>{message}</p></div>
+                    <div className="bev-progress"><span /></div>
+                    <div className="bev-skeleton"><i /><i /><i /></div>
+                  </>
+                ) : isSuccess ? (
+                  <>
+                    <div className="bev-status-icon"><CheckCircle2 size={36} /></div>
+                    <div className="bev-eyebrow">EMAIL CONFIRMED</div>
+                    <h2>Your booking email is verified</h2>
+                    <p>{message}</p>
+                    <div className="bev-progress"><span /></div>
+                    <div className="bev-help">Opening your confirmation summary…</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bev-status-icon is-error"><AlertTriangle size={34} /></div>
+                    <div className="bev-eyebrow">CONFIRMATION NOT COMPLETED</div>
+                    <h2>We could not verify this link</h2>
+                    <p>{message}</p>
+                    <div className="bev-actions">
+                      <Link to="/" className="bev-button bev-button--primary">Return to Altuvera <ArrowRight size={16} /></Link>
+                      <a href="mailto:info@altuverasafaris.com" className="bev-button bev-button--secondary">Contact support</a>
+                    </div>
+                    <div className="bev-help">For security, avoid forwarding booking verification links to other people.</div>
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
         </div>
-        <ShieldCheck size={18} color="#059669" style={{margin:"0 auto 8px"}}/>
-        <h1 style={{margin:"0 0 10px",fontSize:26,fontWeight:850,color:"#10221a"}}>
-          {state==="success" ? "Booking request confirmed" : state==="error" ? "Confirmation unavailable" : "Confirming your request"}
-        </h1>
-        <p style={{margin:0,color:"#64756d",fontSize:14,lineHeight:1.7}}>{message}</p>
-        {state!=="loading" && <button onClick={()=>navigate(state==="success"?"/my-bookings":"/")} style={{marginTop:24,border:0,borderRadius:12,padding:"12px 20px",background:"#059669",color:"#fff",fontWeight:800,cursor:"pointer"}}>{state==="success"?"Open My Bookings":"Return home"}</button>}
+
+        <footer className="bev-footer">
+          <strong>ALTUVERA SAFARIS</strong>
+          <span>·</span>
+          <span>Secure booking communication</span>
+          <Link to="/"><ArrowLeft size={13} /> Back to website</Link>
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }
