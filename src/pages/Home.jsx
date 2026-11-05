@@ -1528,7 +1528,7 @@ const featureBlocks = useMemo(() => [
 
   return (
     <div className="home-root">
-      <SEO title="East Africa Safaris & Gorilla Trekking" description="Explore gorilla trekking in Rwanda and Uganda, wildlife safaris in Tanzania and Kenya, and cultural journeys across East Africa with Altuvera Safaris. Discover destinations and plan a tailored adventure with local insight." />
+      <SEO title="East Africa Safaris & Gorilla Trekking" description="Explore gorilla trekking in Rwanda and Uganda, wildlife safaris in Tanzania and Kenya, and cultural journeys across East Africa with Altuvera. Discover destinations and plan a tailored adventure with local insight." />
       <Hero destinations={allDest} />
 
       {/* ── Intro ── */}
