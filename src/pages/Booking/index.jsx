@@ -91,8 +91,12 @@ function DatePicker({ label, value, onChange, minDate, error }) {
   return <div className="bk-field-group">
     <label className="bk-label"><Calendar size={12} style={{verticalAlign:"-2px",marginRight:5}} />{label} <span className="bk-label-req">*</span></label>
     <div className="bk-input-wrap">
-      <span className="bk-input-ico"><Calendar size={17}/></span>
-      <input className={`bk-input${error ? " bk-input--err":""}`} type="date" min={minDate || isoToday()} value={value || ""} onChange={e=>onChange(e.target.value)} />
+      {value && !error ? (
+        <span className="bk-check-ico bk-check-ico--inside" aria-label="Date looks good"><Check size={15} strokeWidth={3}/></span>
+      ) : (
+        <span className="bk-input-ico"><Calendar size={17}/></span>
+      )}
+      <input className={"bk-input" + (error ? " bk-input--err" : "") + (value && !error ? " bk-input--valid" : "")} type="date" min={minDate || isoToday()} value={value || ""} onChange={e=>onChange(e.target.value)} />
     </div>
     {error && <p className="bk-field-err"><AlertCircle size={13}/>{error}</p>}
   </div>;
