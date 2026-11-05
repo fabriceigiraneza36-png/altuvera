@@ -282,6 +282,11 @@ const publicRoutes = [
     meta: { title: "Terms of Service | Altuvera Safaris", description: "Review the website terms and conditions for using Altuvera Safaris online services and information." },
   },
   {
+    path: "/booking-verification/:id",
+    component: BookingIdentityVerification,
+    meta: { title: "Traveller Verification", noindex: true },
+  },
+  {
     path: "/booking/*",
     component: React.lazy(() => import("./pages/Booking")),
     meta: {
@@ -325,11 +330,6 @@ const protectedRoutes = [
     path: "/notifications",
     component: UserNotifications,
     meta: { title: "Notifications", noindex: true },
-  },
-  {
-    path: "/booking-verification/:id",
-    component: BookingIdentityVerification,
-    meta: { title: "Traveller Verification", noindex: true },
   },
   {
     path: "/messages",
