@@ -2,7 +2,7 @@ export const BRAND_SUPPORT_EMAIL = "info@altuverasafaris.com";
 export const BRAND_SUPPORT_PHONE = "+250785751391";
 
 export const DEFAULT_SEO_DESCRIPTION =
-  "Explore gorilla trekking, wildlife safaris and cultural journeys across Rwanda and East Africa with Altuvera Safaris.";
+  "Explore gorilla trekking, wildlife safaris and cultural journeys across Rwanda and East Africa with Altuvera.";
 
 export const getSiteUrl = () => {
   const envUrl =
@@ -14,8 +14,8 @@ export const getSiteUrl = () => {
 
 export const withBrand = (title) => {
   const raw = String(title || "").replace(/\s+/g, " ").trim();
-  if (!raw) return "Altuvera Safaris";
-  return /\baltuvera\b/i.test(raw) ? raw : raw + " | Altuvera Safaris";
+  if (!raw) return "Altuvera";
+  return /\baltuvera\b/i.test(raw) ? raw : raw + " | Altuvera";
 };
 
 export const toAbsoluteUrl = (value = "/") => {
@@ -26,7 +26,7 @@ export const toAbsoluteUrl = (value = "/") => {
 };
 
 export const BRAND_LOGO_PATH = "/altuvera.png";
-export const BRAND_LOGO_ALT = "Altuvera Safaris official logo";
+export const BRAND_LOGO_ALT = "Altuvera official logo";
 export const getBrandLogoUrl = () => toAbsoluteUrl(BRAND_LOGO_PATH);
 
 export const toMetaDescription = (text = "", max = 160) => {
