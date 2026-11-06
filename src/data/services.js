@@ -8,7 +8,7 @@ export const services = [
       "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=1200&q=85"
     ],
-    imageAlt: "African wildlife and safari landscapes"
+    imageAlt: "East African wildlife and safari landscapes"
   },
   {
     id: "primate-trekking", title: "Gorilla & Primate Trekking", iconName: "primate",
@@ -19,7 +19,7 @@ export const services = [
       "https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=85"
     ],
-    imageAlt: "African rainforest trekking landscapes"
+    imageAlt: "East African rainforest trekking landscapes"
   },
   {
     id: "mountain-trekking", title: "Mountain & Nature Trekking", iconName: "mountain",
@@ -41,18 +41,18 @@ export const services = [
       "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=1200&q=85"
     ],
-    imageAlt: "African culture, heritage, and local experiences"
+    imageAlt: "East African culture, heritage, and local experiences"
   },
   {
     id: "coastal-island", title: "Coastal & Island Escapes", iconName: "coast",
-    description: "Add time by the sea to your African journey, from relaxed coastal stays to island visits and water-based activities.",
+    description: "Add time by the sea to your East African journey, from relaxed coastal stays to island visits and water-based activities.",
     features: ["Coastal and island stays", "Safari-and-coast combinations", "Water activities where available"],
     images: [
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=85"
     ],
-    imageAlt: "African coastal and island scenery"
+    imageAlt: "East African coastal and island scenery"
   },
   {
     id: "adventure-outdoors", title: "Adventure & Outdoor Activities", iconName: "adventure",
