@@ -509,7 +509,7 @@ const SLIDE_DURATION = 20; // seconds per slide
 const TestimonialShowcase = () => {
   useEffect(injectStyles, []);
 
-  const { testimonials, loading } = useTestimonials("active=all");
+  const { testimonials, loading } = useTestimonials();
 
   // Build slides
   const slides = useMemo(() => {
