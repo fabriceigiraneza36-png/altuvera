@@ -1460,7 +1460,7 @@ const About = () => {
               fontSize: 'clamp(24px,3.4vw,34px)', fontWeight: 800, lineHeight: 1.18,
               color: 'white', fontFamily: "'Playfair Display',serif", marginBottom: 10,
             }}>
-              Let's craft your African journey
+              Let's craft your East African journey
             </h2>
             <p style={{
               fontSize: 'clamp(13.5px,1.05vw,15px)', lineHeight: 1.7,
