@@ -231,8 +231,8 @@ export default function Services() {
   return (
     <>
       <SEO
-        title="Travel Services Across Africa"
-        description="Explore Altuvera travel services, from wildlife safaris and primate trekking to mountain journeys, cultural experiences, coastal escapes, and tailor-made trip planning across Africa."
+        title="Travel Services Across East Africa"
+        description="Explore Altuvera travel services, from wildlife safaris and primate trekking to mountain journeys, cultural experiences, coastal escapes, and tailor-made trip planning across East Africa."
         keywords={[
           "Altuvera travel services",
           "African safari planning",
