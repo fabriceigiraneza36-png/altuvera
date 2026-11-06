@@ -1,7 +1,11 @@
 export const ADVENTURE_CATALOG = [
   {
     slug: "safari-adventures",
-    icon: "🦁",
+    group: "wildlife",
+    groupLabel: "Wildlife & Nature",
+    iconKey: "safari",
+    destinationCategories: ["wildlife","safari"],
+    destinationKeywords: ["safari","game drive","great migration","big five","savanna","serengeti","maasai mara","akagera","queen elizabeth","amboseli","ngorongoro","murchison falls"],
     title: "East Africa Wildlife Safaris",
     seoTitle: "East Africa Wildlife Safaris | Big Five & Great Migration",
     seoDescription:
@@ -60,7 +64,11 @@ export const ADVENTURE_CATALOG = [
   },
   {
     slug: "mountain-trekking",
-    icon: "🏔️",
+    group: "active",
+    groupLabel: "Mountain & Active Travel",
+    iconKey: "mountain",
+    destinationCategories: ["mountain","trekking","hiking"],
+    destinationKeywords: ["kilimanjaro","mount kenya","rwenzori","simien mountains","mountain","hiking","trekking","climbing","highland","bisoke","karisimbi"],
     title: "Kilimanjaro Trekking & Mountain Hikes",
     seoTitle: "Kilimanjaro Trekking & East African Mountain Hikes",
     seoDescription:
@@ -121,7 +129,11 @@ export const ADVENTURE_CATALOG = [
   },
   {
     slug: "primate-tracking",
-    icon: "🦍",
+    group: "wildlife",
+    groupLabel: "Wildlife & Nature",
+    iconKey: "primate",
+    destinationCategories: ["primate"],
+    destinationKeywords: ["gorilla","chimpanzee","primate","golden monkey","bwindi","volcanoes national park","mgahinga","nyungwe forest"],
     title: "Compare Gorilla Trekking in Rwanda & Uganda",
     seoTitle: "Gorilla Trekking in Rwanda & Uganda | Compare Trips",
     seoDescription:
@@ -195,7 +207,11 @@ export const ADVENTURE_CATALOG = [
   },
   {
     slug: "beach-escapes",
-    icon: "🏖️",
+    group: "coast",
+    groupLabel: "Coast & Islands",
+    iconKey: "coast",
+    destinationCategories: ["beach","coast","marine"],
+    destinationKeywords: ["beach","coast","coastal","island","zanzibar","diani","lamu","watamu","marine","snorkelling","snorkeling","diving"],
     title: "Zanzibar & East Africa Beach Escapes",
     seoTitle: "Zanzibar & East Africa Beach Holidays",
     seoDescription:
@@ -228,7 +244,11 @@ export const ADVENTURE_CATALOG = [
   },
   {
     slug: "cultural-immersion",
-    icon: "🎭",
+    group: "culture",
+    groupLabel: "Culture & Heritage",
+    iconKey: "culture",
+    destinationCategories: ["cultural","culture","historical","heritage"],
+    destinationKeywords: ["culture","cultural","heritage","community","traditional","historical","stone town","lamu old town","lalibela","craft","swahili"],
     title: "East Africa Cultural & Community Experiences",
     seoTitle: "East Africa Cultural Tours & Community Experiences",
     seoDescription:
@@ -261,7 +281,11 @@ export const ADVENTURE_CATALOG = [
   },
   {
     slug: "photography-tours",
-    icon: "📸",
+    group: "specialist",
+    groupLabel: "Specialist Journeys",
+    iconKey: "photography",
+    destinationCategories: ["photography"],
+    destinationKeywords: ["photography","photo safari","wildlife photography","landscape photography","birdwatching","bird watching"],
     title: "East Africa Safari Photography Tours",
     seoTitle: "East Africa Safari & Wildlife Photography Tours",
     seoDescription:
