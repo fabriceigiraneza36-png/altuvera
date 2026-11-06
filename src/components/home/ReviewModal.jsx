@@ -1120,7 +1120,7 @@ function ReviewModalStyles() {
   }
   .rmod-overlay{align-items:flex-end;padding:0;}
   .rmod-header{padding:1.25rem 1.25rem .75rem;gap:.8rem;}
-  .rmod-header-logo{width:48px;height:48px;border-radius:13px;}
+  .rmod-header-logo{width:48px;height:48px;flex-basis:48px;border-radius:13px;}
   .rmod-title{font-size:1.08rem;}
   .rmod-subtitle{font-size:.76rem;}
   .rmod-stepper{padding:.75rem 1.5rem .25rem;}
