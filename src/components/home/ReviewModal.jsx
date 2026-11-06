@@ -23,14 +23,27 @@ import { useSubmitTestimonial } from "../../hooks/useSubmitTestimonial";
 // ═══════════════════════════════════════════════════════════════════════════
 
 const MAX_WORDS   = 150;
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 const STAR_LABELS = ["Terrible", "Poor", "Good", "Great", "Excellent"];
+
+const rawApiBase = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  "https://backend-jd8f.onrender.com"
+).replace(/\\/+$/, "");
+const API_BASE = rawApiBase.endsWith("/api") ? rawApiBase.slice(0, -4) : rawApiBase;
+const CONTEXT_SEARCH_ENDPOINT = `${API_BASE}/api/testimonials/context-search`;
 
 const EMPTY_FORM = Object.freeze({
   testimonial_text: "",
-  rating:           0,
-  trip:             "",
-  location:         "",
+  rating: 0,
+  trip: "",
+  trip_entity_type: "",
+  trip_entity_id: "",
+  trip_entity: null,
+  review_answers: [],
+  expectations_met: "",
+  location: "",
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -227,150 +240,218 @@ const Step1 = ({ form, set, errors, wordCount, overLimit, pct, barColor }) => (
   </div>
 );
 
-// ── Step 2: Trip details ───────────────────────────────────────────────────
-const Step2 = ({ form, set }) => (
+// ── Step 2: Verified trip selection and traveller details ────────────────
+const Step2 = ({
+  form, set, onTripInput, searchResults, searchLoading, searchError,
+  onSelectTrip, onClearTrip, canProceed,
+}) => (
   <div className="rmod-step">
     <div className="rmod-step-head">
       <div className="rmod-step-num" aria-hidden="true">2</div>
       <div>
         <h3 className="rmod-step-title">Trip Details</h3>
-        <p className="rmod-step-sub">Optional — helps other travelers</p>
+        <p className="rmod-step-sub">Connect your review to a real Altuvera experience</p>
       </div>
     </div>
 
-    {/* Trip / package */}
     <div className="rmod-field">
       <label className="rmod-label" htmlFor="rmod-trip">
-        Trip / Package{" "}
-        <span className="rmod-opt">— optional</span>
+        Destination, Country or Package <span className="rmod-opt">— optional</span>
       </label>
-      <div className="rmod-input-wrap">
-        <Globe2 className="rmod-input-icon" aria-hidden="true" />
-        <input
-          id="rmod-trip"
-          type="text"
-          className="rmod-input"
-          placeholder="e.g. Gorilla Trek, Safari, Kilimanjaro…"
-          value={form.trip}
-          onChange={(e) => set("trip", e.target.value)}
-          maxLength={100}
-          autoComplete="off"
-        />
+      <div style={{ position: "relative" }}>
+        <div className="rmod-input-wrap">
+          <Globe2 className="rmod-input-icon" aria-hidden="true" />
+          <input
+            id="rmod-trip"
+            type="text"
+            className="rmod-input"
+            placeholder="Start typing a destination, country or package…"
+            value={form.trip}
+            onChange={(event) => onTripInput(event.target.value)}
+            maxLength={100}
+            autoComplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={Boolean(form.trip.trim()) && !form.trip_entity_id}
+            aria-controls="rmod-trip-results"
+            aria-describedby="rmod-trip-hint"
+          />
+          {form.trip && (
+            <button type="button" onClick={onClearTrip} aria-label="Clear trip selection"
+              style={{ border: 0, background: "transparent", color: "#64748b", padding: "0 10px", cursor: "pointer" }}>
+              <X size={16} />
+            </button>
+          )}
+        </div>
+
+        {form.trip_entity_id && form.trip_entity && (
+          <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 12, background: "#ecfdf5", border: "1px solid #a7f3d0", color: "#065f46", fontSize: 12 }}>
+            <CheckCircle2 size={16} />
+            <span style={{ minWidth: 0, flex: 1 }}><strong>{form.trip_entity.title}</strong>{form.trip_entity.country_name && form.trip_entity.type !== "country" ? ` · ${form.trip_entity.country_name}` : ""}</span>
+            <span style={{ textTransform: "capitalize", whiteSpace: "nowrap" }}>{String(form.trip_entity.type).replace("_", " ")}</span>
+          </div>
+        )}
+
+        {!form.trip_entity_id && form.trip.trim().length >= 2 && (
+          <div id="rmod-trip-results" role="listbox" className="rmod-search-results">
+            {searchLoading ? (
+              <div className="rmod-search-state"><span className="rmod-spinner" /> Searching experiences…</div>
+            ) : searchError ? (
+              <div className="rmod-search-state rmod-search-state--error">{searchError}</div>
+            ) : searchResults.length ? searchResults.map((item) => (
+              <button key={`${item.type}-${item.id}`} type="button" role="option"
+                aria-selected="false" className="rmod-search-result" onClick={() => onSelectTrip(item)}>
+                <span className="rmod-search-result-icon">{item.type === "package" ? <Send size={16} /> : item.type === "country" ? <Globe2 size={16} /> : <MapPin size={16} />}</span>
+                <span className="rmod-search-result-copy"><strong>{item.title}</strong><small>{String(item.type).replace("_", " ")}{item.country_name && item.type !== "country" ? ` · ${item.country_name}` : ""}</small></span>
+                <ArrowRight size={15} />
+              </button>
+            )) : (
+              <div className="rmod-search-state">No matching destination, country or published package was found. Choose a result from the list or clear your search.</div>
+            )}
+          </div>
+        )}
       </div>
+      <p id="rmod-trip-hint" className="rmod-field-hint">
+        Search results are verified Altuvera records. You may leave this field blank, but typed text must be selected from the results before continuing.
+      </p>
+      {form.trip.trim() && !form.trip_entity_id && form.trip.length < 2 && (
+        <p className="rmod-err">Enter at least two characters to search, or clear this field to continue without a trip reference.</p>
+      )}
+      {form.trip.trim() && !form.trip_entity_id && form.trip.length >= 2 && !searchLoading && searchResults.length === 0 && !searchError && (
+        <p className="rmod-err">Select a matching result or clear the field before continuing.</p>
+      )}
     </div>
 
-    {/* Location */}
+    <div className="rmod-field">
+      <label className="rmod-label">Did the experience meet your expectations? <span className="rmod-opt">— optional</span></label>
+      <div className="rmod-expectation-options">
+        {[
+          { value: "met", label: "Yes, it did" },
+          { value: "partly_met", label: "Partly" },
+          { value: "not_met", label: "No, it did not" },
+        ].map((option) => (
+          <button key={option.value} type="button"
+            className={`rmod-expectation-option${form.expectations_met === option.value ? " is-selected" : ""}`}
+            aria-pressed={form.expectations_met === option.value}
+            onClick={() => set("expectations_met", form.expectations_met === option.value ? "" : option.value)}>
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <p className="rmod-field-hint">Your honest response helps us understand where we are meeting expectations and where we can improve.</p>
+    </div>
+
     <div className="rmod-field">
       <label className="rmod-label" htmlFor="rmod-loc">
-        Where you&apos;re from{" "}
-        <span className="rmod-opt">— optional</span>
+        Where you&apos;re from <span className="rmod-opt">— optional</span>
       </label>
       <div className="rmod-input-wrap">
         <MapPin className="rmod-input-icon" aria-hidden="true" />
-        <input
-          id="rmod-loc"
-          type="text"
-          className="rmod-input"
-          placeholder="e.g. London, UK"
-          value={form.location}
-          onChange={(e) => set("location", e.target.value)}
-          maxLength={100}
-          autoComplete="off"
-        />
+        <input id="rmod-loc" type="text" className="rmod-input"
+          placeholder="e.g. London, UK" value={form.location}
+          onChange={(event) => set("location", event.target.value)}
+          maxLength={100} autoComplete="country-name" />
       </div>
     </div>
 
-    <div className="rmod-tip">
-      <MessageCircle
-        className="rmod-tip-icon"
-        aria-hidden="true"
-      />
-      <p>
-        Adding trip details helps fellow travelers find relevant reviews
-        for their planned adventure.
-      </p>
-    </div>
+    {!canProceed && (
+      <div className="rmod-tip"><MessageCircle className="rmod-tip-icon" aria-hidden="true" />
+        <p>Please select a matching search result or clear the trip field to continue.</p>
+      </div>
+    )}
   </div>
 );
 
-// ── Step 3: Preview + submit ───────────────────────────────────────────────
-const Step3 = ({ form, user, submitting, error, onDismissError }) => {
+// ── Step 3: Optional, context-specific questions ────────────────────────────
+const StepQuestions = ({ form, onAnswer, onSkip }) => {
+  const questions = Array.isArray(form.trip_entity?.review_questions) ? form.trip_entity.review_questions : [];
+  const getAnswer = (questionId) => form.review_answers.find((answer) => answer.question_id === questionId)?.value ?? "";
+
+  if (!questions.length) {
+    return (
+      <div className="rmod-step">
+        <div className="rmod-step-head"><div className="rmod-step-num">3</div><div>
+          <h3 className="rmod-step-title">A Few More Details</h3>
+          <p className="rmod-step-sub">No additional questions are configured for this selection.</p>
+        </div></div>
+        <p className="rmod-field-hint">You can continue to preview your review. Thank you for sharing your experience.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rmod-step">
+      <div className="rmod-step-head"><div className="rmod-step-num">3</div><div>
+        <h3 className="rmod-step-title">Help Us Improve This Experience</h3>
+        <p className="rmod-step-sub">These questions are specific to {form.trip_entity?.title || "your selected experience"}. Every answer is optional.</p>
+      </div></div>
+      <div className="rmod-question-list">
+        {questions.map((question, index) => {
+          const id = String(question.id || `question-${index + 1}`);
+          const value = getAnswer(id);
+          const common = { id: `rmod-question-${id}`, className: "rmod-input", value, onChange: (event) => onAnswer(id, event.target.value) };
+          return (
+            <div className="rmod-field rmod-question-card" key={id}>
+              <label className="rmod-label" htmlFor={common.id}>{question.prompt || `Question ${index + 1}`} <span className="rmod-opt">— optional</span></label>
+              {question.type === "long_text" ? (
+                <textarea {...common} rows={3} maxLength={2000} placeholder="Share any details you feel comfortable providing…" />
+              ) : question.type === "number" ? (
+                <div className="rmod-input-wrap"><input {...common} type="number" inputMode="decimal" step="any" placeholder="Enter a number" />{question.unit && <span className="rmod-question-unit">{question.unit}</span>}</div>
+              ) : question.type === "date" ? (
+                <input {...common} type="date" />
+              ) : question.type === "yes_no" ? (
+                <select {...common}><option value="">Choose an answer</option><option value="yes">Yes</option><option value="no">No</option></select>
+              ) : question.type === "choice" ? (
+                <select {...common}><option value="">Choose an option</option>{(Array.isArray(question.options) ? question.options : []).map(option => <option key={option} value={option}>{option}</option>)}</select>
+              ) : question.type === "rating" ? (
+                <select {...common}><option value="">Select a rating</option>{[1,2,3,4,5].map(n => <option key={n} value={n}>{n} / 5</option>)}</select>
+              ) : (
+                <input {...common} type="text" maxLength={500} placeholder="Your answer…" />
+              )}
+              {question.help_text && <p className="rmod-field-hint">{question.help_text}</p>}
+            </div>
+          );
+        })}
+      </div>
+      <div className="rmod-optional-actions">
+        <button type="button" className="rmod-btn rmod-btn--ghost" onClick={onSkip}>Skip these questions</button>
+      </div>
+      <p className="rmod-note">You may answer as many or as few as you wish. Skipping this step will not affect your review.</p>
+    </div>
+  );
+};
+
+// ── Step 4: Preview + submit ─────────────────────────────────────────────────
+const Step4 = ({ form, user, submitting, error, onDismissError }) => {
   const stars    = Math.max(1, Math.min(5, Number(form.rating) || 5));
   const userName = getUserName(user);
   const avatar   = getUserAvatar(user);
-
-  const tripLine = [form.trip, form.location]
-    .map((v) => String(v || "").trim())
-    .filter(Boolean)
-    .join(" · ");
+  const tripLine = [form.trip, form.location].map((value) => String(value || "").trim()).filter(Boolean).join(" · ");
+  const answeredQuestions = (Array.isArray(form.review_answers) ? form.review_answers : [])
+    .filter((answer) => answer.value !== "" && answer.value !== null && answer.value !== undefined);
 
   return (
     <div className="rmod-step">
       <div className="rmod-step-head">
-        <div className="rmod-step-num" aria-hidden="true">3</div>
-        <div>
-          <h3 className="rmod-step-title">Preview &amp; Submit</h3>
-          <p className="rmod-step-sub">Review how your feedback will appear</p>
-        </div>
+        <div className="rmod-step-num" aria-hidden="true">4</div>
+        <div><h3 className="rmod-step-title">Preview &amp; Submit</h3><p className="rmod-step-sub">Review how your feedback will appear</p></div>
       </div>
-
-      {/* Preview card */}
-      <div
-        className="rmod-preview"
-        aria-label="Review preview"
-      >
-        {/* Stars */}
-        <div
-          className="rmod-preview-stars"
-          aria-label={`${stars} out of 5 stars`}
-        >
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star
-              key={i}
-              className={i < stars ? "rmod-pstar--on" : "rmod-pstar--off"}
-              aria-hidden="true"
-              fill="currentColor"
-            />
-          ))}
+      <div className="rmod-preview" aria-label="Review preview">
+        <div className="rmod-preview-stars" aria-label={`${stars} out of 5 stars`}>
+          {Array.from({ length: 5 }).map((_, i) => <Star key={i} className={i < stars ? "rmod-pstar--on" : "rmod-pstar--off"} aria-hidden="true" fill="currentColor" />)}
         </div>
-
-        {/* Text */}
-        <p className="rmod-preview-text">
-          &ldquo;{String(form.testimonial_text || "Your review will appear here…")}&rdquo;
-        </p>
-
-        {/* Author */}
+        <p className="rmod-preview-text">&ldquo;{String(form.testimonial_text || "Your review will appear here…")}&rdquo;</p>
+        {form.expectations_met && <p className="rmod-preview-expectation">Expectations: {form.expectations_met === "met" ? "Met" : form.expectations_met === "partly_met" ? "Partly met" : "Not met"}</p>}
+        {answeredQuestions.length > 0 && <div className="rmod-preview-answers">{answeredQuestions.map(answer => <div key={answer.question_id}><strong>{answer.prompt}</strong><span>{String(answer.value)}{answer.unit ? ` ${answer.unit}` : ""}</span></div>)}</div>}
         <div className="rmod-preview-author">
-          <div className="rmod-preview-avatar" aria-hidden="true">
-            {avatar ? (
-              <img src={avatar} alt="" />
-            ) : (
-              <span>{getInitials(userName) || "T"}</span>
-            )}
-          </div>
-          <div className="rmod-preview-meta">
-            <strong>{userName}</strong>
-            {tripLine && <span>{tripLine}</span>}
-          </div>
+          <div className="rmod-preview-avatar" aria-hidden="true">{avatar ? <img src={avatar} alt="" /> : <span>{getInitials(userName) || "T"}</span>}</div>
+          <div className="rmod-preview-meta"><strong>{userName}</strong>{tripLine && <span>{tripLine}</span>}</div>
           <span className="rmod-preview-status">Pending admin approval</span>
         </div>
       </div>
-
-      {/* Error — uses safeStr via ErrorAlert */}
-      {error && (
-        <ErrorAlert error={error} onDismiss={onDismissError} />
-      )}
-
-      {submitting && (
-        <div className="rmod-submitting" aria-live="polite" aria-busy="true">
-          <span className="rmod-spinner" aria-hidden="true" />
-          <span>Submitting your review…</span>
-        </div>
-      )}
-
-      <p className="rmod-note">
-        Your review remains private until an Altuvera administrator approves it.
-      </p>
+      {error && <ErrorAlert error={error} onDismiss={onDismissError} />}
+      {submitting && <div className="rmod-submitting" aria-live="polite" aria-busy="true"><span className="rmod-spinner" aria-hidden="true" /><span>Submitting your review…</span></div>}
+      <p className="rmod-note">Your review remains private until an Altuvera administrator approves it.</p>
     </div>
   );
 };
@@ -404,327 +485,251 @@ const SuccessScreen = ({ onClose, userName }) => (
 // ═══════════════════════════════════════════════════════════════════════════
 
 export default function ReviewModal({ isOpen, onClose }) {
-  const { user }  = useUserAuth();
-  const modalRef  = useRef(null);
-
-  const [step, setStep]             = useState(1);
-  const [form, setFormState]        = useState({ ...EMPTY_FORM });
+  const { user } = useUserAuth();
+  const modalRef = useRef(null);
+  const [step, setStep] = useState(1);
+  const [form, setFormState] = useState({ ...EMPTY_FORM });
   const [localErrors, setLocalErrors] = useState({});
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const submitLockRef = useRef(false);
+  const { submit, submitting, submitted, error, reset } = useSubmitTestimonial();
 
-  const { submit, submitting, submitted, error, reset } =
-    useSubmitTestimonial();
-
-  // ── Derived ───────────────────────────────────────────────────────────────
-  const wc        = countWords(form.testimonial_text);
+  const wc = countWords(form.testimonial_text);
   const overLimit = wc > MAX_WORDS;
-  const pct       = Math.min(100, (wc / MAX_WORDS) * 100);
-  const barColor  = overLimit ? "#ef4444" : wc > 50 ? "#f59e0b" : "#22c55e";
-
+  const pct = Math.min(100, (wc / MAX_WORDS) * 100);
+  const barColor = overLimit ? "#ef4444" : wc > 50 ? "#f59e0b" : "#22c55e";
   const firstName = getUserName(user).split(" ")[0];
+  const customQuestions = Array.isArray(form.trip_entity?.review_questions) ? form.trip_entity.review_questions : [];
+  const canProceedStep1 = String(form.testimonial_text || "").trim().length > 0 && !overLimit &&
+    Number(form.rating) >= 1 && Number(form.rating) <= 5;
+  const canProceedStep2 = !String(form.trip || "").trim() || Boolean(form.trip_entity_id && form.trip_entity_type);
 
-  // ── Field setter — clears field error on change ───────────────────────────
-  const set = useCallback((field, val) => {
-    setFormState((prev) => ({ ...prev, [field]: val }));
-    setLocalErrors((prev) => {
-      if (!prev[field]) return prev;
-      const next = { ...prev };
+  const set = useCallback((field, value) => {
+    setFormState((previous) => ({ ...previous, [field]: value }));
+    setLocalErrors((previous) => {
+      if (!previous[field]) return previous;
+      const next = { ...previous };
       delete next[field];
       return next;
     });
   }, []);
 
-  // ── Body scroll lock ──────────────────────────────────────────────────────
+  const setTripInput = useCallback((value) => {
+    setFormState((previous) => ({
+      ...previous,
+      trip: value,
+      trip_entity_type: "",
+      trip_entity_id: "",
+      trip_entity: null,
+      review_answers: [],
+    }));
+    setSearchError("");
+    setSearchResults([]);
+  }, []);
+
+  const selectTrip = useCallback((item) => {
+    setFormState((previous) => ({
+      ...previous,
+      trip: item.title,
+      trip_entity_type: item.type,
+      trip_entity_id: String(item.id),
+      trip_entity: item,
+      review_answers: [],
+    }));
+    setSearchResults([]);
+    setSearchError("");
+  }, []);
+
+  const clearTrip = useCallback(() => setTripInput(""), [setTripInput]);
+
+  const setAnswer = useCallback((questionId, value) => {
+    setFormState((previous) => {
+      const answers = Array.isArray(previous.review_answers) ? previous.review_answers : [];
+      const existing = answers.find((answer) => answer.question_id === questionId);
+      const nextAnswers = existing
+        ? answers.map((answer) => answer.question_id === questionId ? { ...answer, value } : answer)
+        : [...answers, { question_id: questionId, value }];
+      return { ...previous, review_answers: nextAnswers };
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || step !== 2 || form.trip_entity_id || String(form.trip || "").trim().length < 2) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return undefined;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setSearchLoading(true);
+      setSearchError("");
+      try {
+        const response = await fetch(`${CONTEXT_SEARCH_ENDPOINT}?q=${encodeURIComponent(form.trip.trim())}`, {
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body?.error || "Unable to search experiences right now.");
+        setSearchResults(Array.isArray(body.data) ? body.data : []);
+      } catch (searchErr) {
+        if (searchErr.name !== "AbortError") {
+          setSearchResults([]);
+          setSearchError(searchErr.message || "Search is temporarily unavailable. Please try again.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setSearchLoading(false);
+      }
+    }, 280);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [isOpen, step, form.trip, form.trip_entity_id]);
+
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  // ── Escape key to close ───────────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
-    const handler = (e) => { if (e.key === "Escape" && !submitting) onClose(); };
+    const handler = (event) => { if (event.key === "Escape" && !submitting) handleClose(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [isOpen, onClose, submitting]);
+  }, [isOpen, submitting]);
 
-  // ── Auto-focus first focusable element on step change ────────────────────
   useEffect(() => {
     if (!isOpen || !modalRef.current) return;
     const timer = setTimeout(() => {
       const first = modalRef.current?.querySelector(
-        "button:not(:disabled), [href], input:not(:disabled), " +
-        "select:not(:disabled), textarea:not(:disabled), " +
-        '[tabindex]:not([tabindex="-1"])',
+        "button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex=\"-1\"])",
       );
       first?.focus();
     }, 100);
     return () => clearTimeout(timer);
   }, [isOpen, step]);
 
-  // ── Step 1 validation ─────────────────────────────────────────────────────
   const validateStep1 = useCallback(() => {
-    const errs = {};
+    const errors = {};
     const text = String(form.testimonial_text || "").trim();
-
-    if (!text) {
-      errs.testimonial_text = "Please write your review before continuing.";
-    } else if (overLimit) {
-      errs.testimonial_text = `Max ${MAX_WORDS} words (you used ${wc}).`;
-    }
-
-    if (!form.rating || form.rating < 1 || form.rating > 5) {
-      errs.rating = "Please select a star rating.";
-    }
-
-    setLocalErrors(errs);
-    return Object.keys(errs).length === 0;
+    if (!text) errors.testimonial_text = "Please write your review before continuing.";
+    else if (overLimit) errors.testimonial_text = `Max ${MAX_WORDS} words (you used ${wc}).`;
+    if (!form.rating || form.rating < 1 || form.rating > 5) errors.rating = "Please select a star rating.";
+    setLocalErrors(errors);
+    return Object.keys(errors).length === 0;
   }, [form, overLimit, wc]);
 
-  // ── Navigation ────────────────────────────────────────────────────────────
   const handleNext = useCallback(() => {
     if (step === 1 && !validateStep1()) return;
-    if (step < TOTAL_STEPS) setStep((s) => s + 1);
-  }, [step, validateStep1]);
+    if (step === 2 && !canProceedStep2) return;
+    if (step === 2 && customQuestions.length === 0) {
+      setStep(4);
+      return;
+    }
+    if (step < TOTAL_STEPS) setStep((current) => current + 1);
+  }, [step, validateStep1, canProceedStep2, customQuestions.length]);
 
   const handleBack = useCallback(() => {
-    if (step > 1) setStep((s) => s - 1);
-  }, [step]);
+    if (step === 4 && customQuestions.length === 0) setStep(2);
+    else if (step > 1) setStep((current) => current - 1);
+  }, [step, customQuestions.length]);
 
-  // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async () => {
-    if (submitLockRef.current || submitting) return;
+    if (submitLockRef.current || submitting || !canProceedStep2) return;
     submitLockRef.current = true;
     try {
       await submit({
         testimonial_text: form.testimonial_text,
-        rating:           form.rating,
-        trip:             form.trip     || undefined,
-        location:         form.location || undefined,
+        rating: form.rating,
+        trip: form.trip || undefined,
+        trip_entity_type: form.trip_entity_type || undefined,
+        trip_entity_id: form.trip_entity_id || undefined,
+        expectations_met: form.expectations_met || undefined,
+        review_answers: form.review_answers || [],
+        location: form.location || undefined,
       });
     } finally {
       submitLockRef.current = false;
     }
-  }, [submit, form, submitting]);
+  }, [submit, form, submitting, canProceedStep2]);
 
-  // ── Write another — reset everything ─────────────────────────────────────
-  // ── Close — reset and call parent ────────────────────────────────────────
   const handleClose = useCallback(() => {
-    if (submitting) return; // prevent close mid-submission
+    if (submitting) return;
     reset();
     setFormState({ ...EMPTY_FORM });
     setLocalErrors({});
+    setSearchResults([]);
+    setSearchError("");
     setStep(1);
     onClose();
   }, [reset, onClose, submitting]);
 
   if (!isOpen) return null;
-
-  const STEP_LABELS = ["Rate", "Details", "Submit"];
-
-  const canProceedStep1 =
-    String(form.testimonial_text || "").trim().length > 0 && !overLimit &&
-    Number(form.rating) >= 1 && Number(form.rating) <= 5;
+  const STEP_LABELS = ["Review", "Trip", "Questions", "Submit"];
 
   return createPortal(
     <>
       <ReviewModalStyles />
-      <div
-        className="rmod-overlay"
-        onClick={handleClose}
-        role="presentation"
-        aria-hidden="true"
-      >
-        <div
-          ref={modalRef}
-          className="rmod-modal"
-          onClick={(e) => e.stopPropagation()}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="rmod-title"
-          aria-describedby="rmod-subtitle"
-        >
-          {/* Accent bar */}
+      <div className="rmod-overlay" onClick={handleClose} role="presentation" aria-hidden="true">
+        <div ref={modalRef} className="rmod-modal" onClick={(event) => event.stopPropagation()}
+          role="dialog" aria-modal="true" aria-labelledby="rmod-title" aria-describedby="rmod-subtitle">
           <div className="rmod-accent" aria-hidden="true" />
-
-          {/* Close button */}
-          <button
-            type="button"
-            className="rmod-close"
-            onClick={handleClose}
-            disabled={submitting}
-            aria-label="Close review modal"
-          >
-            <X aria-hidden="true" />
-          </button>
-
-          {/* Header */}
+          <button type="button" className="rmod-close" onClick={handleClose} disabled={submitting} aria-label="Close review modal"><X aria-hidden="true" /></button>
           <div className="rmod-header">
-            <div className="rmod-header-icon" aria-hidden="true">
-              <Sparkles />
-            </div>
-            <div>
-              <h2
-                id="rmod-title"
-                className="rmod-title"
-              >
-                Share Your Experience
-              </h2>
-              <p
-                id="rmod-subtitle"
-                className="rmod-subtitle"
-              >
-                Help fellow travelers plan their adventure
-              </p>
-            </div>
+            <div className="rmod-header-icon" aria-hidden="true"><Sparkles /></div>
+            <div><h2 id="rmod-title" className="rmod-title">Share Your Experience</h2><p id="rmod-subtitle" className="rmod-subtitle">Help fellow travelers plan their adventure</p></div>
           </div>
 
-          {/* Stepper */}
           {!submitted && (
-            <div
-              className="rmod-stepper"
-              role="list"
-              aria-label="Form steps"
-            >
-              {STEP_LABELS.map((label, i) => {
-                const n      = i + 1;
-                const done   = step > n;
-                const active = step === n;
-
+            <div className="rmod-stepper" role="list" aria-label="Form steps">
+              {STEP_LABELS.map((label, index) => {
+                const number = index + 1;
+                const done = step > number;
+                const active = step === number;
                 return (
-                  <React.Fragment key={n}>
-                    <div
-                      className="rmod-stepper-item"
-                      role="listitem"
-                    >
-                      <div
-                        className={[
-                          "rmod-stepper-circle",
-                          done   ? "rmod-stepper-circle--done"   :
-                          active ? "rmod-stepper-circle--active" :
-                                   "rmod-stepper-circle--pending",
-                        ].join(" ")}
-                        aria-current={active ? "step" : undefined}
-                      >
-                        {done
-                          ? <CheckCircle2 aria-hidden="true" />
-                          : <span aria-hidden="true">{n}</span>
-                        }
+                  <React.Fragment key={number}>
+                    <div className="rmod-stepper-item" role="listitem">
+                      <div className={["rmod-stepper-circle", done ? "rmod-stepper-circle--done" : active ? "rmod-stepper-circle--active" : "rmod-stepper-circle--pending"].join(" ")} aria-current={active ? "step" : undefined}>
+                        {done ? <CheckCircle2 aria-hidden="true" /> : <span aria-hidden="true">{number}</span>}
                       </div>
-                      <span
-                        className={[
-                          "rmod-stepper-lbl",
-                          active ? "rmod-stepper-lbl--active" :
-                          done   ? "rmod-stepper-lbl--done"   : "",
-                        ].filter(Boolean).join(" ")}
-                      >
-                        {label}
-                      </span>
+                      <span className={["rmod-stepper-lbl", active ? "rmod-stepper-lbl--active" : done ? "rmod-stepper-lbl--done" : ""].filter(Boolean).join(" ")}>{label}</span>
                     </div>
-
-                    {i < STEP_LABELS.length - 1 && (
-                      <div
-                        className="rmod-stepper-line"
-                        aria-hidden="true"
-                      >
-                        <div
-                          className={[
-                            "rmod-stepper-line-fill",
-                            done ? "rmod-stepper-line-fill--done" : "",
-                          ].filter(Boolean).join(" ")}
-                        />
-                      </div>
-                    )}
+                    {index < STEP_LABELS.length - 1 && <div className="rmod-stepper-line" aria-hidden="true"><div className={["rmod-stepper-line-fill", done ? "rmod-stepper-line-fill--done" : ""].filter(Boolean).join(" ")} /></div>}
                   </React.Fragment>
                 );
               })}
             </div>
           )}
 
-          {/* Body */}
           <div className="rmod-body">
             {submitted ? (
-              <SuccessScreen
-                onClose={handleClose}
-                userName={firstName}
-              />
+              <SuccessScreen onClose={handleClose} userName={firstName} />
             ) : (
               <>
-                {step === 1 && (
-                  <Step1
-                    form={form}
-                    set={set}
-                    errors={localErrors}
-                    wordCount={wc}
-                    overLimit={overLimit}
-                    pct={pct}
-                    barColor={barColor}
-                  />
-                )}
-                {step === 2 && (
-                  <Step2 form={form} set={set} />
-                )}
-                {step === 3 && (
-                  <Step3
-                    form={form}
-                    user={user}
-                    submitting={submitting}
-                    error={error}
-                    onDismissError={() => {/* error auto-clears on next submit */}}
-                  />
-                )}
+                {step === 1 && <Step1 form={form} set={set} errors={localErrors} wordCount={wc} overLimit={overLimit} pct={pct} barColor={barColor} />}
+                {step === 2 && <Step2 form={form} set={set} onTripInput={setTripInput} searchResults={searchResults} searchLoading={searchLoading} searchError={searchError} onSelectTrip={selectTrip} onClearTrip={clearTrip} canProceed={canProceedStep2} />}
+                {step === 3 && <StepQuestions form={form} onAnswer={setAnswer} onSkip={() => setStep(4)} />}
+                {step === 4 && <Step4 form={form} user={user} submitting={submitting} error={error} onDismissError={() => {}} />}
               </>
             )}
           </div>
 
-          {/* Footer */}
           {!submitted && (
             <div className="rmod-footer">
-              {/* Back button */}
               {step > 1 ? (
-                <button
-                  type="button"
-                  className="rmod-btn rmod-btn--ghost"
-                  onClick={handleBack}
-                  disabled={submitting}
-                >
-                  <ArrowLeft aria-hidden="true" />
-                  Back
-                </button>
-              ) : (
-                <div aria-hidden="true" /> /* spacer */
-              )}
-
-              {/* Next / Submit */}
+                <button type="button" className="rmod-btn rmod-btn--ghost" onClick={handleBack} disabled={submitting}><ArrowLeft aria-hidden="true" />Back</button>
+              ) : <div aria-hidden="true" />}
               {step < TOTAL_STEPS ? (
-                <button
-                  type="button"
-                  className="rmod-btn rmod-btn--primary"
-                  onClick={handleNext}
-                  disabled={step === 1 && !canProceedStep1}
-                >
-                  Continue
-                  <ArrowRight aria-hidden="true" />
+                <button type="button" className="rmod-btn rmod-btn--primary" onClick={handleNext}
+                  disabled={(step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2)}>
+                  Continue<ArrowRight aria-hidden="true" />
                 </button>
               ) : (
-                <button
-                  type="button"
-                  className="rmod-btn rmod-btn--submit"
-                  onClick={handleSubmit}
-                  disabled={submitting || !canProceedStep1}
-                  aria-busy={submitting}
-                >
-                  {submitting ? (
-                    <>
-                      <span className="rmod-spinner" aria-hidden="true" />
-                      Submitting…
-                    </>
-                  ) : (
-                    <>
-                      <Send aria-hidden="true" />
-                      Submit Review
-                    </>
-                  )}
+                <button type="button" className="rmod-btn rmod-btn--submit" onClick={handleSubmit}
+                  disabled={submitting || !canProceedStep1 || !canProceedStep2} aria-busy={submitting}>
+                  {submitting ? <><span className="rmod-spinner" aria-hidden="true" />Submitting…</> : <><Send aria-hidden="true" />Submit Review</>}
                 </button>
               )}
             </div>
@@ -1118,6 +1123,22 @@ function ReviewModalStyles() {
     transition-duration:.01ms!important;
   }
 }
-    `}</style>
+    `}
+.rmod-search-results{position:absolute;z-index:30;top:calc(100% + 7px);left:0;right:0;max-height:260px;overflow:auto;border:1px solid #dbe7df;border-radius:14px;background:#fff;box-shadow:0 16px 38px rgba(15,45,30,.16)}
+.rmod-search-result{display:flex;align-items:center;gap:10px;width:100%;padding:11px 13px;border:0;border-bottom:1px solid #eef3ef;background:#fff;text-align:left;color:#1f3d2f;cursor:pointer}
+.rmod-search-result:last-child{border-bottom:0}.rmod-search-result:hover,.rmod-search-result:focus-visible{background:#f0faf4;outline:none}
+.rmod-search-result-icon{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:#e9f7ee;color:#087d5a}
+.rmod-search-result-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:3px}.rmod-search-result-copy strong{font-size:13px;overflow-wrap:anywhere}.rmod-search-result-copy small{font-size:10px;color:#718078;text-transform:capitalize}
+.rmod-search-state{padding:14px;color:#69796f;font-size:12px;line-height:1.55}.rmod-search-state--error{color:#b42318}
+.rmod-expectation-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rmod-expectation-option{padding:10px 9px;border:1px solid #dce7df;border-radius:11px;background:#fff;color:#42594b;font-size:12px;font-weight:650;cursor:pointer}
+.rmod-expectation-option.is-selected{border-color:#0b8b62;background:#eaf8f0;color:#066044;box-shadow:0 0 0 2px rgba(11,139,98,.1)}
+.rmod-question-list{display:grid;gap:12px}.rmod-question-card{padding:14px;border:1px solid #e1ebe4;border-radius:14px;background:#fbfdfb}
+.rmod-question-unit{padding:0 12px;color:#728077;font-size:12px;white-space:nowrap}
+.rmod-optional-actions{display:flex;justify-content:flex-end;margin-top:4px}
+.rmod-preview-expectation{margin:0 0 12px;padding:9px 11px;border-radius:10px;background:#eff8f2;color:#176246;font-size:12px;font-weight:650}
+.rmod-preview-answers{display:grid;gap:8px;margin:0 0 14px}.rmod-preview-answers>div{display:grid;gap:3px;padding:9px 11px;border-radius:10px;background:#f7faf8}.rmod-preview-answers strong{font-size:11px;color:#496052}.rmod-preview-answers span{font-size:12px;color:#193d2c;overflow-wrap:anywhere}
+@media(max-width:520px){.rmod-expectation-options{grid-template-columns:1fr}.rmod-search-results{max-height:220px}}
+</style>
   );
 }
