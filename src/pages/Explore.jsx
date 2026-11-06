@@ -141,7 +141,7 @@ function useSlideshow(length, interval = 4500) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   WHY EAST AFRICA DATA
+   WHY East Africa DATA
 ═══════════════════════════════════════════════════════════ */
 const WHY_ITEMS = [
   {
@@ -1369,7 +1369,7 @@ const TRUST_ITEMS = [
   {
     Icon: FiAward,
     title: 'Award-Winning Company',
-    desc: 'Recognized by leading publications for excellence in African travel.',
+    desc: 'Recognized by leading publications for excellence in East African travel.',
   },
 ];
 
@@ -1548,7 +1548,7 @@ export default function Explore() {
           </div>
         </section>
 
-        {/* ════════ 3. WHY EAST AFRICA ════════ */}
+        {/* ════════ 3. WHY East Africa ════════ */}
         <section className="ex-section ex-section--mint">
           <div className="ex-inner">
             <div className="ex-why">
