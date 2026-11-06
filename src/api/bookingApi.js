@@ -262,62 +262,85 @@ const VALID_BOOKING_TYPES = ["destination", "service", "custom", "package"];
 const normaliseBookingPayload = (formData) => {
   const d = { ...formData };
 
-  /* ── booking_type ── */
   if (!VALID_BOOKING_TYPES.includes(d.booking_type)) {
     d.booking_type = "package";
   }
 
-  /* ── integer helpers ── */
-  const toInt = (v, fallback = 0) => {
-    const n = parseInt(v, 10);
-    return Number.isFinite(n) ? n : fallback;
+  const toInt = (value, fallback = 0) => {
+    const parsed = parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : fallback;
   };
-
-  const toFloat = (v) => {
-    const n = parseFloat(v);
-    return Number.isFinite(n) ? n : undefined;
+  const trimStr = (value) =>
+    value != null && String(value).trim() !== "" ? String(value).trim() : undefined;
+  const lowerStr = (value) => {
+    const valueText = trimStr(value);
+    return valueText ? valueText.toLowerCase() : undefined;
   };
-
-  /* ── traveler counts ─ accept both naming conventions ── */
-  const adults   = Math.max(1, toInt(d.number_of_adults   ?? d.adults,   1));
+  const adults = Math.max(1, toInt(d.number_of_adults ?? d.adults, 1));
   const children = Math.max(0, toInt(d.number_of_children ?? d.children, 0));
-  const travelers = toInt(
-    d.travelers_count ?? d.number_of_travelers ?? d.travelers,
-    adults + children,
+  const travelers = Math.max(
+    1,
+    toInt(d.travelers_count ?? d.number_of_travelers ?? d.travelers, adults + children),
   );
+  const fullName =
+    trimStr(d.full_name || d.fullName || d.name) ||
+    [trimStr(d.first_name || d.firstName), trimStr(d.last_name || d.lastName)]
+      .filter(Boolean)
+      .join(" ") ||
+    trimStr(d.guest_name);
 
-  /* ── string helpers ── */
-  const trimStr  = (v) => (v != null ? String(v).trim()              : undefined);
-  const lowerStr = (v) => (v != null ? String(v).trim().toLowerCase() : undefined);
-
-  /* ── build clean payload ── */
   const payload = {
-    // Guest
-    guest_name:           trimStr(d.guest_name),
-    guest_email:          lowerStr(d.guest_email),
-    guest_phone:          trimStr(d.guest_phone) || undefined,
+    // Preserve legacy guest fields while supplying the canonical booking fields.
+    guest_name: fullName,
+    guest_email: lowerStr(d.guest_email || d.email),
+    guest_phone: trimStr(d.guest_phone || d.phone),
+    full_name: fullName,
+    email: lowerStr(d.email || d.guest_email),
+    phone: trimStr(d.phone || d.guest_phone),
+    whatsapp: trimStr(d.whatsapp),
 
-    // Booking meta
-    booking_type:         d.booking_type,
+    booking_type: d.booking_type,
+    package_id: d.package_id ? toInt(d.package_id) : undefined,
+    package_title: trimStr(d.package_title),
+    destination_id: d.destination_id || d.destinationId ? toInt(d.destination_id ?? d.destinationId) : undefined,
+    service_id: d.service_id || d.serviceId ? toInt(d.service_id ?? d.serviceId) : undefined,
+    country_id: d.country_id || d.countryId ? toInt(d.country_id ?? d.countryId) : undefined,
+    destination_name: trimStr(d.destination_name || d.destinationName),
+    country_name: trimStr(d.country_name || d.countryName),
+    country: trimStr(d.country || d.country_of_residence || d.countryOfResidence),
+    attraction_name: trimStr(d.attraction_name || d.attractionName),
 
-    // Package reference
-    package_id:           d.package_id   ? toInt(d.package_id)          : undefined,
-    package_title:        trimStr(d.package_title)                       || undefined,
-    
-    // Travel dates
-    travel_date:          trimStr(d.travel_date)                         || undefined,
-    end_date:             trimStr(d.end_date)                            || undefined,
+    travel_date: trimStr(d.travel_date || d.travelDate || d.startDate),
+    return_date: trimStr(d.return_date || d.end_date || d.endDate || d.departureDate),
+    flexible_dates: Boolean(d.flexible_dates ?? d.flexibleDates ?? false),
+    flexible_months: Array.isArray(d.flexible_months)
+      ? JSON.stringify(d.flexible_months)
+      : trimStr(d.flexible_months || d.flexibleMonths),
 
-    // Travelers
-    number_of_adults:     adults,
-    number_of_children:   children,
-    travelers_count:      travelers,
+    number_of_adults: adults,
+    number_of_children: children,
+    number_of_travelers: travelers,
+    travelers_count: travelers,
+    accommodation_type: trimStr(d.accommodation_type || d.accommodationType),
+    room_type: trimStr(d.room_type || d.roomType),
+    dietary_requirements: trimStr(d.dietary_requirements || d.dietaryRequirements),
+    special_requests: trimStr(d.special_requests || d.specialRequests),
+    accessibility_needs: trimStr(d.accessibility_needs || d.accessibilityNeeds),
+    customer_notes: trimStr(d.customer_notes || d.customerNotes || d.message),
+    group_type: trimStr(d.group_type || d.groupType),
+    marketing_source: trimStr(d.marketing_source || d.marketingSource),
+    newsletter_opt_in: Boolean(d.newsletter_opt_in ?? d.newsletterOptIn ?? false),
+    preferred_contact_method: trimStr(d.preferred_contact_method || d.preferredContactMethod),
+    preferred_contact_time: trimStr(d.preferred_contact_time || d.preferredContactTime),
+    pickup_location: trimStr(d.pickup_location || d.pickupLocation),
+    source: trimStr(d.source) || "website",
+    children_ages: d.children_ages ?? d.childrenAges,
+    travelers_details: d.travelers_details ?? d.travelersDetails,
+    emergency_contact: d.emergency_contact ?? d.emergencyContact,
+  };
 
-    // Extras */
-
-  /* ── strip undefined values (keep 0 and false) ── */
   return Object.fromEntries(
-    Object.entries(payload).filter(([, v]) => v !== undefined),
+    Object.entries(payload).filter(([, value]) => value !== undefined),
   );
 };
 
