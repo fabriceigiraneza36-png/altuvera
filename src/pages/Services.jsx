@@ -178,15 +178,18 @@ function TestimonialsCarousel() {
                 <article className="sv-review-card" key={review.id || (name + quote.slice(0, 24))}>
                   <div className="sv-review-card__topline">
                     <span className="sv-review-quote" aria-hidden="true">“</span>
-                    <span className="sv-review-rating" aria-label={`${Math.max(0, Math.min(5, Number(review.rating) || 0))} out of 5 stars`}>
-                      {Array.from({ length: 5 }).map((_, index) => <FiStar key={index} className={index < (Number(review.rating) || 0) ? "is-filled" : ""} aria-hidden="true" />)}
-                    </span>
+                    <span className="sv-review-card__eyebrow">A traveller’s story</span>
                   </div>
                   <p>{quote}</p>
                   {review.trip && <span className="sv-review-trip">{review.trip}</span>}
                   <div className="sv-review-person">
-                    {avatar ? <img src={avatar} alt="" loading="lazy" /> : <span className="sv-review-initial">{name.charAt(0).toUpperCase()}</span>}
-                    <div><strong>{name}</strong>{location && <small>{location}</small>}</div>
+                    <div className="sv-review-avatar">
+                      {avatar ? <img src={avatar} alt="" loading="lazy" /> : <span className="sv-review-initial">{name.charAt(0).toUpperCase()}</span>}
+                    </div>
+                    <span className="sv-review-rating" role="img" aria-label={`${Math.max(0, Math.min(5, Math.round(Number(review.rating) || 0)))} out of 5 stars`}>
+                      {Array.from({ length: 5 }).map((_, index) => <FiStar key={index} className={index < Math.max(0, Math.min(5, Math.round(Number(review.rating) || 0))) ? "is-filled" : ""} aria-hidden="true" />)}
+                    </span>
+                    <div className="sv-review-person-copy"><strong>{name}</strong>{location && <small>{location}</small>}</div>
                   </div>
                 </article>
               );
