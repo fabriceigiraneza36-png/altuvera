@@ -40,8 +40,8 @@ export const posts = [
     readTime: '12 min read',
     featured: false,
     image: 'https://images.unsplash.com/photo-1589553416260-f586c8f1514f?w=1200&q=80',
-    excerpt: 'A comprehensive comparison of Kilimanjaro\'s routes to help you choose your path to the Roof of Africa.',
-    content: `Mount Kilimanjaro, Africa's highest peak, offers six established routes to the summit. Each has its own character, challenges, and rewards...`,
+    excerpt: 'A comprehensive comparison of Kilimanjaro\'s routes to help you choose your path to the Roof of East Africa.',
+    content: `Mount Kilimanjaro, East Africa's highest peak, offers six established routes to the summit. Each has its own character, challenges, and rewards...`,
     tags: ['kilimanjaro', 'trekking', 'tanzania', 'mountains']
   },
   {
@@ -116,7 +116,7 @@ export const posts = [
     featured: true,
     image: 'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=1200&q=80',
     excerpt: 'Navigate the world\'s largest inland delta in traditional mokoro canoes for an intimate wildlife experience.',
-    content: `The Okavango Delta is a place where the Kalahari Desert blooms. This UNESCO World Heritage Site is a labyrinth of lagoons, channels, and islands that creates one of Africa's most unique safari destinations...`,
+    content: `The Okavango Delta is a place where the Kalahari Desert blooms. This UNESCO World Heritage Site is a labyrinth of lagoons, channels, and islands that creates one of the region's most unique safari destinations...`,
     tags: ['okavango', 'botswana', 'safari', 'delta']
   },
   {
@@ -191,7 +191,7 @@ export const posts = [
     featured: true,
     image: 'https://images.unsplash.com/photo-1535338454770-6c4f5b113d03?w=1200&q=80',
     excerpt: 'Plan the perfect self-drive safari in South Africa\'s premier wildlife destination with insider tips and route suggestions.',
-    content: `Kruger National Park is one of the few places in Africa where you can safely explore on a self-drive safari. Covering an area larger than Israel, this iconic park offers incredible wildlife diversity...`,
+    content: `Kruger National Park is one of the few places in South Africa where you can safely explore on a self-drive safari. Covering an area larger than Israel, this iconic park offers incredible wildlife diversity...`,
     tags: ['kruger', 'south-africa', 'safari', 'self-drive']
   },
   {
@@ -236,7 +236,7 @@ export const posts = [
     featured: false,
     image: 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=1200&q=80',
     excerpt: 'Explore Rwanda\'s remarkable transformation, stunning landscapes, and commitment to conservation.',
-    content: `Rwanda has undergone one of the most remarkable transformations in modern African history. Known as the "Land of a Thousand Hills," this small nation punches well above its weight in tourism...`,
+    content: `Rwanda has undergone one of the most remarkable transformations in modern East African history. Known as the "Land of a Thousand Hills," this small nation punches well above its weight in tourism...`,
     tags: ['rwanda', 'kigali', 'conservation', 'culture']
   },
   {
