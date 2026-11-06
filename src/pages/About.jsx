@@ -18,6 +18,7 @@ import CookieSettingsButton from '../components/common/CookieSettingsButton';
 import ReviewModal from '../components/home/ReviewModal';
 import AnimatedSection from '../components/common/AnimatedSection';
 import TeamPortraitCarousel from '../components/common/TeamPortraitCarousel';
+import TestimonialShowcase from '../components/home/TestimonialShowcase';
 import { useUserAuth } from '../context/UserAuthContext';
 import { useGallery } from '../hooks/useGallery';
 
@@ -1220,6 +1221,9 @@ const About = () => {
           </FadeInSection>
         </div>
       </section>
+
+      {/* Live CMS testimonials — shared feed used on the homepage and services page. */}
+      <TestimonialShowcase />
 
       {/* ══════════════════════════════════════════
           OUR ADVENTURES — Quick showcase
