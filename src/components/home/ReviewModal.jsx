@@ -566,6 +566,8 @@ export default function ReviewModal({ isOpen, onClose }) {
       setSearchLoading(false);
       return undefined;
     }
+    setSearchLoading(true);
+    setSearchError("");
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       setSearchLoading(true);
