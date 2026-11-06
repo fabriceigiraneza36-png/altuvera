@@ -180,3 +180,25 @@
   .sv-page *, .sv-page *:before, .sv-page *:after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important; }
   .sv-card:hover,.sv-approach-card:hover,.sv-button:hover { transform:none; }
 }
+
+/* Accessible, interactive image pagination */
+.sv-card__dots { pointer-events:auto; }
+.sv-card__dots button {
+  display:block;
+  width:7px;
+  height:7px;
+  flex:0 0 auto;
+  padding:0;
+  border:1px solid rgba(255,255,255,.82);
+  border-radius:999px;
+  background:rgba(255,255,255,.52);
+  box-shadow:0 1px 5px rgba(0,0,0,.2);
+  cursor:pointer;
+  transition:width .22s ease,background .22s ease,transform .22s ease;
+}
+.sv-card__dots button.is-active { width:22px; background:#fff; }
+.sv-card__dots button:hover { transform:scale(1.12); }
+.sv-card__dots button:focus-visible { outline:2px solid #fff; outline-offset:3px; }
+@media (prefers-reduced-motion:reduce) {
+  .sv-card__dots button { transition:none; }
+}
