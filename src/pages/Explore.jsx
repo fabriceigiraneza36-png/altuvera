@@ -1650,7 +1650,7 @@ const TRUST_ITEMS = [
 const ADVENTURE_ICON_COMPONENTS = {
   safari: FiCompass,
   mountain: FiActivity,
-  primate: FiShieldCheck,
+  primate: FiShield,
   coast: FiAnchor,
   culture: FiBookOpen,
   photography: FiCamera,
@@ -1945,6 +1945,28 @@ function AdventureExperienceModal({
               </div>
             )}
           </section>
+
+          {Array.isArray(adventure.planningLinks) && adventure.planningLinks.length > 0 && (
+            <section className="ex-adventure-modal__panel" style={{ marginTop: 16 }}>
+              <h3 className="ex-adventure-modal__section-title"><FiShield size={16} /> Official planning information</h3>
+              <p style={{ marginBottom: 12 }}>
+                Use the relevant park and destination authorities for current permits, visitor requirements and local guidance.
+              </p>
+              <div className="ex-adventure-modal__countries">
+                {adventure.planningLinks.map((item) => (
+                  <a
+                    key={item.url}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ex-adventure-modal__country-link"
+                  >
+                    {item.label} <FiExternalLink size={11} />
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
 
           {Array.isArray(adventure.faqs) && adventure.faqs.length > 0 && (
             <section className="ex-adventure-modal__faq" aria-label="Frequently asked questions">
