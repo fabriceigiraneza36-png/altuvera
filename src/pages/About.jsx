@@ -377,13 +377,196 @@ const ABOUT_STYLES = `
     cursor: not-allowed;
   }
 
-  /* ── Lightbox ── */
+  /* ── Fullscreen gallery viewer ── */
   .about-lightbox {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.96);
+    position: fixed;
+    inset: 0;
     z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
+    display: grid;
+    place-items: center;
+    padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+      max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    background: rgba(1, 12, 8, .92);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+  .about-lightbox-dialog {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(1120px, 100%);
+    height: min(900px, calc(100dvh - 36px));
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid rgba(167, 243, 208, .2);
+    border-radius: 24px;
+    background: #06170f;
+    color: #f0fdf4;
+    box-shadow: 0 30px 100px rgba(0, 0, 0, .55);
+  }
+  .about-lightbox-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex: 0 0 auto;
+    min-height: 68px;
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(167, 243, 208, .14);
+    background: linear-gradient(180deg, rgba(16, 44, 31, .98), rgba(6, 23, 15, .96));
+  }
+  .about-lightbox-eyebrow {
+    margin: 0 0 3px;
+    color: #86efac;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .18em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  .about-lightbox-count {
+    flex: 0 0 auto;
+    padding: 7px 11px;
+    border: 1px solid rgba(167, 243, 208, .22);
+    border-radius: 999px;
+    background: rgba(167, 243, 208, .08);
+    color: #d1fae5;
+    font-size: 11px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .about-lightbox-close,
+  .about-lightbox-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid rgba(209, 250, 229, .24);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .09);
+    color: #f0fdf4;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease, opacity .18s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .about-lightbox-close:hover,
+  .about-lightbox-nav:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: rgba(167, 243, 208, .65);
+    background: #047857;
+  }
+  .about-lightbox-close:focus-visible,
+  .about-lightbox-nav:focus-visible {
+    outline: 3px solid #6ee7b7;
+    outline-offset: 3px;
+  }
+  .about-lightbox-stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    padding: 16px 76px;
+    background:
+      radial-gradient(ellipse at center, rgba(22, 101, 52, .16), transparent 68%),
+      #020b07;
+    touch-action: pan-y;
+  }
+  .about-lightbox-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 10px;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .about-lightbox-nav {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 46px;
+    height: 46px;
+    transform: translateY(-50%);
+    background: rgba(9, 30, 20, .78);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .about-lightbox-nav:hover:not(:disabled) { transform: translateY(calc(-50% - 1px)); }
+  .about-lightbox-nav:disabled { cursor: not-allowed; opacity: .28; }
+  .about-lightbox-nav--prev { left: 14px; }
+  .about-lightbox-nav--next { right: 14px; }
+  .about-lightbox-caption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 14px 20px 16px;
+    border-top: 1px solid rgba(167, 243, 208, .14);
+    background: #071b11;
+  }
+  .about-lightbox-caption-copy { min-width: 0; }
+  .about-lightbox-caption-title {
+    margin: 0;
+    overflow: hidden;
+    color: #f0fdf4;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(15px, 2vw, 19px);
+    font-weight: 700;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+  }
+  .about-lightbox-caption-location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 5px 0 0;
+    color: #a7f3d0;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  @media (max-width: 640px) {
+    .about-lightbox {
+      padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+        max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    }
+    .about-lightbox-dialog {
+      width: 100%;
+      height: calc(100dvh - 16px);
+      max-height: 900px;
+      border-radius: 17px;
+    }
+    .about-lightbox-toolbar {
+      min-height: 58px;
+      padding: 9px 11px;
+      gap: 8px;
+    }
+    .about-lightbox-eyebrow { font-size: 8px; }
+    .about-lightbox-count { padding: 6px 8px; font-size: 10px; }
+    .about-lightbox-close { width: 38px; height: 38px; }
+    .about-lightbox-stage { padding: 10px 48px; }
+    .about-lightbox-nav { width: 38px; height: 38px; }
+    .about-lightbox-nav--prev { left: 7px; }
+    .about-lightbox-nav--next { right: 7px; }
+    .about-lightbox-image { border-radius: 7px; }
+    .about-lightbox-caption { padding: 11px 13px calc(12px + env(safe-area-inset-bottom)); gap: 8px; }
+    .about-lightbox-caption-location { font-size: 10px; }
+  }
+  @media (max-height: 520px) and (orientation: landscape) {
+    .about-lightbox-toolbar { min-height: 48px; padding: 6px 12px; }
+    .about-lightbox-close { width: 36px; height: 36px; }
+    .about-lightbox-caption { padding: 8px 14px; }
   }
 
   /* ── Value Cards ── */
@@ -669,7 +852,13 @@ const HorizontalGallery = ({ images, onImageClick }) => {
               onClick={() => onImageClick(img)}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter') onImageClick(img); }}
+              aria-label={`Open image: ${img.title || img.alt || 'Gallery photograph'}`}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onImageClick(img);
+                }
+              }}
             >
               <img
                 src={img.thumb || img.src}
@@ -723,81 +912,129 @@ const HorizontalGallery = ({ images, onImageClick }) => {
    GALLERY LIGHTBOX
    ═══════════════════════════════════════════════════════ */
 const GalleryLightbox = ({ image, images, onClose, onPrev, onNext }) => {
+  const touchStartX = useRef(null);
+  const idx = Math.max(0, images.findIndex((item) => item.id === image.id));
+  const location = image.location || image.countryName || image.country_name || '';
+
   useEffect(() => {
-    const fn = (e) => {
-      if (e.key === 'Escape')     onClose();
-      if (e.key === 'ArrowLeft')  onPrev();
-      if (e.key === 'ArrowRight') onNext();
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key === 'ArrowLeft') onPrev();
+      if (event.key === 'ArrowRight') onNext();
     };
-    window.addEventListener('keydown', fn);
+
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', fn);
-      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
     };
   }, [onClose, onPrev, onNext]);
 
-  const idx = images.findIndex((i) => i.id === image.id);
-  const btnStyle = (disabled) => ({
-    position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-    width: 50, height: 50, borderRadius: '50%',
-    background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-    color: 'white', cursor: disabled ? 'not-allowed' : 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    opacity: disabled ? 0.35 : 1, zIndex: 10,
-  });
+  const handleTouchStart = (event) => {
+    touchStartX.current = event.touches?.[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = (event) => {
+    if (touchStartX.current == null) return;
+    const endX = event.changedTouches?.[0]?.clientX ?? touchStartX.current;
+    const distance = endX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(distance) < 55) return;
+    if (distance > 0 && idx > 0) onPrev();
+    if (distance < 0 && idx < images.length - 1) onNext();
+  };
 
   return (
     <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       className="about-lightbox"
       onClick={onClose}
     >
-      <button onClick={onClose} style={{
-        position: 'absolute', top: 24, right: 24, width: 50, height: 50, borderRadius: '50%',
-        background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-        color: 'white', cursor: 'pointer', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', zIndex: 10,
-      }}>
-        <X size={24} />
-      </button>
-
-      <button
-        onClick={(e) => { e.stopPropagation(); onPrev(); }}
-        disabled={idx === 0}
-        style={{ ...btnStyle(idx === 0), left: 24 }}
+      <motion.div
+        initial={{ opacity: 0, y: 18, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 12, scale: 0.985 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+        className="about-lightbox-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Altuvera photo gallery"
+        onClick={(event) => event.stopPropagation()}
       >
-        <ChevronLeft size={24} />
-      </button>
-
-      <button
-        onClick={(e) => { e.stopPropagation(); onNext(); }}
-        disabled={idx === images.length - 1}
-        style={{ ...btnStyle(idx === images.length - 1), right: 24 }}
-      >
-        <ChevronRight size={24} />
-      </button>
-
-      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: '85%', maxHeight: '85vh', position: 'relative' }}>
-        <motion.img
-          key={image.id}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          src={image.src || image.thumb}
-          alt={image.alt || image.title}
-          style={{
-            maxWidth: '100%', maxHeight: '80vh',
-            objectFit: 'contain', borderRadius: 12, display: 'block',
-          }}
-        />
-        <div style={{
-          position: 'absolute', bottom: -48, left: '50%', transform: 'translateX(-50%)',
-          textAlign: 'center', color: 'white', whiteSpace: 'nowrap',
-        }}>
-          <p style={{ fontSize: 16, marginBottom: 4 }}>{image.title}</p>
-          <span style={{ fontSize: 13, opacity: 0.7 }}>{idx + 1} / {images.length}</span>
+        <div className="about-lightbox-toolbar">
+          <div className="min-w-0">
+            <p className="about-lightbox-eyebrow">Altuvera · Moments in Africa</p>
+            <span className="about-lightbox-count" aria-live="polite">{idx + 1} / {images.length}</span>
+          </div>
+          <button
+            type="button"
+            className="about-lightbox-close"
+            onClick={onClose}
+            aria-label="Close fullscreen image viewer"
+          >
+            <X size={20} strokeWidth={2.2} />
+          </button>
         </div>
-      </div>
+
+        <div
+          className="about-lightbox-stage"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {idx > 0 && (
+            <button
+              type="button"
+              className="about-lightbox-nav about-lightbox-nav--prev"
+              onClick={onPrev}
+              aria-label="View previous gallery image"
+            >
+              <ChevronLeft size={23} />
+            </button>
+          )}
+
+          <motion.img
+            key={image.id || image.src || image.thumb}
+            initial={{ opacity: 0.35, scale: 0.99 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.22 }}
+            src={image.src || image.thumb}
+            alt={image.alt || image.title || 'Altuvera travel gallery photograph'}
+            className="about-lightbox-image"
+            draggable={false}
+          />
+
+          {idx < images.length - 1 && (
+            <button
+              type="button"
+              className="about-lightbox-nav about-lightbox-nav--next"
+              onClick={onNext}
+              aria-label="View next gallery image"
+            >
+              <ChevronRight size={23} />
+            </button>
+          )}
+        </div>
+
+        <div className="about-lightbox-caption">
+          <div className="about-lightbox-caption-copy">
+            <h3 className="about-lightbox-caption-title">
+              {image.title || image.alt || 'A moment from our journeys'}
+            </h3>
+            {location && (
+              <p className="about-lightbox-caption-location">
+                <MapPin size={13} aria-hidden="true" />
+                <span>{location}</span>
+              </p>
+            )}
+          </div>
+          <span className="about-lightbox-count" aria-hidden="true">{idx + 1} of {images.length}</span>
+        </div>
+      </motion.div>
     </motion.div>
   );
 };
