@@ -30,7 +30,7 @@ const rawApiBase = (
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_BACKEND_URL ||
   "https://backend-jd8f.onrender.com"
-).replace(/\\/+$/, "");
+).replace(/\/+$/, "");
 const API_BASE = rawApiBase.endsWith("/api") ? rawApiBase.slice(0, -4) : rawApiBase;
 const CONTEXT_SEARCH_ENDPOINT = `${API_BASE}/api/testimonials/context-search`;
 
