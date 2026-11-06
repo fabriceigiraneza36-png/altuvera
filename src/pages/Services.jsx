@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import {
   FiArrowRight, FiArrowUpRight, FiCamera, FiCheck, FiCompass,
-  FiGlobe, FiHeart, FiMap, FiMapPin, FiMail, FiShield, FiSun, FiZap
+  FiGlobe, FiHeart, FiMap, FiMapPin, FiMail, FiShield, FiSun, FiZap, FiStar
 } from "react-icons/fi";
 import SEO from "../components/common/SEO";
 import PageHeader from "../components/common/PageHeader";
@@ -176,8 +176,14 @@ function TestimonialsCarousel() {
               const location = [review.location, review.date_text].filter(Boolean).join(" · ");
               return (
                 <article className="sv-review-card" key={review.id || (name + quote.slice(0, 24))}>
-                  <span className="sv-review-quote" aria-hidden="true">“</span>
+                  <div className="sv-review-card__topline">
+                    <span className="sv-review-quote" aria-hidden="true">“</span>
+                    <span className="sv-review-rating" aria-label={`${Math.max(0, Math.min(5, Number(review.rating) || 0))} out of 5 stars`}>
+                      {Array.from({ length: 5 }).map((_, index) => <FiStar key={index} className={index < (Number(review.rating) || 0) ? "is-filled" : ""} aria-hidden="true" />)}
+                    </span>
+                  </div>
                   <p>{quote}</p>
+                  {review.trip && <span className="sv-review-trip">{review.trip}</span>}
                   <div className="sv-review-person">
                     {avatar ? <img src={avatar} alt="" loading="lazy" /> : <span className="sv-review-initial">{name.charAt(0).toUpperCase()}</span>}
                     <div><strong>{name}</strong>{location && <small>{location}</small>}</div>
