@@ -12,7 +12,7 @@ import React, {
 import { createPortal } from "react-dom";
 import {
   Star, X, CheckCircle2, ArrowRight, ArrowLeft,
-  MapPin, Globe2, Send, MessageCircle,
+  MapPin, Globe2, Send,
 } from "lucide-react";
 
 import { useUserAuth }          from "../../context/UserAuthContext";
