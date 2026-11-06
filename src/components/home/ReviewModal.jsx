@@ -10,16 +10,10 @@ import React, {
   useState, useCallback, useEffect, useRef,
 } from "react";
 import { createPortal } from "react-dom";
-import { FaStar }       from "react-icons/fa6";
 import {
-  HiX, HiCheckCircle, HiSparkles,
-  HiArrowRight, HiArrowLeft,
-} from "react-icons/hi";
-import {
-  HiOutlineMapPin, HiOutlineGlobeAlt,
-  HiOutlinePaperAirplane, HiOutlineChatBubbleLeftEllipsis,
-} from "react-icons/hi2";
-import { MdVerified } from "react-icons/md";
+  Star, X, CheckCircle2, Sparkles, ArrowRight, ArrowLeft,
+  MapPin, Globe2, Send, MessageCircle,
+} from "lucide-react";
 
 import { useUserAuth }          from "../../context/UserAuthContext";
 import { useSubmitTestimonial } from "../../hooks/useSubmitTestimonial";
@@ -28,13 +22,13 @@ import { useSubmitTestimonial } from "../../hooks/useSubmitTestimonial";
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════
 
-const MAX_WORDS   = 60;
+const MAX_WORDS   = 150;
 const TOTAL_STEPS = 3;
 const STAR_LABELS = ["Terrible", "Poor", "Good", "Great", "Excellent"];
 
 const EMPTY_FORM = Object.freeze({
   testimonial_text: "",
-  rating:           5,
+  rating:           0,
   trip:             "",
   location:         "",
 });
@@ -114,7 +108,7 @@ const StarInput = ({ value, onChange, disabled = false }) => {
           aria-label={`${n} star — ${STAR_LABELS[n - 1]}`}
           aria-pressed={n === value}
         >
-          <FaStar aria-hidden="true" />
+          <Star aria-hidden="true" />
         </button>
       ))}
       {display > 0 && (
@@ -136,7 +130,7 @@ const ErrorAlert = ({ error, onDismiss }) => {
       role="alert"
       aria-live="assertive"
     >
-      <span aria-hidden="true">⚠️</span>
+      <span className="rmod-alert-mark" aria-hidden="true">!</span>
       <span className="rmod-alert-text">{msg}</span>
       {onDismiss && (
         <button
@@ -145,7 +139,7 @@ const ErrorAlert = ({ error, onDismiss }) => {
           onClick={onDismiss}
           aria-label="Dismiss error"
         >
-          ✕
+          ×
         </button>
       )}
     </div>
@@ -205,7 +199,7 @@ const Step1 = ({ form, set, errors, wordCount, overLimit, pct, barColor }) => (
           value={form.testimonial_text}
           onChange={(e) => set("testimonial_text", e.target.value)}
           rows={5}
-          maxLength={600}
+          maxLength={1500}
           required
           aria-required="true"
           aria-invalid={overLimit || !!errors.testimonial_text}
@@ -250,7 +244,7 @@ const Step2 = ({ form, set }) => (
         <span className="rmod-opt">— optional</span>
       </label>
       <div className="rmod-input-wrap">
-        <HiOutlineGlobeAlt className="rmod-input-icon" aria-hidden="true" />
+        <Globe2 className="rmod-input-icon" aria-hidden="true" />
         <input
           id="rmod-trip"
           type="text"
@@ -271,7 +265,7 @@ const Step2 = ({ form, set }) => (
         <span className="rmod-opt">— optional</span>
       </label>
       <div className="rmod-input-wrap">
-        <HiOutlineMapPin className="rmod-input-icon" aria-hidden="true" />
+        <MapPin className="rmod-input-icon" aria-hidden="true" />
         <input
           id="rmod-loc"
           type="text"
@@ -286,7 +280,7 @@ const Step2 = ({ form, set }) => (
     </div>
 
     <div className="rmod-tip">
-      <HiOutlineChatBubbleLeftEllipsis
+      <MessageCircle
         className="rmod-tip-icon"
         aria-hidden="true"
       />
@@ -307,7 +301,7 @@ const Step3 = ({ form, user, submitting, error, onDismissError }) => {
   const tripLine = [form.trip, form.location]
     .map((v) => String(v || "").trim())
     .filter(Boolean)
-    .join(" · ") || "Altuvera Safariser";
+    .join(" · ");
 
   return (
     <div className="rmod-step">
@@ -330,7 +324,7 @@ const Step3 = ({ form, user, submitting, error, onDismissError }) => {
           aria-label={`${stars} out of 5 stars`}
         >
           {Array.from({ length: 5 }).map((_, i) => (
-            <FaStar
+            <Star
               key={i}
               className={i < stars ? "rmod-pstar--on" : "rmod-pstar--off"}
               aria-hidden="true"
@@ -354,12 +348,9 @@ const Step3 = ({ form, user, submitting, error, onDismissError }) => {
           </div>
           <div className="rmod-preview-meta">
             <strong>{userName}</strong>
-            <span>{tripLine}</span>
+            {tripLine && <span>{tripLine}</span>}
           </div>
-          <MdVerified
-            className="rmod-preview-verified"
-            aria-label="Verified reviewer"
-          />
+          <span className="rmod-preview-status">Pending admin approval</span>
         </div>
       </div>
 
@@ -376,8 +367,7 @@ const Step3 = ({ form, user, submitting, error, onDismissError }) => {
       )}
 
       <p className="rmod-note">
-        Your review will be published after a quick moderation check —
-        usually within 24 hours.
+        Your review remains private until an Altuvera administrator approves it.
       </p>
     </div>
   );
@@ -387,14 +377,13 @@ const Step3 = ({ form, user, submitting, error, onDismissError }) => {
 const SuccessScreen = ({ onClose, onAnother, userName }) => (
   <div className="rmod-success" role="status" aria-live="polite">
     <div className="rmod-success-ring" aria-hidden="true">
-      <HiCheckCircle className="rmod-success-icon" />
+      <CheckCircle2 className="rmod-success-icon" />
     </div>
     <h3 className="rmod-success-title">
       Thank you, {String(userName || "Traveler")}!
     </h3>
     <p className="rmod-success-body">
-      Your review has been submitted and will appear once approved —
-      usually within 24 hours.
+      Your review has been received and is awaiting approval by the Altuvera team. It will appear publicly only after an administrator approves it.
     </p>
     <div className="rmod-success-actions">
       <button
@@ -426,6 +415,7 @@ export default function ReviewModal({ isOpen, onClose }) {
   const [step, setStep]             = useState(1);
   const [form, setFormState]        = useState({ ...EMPTY_FORM });
   const [localErrors, setLocalErrors] = useState({});
+  const submitLockRef = useRef(false);
 
   const { submit, submitting, submitted, error, reset } =
     useSubmitTestimonial();
@@ -508,13 +498,19 @@ export default function ReviewModal({ isOpen, onClose }) {
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async () => {
-    await submit({
-      testimonial_text: form.testimonial_text,
-      rating:           form.rating,
-      trip:             form.trip     || undefined,
-      location:         form.location || undefined,
-    });
-  }, [submit, form]);
+    if (submitLockRef.current || submitting) return;
+    submitLockRef.current = true;
+    try {
+      await submit({
+        testimonial_text: form.testimonial_text,
+        rating:           form.rating,
+        trip:             form.trip     || undefined,
+        location:         form.location || undefined,
+      });
+    } finally {
+      submitLockRef.current = false;
+    }
+  }, [submit, form, submitting]);
 
   // ── Write another — reset everything ─────────────────────────────────────
   const handleAnother = useCallback(() => {
@@ -539,7 +535,8 @@ export default function ReviewModal({ isOpen, onClose }) {
   const STEP_LABELS = ["Rate", "Details", "Submit"];
 
   const canProceedStep1 =
-    String(form.testimonial_text || "").trim().length > 0 && !overLimit;
+    String(form.testimonial_text || "").trim().length > 0 && !overLimit &&
+    Number(form.rating) >= 1 && Number(form.rating) <= 5;
 
   return createPortal(
     <>
@@ -570,13 +567,13 @@ export default function ReviewModal({ isOpen, onClose }) {
             disabled={submitting}
             aria-label="Close review modal"
           >
-            <HiX aria-hidden="true" />
+            <X aria-hidden="true" />
           </button>
 
           {/* Header */}
           <div className="rmod-header">
             <div className="rmod-header-icon" aria-hidden="true">
-              <HiSparkles />
+              <Sparkles />
             </div>
             <div>
               <h2
@@ -622,7 +619,7 @@ export default function ReviewModal({ isOpen, onClose }) {
                         aria-current={active ? "step" : undefined}
                       >
                         {done
-                          ? <HiCheckCircle aria-hidden="true" />
+                          ? <CheckCircle2 aria-hidden="true" />
                           : <span aria-hidden="true">{n}</span>
                         }
                       </div>
@@ -704,7 +701,7 @@ export default function ReviewModal({ isOpen, onClose }) {
                   onClick={handleBack}
                   disabled={submitting}
                 >
-                  <HiArrowLeft aria-hidden="true" />
+                  <ArrowLeft aria-hidden="true" />
                   Back
                 </button>
               ) : (
@@ -720,7 +717,7 @@ export default function ReviewModal({ isOpen, onClose }) {
                   disabled={step === 1 && !canProceedStep1}
                 >
                   Continue
-                  <HiArrowRight aria-hidden="true" />
+                  <ArrowRight aria-hidden="true" />
                 </button>
               ) : (
                 <button
@@ -737,7 +734,7 @@ export default function ReviewModal({ isOpen, onClose }) {
                     </>
                   ) : (
                     <>
-                      <HiOutlinePaperAirplane aria-hidden="true" />
+                      <Send aria-hidden="true" />
                       Submit Review
                     </>
                   )}
@@ -906,7 +903,7 @@ function ReviewModalStyles() {
 /* ── Stars ── */
 .rmod-stars{display:flex;align-items:center;gap:.2rem;flex-wrap:wrap;}
 .rmod-star-btn{
-  background:none;border:none;cursor:pointer;padding:.2rem;
+  background:none;border:none;cursor:pointer;padding:.45rem;min-width:44px;min-height:44px;
   font-size:1.75rem;color:#e5e7eb;line-height:1;
   transition:color .15s ease,transform .2s cubic-bezier(.34,1.56,.64,1);
 }
@@ -1002,7 +999,7 @@ function ReviewModalStyles() {
 .rmod-preview-meta{flex:1;min-width:0;}
 .rmod-preview-meta strong{display:block;font-size:.85rem;font-weight:700;color:#0f172a;}
 .rmod-preview-meta span{display:block;font-size:.72rem;color:#64748b;margin-top:.1rem;}
-.rmod-preview-verified{width:18px;height:18px;color:#22c55e;flex-shrink:0;}
+.rmod-preview-status{display:inline-flex;align-items:center;justify-content:center;padding:.4rem .65rem;border-radius:999px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.65rem;font-weight:800;line-height:1.2;text-align:center;flex-shrink:0;}
 
 /* ── Submitting indicator ── */
 .rmod-submitting{
@@ -1021,7 +1018,7 @@ function ReviewModalStyles() {
 .rmod-alert--err{
   background:#fef2f2;border:1px solid #fecaca;color:#dc2626;
 }
-.rmod-alert span:first-child{flex-shrink:0;font-size:1rem;}
+.rmod-alert-mark{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900;background:#fee2e2;color:#b91c1c;}
 .rmod-alert-text{flex:1;}
 .rmod-alert-close{
   background:none;border:none;cursor:pointer;
