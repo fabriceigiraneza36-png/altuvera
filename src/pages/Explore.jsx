@@ -1194,11 +1194,15 @@ function WhyImageSlideshow() {
    TESTIMONIALS SLIDER
 ═══════════════════════════════════════════════════════════ */
 function TestimonialsSlider() {
-  const { testimonials, loading, error } = useTestimonials("active=all");
+  const { testimonials, loading, error } = useTestimonials();
   const [idx, setIdx] = useState(0);
   const timerRef = useRef(null);
 
   const total = testimonials.length;
+
+  useEffect(() => {
+    setIdx(0);
+  }, [total]);
 
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);
