@@ -139,7 +139,7 @@ export const HERO_SLIDES = [
       "https://copilot.microsoft.com/th/id/BCO.db353217-b4b5-4d08-b747-001ccd69d7b9.png",
     title: "Amboseli & Kilimanjaro",
     subtitle:
-      "Iconic African wildlife framed by majestic Mount Kilimanjaro in Rwanda",
+      "Iconic East African wildlife framed by majestic Mount Kilimanjaro in Rwanda",
     location: "Rwanda",
     animationPreset: "rotateZoom",
     overlayGradient:
