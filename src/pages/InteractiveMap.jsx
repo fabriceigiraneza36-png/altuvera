@@ -1873,7 +1873,7 @@ const InteractiveMap = () => {
                                   : "none",
                             }}
                             src={toGoogleMapEmbedUrl({
-                              query: selectedCountry ? (selectedCountry.name || selectedCountry.slug) : "Africa",
+                              query: selectedCountry ? (selectedCountry.name || selectedCountry.slug) : "East Africa",
                               zoom: selectedCountry ? 7 : 3,
                               mapType: currentMap.mapType,
                             })}
@@ -1936,7 +1936,7 @@ const InteractiveMap = () => {
                           strokeDasharray="1.2 1"
                           vectorEffect="non-scaling-stroke"
                         />
-                        <text x="72" y="18" fill="#047857" fontSize="2.2" fontWeight="700" letterSpacing=".35">ALTUVERA • EAST AFRICA</text>
+                        <text x="72" y="18" fill="#047857" fontSize="2.2" fontWeight="700" letterSpacing=".35">ALTUVERA • East Africa</text>
                       </svg>
 
                       {/* Markers layer */}
