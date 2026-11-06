@@ -173,13 +173,20 @@ function BookingInner({ user }) {
 
   const destinationForImage = selectedDest ? {...selectedDest,src:selectedDest.image,images:selectedDest.images,alt:selectedDest.label,caption:selectedDest.label,tag:"Your selection"} : null;
 
-  if(submitted) return <div className="bk-success"><SuccessScreen
-        displayName={displayName}
-        bookingRef={bookingRef}
-        email={data.email}
-        category={selectedDest?.category || ""}
-        onReset={reset}
-      /></div>;
+  if (submitted) return (
+    <SuccessScreen
+      displayName={displayName}
+      bookingRef={bookingRef}
+      email={data.email}
+      category={selectedDest?.category || ""}
+      destination={selectedDest?.label || ""}
+      country={countriesList.find((item) => item.value === String(data.countryId))?.label || ""}
+      arrivalDate={data.flexibleDates ? "" : data.startDate}
+      departureDate={data.flexibleDates ? "" : data.endDate}
+      travelers={totalTravelers}
+      onReset={reset}
+    />
+  );
 
   const title=STEPS[step]?.label || "Review";
   const desc=STEPS[step]?.desc || "";
