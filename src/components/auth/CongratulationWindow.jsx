@@ -298,7 +298,7 @@ const CONTENT = {
     cta:      "Explore Destinations",
     ctaLink:  "/destinations",
     tips: [
-      { icon: Globe,    text: "Browse curated African destinations" },
+      { icon: Globe,    text: "Browse curated East African destinations" },
       { icon: Compass,  text: "Discover experiences for your next safari" },
       { icon: Star,     text: "Save favorites and plan at your pace" },
     ],
