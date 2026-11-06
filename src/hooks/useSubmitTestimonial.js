@@ -143,7 +143,15 @@ export const useSubmitTestimonial = () => {
     const text     = String(formData.testimonial_text || formData.review || "").trim();
     const rating   = parseInt(String(formData.rating ?? ""), 10);
     const trip     = String(formData.trip     || "").trim();
+    const tripEntityType = String(formData.trip_entity_type || "").trim();
+    const tripEntityId = String(formData.trip_entity_id || "").trim();
     const location = String(formData.location || "").trim();
+
+    if (trip && (!["destination", "country", "package"].includes(tripEntityType) || !/^\\d+$/.test(tripEntityId))) {
+      setErrorSafe("Please select a matching destination, country or package from the search results.");
+      setSubmitting(false);
+      return;
+    }
 
     if (!text) {
       setErrorSafe("Review text is required.");
@@ -157,7 +165,17 @@ export const useSubmitTestimonial = () => {
     }
 
     const payload = { testimonial_text: text, rating };
-    if (trip)     payload.trip     = trip;
+    if (trip) {
+      payload.trip = trip;
+      payload.trip_entity_type = tripEntityType;
+      payload.trip_entity_id = tripEntityId;
+    }
+    if (formData.expectations_met) payload.expectations_met = formData.expectations_met;
+    if (Array.isArray(formData.review_answers) && formData.review_answers.length) {
+      payload.review_answers = formData.review_answers
+        .filter(answer => answer && answer.question_id && answer.value !== "" && answer.value !== null && answer.value !== undefined)
+        .map(answer => ({ question_id: String(answer.question_id), value: answer.value }));
+    }
     if (location) payload.location = location;
 
     // ── Auth header ─────────────────────────────────────────────────────────
