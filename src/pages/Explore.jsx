@@ -94,8 +94,8 @@ const renderStars = (rating) =>
       key={i}
       size={13}
       style={{
-        fill: i < Math.floor(rating || 0) ? '#22C55E' : 'transparent',
-        color: i < Math.floor(rating || 0) ? '#22C55E' : '#D0E3D0',
+        fill: i < Math.floor(rating || 0) ? '#E5A82C' : 'transparent',
+        color: i < Math.floor(rating || 0) ? '#E5A82C' : '#D8E2DA',
         flexShrink: 0,
       }}
     />
@@ -661,14 +661,32 @@ const PAGE_CSS = `
   box-shadow: 0 16px 48px rgba(5,150,105,0.1);
   transform: translateY(-4px);
 }
+.ex-testi__profile {
+  display: flex;
+  flex: 0 0 clamp(96px, 12vw, 128px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  min-width: 0;
+}
 .ex-testi__avatar-wrap {
   flex-shrink: 0;
-  width: clamp(80px, 12vw, 120px);
-  height: clamp(80px, 12vw, 120px);
-  border-radius: 20px;
+  width: clamp(80px, 10vw, 112px);
+  height: clamp(80px, 10vw, 112px);
+  border-radius: 50%;
   overflow: hidden;
-  border: 3px solid #a7f3d0;
-  box-shadow: 0 6px 24px rgba(5,150,105,0.12);
+  border: 3px solid #fff;
+  background: linear-gradient(145deg,#e5f5ea,#ccebd8);
+  box-shadow: 0 0 0 1px #b9dfc8, 0 8px 24px rgba(5,95,61,0.14);
+}
+.ex-testi__avatar-initial {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #087f58;
+  font: 800 30px 'Plus Jakarta Sans',Inter,sans-serif;
 }
 .ex-testi__avatar {
   width: 100%; height: 100%;
@@ -676,9 +694,15 @@ const PAGE_CSS = `
 }
 .ex-testi__body { flex: 1; min-width: 0; }
 .ex-testi__stars {
-  display: flex; gap: 3px;
-  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 17px;
+  margin: 0;
+  white-space: nowrap;
 }
+.ex-testi__stars svg { width: 15px; height: 15px; stroke-width: 1.8; }
 .ex-testi__quote {
   position: relative;
   font-family: 'DM Serif Display', Georgia, serif;
@@ -899,7 +923,8 @@ const PAGE_CSS = `
 /* ═══════ RESPONSIVE ═══════ */
 @media (max-width: 1024px) {
   .ex-why { flex-direction: column; }
-  .ex-testi__card { flex-direction: column; text-align: center; }
+  .ex-testi__card { flex-direction: column; text-align: center; gap: 18px; }
+  .ex-testi__profile { flex: 0 0 auto; }
   .ex-testi__meta { justify-content: center; }
 }
 @media (max-width: 768px) {
@@ -907,7 +932,9 @@ const PAGE_CSS = `
   .ex-dest-grid { grid-template-columns: repeat(2, 1fr); }
   .ex-testi__slide { padding: 0 8px; }
   .ex-testi__card { padding: 24px; }
-  .ex-testi__avatar-wrap { width: 72px; height: 72px; }
+  .ex-testi__avatar-wrap { width: 76px; height: 76px; }
+  .ex-testi__profile { gap: 8px; }
+  .ex-testi__stars svg { width: 14px; height: 14px; }
 }
 .ex-dest-grid__dots { display: none; }
 
@@ -1241,23 +1268,29 @@ function TestimonialsSlider() {
           {testimonials.map((t) => (
             <div key={t.id} className="ex-testi__slide">
               <div className="ex-testi__card">
-                {/* Avatar */}
-                {t.avatar_url && (
+                {/* Traveller portrait and rating */}
+                <div className="ex-testi__profile">
                   <div className="ex-testi__avatar-wrap">
-                    <img
-                      className="ex-testi__avatar"
-                      src={t.avatar_url}
-                      alt={t.name}
-                      loading="lazy"
-                    />
+                    {t.avatar_url ? (
+                      <img
+                        className="ex-testi__avatar"
+                        src={t.avatar_url}
+                        alt={t.name || "Traveller"}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="ex-testi__avatar-initial" aria-hidden="true">
+                        {(t.name || "T").trim().charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
-                )}
+                  <div className="ex-testi__stars" role="img" aria-label={`${Math.max(0, Math.min(5, Math.round(Number(t.rating) || 0)))} out of 5 stars`}>
+                    {renderStars(t.rating)}
+                  </div>
+                </div>
 
                 {/* Body */}
                 <div className="ex-testi__body">
-                  <div className="ex-testi__stars">
-                    {renderStars(t.rating)}
-                  </div>
 
                   <p className="ex-testi__quote">
                     {t.testimonial_text || t.text}
