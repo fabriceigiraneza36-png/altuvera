@@ -235,11 +235,11 @@ export default function Services() {
         description="Explore Altuvera travel services, from wildlife safaris and primate trekking to mountain journeys, cultural experiences, coastal escapes, and tailor-made trip planning across East Africa."
         keywords={[
           "Altuvera travel services",
-          "African safari planning",
+          "East African safari planning",
           "wildlife safaris",
           "gorilla and primate trekking",
-          "African cultural journeys",
-          "tailor-made African travel",
+          "East African cultural journeys",
+          "tailor-made East African travel",
         ]}
         url="/services"
         type="website"
@@ -251,7 +251,7 @@ export default function Services() {
       <main className="sv-page">
         <PageHeader
           title="Travel Services"
-          subtitle="From wildlife encounters and mountain trails to cultural journeys and coastal escapes, we help bring your African travel plans together."
+          subtitle="From wildlife encounters and mountain trails to cultural journeys and coastal escapes, we help bring your East African travel plans together."
           backgroundImage="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=2200&q=88"
           height="540px"
           parallax
