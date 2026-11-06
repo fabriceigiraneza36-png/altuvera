@@ -243,7 +243,7 @@ const Step1 = ({ form, set, errors, wordCount, overLimit, pct, barColor }) => (
 
 // ── Step 2: Verified trip selection and traveller details ────────────────
 const Step2 = ({
-  form, set, onTripInput, searchResults, searchLoading, searchError,
+  form, set, typedTrip, onTripInput, searchResults, searchLoading, searchError,
   onSelectTrip, onClearTrip, canProceed,
 }) => (
   <div className="rmod-step">
@@ -721,7 +721,7 @@ export default function ReviewModal({ isOpen, onClose }) {
             ) : (
               <>
                 {step === 1 && <Step1 form={form} set={set} errors={localErrors} wordCount={wc} overLimit={overLimit} pct={pct} barColor={barColor} />}
-                {step === 2 && <Step2 form={form} set={set} onTripInput={setTripInput} searchResults={searchResults} searchLoading={searchLoading} searchError={searchError} onSelectTrip={selectTrip} onClearTrip={clearTrip} canProceed={canProceedStep2} />}
+                {step === 2 && <Step2 form={form} set={set} typedTrip={typedTrip} onTripInput={setTripInput} searchResults={searchResults} searchLoading={searchLoading} searchError={searchError} onSelectTrip={selectTrip} onClearTrip={clearTrip} canProceed={canProceedStep2} />}
                 {step === 3 && <StepQuestions form={form} onAnswer={setAnswer} onSkip={() => setStep(4)} />}
                 {step === 4 && <Step4 form={form} user={user} submitting={submitting} error={error} onDismissError={() => {}} />}
               </>
