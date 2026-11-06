@@ -1105,7 +1105,7 @@ function HeroSection({ country, navigate }) {
       <div className="cp-hero__body">
         <div className="cp-hero__eyebrow">
           <div className="cp-hero__eyebrow-line cp-hero__eyebrow-line--l" />
-          <span className="cp-hero__eyebrow-text">Explore {country.continent || "Africa"}</span>
+          <span className="cp-hero__eyebrow-text">Explore {country.continent || "East Africa"}</span>
           <div className="cp-hero__eyebrow-line cp-hero__eyebrow-line--r" />
         </div>
 
