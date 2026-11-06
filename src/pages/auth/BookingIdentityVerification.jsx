@@ -378,7 +378,7 @@ export default function BookingIdentityVerification() {
         <header className="biv-header">
           <Link to="/" className="biv-brand" aria-label="Altuvera home">
             <span className="biv-brand-mark"><img src="/favicon.svg" alt="" /></span>
-            <span className="biv-brand-name"><strong>ALTUVERA</strong><small>SAFARIS</small></span>
+            <span className="biv-brand-name"><strong>ALTUVERA</strong></span>
           </Link>
           <div className="biv-header-trust"><ShieldCheck size={16} /><span>Secure traveller verification</span></div>
         </header>
