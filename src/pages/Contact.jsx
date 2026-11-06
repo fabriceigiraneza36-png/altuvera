@@ -1,6 +1,6 @@
 // src/pages/Contact.jsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { AnimatePresence, useInView, useScroll, useTransform, motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Mail as FiMail, Phone as FiPhone, MapPin as FiMapPin, Clock3 as FiClock,
   Send as FiSend, MessageCircle as FiMessageSquare, CircleCheck as FiCheckCircle,
@@ -8,10 +8,9 @@ import {
   Users as FiUsers, Globe2 as FiGlobe, ArrowRight as FiArrowRight,
   ArrowLeft as FiArrowLeft, CircleHelp as FiHelpCircle, ShieldCheck as FiShield,
   ExternalLink as FiExternalLink, CalendarDays as FiCalendar, Sparkles as FiSparkles,
+  Facebook as FiFacebook, Instagram as FiInstagram, Twitter as FiTwitter,
+  Youtube as FiYoutube, MessageCircle as FiWhatsapp, Music2 as FiTikTok,
 } from "lucide-react";
-import {
-  FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaWhatsapp, FaTiktok,
-} from "react-icons/fa";
 import SEO from "../components/common/SEO";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { sendMessage } from "../utils/sendMessage";
@@ -108,16 +107,16 @@ const TRIP_TYPES = [
 ];
 
 const SOCIALS = [
-  { icon: FaFacebookF, label: "Facebook", url: "https://www.facebook.com/profile.php?id=61591972225527&sfnsn=mo&mibextid=RUbZ1f", color: "#1877F2" },
-  { icon: FaInstagram, label: "Instagram", url: "#", color: "#E1306C" },
-  { icon: FaTwitter, label: "Twitter", url: "#", color: "#1DA1F2" },
-  { icon: FaYoutube, label: "YouTube", url: "#", color: "#FF0000" },
-  { icon: FaWhatsapp, label: "WhatsApp", url: "https://wa.me/250785751391", color: "#25D366" },
-  { icon: FaTiktok, label: "TikTok", url: "#", color: "#000" },
+  { icon: FiFacebook, label: "Facebook", url: "https://www.facebook.com/profile.php?id=61591972225527&sfnsn=mo&mibextid=RUbZ1f", color: "#1877F2" },
+  { icon: FiInstagram, label: "Instagram", url: "#", color: "#E1306C" },
+  { icon: FiTwitter, label: "Twitter", url: "#", color: "#1DA1F2" },
+  { icon: FiYoutube, label: "YouTube", url: "#", color: "#FF0000" },
+  { icon: FiWhatsapp, label: "WhatsApp", url: "https://wa.me/250785751391", color: "#25D366" },
+  { icon: FiTikTok, label: "TikTok", url: "#", color: "#000" },
 ];
 
 const QUICK_CHANNELS = [
-  { icon: FaWhatsapp, title: "WhatsApp", subtitle: "Instant chat", detail: "+250 785 751 391", href: "https://wa.me/250785751391", color: "#25D366" },
+  { icon: FiWhatsapp, title: "WhatsApp", subtitle: "Instant chat", detail: "+250 785 751 391", href: "https://wa.me/250785751391", color: "#25D366" },
   { icon: FiPhone, title: "Call Us", subtitle: "Speak to an expert", detail: "+250 792 352 409", href: "tel:+250792352409", color: "#047857" },
   { icon: FiMail, title: "Email", subtitle: "Detailed inquiries", detail: "info@altuverasafaris.com", href: "mailto:info@altuverasafaris.com", color: "#3B82F6" },
 ];
@@ -164,12 +163,12 @@ const FormBubbleLayer = React.memo(function FormBubbleLayer() {
 ═══════════════════════════════════════════════════ */
 const ScrollReveal = ({ children, delay = 0, direction = "up", distance = 22, style = {}, className = "" }) => {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
   const dirs = { up: { y: distance }, down: { y: -distance }, left: { x: -distance }, right: { x: distance }, scale: { scale: 0.95 } };
   return (
     <motion.div ref={ref} className={className} style={style}
       initial={{ opacity: 0, ...dirs[direction] }}
-      animate={inView ? { opacity: 1, x: 0, y: 0, scale: 1 } : {}}
+      whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.48, delay, ease: EASE.smooth }}>
       {children}
     </motion.div>
@@ -316,9 +315,6 @@ const Contact = () => {
 
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "28%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   /* ── Auto-fill from auth ── */
   useEffect(() => {
@@ -473,7 +469,7 @@ const Contact = () => {
 
       <section className="ct-hero" ref={heroRef}>
         <motion.div className="ct-hero-bg"
-          style={{ backgroundImage: "url(https://i.pinimg.com/736x/bb/ca/d1/bbcad1c07136f38bfc47257f8b38cf2a.jpg)", y: heroY }}
+          style={{ backgroundImage: "url(https://i.pinimg.com/736x/bb/ca/d1/bbcad1c07136f38bfc47257f8b38cf2a.jpg)" }}
           initial={{ scale: 1.1 }} animate={{ scale: 1 }} transition={{ duration: 10, ease: "easeOut" }} />
         <div className="ct-hero-overlay" />
         <div className="ct-hero-fog" aria-hidden="true"><span className="ct-hero-fog__layer ct-hero-fog__layer--one" /><span className="ct-hero-fog__layer ct-hero-fog__layer--two" /><span className="ct-hero-fog__ground" /></div>
@@ -492,7 +488,7 @@ const Contact = () => {
           ))}
         </div>
 
-        <motion.div className="ct-hero-content" style={{ opacity: heroOpacity }}>
+        <motion.div className="ct-hero-content">
           <motion.div className="ct-hero-kicker" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.45 }}>
             <span className="ct-hero-kicker-dot" />
             TRUE ADVENTURE IN HIGH PLACES &amp; DEEP CULTURE
@@ -929,7 +925,7 @@ const Contact = () => {
               <div className="ct-cta-btns">
                 <a href="#contact-form" className="ct-btn ct-btn--white"><FiSend size={14} /> Plan My Safari</a>
                 <a href="https://wa.me/250785751391" target="_blank" rel="noopener noreferrer" className="ct-btn ct-btn--ghost">
-                  <FaWhatsapp size={15} /> WhatsApp Us
+                  <FiWhatsapp size={15} /> WhatsApp Us
                 </a>
               </div>
             </div>
