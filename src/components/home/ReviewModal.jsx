@@ -108,7 +108,7 @@ const StarInput = ({ value, onChange, disabled = false }) => {
           aria-label={`${n} star — ${STAR_LABELS[n - 1]}`}
           aria-pressed={n === value}
         >
-          <Star aria-hidden="true" />
+          <Star aria-hidden="true" fill="currentColor" />
         </button>
       ))}
       {display > 0 && (
@@ -164,6 +164,7 @@ const Step1 = ({ form, set, errors, wordCount, overLimit, pct, barColor }) => (
         value={form.rating}
         onChange={(v) => set("rating", v)}
       />
+      <p className="rmod-field-hint">Choose 1–5 stars to continue.</p>
       {errors.rating && (
         <p className="rmod-err" role="alert">{safeStr(errors.rating)}</p>
       )}
@@ -328,6 +329,7 @@ const Step3 = ({ form, user, submitting, error, onDismissError }) => {
               key={i}
               className={i < stars ? "rmod-pstar--on" : "rmod-pstar--off"}
               aria-hidden="true"
+              fill="currentColor"
             />
           ))}
         </div>
@@ -897,6 +899,7 @@ function ReviewModalStyles() {
 /* ── Fields ── */
 .rmod-field{display:flex;flex-direction:column;gap:.45rem;}
 .rmod-label{font-size:.82rem;font-weight:700;color:#374151;}
+.rmod-field-hint{font-size:.72rem;color:#64748b;margin:-.2rem 0 0;}
 .rmod-opt{font-weight:400;font-size:.75rem;color:#9ca3af;}
 .rmod-label-row{display:flex;align-items:center;justify-content:space-between;}
 
@@ -908,6 +911,7 @@ function ReviewModalStyles() {
   transition:color .15s ease,transform .2s cubic-bezier(.34,1.56,.64,1);
 }
 .rmod-star-btn--on{color:#f59e0b;}
+.rmod-star-btn svg{width:24px;height:24px;stroke-width:2.2;}
 .rmod-star-btn:hover:not(:disabled){transform:scale(1.25);}
 .rmod-star-btn:disabled{cursor:not-allowed;opacity:.6;}
 .rmod-star-label{font-size:.8rem;font-weight:700;color:#22c55e;margin-left:.5rem;}
@@ -981,6 +985,7 @@ function ReviewModalStyles() {
 .rmod-preview-stars{display:flex;gap:.2rem;}
 .rmod-pstar--on{font-size:1rem;color:#f59e0b;}
 .rmod-pstar--off{font-size:1rem;color:#e5e7eb;}
+.rmod-preview-stars svg{width:18px;height:18px;stroke-width:1.8;}
 .rmod-preview-text{
   font-size:.92rem;color:#374151;line-height:1.7;
   font-style:italic;margin:0;min-height:3.5rem;
