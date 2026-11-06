@@ -376,7 +376,7 @@ const Step3 = ({ form, user, submitting, error, onDismissError }) => {
 };
 
 // ── Success screen ─────────────────────────────────────────────────────────
-const SuccessScreen = ({ onClose, onAnother, userName }) => (
+const SuccessScreen = ({ onClose, userName }) => (
   <div className="rmod-success" role="status" aria-live="polite">
     <div className="rmod-success-ring" aria-hidden="true">
       <CheckCircle2 className="rmod-success-icon" />
@@ -388,13 +388,6 @@ const SuccessScreen = ({ onClose, onAnother, userName }) => (
       Your review has been received and is awaiting approval by the Altuvera team. It will appear publicly only after an administrator approves it.
     </p>
     <div className="rmod-success-actions">
-      <button
-        type="button"
-        className="rmod-btn rmod-btn--outline"
-        onClick={onAnother}
-      >
-        Write Another
-      </button>
       <button
         type="button"
         className="rmod-btn rmod-btn--primary"
@@ -515,13 +508,6 @@ export default function ReviewModal({ isOpen, onClose }) {
   }, [submit, form, submitting]);
 
   // ── Write another — reset everything ─────────────────────────────────────
-  const handleAnother = useCallback(() => {
-    reset();
-    setFormState({ ...EMPTY_FORM });
-    setLocalErrors({});
-    setStep(1);
-  }, [reset]);
-
   // ── Close — reset and call parent ────────────────────────────────────────
   const handleClose = useCallback(() => {
     if (submitting) return; // prevent close mid-submission
@@ -660,7 +646,6 @@ export default function ReviewModal({ isOpen, onClose }) {
             {submitted ? (
               <SuccessScreen
                 onClose={handleClose}
-                onAnother={handleAnother}
                 userName={firstName}
               />
             ) : (
