@@ -80,7 +80,7 @@ const SECTIONS = [
     title: "Services and Eligibility",
     color: "#3B82F6",
     body: [
-      "Altuvera provides travel-related information, destination content, safari planning tools, booking facilitation, and customer support services across East africa.",
+      "Altuvera provides travel-related information, destination content, safari planning tools, booking facilitation, and customer support services across East Africa.",
       "To create an account or submit a booking request, you must be at least 18 years of age or have the consent of a parent or legal guardian. You represent that all information you provide is accurate, current, and complete.",
     ],
   },
