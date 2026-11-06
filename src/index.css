@@ -468,3 +468,15 @@ h1, h2, h3, h4, h5, h6,
     scroll-snap-align: start;
   }
 }
+
+/* One typographic voice across every public page and embedded experience. */
+body,
+body :is(h1,h2,h3,h4,h5,h6,p,a,button,input,textarea,select,label,span,strong,small,li,dt,dd,blockquote,figcaption,summary,th,td,legend,option,div,section,article,header,footer,main,nav),
+.text-hero,
+.text-heading,
+.text-subheading,
+.page-title,
+.section-title,
+.hero-title {
+  font-family: var(--font-body) !important;
+}
