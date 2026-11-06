@@ -4,6 +4,7 @@ import { ADVENTURE_CATALOG } from "../data/adventureCatalog";
 import { useDestinations } from "../hooks/useDestinations";
 import DestinationCard from "../components/common/DestinationCard";
 import SEO from "../components/common/SEO";
+import { getAdventureDestinationMatches } from "../utils/adventureMatching";
 
 const COUNTRY_LABELS = {
   rwanda: "Rwanda",
@@ -25,34 +26,10 @@ export default function AdventureGuide() {
     [slug],
   );
 
-  const matchedDestinations = useMemo(() => {
-    if (!adventure) return [];
-    const terms = new Set(
-      [...(adventure.filters || []), adventure.title, adventure.slug, adventure.eyebrow]
-        .map((term) => String(term).toLowerCase())
-        .filter(Boolean),
-    );
-
-    return destinations.filter((destination) => {
-      const haystack = [
-        destination.category,
-        destination.experienceCategory,
-        destination.adventureCategory,
-        destination.classification,
-        destination.destinationType,
-        destination.name,
-        destination.tagline,
-        destination.shortDescription,
-        destination.description,
-        destination.country,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return [...terms].some((term) => haystack.includes(term));
-    });
-  }, [adventure, destinations]);
+  const matchedDestinations = useMemo(
+    () => getAdventureDestinationMatches(adventure, destinations),
+    [adventure, destinations],
+  );
 
   const relatedCountries = useMemo(
     () =>
