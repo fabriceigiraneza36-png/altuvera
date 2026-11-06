@@ -48,7 +48,7 @@ export const HERO_SLIDES = [
         "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=3840",
       title: "Summit Mount Kilimanjaro",
       subtitle:
-        "Conquer Africa's highest peak and stand at the legendary roof of the continent",
+        "Conquer East Africa's highest peak and stand at the legendary roof of the continent",
       location: "Tanzania",
       animationPreset: "risingHorizon",
       overlayGradient:
