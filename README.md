@@ -1,9 +1,9 @@
 # Altuvera
 
 <p align="center">
-  <strong>Discover Africa. Travel deeper. Make every journey count.</strong>
+  <strong>Discover East Africa. Travel deeper. Make every journey count.</strong>
   <br />
-  A modern, responsive safari and travel experience for discovering destinations, planning trips, and connecting with local expertise across Africa.
+  A modern, responsive safari and travel experience for discovering destinations, planning trips, and connecting with local expertise across East Africa.
   <br /><br />
   <a href="https://www.altuverasafaris.com">Visit the live website</a>
 </p>
