@@ -88,15 +88,30 @@ function ServiceCard({ service, index }) {
   const Icon = ICONS[service.iconName] || FiCompass;
   const images = service.images?.length ? service.images : [service.image].filter(Boolean);
   const [activeImage, setActiveImage] = useState(0);
+  const [carouselPaused, setCarouselPaused] = useState(false);
   useEffect(() => {
-    if (images.length < 2) return undefined;
-    const timer = window.setInterval(() => setActiveImage((current) => (current + 1) % images.length), 4200);
+    if (
+      images.length < 2 ||
+      carouselPaused ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) return undefined;
+    const timer = window.setInterval(() => {
+      if (!document.hidden) setActiveImage((current) => (current + 1) % images.length);
+    }, 4800);
     return () => window.clearInterval(timer);
-  }, [images.length]);
+  }, [images.length, carouselPaused]);
   return (
     <Reveal delay={(index % 3) * 0.07} className="sv-reveal">
       <article className="sv-card">
-        <div className="sv-card__image">
+        <div
+          className="sv-card__image"
+          onMouseEnter={() => setCarouselPaused(true)}
+          onMouseLeave={() => setCarouselPaused(false)}
+          onFocusCapture={() => setCarouselPaused(true)}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setCarouselPaused(false);
+          }}
+        >
           {images.map((image, imageIndex) => (
             <img key={image} src={image}
               alt={imageIndex === 0 ? (service.imageAlt || service.title) : ""}
@@ -106,8 +121,17 @@ function ServiceCard({ service, index }) {
             />
           ))}
           <div className="sv-card__shade" />
-          {images.length > 1 && <div className="sv-card__dots" aria-hidden="true">
-            {images.map((image, dotIndex) => <span key={image} className={dotIndex === activeImage ? "is-active" : ""} />)}
+          {images.length > 1 && <div className="sv-card__dots" role="group" aria-label={`${service.title} photos`}>
+            {images.map((image, dotIndex) => (
+              <button
+                type="button"
+                key={image}
+                className={dotIndex === activeImage ? "is-active" : ""}
+                aria-label={`Show ${service.title} photo ${dotIndex + 1}`}
+                aria-pressed={dotIndex === activeImage}
+                onClick={() => setActiveImage(dotIndex)}
+              />
+            ))}
           </div>}
           <span className="sv-card__fallback-icon" aria-hidden="true"><Icon size={42} /></span>
         </div>
