@@ -67,7 +67,7 @@ export const getRouteSeoDescription = (pathname = "", title = "") => {
     return `Explore the ${name} safari package by Altuvera, including its destination, itinerary, wildlife experiences and useful trip-planning details.`;
   }
   if (section === "post") {
-    return `Read Altuvera's ${name} travel guide for destination context, local insights and practical ideas to help plan your next African journey.`;
+    return `Read Altuvera's ${name} travel guide for destination context, local insights and practical ideas to help plan your next East African journey.`;
   }
   if (section === "adventures") {
     return `Explore ${name.toLowerCase()} experiences with Altuvera, with ideas for wildlife encounters, cultural discovery and planning an East African journey.`;

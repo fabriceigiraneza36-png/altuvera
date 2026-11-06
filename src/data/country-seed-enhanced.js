@@ -47,7 +47,7 @@ export const enhancedCountries = [
     id: "tanzania",
     slug: "tanzania",
     name: "Tanzania",
-    tagline: "The Soul of Africa",
+    tagline: "The Soul of East Africa",
     excerpt: "Home to Kilimanjaro, Serengeti and Zanzibar — epic safari & island escapes.",
     hero_image: "https://cdn.example.com/tanzania/hero.jpg",
     cover_image: "https://cdn.example.com/tanzania/cover.jpg",

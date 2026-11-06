@@ -152,7 +152,7 @@ export default function Step1Destination({
                   <span className="bk-choice-card__copy">
                     <span className="bk-choice-card__label">Selected destination</span>
                     <strong className="bk-choice-card__title">{selectedDest.label}</strong>
-                    <span className="bk-choice-card__meta"><MapPin size={12} /> {selectedDest.country || selectedCountry?.label || "Africa"}</span>
+                    <span className="bk-choice-card__meta"><MapPin size={12} /> {selectedDest.country || selectedCountry?.label || "East Africa"}</span>
                   </span>
                   <button type="button" className="bk-choice-card__change" onClick={() => { setDestinationEditing(true); setDestinationQuery(""); setDestinationPickerOpen(true); }}>
                     Change

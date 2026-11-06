@@ -1,9 +1,9 @@
 # Altuvera
 
 <p align="center">
-  <strong>Discover Africa. Travel deeper. Make every journey count.</strong>
+  <strong>Discover East Africa. Travel deeper. Make every journey count.</strong>
   <br />
-  A modern, responsive safari and travel experience for discovering destinations, planning trips, and connecting with local expertise across Africa.
+  A modern, responsive safari and travel experience for discovering destinations, planning trips, and connecting with local expertise across East Africa.
   <br /><br />
   <a href="https://www.altuverasafaris.com">Visit the live website</a>
 </p>
@@ -12,7 +12,7 @@
 
 ## Overview
 
-**Altuvera** is the public-facing web application for exploring African travel experiences. It brings destination discovery, safari packages, travel information, galleries, customer accounts, booking requests, and direct communication together in one responsive experience.
+**Altuvera** is the public-facing web application for exploring East African travel experiences. It brings destination discovery, safari packages, travel information, galleries, customer accounts, booking requests, and direct communication together in one responsive experience.
 
 The application is built with React and Vite, uses a shared API backend for dynamic content, and is deployed through Vercel.
 
@@ -290,7 +290,7 @@ No license terms are specified here. Contact the repository owner before redistr
 
 <p align="center">
   <strong>Altuvera</strong><br />
-  Thoughtful journeys. Authentic African experiences.
+  Thoughtful journeys. Authentic East African experiences.
   <br /><br />
   <a href="https://www.altuverasafaris.com">altuverasafaris.com</a>
 </p>

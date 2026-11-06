@@ -7,11 +7,11 @@ import { destinations } from "../data/destinations";
 // ============================================
 
 export const BRAND_NAME = "Altuvera";
-export const BRAND_TAGLINE = "Your Gateway to African Adventures";
+export const BRAND_TAGLINE = "Your Gateway to East African Adventures";
 export const BRAND_LOGO_ALT =
-  "Altuvera - Premium African Safari Experiences";
+  "Altuvera - Premium East African Safari Experiences";
 export const BRAND_DESCRIPTION =
-  "Experience the magic of Africa with Altuvera. We offer premium safari experiences across Rwanda, Tanzania, Uganda, Rwanda, and beyond.";
+  "Experience the magic of East Africa with Altuvera. We offer premium safari experiences across Rwanda, Tanzania, Uganda, Rwanda, and beyond.";
 
 export const BRAND_COLORS = {
   primary: "#064e3b",

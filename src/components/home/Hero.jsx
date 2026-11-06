@@ -48,7 +48,7 @@ export const HERO_SLIDES = [
         "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=3840",
       title: "Summit Mount Kilimanjaro",
       subtitle:
-        "Conquer Africa's highest peak and stand at the legendary roof of the continent",
+        "Conquer East Africa's highest peak and stand at the legendary roof of the continent",
       location: "Tanzania",
       animationPreset: "risingHorizon",
       overlayGradient:
@@ -139,7 +139,7 @@ export const HERO_SLIDES = [
       "https://copilot.microsoft.com/th/id/BCO.db353217-b4b5-4d08-b747-001ccd69d7b9.png",
     title: "Amboseli & Kilimanjaro",
     subtitle:
-      "Iconic African wildlife framed by majestic Mount Kilimanjaro in Rwanda",
+      "Iconic East African wildlife framed by majestic Mount Kilimanjaro in Rwanda",
     location: "Rwanda",
     animationPreset: "rotateZoom",
     overlayGradient:

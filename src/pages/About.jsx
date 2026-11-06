@@ -968,7 +968,7 @@ const GalleryLightbox = ({ image, images, onClose, onPrev, onNext }) => {
       >
         <div className="about-lightbox-toolbar">
           <div className="min-w-0">
-            <p className="about-lightbox-eyebrow">Altuvera · Moments in Africa</p>
+            <p className="about-lightbox-eyebrow">Altuvera · Moments in East Africa</p>
             <span className="about-lightbox-count" aria-live="polite">{idx + 1} / {images.length}</span>
           </div>
           <button
@@ -1123,7 +1123,7 @@ const About = () => {
         <div style={{ maxWidth: 920, margin: '0 auto', textAlign: 'center' }}>
           <FadeInSection>
             <h2 className="about-section-title">
-              We don't just take travelers to Africa.<br />
+              We don't just take travelers to East Africa.<br />
               <em>We connect them with what makes it extraordinary.</em>
             </h2>
             <p className="about-section-lead" style={{ marginBottom: 24 }}>
@@ -1284,7 +1284,7 @@ const About = () => {
                 From tracking <strong style={{ color: '#065f46' }}>mountain gorillas</strong> in the misty forests of Volcanoes National Park to witnessing the <strong style={{ color: '#065f46' }}>Great Migration</strong> thunder across the Serengeti — our journeys are as diverse as the land itself.
               </p>
               <p className="about-section-p">
-                We craft personalized itineraries that blend <strong>wildlife adventures</strong>, <strong>cultural immersions</strong> in villages where traditions still shape daily life, and <strong>quiet luxury retreats</strong> where you can simply breathe in the beauty of Africa.
+                We craft personalized itineraries that blend <strong>wildlife adventures</strong>, <strong>cultural immersions</strong> in villages where traditions still shape daily life, and <strong>quiet luxury retreats</strong> where you can simply breathe in the beauty of East Africa.
               </p>
               <p className="about-section-p">
                 Whether you're seeking the thrill of a Big Five safari, a soul-stirring cultural exchange, or the challenge of climbing Kilimanjaro — <strong style={{ color: '#059669' }}>we build the journey around you</strong>.
@@ -1460,7 +1460,7 @@ const About = () => {
               fontSize: 'clamp(24px,3.4vw,34px)', fontWeight: 800, lineHeight: 1.18,
               color: 'white', fontFamily: "'Playfair Display',serif", marginBottom: 10,
             }}>
-              Let's craft your African journey
+              Let's craft your East African journey
             </h2>
             <p style={{
               fontSize: 'clamp(13.5px,1.05vw,15px)', lineHeight: 1.7,
