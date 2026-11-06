@@ -320,8 +320,6 @@ export default function BookingVerifyResult() {
     return () => window.clearInterval(timer);
   }, [images.length]);
 
-  const tripName = booking?.destination || booking?.package || booking?.service || "";
-
   return (
     <main className="bev-page">
       <div className="bev-atmosphere bev-atmosphere--one" />
