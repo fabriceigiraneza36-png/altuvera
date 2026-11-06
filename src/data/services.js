@@ -1,7 +1,7 @@
 export const services = [
   {
     id: "wildlife-safaris", title: "Wildlife Safaris", iconName: "wildlife",
-    description: "Plan wildlife-focused journeys through Africa's national parks and reserves, with time for game drives and the landscapes around them.",
+    description: "Plan wildlife-focused journeys through East Africa's national parks and reserves, with time for game drives and the landscapes around them.",
     features: ["National park and reserve visits", "Game-drive planning", "Private or shared trip enquiries"],
     images: [
       "https://images.unsplash.com/photo-1549366021-9f761d450615?auto=format&fit=crop&w=1200&q=85",
