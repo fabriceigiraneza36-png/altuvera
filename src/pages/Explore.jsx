@@ -6,7 +6,8 @@
 import React, {
   useState, useEffect, useCallback, useRef, useMemo,
 } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import SEO from '../components/common/SEO';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
@@ -16,7 +17,13 @@ import DestinationCard, {
   DestinationCardSkeleton,
 } from '../components/common/DestinationCard';
 import { useCountries } from '../hooks/useCountries';
-import { useTestimonials } from '../hooks/useTestimonials';\nimport { useDestinations } from '../hooks/useDestinations';\nimport {\n  getAdventureDestinationMatches,\n  getDestinationCountry,\n  getDestinationExperienceLabel,\n  getDestinationImage,\n} from '../utils/adventureMatching';
+import { useTestimonials } from '../hooks/useTestimonials';
+import { useDestinations } from '../hooks/useDestinations';
+import {
+  getAdventureDestinationMatches,
+  getDestinationCountry,
+  getDestinationImage,
+} from '../utils/adventureMatching';
 import { ADVENTURE_CATALOG } from '../data/adventureCatalog';
 import {
   FiArrowRight, FiMapPin, FiCompass, FiClock, FiStar,
@@ -26,6 +33,7 @@ import {
   FiBookOpen, FiArrowUpRight, FiSun, FiRefreshCw,
   FiPlay, FiVolume2, FiVolumeX, FiMaximize,
   FiEye, FiCamera, FiMap, FiZap, FiStar as FiStarIcon,
+  FiX, FiActivity, FiAnchor, FiExternalLink, FiCheckCircle,
 } from 'react-icons/fi';
 
 /* ═══════════════════════════════════════════════════════════
@@ -2044,15 +2052,6 @@ function ExploreDestinationRail({ destinations }) {
           />
         ))}
       </div>
-      {activeAdventure && (
-        <AdventureExperienceModal
-          adventure={activeAdventure}
-          destinations={guideDestinations}
-          destinationsLoading={guideDestinationsLoading}
-          destinationsError={guideDestinationsError}
-          onClose={closeAdventure}
-        />
-      )}
     </>
   );
 }
@@ -2423,6 +2422,15 @@ export default function Explore() {
           </AnimatedSection>
         </section>
       </div>
+      {activeAdventure && (
+        <AdventureExperienceModal
+          adventure={activeAdventure}
+          destinations={guideDestinations}
+          destinationsLoading={guideDestinationsLoading}
+          destinationsError={guideDestinationsError}
+          onClose={closeAdventure}
+        />
+      )}
     </>
   );
 }
