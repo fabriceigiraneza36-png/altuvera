@@ -17,6 +17,7 @@ import {
 
 import { useUserAuth }          from "../../context/UserAuthContext";
 import { useSubmitTestimonial } from "../../hooks/useSubmitTestimonial";
+import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -260,13 +261,13 @@ const Step2 = ({
       </label>
       <div style={{ position: "relative" }}>
         <div className="rmod-input-wrap">
-          <Globe2 className="rmod-input-icon" aria-hidden="true" />
+          <Globe2 className={`rmod-input-icon${form.trip_entity_id ? " is-valid" : ""}`} aria-hidden="true" />
           <input
             id="rmod-trip"
             type="text"
             className="rmod-input"
             placeholder="Start typing a destination, country or package…"
-            value={form.trip}
+            value={form.trip_entity_id ? typedTrip : form.trip}
             onChange={(event) => onTripInput(event.target.value)}
             maxLength={100}
             autoComplete="off"
@@ -283,14 +284,6 @@ const Step2 = ({
             </button>
           )}
         </div>
-
-        {form.trip_entity_id && form.trip_entity && (
-          <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 12, background: "#ecfdf5", border: "1px solid #a7f3d0", color: "#065f46", fontSize: 12 }}>
-            <CheckCircle2 size={16} />
-            <span style={{ minWidth: 0, flex: 1 }}><strong>{form.trip_entity.title}</strong>{form.trip_entity.country_name && form.trip_entity.type !== "country" ? ` · ${form.trip_entity.country_name}` : ""}</span>
-            <span style={{ textTransform: "capitalize", whiteSpace: "nowrap" }}>{String(form.trip_entity.type).replace("_", " ")}</span>
-          </div>
-        )}
 
         {!form.trip_entity_id && form.trip.trim().length >= 2 && (
           <div id="rmod-trip-results" role="listbox" className="rmod-search-results">
@@ -354,11 +347,6 @@ const Step2 = ({
       </div>
     </div>
 
-    {!canProceed && (
-      <div className="rmod-tip"><MessageCircle className="rmod-tip-icon" aria-hidden="true" />
-        <p>Please select a matching search result or clear the trip field to continue.</p>
-      </div>
-    )}
   </div>
 );
 
@@ -498,6 +486,7 @@ export default function ReviewModal({ isOpen, onClose }) {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [typedTrip, setTypedTrip] = useState("");
   const submitLockRef = useRef(false);
   const { submit, submitting, submitted, error, reset } = useSubmitTestimonial();
 
@@ -522,6 +511,7 @@ export default function ReviewModal({ isOpen, onClose }) {
   }, []);
 
   const setTripInput = useCallback((value) => {
+    setTypedTrip(value);
     setFormState((previous) => ({
       ...previous,
       trip: value,
@@ -535,6 +525,7 @@ export default function ReviewModal({ isOpen, onClose }) {
   }, []);
 
   const selectTrip = useCallback((item) => {
+    setTypedTrip("");
     setFormState((previous) => ({
       ...previous,
       trip: item.title,
@@ -547,7 +538,20 @@ export default function ReviewModal({ isOpen, onClose }) {
     setSearchError("");
   }, []);
 
-  const clearTrip = useCallback(() => setTripInput(""), [setTripInput]);
+  const clearTrip = useCallback(() => { setTypedTrip(""); setTripInput(""); }, [setTripInput]);
+
+  useEffect(() => {
+    const target = String(form.trip_entity?.title || "");
+    if (!form.trip_entity_id || !target) return undefined;
+    setTypedTrip("");
+    let index = 0;
+    const timer = window.setInterval(() => {
+      index += 1;
+      setTypedTrip(target.slice(0, index));
+      if (index >= target.length) window.clearInterval(timer);
+    }, 24);
+    return () => window.clearInterval(timer);
+  }, [form.trip_entity_id, form.trip_entity?.title]);
 
   const setAnswer = useCallback((questionId, value) => {
     setFormState((previous) => {
@@ -682,10 +686,9 @@ export default function ReviewModal({ isOpen, onClose }) {
       <div className="rmod-overlay" onClick={handleClose} role="presentation" aria-hidden="true">
         <div ref={modalRef} className="rmod-modal" onClick={(event) => event.stopPropagation()}
           role="dialog" aria-modal="true" aria-labelledby="rmod-title" aria-describedby="rmod-subtitle">
-          <div className="rmod-accent" aria-hidden="true" />
           <button type="button" className="rmod-close" onClick={handleClose} disabled={submitting} aria-label="Close review modal"><X aria-hidden="true" /></button>
           <div className="rmod-header">
-            <div className="rmod-header-icon" aria-hidden="true"><Sparkles /></div>
+            <div className="rmod-header-icon rmod-header-logo"><img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT || "Altuvera"} /></div>
             <div><h2 id="rmod-title" className="rmod-title">Share Your Experience</h2><p id="rmod-subtitle" className="rmod-subtitle">Help fellow travelers plan their adventure</p></div>
           </div>
 
@@ -780,10 +783,7 @@ function ReviewModalStyles() {
 }
 
 /* ── Accent bar ── */
-.rmod-accent{
-  height:4px;flex-shrink:0;
-  background:linear-gradient(90deg,#14532d,#22c55e,#4ade80,#22c55e,#14532d);
-}
+.rmod-accent{display:none;}
 
 /* ── Close ── */
 .rmod-close{
@@ -810,6 +810,8 @@ function ReviewModalStyles() {
   display:flex;align-items:center;justify-content:center;
 }
 .rmod-header-icon svg{width:24px;height:24px;color:#16a34a;}
+.rmod-header-logo{width:58px;height:58px;border-radius:15px;background:#fff;border:1px solid #e7eee9;box-shadow:0 5px 18px rgba(15,45,30,.08);padding:7px;}
+.rmod-header-logo img{display:block;width:100%;height:100%;object-fit:contain;}
 .rmod-title{
   font-size:1.25rem;font-weight:800;color:#0f172a;
   margin:0 0 .15rem;letter-spacing:-.02em;
@@ -1114,7 +1116,10 @@ function ReviewModalStyles() {
     margin-top:auto;
   }
   .rmod-overlay{align-items:flex-end;padding:0;}
-  .rmod-header{padding:1.5rem 1.5rem .75rem;}
+  .rmod-header{padding:1.25rem 1.25rem .75rem;gap:.8rem;}
+  .rmod-header-logo{width:48px;height:48px;border-radius:13px;}
+  .rmod-title{font-size:1.08rem;}
+  .rmod-subtitle{font-size:.76rem;}
   .rmod-stepper{padding:.75rem 1.5rem .25rem;}
   .rmod-body{padding:1rem 1.5rem 1.25rem;}
   .rmod-footer{padding:.85rem 1.5rem 1.25rem;}
@@ -1130,6 +1135,11 @@ function ReviewModalStyles() {
     transition-duration:.01ms!important;
   }
 }
+.rmod-input-wrap{position:relative;display:flex;align-items:center;min-height:52px;}
+.rmod-input-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:#829187;z-index:2;pointer-events:none;transition:color .2s,filter .2s;}
+.rmod-input-icon.is-valid{color:#079669;filter:drop-shadow(0 1px 2px rgba(7,150,105,.18));}
+.rmod-input-wrap:has(.rmod-input-icon) .rmod-input{padding-left:46px;padding-right:42px;}
+.rmod-input-wrap:has(.rmod-input-icon.is-valid) .rmod-input{border-color:#12a875;background:#f6fdf9;box-shadow:0 0 0 3px rgba(18,168,117,.09);}
 .rmod-search-results{position:absolute;z-index:30;top:calc(100% + 7px);left:0;right:0;max-height:260px;overflow:auto;border:1px solid #dbe7df;border-radius:14px;background:#fff;box-shadow:0 16px 38px rgba(15,45,30,.16)}
 .rmod-search-result{display:flex;align-items:center;gap:10px;width:100%;padding:11px 13px;border:0;border-bottom:1px solid #eef3ef;background:#fff;text-align:left;color:#1f3d2f;cursor:pointer}
 .rmod-search-result:last-child{border-bottom:0}.rmod-search-result:hover,.rmod-search-result:focus-visible{background:#f0faf4;outline:none}
