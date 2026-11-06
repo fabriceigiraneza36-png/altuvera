@@ -149,11 +149,22 @@ const TESTIMONIAL_STYLES = `
 
 /* ── Avatar side ── */
 .tshow-avatar-col {
+  flex: 0 0 88px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .6rem;
+  justify-content: flex-start;
+  gap: .42rem;
+}
+.tshow-avatar-col .tshow-stars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .16rem;
+  min-height: 16px;
+  margin: 0;
+  white-space: nowrap;
 }
 .tshow-avatar-ring {
   width: 68px;
@@ -200,8 +211,10 @@ const TESTIMONIAL_STYLES = `
 }
 .tshow-stars {
   display: flex;
-  gap: .15rem;
-  margin-bottom: .1rem;
+  align-items: center;
+  justify-content: center;
+  gap: .16rem;
+  margin: 0;
 }
 .tshow-star {
   font-size: .7rem;
@@ -326,12 +339,13 @@ const TESTIMONIAL_STYLES = `
     padding: 1rem;
   }
   .tshow-avatar-col {
-    flex-direction: row;
-    gap: .75rem;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: .42rem;
   }
   .tshow-avatar-ring {
-    width: 52px;
-    height: 52px;
+    width: 62px;
+    height: 62px;
   }
   .tshow-person {
     align-items: center;
@@ -432,12 +446,7 @@ const TestimonialCard = React.memo(function TestimonialCard({
             </div>
           )}
         </div>
-        <FaQuoteRight className="tshow-quote-icon" />
-      </div>
-
-      {/* Content column */}
-      <div className="tshow-content">
-        <div className="tshow-stars">
+        <div className="tshow-stars" role="img" aria-label={`${slide.rating || 5} out of 5 stars`}>
           {Array.from({ length: 5 }).map((_, i) =>
             i < (slide.rating || 5) ? (
               <FaStar key={i} className="tshow-star filled" />
@@ -446,6 +455,11 @@ const TestimonialCard = React.memo(function TestimonialCard({
             )
           )}
         </div>
+        <FaQuoteRight className="tshow-quote-icon" />
+      </div>
+
+      {/* Content column */}
+      <div className="tshow-content">
 
         <div className="tshow-text">
           &ldquo;{isActive ? displayed : truncated}&rdquo;
