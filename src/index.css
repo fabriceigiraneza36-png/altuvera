@@ -3,7 +3,7 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 /* 1. Google Fonts — must be before @import "tailwindcss" */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
 /* 2. Tailwind v4 — single import replaces base/components/utilities */
 @import "tailwindcss";
@@ -47,8 +47,8 @@
   --shadow-lg: 0 24px 56px rgba(2, 44, 34, 0.15);
   --shadow-xl: 0 40px 80px rgba(2, 44, 34, 0.18);
 
-  --font-heading: "Playfair Display", Georgia, serif;
-  --font-body:    "Inter", "Playfair Display", "Segoe UI", system-ui,
+  --font-heading: "Inter", system-ui, sans-serif;
+  --font-body:    "Inter", "Segoe UI", system-ui,
                   -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
 
   --ui-primary:   var(--clr-primary);
