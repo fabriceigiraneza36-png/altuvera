@@ -11,7 +11,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import {
-  Star, X, CheckCircle2, Sparkles, ArrowRight, ArrowLeft,
+  Star, X, CheckCircle2, ArrowRight, ArrowLeft,
   MapPin, Globe2, Send, MessageCircle,
 } from "lucide-react";
 
@@ -261,7 +261,7 @@ const Step2 = ({
       </label>
       <div style={{ position: "relative" }}>
         <div className="rmod-input-wrap">
-          <Globe2 className={`rmod-input-icon${form.trip_entity_id ? " is-valid" : ""}`} aria-hidden="true" />
+          <Globe2 className={`rmod-input-icon${form.trip_entity_id && form.trip_entity ? " is-valid" : ""}`} aria-hidden="true" />
           <input
             id="rmod-trip"
             type="text"
@@ -542,16 +542,18 @@ export default function ReviewModal({ isOpen, onClose }) {
 
   useEffect(() => {
     const target = String(form.trip_entity?.title || "");
-    if (!form.trip_entity_id || !target) return undefined;
+    if (!isOpen || !form.trip_entity_id || !target) return undefined;
+
     setTypedTrip("");
     let index = 0;
     const timer = window.setInterval(() => {
       index += 1;
       setTypedTrip(target.slice(0, index));
       if (index >= target.length) window.clearInterval(timer);
-    }, 24);
+    }, 20);
+
     return () => window.clearInterval(timer);
-  }, [form.trip_entity_id, form.trip_entity?.title]);
+  }, [isOpen, form.trip_entity_id, form.trip_entity?.title]);
 
   const setAnswer = useCallback((questionId, value) => {
     setFormState((previous) => {
@@ -688,7 +690,7 @@ export default function ReviewModal({ isOpen, onClose }) {
           role="dialog" aria-modal="true" aria-labelledby="rmod-title" aria-describedby="rmod-subtitle">
           <button type="button" className="rmod-close" onClick={handleClose} disabled={submitting} aria-label="Close review modal"><X aria-hidden="true" /></button>
           <div className="rmod-header">
-            <div className="rmod-header-icon rmod-header-logo"><img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT || "Altuvera"} /></div>
+            <div className="rmod-header-logo"><img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT || "Altuvera"} /></div>
             <div><h2 id="rmod-title" className="rmod-title">Share Your Experience</h2><p id="rmod-subtitle" className="rmod-subtitle">Help fellow travelers plan their adventure</p></div>
           </div>
 
@@ -771,7 +773,7 @@ function ReviewModalStyles() {
 
 /* ── Modal ── */
 .rmod-modal{
-  position:relative;width:100%;max-width:520px;max-height:90vh;
+  position:relative;width:100%;max-width:560px;max-height:min(92dvh,860px);
   background:#fff;border-radius:1.75rem;
   box-shadow:0 32px 80px rgba(0,0,0,.20),0 8px 20px rgba(0,0,0,.10);
   display:flex;flex-direction:column;overflow:hidden;
@@ -781,9 +783,6 @@ function ReviewModalStyles() {
   from{opacity:0;transform:scale(.9) translateY(30px)}
   to{opacity:1;transform:scale(1) translateY(0)}
 }
-
-/* ── Accent bar ── */
-.rmod-accent{display:none;}
 
 /* ── Close ── */
 .rmod-close{
