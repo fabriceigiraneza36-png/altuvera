@@ -387,7 +387,7 @@ const GallerySlideshow = ({ intervalMs = 4600 }) => {
     const titleOf = (item) => {
       const value = item?.name || item?.title || item?.destination_name ||
         item?.destinationName || item?.country_name;
-      return typeof value === "string" && value.trim() ? value.trim() : "Explore Africa";
+      return typeof value === "string" && value.trim() ? value.trim() : "Explore East Africa";
     };
 
     const subtitleOf = (item) => {
@@ -424,7 +424,7 @@ const GallerySlideshow = ({ intervalMs = 4600 }) => {
         }
       })
       .catch(() => {
-        // Keep the built-in Africa imagery available if the destinations API is offline.
+        // Keep the built-in East Africa imagery available if the destinations API is offline.
       });
 
     return () => { cancelled = true; controller.abort(); };
@@ -1766,7 +1766,7 @@ export default function AuthModal() {
             <aside className="am-auth-action-panel" aria-label="Secure booking sign-in information">
               <div className="am-auth-action-panel__brand">
                 <span className="am-auth-action-panel__logo"><HiShieldCheck className="w-7 h-7" /></span>
-                <span><strong>ALTUVERA</strong><small>SAFARIS</small></span>
+                <span><strong>ALTUVERA</strong></span>
               </div>
               <div className="am-auth-action-panel__content">
                 <span className="am-auth-action-panel__eyebrow">SECURE BOOKING ACCESS</span>
