@@ -24,8 +24,8 @@ const formatDate = (value) => {
 };
 
 const SUCCESS_CSS = `
-.bcm-overlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:clamp(10px,2.4vw,30px);background:rgba(5,24,17,.76);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overscroll-behavior:contain;animation:bcmBackdropIn .24s ease both}
-.bcm-dialog{position:relative;display:flex;flex-direction:column;width:min(100%,850px);max-height:min(92dvh,900px);overflow:hidden;border:1px solid rgba(255,255,255,.72);border-radius:28px;background:#fff;box-shadow:0 34px 100px rgba(0,0,0,.32);outline:none;animation:bcmDialogIn .42s cubic-bezier(.2,.8,.2,1) both}
+.bcm-overlay{font-family:var(--font-body,"Inter",system-ui,sans-serif);position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:clamp(10px,2.4vw,30px);background:rgba(5,24,17,.76);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overscroll-behavior:contain;animation:bcmBackdropIn .24s ease both}
+.bcm-dialog{font-family:var(--font-body,"Inter",system-ui,sans-serif);position:relative;display:flex;flex-direction:column;width:min(100%,850px);max-height:min(92dvh,900px);overflow:hidden;border:1px solid rgba(255,255,255,.72);border-radius:28px;background:#fff;box-shadow:0 34px 100px rgba(0,0,0,.32);outline:none;animation:bcmDialogIn .42s cubic-bezier(.2,.8,.2,1) both}
 .bcm-hero{position:relative;isolation:isolate;flex:0 0 auto;overflow:hidden;padding:25px 32px 29px;color:#fff;background:radial-gradient(ellipse at 78% 4%,rgba(115,211,160,.24),transparent 37%),linear-gradient(125deg,#062e23 0%,#07533b 58%,#0a7250 100%)}
 .bcm-hero:before,.bcm-hero:after{position:absolute;z-index:-1;content:"";pointer-events:none;border:1px solid rgba(255,255,255,.09);border-radius:50%}
 .bcm-hero:before{width:360px;height:360px;right:-115px;top:-240px}
