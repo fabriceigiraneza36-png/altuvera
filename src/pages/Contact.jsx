@@ -533,7 +533,7 @@ const Contact = () => {
           <ScrollReveal>
             <div className="ct-section-header">
               <h2 className="ct-h2">We'd Love to <em>Hear From You</em></h2>
-              <p className="ct-subtitle">Our Africa travel experts are ready to help craft your perfect adventure.</p>
+              <p className="ct-subtitle">Our East Africa travel experts are ready to help craft your perfect adventure.</p>
             </div>
           </ScrollReveal>
 
