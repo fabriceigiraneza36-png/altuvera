@@ -141,12 +141,17 @@ export const useSubmitTestimonial = () => {
 
     // ── Build payload ───────────────────────────────────────────────────────
     const text     = String(formData.testimonial_text || formData.review || "").trim();
-    const rating   = Math.min(5, Math.max(1, parseInt(String(formData.rating || "5"), 10) || 5));
+    const rating   = parseInt(String(formData.rating ?? ""), 10);
     const trip     = String(formData.trip     || "").trim();
     const location = String(formData.location || "").trim();
 
     if (!text) {
       setErrorSafe("Review text is required.");
+      setSubmitting(false);
+      return;
+    }
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+      setErrorSafe("Please select a star rating before submitting.");
       setSubmitting(false);
       return;
     }
