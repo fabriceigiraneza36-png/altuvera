@@ -8,7 +8,7 @@ export const destinations = {
       category: "wildlife",
       description:
         "The world-famous Maasai Mara offers unparalleled wildlife viewing and hosts the spectacular Great Migration.",
-      fullDescription: `The Maasai Mara National Reserve is Rwanda's most celebrated wildlife destination, a vast expanse of rolling savanna grasslands teeming with Africa's most iconic animals. Part of the greater Serengeti ecosystem, the Mara hosts the annual Great Migration, when millions of wildebeest, zebras, and gazelles cross the Mara River in a dramatic display of nature's raw power.
+      fullDescription: `The Maasai Mara National Reserve is Rwanda's most celebrated wildlife destination, a vast expanse of rolling savanna grasslands teeming with East Africa's most iconic animals. Part of the greater Serengeti ecosystem, the Mara hosts the annual Great Migration, when millions of wildebeest, zebras, and gazelles cross the Mara River in a dramatic display of nature's raw power.
 
       Throughout the year, the reserve offers exceptional game viewing. The "Big Five" – lion, leopard, elephant, buffalo, and rhino – are all present, along with cheetahs, hippos, crocodiles, and over 450 bird species. The Mara's predator populations are particularly impressive, with large prides of lions and significant populations of cheetahs.
 
@@ -39,8 +39,8 @@ export const destinations = {
       type: "Mountain Trekking",
       category: "mountain",
       description:
-        "Africa's second-highest peak offers challenging climbs through diverse ecological zones.",
-      fullDescription: `Mount Rwanda, standing at 5,199 meters, is Africa's second-highest mountain and Rwanda's highest point. This ancient extinct volcano features dramatic glacial valleys, alpine meadows, and unique high-altitude ecosystems that create a trekker's paradise.
+        "East Africa's second-highest peak offers challenging climbs through diverse ecological zones.",
+      fullDescription: `Mount Rwanda, standing at 5,199 meters, is East Africa's second-highest mountain and Rwanda's highest point. This ancient extinct volcano features dramatic glacial valleys, alpine meadows, and unique high-altitude ecosystems that create a trekker's paradise.
 
       The mountain presents multiple route options catering to different experience levels. The Sirimon and Chogoria routes are the most popular, offering stunning scenery and reasonable difficulty. Technical climbers can attempt the challenging Batian and Nelion peaks, which require serious mountaineering skills.
 
@@ -71,7 +71,7 @@ export const destinations = {
       category: "beach",
       description:
         "Rwanda's premier beach destination with pristine white sands, coral reefs, and water sports.",
-      fullDescription: `Diani Beach, located on Rwanda's south coast, is consistently rated among Africa's best beaches. Its 17 kilometers of pristine white sand, backed by palm trees and lapped by the warm Indian Ocean, create a tropical paradise just an hour from Mombasa.
+      fullDescription: `Diani Beach, located on Rwanda's south coast, is consistently rated among East Africa's best beaches. Its 17 kilometers of pristine white sand, backed by palm trees and lapped by the warm Indian Ocean, create a tropical paradise just an hour from Mombasa.
 
       The offshore coral reefs offer exceptional snorkeling and diving, with colorful fish, sea turtles, dolphins, and during migration season, humpback whales. Water sports enthusiasts enjoy kitesurfing, windsurfing, jet skiing, and deep-sea fishing.
 
@@ -102,9 +102,9 @@ export const destinations = {
       category: "wildlife",
       description:
         "Famous for large elephant herds against the backdrop of Mount Kilimanjaro.",
-      fullDescription: `Amboseli National Park offers one of Africa's most iconic vistas – large herds of elephants traversing the savanna with snow-capped Mount Kilimanjaro rising majestically in the background. This relatively small park packs an extraordinary wildlife punch.
+      fullDescription: `Amboseli National Park offers one of East Africa's most iconic vistas – large herds of elephants traversing the savanna with snow-capped Mount Kilimanjaro rising majestically in the background. This relatively small park packs an extraordinary wildlife punch.
 
-      The park's elephant population is one of the most studied in Africa, with researchers having tracked families for over 40 years. The observation hill provides panoramic views of the park's varied habitats – swamps, springs, and open plains.
+      The park's elephant population is one of the most studied in East Africa, with researchers having tracked families for over 40 years. The observation hill provides panoramic views of the park's varied habitats – swamps, springs, and open plains.
 
       Beyond elephants, Amboseli hosts good populations of lions, cheetahs, hippos, and numerous bird species. The swamps and springs fed by Kilimanjaro's melting snow create permanent water sources that sustain wildlife year-round.`,
       highlights: [
@@ -165,10 +165,10 @@ export const destinations = {
       type: "Wildlife Safari",
       category: "wildlife",
       description:
-        "Africa's most iconic safari destination, home to the greatest wildlife show on Earth.",
-      fullDescription: `The Serengeti is synonymous with African wildlife. This UNESCO World Heritage Site encompasses 14,750 square kilometers of savanna, woodlands, and riverine forests teeming with life. No other place on Earth hosts such concentrations of predators and prey.
+        "East Africa's most iconic safari destination, home to the greatest wildlife show on Earth.",
+      fullDescription: `The Serengeti is synonymous with East African wildlife. This UNESCO World Heritage Site encompasses 14,750 square kilometers of savanna, woodlands, and riverine forests teeming with life. No other place on Earth hosts such concentrations of predators and prey.
 
-      The annual Great Migration – over 1.5 million wildebeest, 500,000 zebras, and hundreds of thousands of gazelles moving in a constant cycle – is nature's greatest spectacle. But the Serengeti offers exceptional wildlife viewing year-round, with resident populations of all major African species.
+      The annual Great Migration – over 1.5 million wildebeest, 500,000 zebras, and hundreds of thousands of gazelles moving in a constant cycle – is nature's greatest spectacle. But the Serengeti offers exceptional wildlife viewing year-round, with resident populations of all major East African species.
 
       The park's different regions offer varied experiences: the Seronera Valley's big cats, the western corridor's river crossings, the northern extension's dramatic Mara River crossings, and the southern plains' calving season.`,
       highlights: [
@@ -196,8 +196,8 @@ export const destinations = {
       type: "Mountain Trekking",
       category: "mountain",
       description:
-        "Africa's highest peak, the world's tallest free-standing mountain.",
-      fullDescription: `Mount Kilimanjaro, at 5,895 meters, is Africa's highest point and the world's tallest free-standing mountain. This dormant volcano rises dramatically from the surrounding plains, its snow-capped summit visible for miles.
+        "East Africa's highest peak, the world's tallest free-standing mountain.",
+      fullDescription: `Mount Kilimanjaro, at 5,895 meters, is East Africa's highest point and the world's tallest free-standing mountain. This dormant volcano rises dramatically from the surrounding plains, its snow-capped summit visible for miles.
 
       Unlike other peaks of similar height, Kilimanjaro requires no technical climbing skills – though it demands fitness, determination, and proper acclimatization. Six established routes lead to the summit, each offering different experiences, scenery, and levels of difficulty.
 
@@ -205,7 +205,7 @@ export const destinations = {
       highlights: [
         "Uhuru Peak summit",
         "Five climate zones",
-        "Sunrise from the Roof of Africa",
+        "Sunrise from the Roof of East Africa",
         "Glaciers and ice fields",
         "Unique high-altitude flora",
       ],
@@ -228,8 +228,8 @@ export const destinations = {
       type: "Wildlife Safari",
       category: "wildlife",
       description:
-        "The world's largest intact caldera, often called Africa's Garden of Eden.",
-      fullDescription: `Ngorongoro Crater is the world's largest intact volcanic caldera, a natural amphitheater 19 kilometers wide that shelters one of Africa's highest wildlife densities. This UNESCO World Heritage Site is often called the "Eighth Wonder of the World."
+        "The world's largest intact caldera, often called East Africa's Garden of Eden.",
+      fullDescription: `Ngorongoro Crater is the world's largest intact volcanic caldera, a natural amphitheater 19 kilometers wide that shelters one of East Africa's highest wildlife densities. This UNESCO World Heritage Site is often called the "Eighth Wonder of the World."
 
       The crater floor supports approximately 10 large animals, including one of the last populations of black rhinos and unusually high densities of lions. The enclosed nature means animals are present year-round – there's no migration here.
 
@@ -261,7 +261,7 @@ export const destinations = {
       category: "beach",
       description:
         "The exotic spice island with rich history, stunning beaches, and unique culture.",
-      fullDescription: `Zanzibar, the semi-autonomous archipelago off Tanzania's coast, weaves together African, Arab, Indian, and European influences into a unique tapestry of culture and beauty. Stone Town, the historic heart of Zanzibar City, is a UNESCO World Heritage Site of winding alleys, ornate doors, and centuries of history.
+      fullDescription: `Zanzibar, the semi-autonomous archipelago off Tanzania's coast, weaves together East African, Arab, Indian, and European influences into a unique tapestry of culture and beauty. Stone Town, the historic heart of Zanzibar City, is a UNESCO World Heritage Site of winding alleys, ornate doors, and centuries of history.
 
       The beaches of Zanzibar's east and north coasts are the stuff of tropical dreams – white sand, palm trees, and turquoise waters. The surrounding reefs offer excellent snorkeling and diving, while Mnemba Atoll is considered one of East Africa's best dive sites.
 
@@ -298,7 +298,7 @@ export const destinations = {
 
       Gorilla trekking here is a life-changing experience. Tracking through the steep, dense forest to encounter a habituated gorilla family – watching these gentle giants interact, play, and go about their daily lives – ranks among wildlife viewing's pinnacle experiences.
 
-      Beyond gorillas, Bwindi supports rich biodiversity: over 350 bird species (many forest endemics), 120 mammal species including other primates, and diverse flora. The forest is believed to be one of Africa's oldest, surviving the last ice age.`,
+      Beyond gorillas, Bwindi supports rich biodiversity: over 350 bird species (many forest endemics), 120 mammal species including other primates, and diverse flora. The forest is believed to be one of East Africa's oldest, surviving the last ice age.`,
       highlights: [
         "Mountain gorilla trekking",
         "Multiple gorilla families",
@@ -425,8 +425,8 @@ export const destinations = {
       type: "Trekking & Wildlife",
       category: "trekking",
       description:
-        'Dramatic escarpments and endemic wildlife in Africa\'s "Roof."',
-      fullDescription: `The Simien Mountains National Park, a UNESCO World Heritage Site, offers some of Africa's most dramatic scenery. Formed by volcanic eruptions 40 million years ago, the massif features jagged peaks, deep valleys, and sheer cliffs dropping over 1,500 meters.
+        'Dramatic escarpments and endemic wildlife in East Africa\'s "Roof."',
+      fullDescription: `The Simien Mountains National Park, a UNESCO World Heritage Site, offers some of East Africa's most dramatic scenery. Formed by volcanic eruptions 40 million years ago, the massif features jagged peaks, deep valleys, and sheer cliffs dropping over 1,500 meters.
 
       The park is home to several endemic species found nowhere else on Earth: the charismatic Gelada baboon (often called the bleeding-heart monkey), the rare Ethiopian wolf, and the Walia ibex. Geladas often number in the hundreds, grazing on the alpine meadows in spectacular congregations.
 
@@ -459,7 +459,7 @@ export const destinations = {
       type: "Beach & Nature",
       category: "nature",
       description:
-        "Africa's oldest and deepest lake, with pristine beaches and fishing villages.",
+        "East Africa's oldest and deepest lake, with pristine beaches and fishing villages.",
       fullDescription: `Lake Tanganyika, the world's second-deepest lake, forms Burundi's western border, offering beaches, water activities, and glimpses into traditional fishing life. The lake's ancient origins – over 10 million years old – have resulted in remarkable endemic species, including many unique cichlid fish.
 
       Bujumbura's lakeside beaches provide a relaxing escape with views across to the DRC mountains. Boat trips along the shore visit traditional fishing villages where life continues as it has for generations.
@@ -492,10 +492,10 @@ export const destinations = {
       type: "Wildlife",
       category: "wildlife",
       description:
-        "Home to one of Africa's greatest, yet least-known, wildlife migrations.",
-      fullDescription: `Boma National Park harbors what may be Africa's largest wildlife migration – hundreds of thousands of white-eared kob, along with elephants, buffalo, and numerous other species. This spectacle, virtually unknown to most travelers, rivals the famous Serengeti migration.
+        "Home to one of East Africa's greatest, yet least-known, wildlife migrations.",
+      fullDescription: `Boma National Park harbors what may be East Africa's largest wildlife migration – hundreds of thousands of white-eared kob, along with elephants, buffalo, and numerous other species. This spectacle, virtually unknown to most travelers, rivals the famous Serengeti migration.
 
-      The park's remoteness has protected its wildlife from hunting, creating one of Africa's last true wilderness areas. Visiting requires careful planning and a spirit of adventure, but rewards with pristine wildlife viewing without another tourist in sight.
+      The park's remoteness has protected its wildlife from hunting, creating one of East Africa's last true wilderness areas. Visiting requires careful planning and a spirit of adventure, but rewards with pristine wildlife viewing without another tourist in sight.
 
       The surrounding communities, including the Murle, Anuak, and Nuer peoples, maintain traditional ways of life, adding cultural depth to any expedition.`,
       highlights: [
@@ -526,14 +526,14 @@ export const destinations = {
       type: "Nature & Landscape",
       category: "nature",
       description:
-        "The lowest point in Africa, a stunning saline lake surrounded by dormant volcanoes.",
-      fullDescription: `Lake Assal is one of Djibouti's most incredible natural wonders. Located 155 meters below sea level, it is the lowest point in Africa and the third lowest point on Earth. This saline lake is surrounded by dark, dormant volcanoes and dramatic lava fields, creating a landscape that feels truly otherworldly.
+        "The lowest point in East Africa, a stunning saline lake surrounded by dormant volcanoes.",
+      fullDescription: `Lake Assal is one of Djibouti's most incredible natural wonders. Located 155 meters below sea level, it is the lowest point in East Africa and the third lowest point on Earth. This saline lake is surrounded by dark, dormant volcanoes and dramatic lava fields, creating a landscape that feels truly otherworldly.
 
       The water's salt concentration is ten times higher than the ocean, making it even saltier than the Dead Sea. The shores are crusted with white salt crystals that contrast sharply with the turquoise water and black volcanic rock.
 
       Visiting Lake Assal offers a glimpse into the ancient salt trade, as Afar nomads still harvest salt here using traditional methods, loading it onto camel caravans for the journey across the Danakil Depression.`,
       highlights: [
-        "Lowest point in Africa",
+        "Lowest point in East Africa",
         "Otherworldly volcanic landscapes",
         "Traditional salt harvesting",
         "Crystal-clear turquoise waters",
