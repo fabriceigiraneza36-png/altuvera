@@ -773,7 +773,7 @@ function ReviewModalStyles() {
 
 /* ── Modal ── */
 .rmod-modal{
-  position:relative;width:100%;max-width:560px;max-height:min(92dvh,860px);
+  position:relative;width:100%;max-width:620px;max-height:min(92dvh,900px);
   background:#fff;border-radius:1.75rem;
   box-shadow:0 32px 80px rgba(0,0,0,.20),0 8px 20px rgba(0,0,0,.10);
   display:flex;flex-direction:column;overflow:hidden;
@@ -810,7 +810,11 @@ function ReviewModalStyles() {
 }
 .rmod-header-icon svg{width:24px;height:24px;color:#16a34a;}
 .rmod-header-logo{width:58px;height:58px;border-radius:15px;background:#fff;border:1px solid #e7eee9;box-shadow:0 5px 18px rgba(15,45,30,.08);padding:7px;}
-.rmod-header-logo img{display:block;width:100%;height:100%;object-fit:contain;}
+ .rmod-header-logo img{display:block;width:100%;height:100%;object-fit:contain;}
+.rmod-header{padding-top:1.35rem;}
+.rmod-modal{border:1px solid rgba(226,232,240,.9);}
+.rmod-stepper{border-bottom:1px solid #f1f5f9;padding-bottom:.85rem;}
+.rmod-footer{background:linear-gradient(180deg,#fff,#fbfdfb);}
 .rmod-title{
   font-size:1.25rem;font-weight:800;color:#0f172a;
   margin:0 0 .15rem;letter-spacing:-.02em;
