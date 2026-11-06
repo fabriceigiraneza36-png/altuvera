@@ -502,7 +502,7 @@ const Contact = () => {
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.6 }}>
             Connect with our expert team and let us craft an unforgettable
-            African adventure tailored just for you.
+            East African adventure tailored just for you.
           </motion.p>
           <motion.div className="ct-hero-actions"
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
@@ -918,7 +918,7 @@ const Contact = () => {
         <div className="ct-container">
           <ScrollReveal>
             <div className="ct-cta-content">
-              <h2 className="ct-h2 ct-h2--light">Ready for Your <em>African Adventure</em>?</h2>
+              <h2 className="ct-h2 ct-h2--light">Ready for Your <em>East African Adventure</em>?</h2>
               <p className="ct-subtitle ct-subtitle--light">
                 Join thousands of happy travellers who trusted Altuvera to make their safari dreams real.
               </p>
