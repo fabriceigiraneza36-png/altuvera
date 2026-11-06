@@ -398,7 +398,7 @@ const GallerySlideshow = ({ intervalMs = 4600 }) => {
       const value = candidates.find((candidate) =>
         typeof candidate === "string" && candidate.trim()
       );
-      return value ? value.trim() : "Discover unforgettable African experiences";
+      return value ? value.trim() : "Discover unforgettable East African experiences";
     };
 
     fetch(String(API_BASE || "").replace(/\/+$/, "") + "/destinations", { signal: controller.signal })
@@ -453,7 +453,7 @@ const GallerySlideshow = ({ intervalMs = 4600 }) => {
     <div
       className="am-auth-slideshow relative h-full w-full overflow-hidden"
       role="region"
-      aria-label="Featured African destinations"
+      aria-label="Featured East African destinations"
     >
       {gallery.map((item, index) => (
         <div
