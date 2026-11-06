@@ -147,7 +147,7 @@ export const useSubmitTestimonial = () => {
     const tripEntityId = String(formData.trip_entity_id || "").trim();
     const location = String(formData.location || "").trim();
 
-    if (trip && (!["destination", "country", "package"].includes(tripEntityType) || !/^\\d+$/.test(tripEntityId))) {
+    if (trip && (!["destination", "country", "package"].includes(tripEntityType) || !/^\d+$/.test(tripEntityId))) {
       setErrorSafe("Please select a matching destination, country or package from the search results.");
       setSubmitting(false);
       return;
