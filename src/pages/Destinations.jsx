@@ -98,7 +98,7 @@ const HERO_SLIDES = [
   },
   {
     image: 'https://i.pinimg.com/736x/de/f5/9c/def59c5b8ada86765cbfb235e1d6062b.jpg',
-    title: "Conquer Africa's",
+    title: "Conquer East Africa's",
     subtitle: 'Highest Peak',
     desc: 'Standing at 5,895 metres above sea level, Kilimanjaro rises majestically above the clouds — calling to every adventurous soul.',
     location: 'Tanzania',
@@ -1454,7 +1454,7 @@ export default function Destinations() {
       <SEO
         title="Destinations — East Africa"
         description="Explore curated destinations across East Africa. Handpicked places, iconic countries, and life-changing experiences."
-        keywords={['east africa destinations', 'safari destinations', 'african countries']}
+        keywords={['East Africa destinations', 'safari destinations', 'african countries']}
         url="/destinations"
         type="website"
         breadcrumbs={[
