@@ -33,9 +33,14 @@ const getDestinationCategories = (destination) => [
   destination?.classification,
   destination?.adventureCategory,
   destination?.adventure_category,
+  destination?.experienceCategory,
+  destination?.experience_category,
   destination?.destinationType,
   destination?.destination_type,
   destination?.type,
+  ...asList(destination?.categories),
+  ...asList(destination?.experienceCategories),
+  ...asList(destination?.experience_categories),
 ].map(normalize).filter(Boolean);
 
 export const matchesAdventureDestination = (adventure, destination) => {
@@ -45,7 +50,10 @@ export const matchesAdventureDestination = (adventure, destination) => {
     asList(adventure.destinationCategories).map(normalize).filter(Boolean)
   );
   const categories = getDestinationCategories(destination);
-  if (categories.some((category) => allowedCategories.has(category))) return true;
+  if (categories.some((category) =>
+    allowedCategories.has(category) ||
+    [...allowedCategories].some((allowed) => matchesPhrase(category, allowed))
+  )) return true;
 
   const textFields = [
     destination.name,
