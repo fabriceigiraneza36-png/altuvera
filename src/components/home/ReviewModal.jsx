@@ -428,7 +428,12 @@ const Step4 = ({ form, user, submitting, error, onDismissError }) => {
   const avatar   = getUserAvatar(user);
   const tripLine = [form.trip, form.location].map((value) => String(value || "").trim()).filter(Boolean).join(" · ");
   const answeredQuestions = (Array.isArray(form.review_answers) ? form.review_answers : [])
-    .filter((answer) => answer.value !== "" && answer.value !== null && answer.value !== undefined);
+    .filter((answer) => answer.value !== "" && answer.value !== null && answer.value !== undefined)
+    .map((answer) => {
+      const question = (Array.isArray(form.trip_entity?.review_questions) ? form.trip_entity.review_questions : [])
+        .find((item) => String(item.id) === String(answer.question_id));
+      return { ...answer, prompt: question?.prompt || "Additional feedback", unit: question?.unit || "" };
+    });
 
   return (
     <div className="rmod-step">
@@ -594,13 +599,6 @@ export default function ReviewModal({ isOpen, onClose }) {
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    const handler = (event) => { if (event.key === "Escape" && !submitting) handleClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isOpen, submitting]);
-
-  useEffect(() => {
     if (!isOpen || !modalRef.current) return;
     const timer = setTimeout(() => {
       const first = modalRef.current?.querySelector(
@@ -665,6 +663,13 @@ export default function ReviewModal({ isOpen, onClose }) {
     setStep(1);
     onClose();
   }, [reset, onClose, submitting]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (event) => { if (event.key === "Escape" && !submitting) handleClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen, submitting, handleClose]);
 
   if (!isOpen) return null;
   const STEP_LABELS = ["Review", "Trip", "Questions", "Submit"];
