@@ -1121,7 +1121,7 @@ export default function UserProfile() {
                 <span className="up-photo-modal-mark"><HiCamera size={23} /></span>
                 <div>
                   <h2 id="up-photo-modal-title">Choose your profile image</h2>
-                  <p>Browse more than 500 illustrated options or choose a photo from your device.</p>
+                  <p>Browse {PROFILE_AVATAR_COUNT} illustrated options or choose a photo from your device.</p>
                 </div>
               </div>
               <button
@@ -1160,7 +1160,7 @@ export default function UserProfile() {
                 disabled={uploading || avatarChangeLocked}
               >
                 <HiOutlinePhotograph size={19} />
-                <span><strong>Upload from device</strong><small>JPEG, PNG, WebP or AVIF</small></span>
+                <span><strong>Upload from device</strong><small>JPEG, PNG, WebP, AVIF or GIF · up to 5 MB</small></span>
               </button>
             </div>
 
