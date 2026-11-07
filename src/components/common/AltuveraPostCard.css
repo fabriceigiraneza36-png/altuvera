@@ -8,6 +8,7 @@
   animation: avPostCardReveal .42s cubic-bezier(.2,.7,.2,1) both;
 }
 .av-post-card-wrap--fill { width: 100%; }
+.av-post-card-wrap:not(.av-post-card-wrap--fill) { width: 260px; flex: 0 0 260px; }
 .av-post-card.hpost-card {
   display: flex;
   flex: 1 1 auto;
@@ -87,8 +88,8 @@
 }
 .av-post-card__featured {
   position: absolute;
-  top: 12px;
   right: 12px;
+  bottom: 12px;
   padding: 6px 9px;
   border: 1px solid rgba(255,255,255,.68);
   border-radius: 999px;
