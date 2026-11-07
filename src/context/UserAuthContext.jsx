@@ -1117,7 +1117,7 @@ export function UserAuthProvider({ children }) {
     const authPath = endpoint.startsWith("http")
       ? new URL(endpoint).pathname
       : (endpoint.startsWith("/") ? endpoint : `/${endpoint}`).split("?")[0];
-    const isPublicAuthRequest = /^\/users\/(?:login(?:\/(?:passkey\/(?:options|verify)|factor|verify-factor))?|register|verify-code|resend-code|check-email|google(?:\/signup-complete)?|github|facebook|forgot-username|forgot-password)(?:\/|$)/i.test(authPath);
+    const isPublicAuthRequest = /^\/users\/(?:login(?:\/(?:passkey\/(?:options|verify)|factor|verify-factor))?|register|verify-code|resend-code|check-email|google(?:\/signup-complete)?|github|facebook|forgot-username|forgot-password|refresh-token)(?:\/|$)/i.test(authPath);
     const diagnosticProvider = resolveAuthDiagnosticProvider(authPath, opts.body);
     const tok    = isPublicAuthRequest ? null : (token || store.get(KEYS.TOKEN));
     const isForm = opts.body instanceof FormData;
@@ -1176,9 +1176,27 @@ export function UserAuthProvider({ children }) {
             })
               .then(async (r) => {
                 const d = await r.json().catch(() => ({}));
-                if (!r.ok) throw new Error(d?.message || "Session expired");
+                if (!r.ok) {
+                  const refreshError = new Error(
+                    d?.message || `Session refresh failed (${r.status}).`,
+                  );
+                  refreshError.status = r.status;
+                  refreshError.code = d?.code || "";
+                  refreshError.data = d;
+                  throw refreshError;
+                }
+
+                const refreshedToken = extractPayload(d).token;
+                if (!refreshedToken) {
+                  const refreshError = new Error(
+                    "The session refresh response did not include a new access token.",
+                  );
+                  refreshError.code = "AUTH_REFRESH_INVALID_RESPONSE";
+                  throw refreshError;
+                }
+
                 saveAuth(d, { persist: persistSession });
-                return extractPayload(d).token;
+                return refreshedToken;
               })
               .finally(() => { refreshRef.current = null; });
           }
@@ -1186,13 +1204,29 @@ export function UserAuthProvider({ children }) {
           res = await fetch(url, {
             ...opts, _retry: true, headers: makeHeaders(newTok),
           });
-        } catch {
-          clearAuth();
-          throw new Error("Session expired. Please sign in again.");
+        } catch (refreshError) {
+          // A rejected refresh credential is a real session failure. Network
+          // errors and temporary 5xx responses are not: preserve the stored
+          // credentials so the next request can retry renewal.
+          if (refreshError?.status === 401) {
+            clearAuth();
+            const rejected = new Error(
+              refreshError.message || "Your sign-in session is no longer valid. Please sign in again.",
+            );
+            rejected.status = 401;
+            rejected.code = refreshError.code || "AUTH_REFRESH_REJECTED";
+            throw rejected;
+          }
+          throw refreshError;
         }
       } else {
         clearAuth();
-        throw new Error("Session expired. Please sign in again.");
+        const missingRefresh = new Error(
+          "Your sign-in session cannot be renewed. Please sign in again.",
+        );
+        missingRefresh.status = 401;
+        missingRefresh.code = "AUTH_REFRESH_MISSING";
+        throw missingRefresh;
       }
     }
 
@@ -1297,7 +1331,10 @@ export function UserAuthProvider({ children }) {
       }
     } catch (err) {
       console.warn("[Auth] Session restore failed:", err.message);
-      clearAuth();
+      // Do not sign users out because of a temporary network/server problem
+      // or a permission response. authFetch already clears credentials when
+      // the backend definitively rejects the access/refresh session.
+      if (err?.status === 401) clearAuth();
     } finally {
       setAuthLoading(false);
       fetchingRef.current = false;
