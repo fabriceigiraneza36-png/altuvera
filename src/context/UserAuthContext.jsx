@@ -1331,10 +1331,30 @@ export function UserAuthProvider({ children }) {
       }
     } catch (err) {
       console.warn("[Auth] Session restore failed:", err.message);
-      // Do not sign users out because of a temporary network/server problem
-      // or a permission response. authFetch already clears credentials when
-      // the backend definitively rejects the access/refresh session.
-      if (err?.status === 401) clearAuth();
+      if (err?.status === 401) {
+        // authFetch has already attempted refresh and the backend rejected
+        // the session. This is a real sign-out condition.
+        clearAuth();
+      } else {
+        // Keep the signed-in UI stable during temporary network/server errors.
+        // The cached identity is display-only; protected requests still require
+        // the backend to accept the saved access/refresh credentials.
+        const claims = decodeJWT(tok);
+        const email = trim(claims?.email);
+        const cachedProfile = email ? getCache()?.[email.toLowerCase()] : null;
+        const fallbackProfile = email
+          ? {
+              ...(cachedProfile || {}),
+              id: claims?.id || cachedProfile?.id || null,
+              email,
+              role: claims?.role || cachedProfile?.role || "user",
+            }
+          : null;
+        const restoredUser = fallbackProfile
+          ? normalizeUser(fallbackProfile, { cache: getCache() })
+          : null;
+        if (restoredUser) setUser(restoredUser);
+      }
     } finally {
       setAuthLoading(false);
       fetchingRef.current = false;
