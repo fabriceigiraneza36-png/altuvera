@@ -157,8 +157,8 @@ const publicRoutes = [
     path: "/",
     component: React.lazy(() => import("./pages/Home")),
     meta: {
-      title: "East Africa Safaris & Gorilla Trekking",
-      description: "Plan gorilla trekking, wildlife safaris and cultural journeys across Rwanda and East Africa with Altuvera. Expert local guidance and thoughtfully planned trips.",
+      title: "Altuvera | East Africa Safaris & Gorilla Trekking",
+      description: "Plan gorilla trekking in Rwanda, wildlife safaris and cultural journeys across East Africa with Altuvera. Explore destinations and tailor-made trips.",
     },
   },
   {
