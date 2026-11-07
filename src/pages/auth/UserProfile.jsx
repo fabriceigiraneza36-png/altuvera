@@ -399,17 +399,24 @@ const css = `
     flex: 0 0 auto; padding: 6px 9px; border-radius: 999px;
     color: #047857; background: #e9f8f0; font-size: 11px; font-weight: 800;
   }
-  .up-photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 22px 0; }
+
+  .up-photo-actions {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px; margin: 14px 22px 0;
+  }
   .up-photo-action {
-    min-width: 0; display: flex; align-items: center; gap: 12px;
+    min-height: 66px; min-width: 0; display: flex; align-items: center; gap: 11px;
     padding: 12px 14px; text-align: left; color: #315044;
     border: 1px solid #e1ebe5; border-radius: 15px; background: #fff;
     cursor: pointer; transition: border-color .18s, background .18s, transform .18s;
   }
+  .up-photo-actions > * { min-width: 0; }
   .up-photo-action > svg { flex: 0 0 auto; color: #07835f; }
   .up-photo-action span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .up-photo-action strong { color: #1a392d; font-size: 12.5px; font-weight: 800; }
-  .up-photo-action small { color: #7a8981; font-size: 11px; line-height: 1.35; }
+  .up-photo-action small { color: #7a8981; font-size: 10.5px; line-height: 1.35; }
+  .up-photo-attribution { flex-basis: 100%; color: #9aa59e; font-size: 9px; font-weight: 500; text-align: right; }
+
   .up-photo-action-active { border-color: #9cdbc0; background: #f1fbf5; }
   button.up-photo-action:hover:not(:disabled) { border-color: #71c79f; background: #f6fcf8; transform: translateY(-1px); }
   .up-photo-action:disabled { opacity: .45; cursor: not-allowed; }
@@ -602,7 +609,13 @@ const css = `
   @media (max-width: 640px) {
     .up-photo-modal { max-height: 94dvh; border-radius: 20px; }
     .up-photo-modal-header { padding: 17px 16px 14px; }
-    .up-photo-current, .up-photo-actions { margin-left: 15px; margin-right: 15px; }
+    .up-photo-current { margin-left: 15px; margin-right: 15px; }
+    .up-photo-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-left: 15px; margin-right: 15px; }
+    .up-photo-action { min-height: 72px; gap: 7px; padding: 10px 9px; border-radius: 12px; }
+    .up-photo-action > svg { width: 17px; height: 17px; }
+    .up-photo-action strong { font-size: 11px; line-height: 1.25; }
+    .up-photo-action small { font-size: 9px; line-height: 1.3; }
+    .up-photo-attribution { text-align: left; }
     .up-avatar-category-list { padding-left: 15px; padding-right: 15px; }
     .up-avatar-search-row { padding-left: 15px; padding-right: 15px; }
     .up-avatar-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-left: 15px; padding-right: 15px; max-height: 35vh; }
@@ -612,8 +625,10 @@ const css = `
     .up-photo-modal-heading p { font-size: 11.5px; }
     .up-photo-current-copy span { font-size: 10px; }
     .up-photo-library-count { display: none; }
-    .up-photo-actions { grid-template-columns: 1fr; gap: 7px; }
-    .up-photo-action { padding: 10px 12px; }
+    .up-photo-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .up-photo-action { min-height: 74px; padding: 9px 7px; gap: 6px; }
+    .up-photo-action strong { font-size: 10.5px; }
+    .up-photo-action small { font-size: 8.5px; }
     .up-avatar-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: 32vh; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1454,10 +1469,6 @@ export default function UserProfile() {
               <span className="up-avatar-search-count">{filteredAvatars.length} found</span>
             </div>}
 
-            <div className="up-avatar-catalog-status" role="status">
-              {openMojiLoading ? "Loading the searchable illustration library…" : openMojiError ? "Some illustrations could not be loaded; the built-in avatar set is still available." : `${openMojiAvatars.length.toLocaleString()} searchable subject illustrations available.`} · Artwork by <a href="https://openmoji.org/" target="_blank" rel="noreferrer">OpenMoji</a> (CC BY-SA 4.0.
-            </div>
-
             <div
               className="up-avatar-grid"
               ref={avatarGridRef}
@@ -1507,6 +1518,7 @@ export default function UserProfile() {
             <footer className="up-photo-modal-footer">
               <span>Showing {visibleAvatars.length} of {filteredAvatars.length.toLocaleString()} illustrations</span>
               <span>{visibleAvatars.length < filteredAvatars.length ? "Scroll to load 50 more" : "You’ve reached the end"}</span>
+              <small className="up-photo-attribution">Includes OpenMoji artwork · CC BY-SA 4.0</small>
             </footer>
           </section>
         </div>
