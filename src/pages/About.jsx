@@ -608,8 +608,12 @@ const ABOUT_STYLES = `
     transform: scaleX(1);
   }
 
-  .about-value-heading {
-    display: flex; align-items: center; gap: 16px;
+  .about-root .about-section .about-values-grid .about-value-card .about-value-heading {
+    display: grid !important;
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+    align-items: center !important;
+    justify-items: stretch;
+    gap: 14px !important;
     width: 100%; min-width: 0; margin: 0 0 18px;
   }
 
@@ -642,9 +646,12 @@ const ABOUT_STYLES = `
   }
 
   @media (max-width: 480px) {
-    .about-value-heading { gap: 12px; margin-bottom: 15px; }
+    .about-root .about-section .about-values-grid .about-value-card .about-value-heading {
+      grid-template-columns: 48px minmax(0, 1fr) !important;
+      gap: 12px !important; margin-bottom: 15px;
+    }
     .about-value-icon-wrap { width: 48px; height: 48px; flex-basis: 48px; }
-    .about-value-title { font-size: 18px; }
+    .about-value-title { font-size: clamp(16px, 4.5vw, 18px); }
   }
 
   .about-value-desc {
