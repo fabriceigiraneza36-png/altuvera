@@ -76,7 +76,13 @@ const safeFetch = async (authFetch, endpoint, options = {}) => {
     return { data: result, error: null };
   } catch (err) {
     const status = err?.status || err?.statusCode || 0;
-    if (status === 403 || status === 401) return { data: null, error: `auth:${status}` };
+    if (status === 401) return { data: null, error: `auth:${status}` };
+    if (status === 403) {
+      return {
+        data: null,
+        error: err.message || "You do not have permission to view this information.",
+      };
+    }
     return { data: null, error: err.message || "Request failed" };
   }
 };
