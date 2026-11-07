@@ -2467,9 +2467,9 @@ export function UserAuthProvider({ children }) {
     if (file.size > 5 * 1024 * 1024)
       throw new Error("Image must be 5 MB or less.");
 
-    const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
     if (!allowed.includes(file.type))
-      throw new Error("Please upload a JPEG, PNG, WebP, or AVIF image.");
+      throw new Error("Please upload a JPEG, PNG, WebP, AVIF, or GIF image.");
 
     const form = new FormData();
     form.append("image", file);
