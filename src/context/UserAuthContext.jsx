@@ -920,6 +920,8 @@ export function UserAuthProvider({ children }) {
         email,
         fullName: trim(profile?.fullName || profile?.name),
         avatar:   trim(profile?.avatar),
+        avatarSource: profile?.avatarSource || null,
+        avatarUpdatedAt: profile?.avatarUpdatedAt || null,
       },
     };
     profileCacheRef.current = next;
