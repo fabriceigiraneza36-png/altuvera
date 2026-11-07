@@ -186,7 +186,7 @@ const KEYFRAMES = `
   }
 
   /* Responsive horizontal overview-card carousel */
-  .db-stats-grid { display:flex !important; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; gap:12px !important; padding:4px 3px 14px; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:#a7f3d0 transparent; max-width:100%; }
+  .db-stats-grid { display:flex !important; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; gap:12px !important; padding:4px 3px 14px; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; scrollbar-width:none; scrollbar-color:transparent transparent; max-width:100%; }\n  .db-stats-grid::-webkit-scrollbar { display:none; width:0; height:0; }
   .db-stats-grid > * { flex:0 0 clamp(168px,21vw,210px); min-width:0; scroll-snap-align:start; }
   .db-stats-grid:focus-visible { outline:3px solid #34d399; outline-offset:3px; border-radius:14px; }
   @media (max-width: 900px) { .db-stats-grid > * { flex-basis:clamp(170px,34vw,220px); }
@@ -318,20 +318,25 @@ const S = {
     gap: 12,
   },
   quickCard: {
-    background: "#fff", borderRadius: 18, padding: "18px 16px",
+    background: "linear-gradient(180deg,#fff 0%,#fbfefc 100%)",
+    borderRadius: 18, padding: "18px 12px",
     border: "1.5px solid #e2e8f0",
     textDecoration: "none",
-    display: "flex", flexDirection: "column", gap: 10,
-    transition: "all 0.22s", cursor: "pointer",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+    display: "flex", flexDirection: "column",
+    alignItems: "center", justifyContent: "center",
+    gap: 9, minHeight: 142, height: "100%",
+    textAlign: "center",
+    transition: "transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease",
+    cursor: "pointer",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.035)",
   },
   quickIcon: (bg) => ({
-    width: 46, height: 46, borderRadius: 13,
+    width: 48, height: 48, borderRadius: 15,
     display: "flex", alignItems: "center", justifyContent: "center",
     background: bg, flexShrink: 0,
   }),
-  quickLabel: { fontSize: "0.88rem", fontWeight: 800, color: "#0f172a", margin: "0 0 2px" },
-  quickDesc:  { fontSize: "0.72rem", color: "#94a3b8", margin: 0 },
+  quickLabel: { fontSize: "0.86rem", fontWeight: 850, color: "#0f172a", margin: "0 0 3px", textAlign: "center", lineHeight: 1.3 },
+  quickDesc:  { fontSize: "0.71rem", color: "#94a3b8", margin: 0, textAlign: "center", lineHeight: 1.45 },
 
   /* Generic card */
   card: {
@@ -949,7 +954,7 @@ function QuickCard({ label, desc, Icon, color, iconBg, to }) {
         <p style={S.quickLabel}>{label}</p>
         <p style={S.quickDesc}>{desc}</p>
       </div>
-      <ChevronRight size={14} color="#cbd5e1" style={{ marginTop: "auto", alignSelf: "flex-end" }} />
+      <ChevronRight size={14} color="#9aaea2" style={{ marginTop: 2, alignSelf: "center", opacity: 0.9 }} />
     </Link>
   );
 }
@@ -1101,6 +1106,7 @@ export default function UserDashboard() {
   const [loadingB,  setLoadingB]  = useState(true);
   const [authWarn,  setAuthWarn]  = useState(null);
   const [fetchErr,  setFetchErr]  = useState(null);
+  const [favoritesExpanded, setFavoritesExpanded] = useState(false);
   const overviewTrackRef = useRef(null);
 
   // Auto-advance overview cards while preserving touch, keyboard and reduced-motion control.
@@ -1411,16 +1417,63 @@ export default function UserDashboard() {
           </div>
 
           <section className="db-favorites" aria-labelledby="db-favorites-title">
-            <style>{`.db-favorites{min-width:0;border:1px solid #dcefe4;border-radius:22px;padding:clamp(15px,2.5vw,24px);background:linear-gradient(135deg,#f7fdf9,#fff);box-shadow:0 8px 26px rgba(5,80,50,.045)}.db-favorites__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.db-favorites__title{display:flex;align-items:center;gap:9px;margin:0;color:#123c2c;font-size:clamp(1rem,2vw,1.2rem);font-weight:900;letter-spacing:-.025em}.db-favorites__title-icon{display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:12px;background:#ffe4e6;color:#e11d48}.db-favorites__track{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 2px 9px;scrollbar-width:thin;scrollbar-color:#a7f3d0 transparent;-webkit-overflow-scrolling:touch}.db-favorites__link{display:inline-flex;align-items:center;gap:9px;flex:0 0 auto;max-width:min(78vw,300px);min-height:46px;padding:10px 15px;border:1px solid #d7eade;border-radius:999px;background:#fff;color:#14532d;text-decoration:none;font-size:13px;font-weight:800;scroll-snap-align:start;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}.db-favorites__link span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.db-favorites__link:hover{transform:translateY(-2px);border-color:#86cba4;box-shadow:0 8px 18px rgba(5,150,105,.1)}.db-favorites__link:focus-visible{outline:3px solid #34d399;outline-offset:3px}.db-favorites__empty{margin:0;padding:12px 14px;border:1px dashed #c7e5d2;border-radius:14px;color:#5b7466;background:rgba(255,255,255,.8);font-size:13px;line-height:1.6}.db-favorites__empty a{color:#047857;font-weight:800;text-decoration:none}@media(max-width:480px){.db-favorites{border-radius:17px;padding:14px}.db-favorites__head{align-items:flex-start}.db-favorites__title{font-size:1rem}.db-favorites__link{min-height:43px;padding:9px 12px;font-size:12px}}@media(prefers-reduced-motion:reduce){.db-favorites__link{transition:none}}`}</style>
+            <style>{`.db-favorites{min-width:0;border:1px solid #e1ebe5;border-radius:18px;padding:12px 15px;background:#fff;box-shadow:0 4px 16px rgba(5,80,50,.035)}.db-favorites__head{display:flex;align-items:center;justify-content:space-between;gap:12px}.db-favorites__title{display:flex;align-items:center;gap:9px;min-width:0;margin:0;color:#123c2c;font-size:clamp(.9rem,1.7vw,1.02rem);font-weight:850;letter-spacing:-.02em}.db-favorites__title-icon{display:grid;place-items:center;width:32px;height:32px;flex-shrink:0;border-radius:11px;background:#fff1f2;color:#e11d48}.db-favorites__count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#f1f5f2;color:#52665a;font-size:11px;font-weight:850}.db-favorites__head-actions{display:flex;align-items:center;gap:12px;flex-shrink:0}.db-favorites__toggle{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid #e1ebe5;border-radius:10px;background:#f9fcfa;color:#365746;font-size:11px;font-weight:850;cursor:pointer;transition:background .2s ease,border-color .2s ease}.db-favorites__toggle:hover{background:#f0f8f2;border-color:#c6ddce}.db-favorites__toggle:focus-visible{outline:3px solid #34d399;outline-offset:2px}.db-favorites__view-all{display:inline-flex;align-items:center;gap:4px;color:#047857;font-size:11px;font-weight:850;text-decoration:none;white-space:nowrap}.db-favorites__panel{margin-top:11px}.db-favorites__track{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 1px 3px;scrollbar-width:none;scrollbar-color:transparent transparent;-webkit-overflow-scrolling:touch}.db-favorites__track::-webkit-scrollbar{display:none;width:0;height:0}.db-favorites__link{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;max-width:min(72vw,260px);min-height:38px;padding:8px 11px;border:1px solid #e2ebe5;border-radius:12px;background:#fbfdfb;color:#315443;text-decoration:none;font-size:11px;font-weight:800;scroll-snap-align:start;transition:transform .2s ease,border-color .2s ease,background .2s ease}.db-favorites__link span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.db-favorites__link:hover{transform:translateY(-1px);border-color:#a9cfb7;background:#fff}.db-favorites__link:focus-visible{outline:3px solid #34d399;outline-offset:2px}.db-favorites__empty{margin:0;padding:10px 12px;border:1px dashed #d5e5da;border-radius:12px;color:#64776b;background:#fbfdfb;font-size:12px;line-height:1.5}.db-favorites__empty a{color:#047857;font-weight:850;text-decoration:none}@media(max-width:480px){.db-favorites{border-radius:16px;padding:11px}.db-favorites__head{gap:8px}.db-favorites__title{font-size:.86rem;gap:7px}.db-favorites__title-icon{width:29px;height:29px}.db-favorites__head-actions{gap:7px}.db-favorites__toggle{padding:7px}.db-favorites__view-all{font-size:10px}}@media(prefers-reduced-motion:reduce){.db-favorites__link,.db-favorites__toggle{transition:none}}`}</style>
             <div className="db-favorites__head">
-              <h2 id="db-favorites-title" className="db-favorites__title"><span className="db-favorites__title-icon"><Heart size={18} fill="currentColor" /></span> Your favorite destinations</h2>
-              <Link to="/wishlist" style={{display:"inline-flex",alignItems:"center",gap:5,color:"#047857",fontSize:12,fontWeight:800,textDecoration:"none",whiteSpace:"nowrap"}}>View all <ArrowRight size={14}/></Link>
-            </div>
-            {destinationsLoading ? <p className="db-favorites__empty" role="status">Loading your saved places…</p> : favoriteDestinations.length ? (
-              <div className="db-favorites__track" aria-label="Your favorite destinations carousel">
-                {favoriteDestinations.map((destination) => <Link key={destination.id || destination._id || destination.slug} className="db-favorites__link" to={"/destinations/" + encodeURIComponent(destination.slug || destination.id || destination._id)}><Heart size={15} fill="currentColor" aria-hidden="true"/><span>{destination.name || destination.title || "Explore destination"}</span><ArrowRight size={14} aria-hidden="true"/></Link>)}
+              <h2 id="db-favorites-title" className="db-favorites__title">
+                <span className="db-favorites__title-icon"><Heart size={16} fill="currentColor" /></span>
+                <span>Your favorite destinations</span>
+                <span className="db-favorites__count">{favoriteDestinations.length}</span>
+              </h2>
+              <div className="db-favorites__head-actions">
+                <button
+                  type="button"
+                  className="db-favorites__toggle"
+                  aria-expanded={favoritesExpanded}
+                  aria-controls="db-favorites-panel"
+                  onClick={() => setFavoritesExpanded((value) => !value)}
+                >
+                  {favoritesExpanded ? "Hide" : "Show"}
+                  <ChevronRight size={14} style={{ transform: favoritesExpanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform .2s ease" }} />
+                </button>
+                <Link to="/wishlist" className="db-favorites__view-all">View all <ArrowRight size={13}/></Link>
               </div>
-            ) : <p className="db-favorites__empty">Your favorite places will appear here. <Link to="/destinations">Explore destinations</Link> and save the ones you love.</p>}
+            </div>
+            <AnimatePresence initial={false}>
+              {favoritesExpanded && (
+                <motion.div
+                  id="db-favorites-panel"
+                  className="db-favorites__panel"
+                  key="favorite-destinations-panel"
+                  initial={{ opacity: 0, height: 0, y: -5 }}
+                  animate={{ opacity: 1, height: "auto", y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -5 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  style={{ overflow: "hidden" }}
+                >
+                  {destinationsLoading ? (
+                    <p className="db-favorites__empty" role="status">Loading your saved places…</p>
+                  ) : favoriteDestinations.length ? (
+                    <div className="db-favorites__track" aria-label="Your favorite destinations carousel">
+                      {favoriteDestinations.map((destination) => (
+                        <Link
+                          key={destination.id || destination._id || destination.slug}
+                          className="db-favorites__link"
+                          to={"/destinations/" + encodeURIComponent(destination.slug || destination.id || destination._id)}
+                        >
+                          <Heart size={13} fill="currentColor" aria-hidden="true"/>
+                          <span>{destination.name || destination.title || "Explore destination"}</span>
+                          <ArrowRight size={13} aria-hidden="true"/>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="db-favorites__empty">
+                      Your favorite places will appear here. <Link to="/destinations">Explore destinations</Link> and save the ones you love.
+                    </p>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </section>
 
           {/* ── Swipeable destinations, packages and travel stories ─────── */}
