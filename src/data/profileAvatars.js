@@ -11,6 +11,12 @@ const CATEGORY_DEFINITIONS = [
   { id: "sketch", label: "Sketch", style: "croodles", palette: ["fbcfe8", "ddd6fe", "bfdbfe", "bbf7d0"] },
   { id: "minimal", label: "Minimal", style: "thumbs", palette: ["e2e8f0", "d1fae5", "dbeafe", "fce7f3"] },
   { id: "abstract", label: "Abstract", style: "identicon", palette: ["c4b5fd", "a7f3d0", "fda4af", "93c5fd"] },
+  { id: "pets", label: "Pets & Companions", style: "fun-emoji", palette: ["fde68a", "fecaca", "bfdbfe", "bbf7d0"] },
+  { id: "birds", label: "Birds & Wings", style: "pixel-art", palette: ["bae6fd", "d9f99d", "fbcfe8", "ddd6fe"] },
+  { id: "botanical", label: "Flowers & Botanicals", style: "shapes", palette: ["bbf7d0", "fbcfe8", "d9f99d", "fef3c7"] },
+  { id: "travel", label: "Travel & Adventure", style: "adventurer-neutral", palette: ["bfdbfe", "bbf7d0", "fed7aa", "ddd6fe"] },
+  { id: "space", label: "Space & Science", style: "bottts-neutral", palette: ["c7d2fe", "bae6fd", "a7f3d0", "e9d5ff"] },
+  { id: "creative", label: "Creative Studio", style: "open-peeps", palette: ["fbcfe8", "ddd6fe", "bfdbfe", "bbf7d0"] },
 ];
 
 const makeAvatar = (category, index) => {
