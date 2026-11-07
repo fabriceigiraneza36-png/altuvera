@@ -8,16 +8,9 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { Link } from "react-router-dom";
 import {
   FiSearch,
-  FiCalendar,
-  FiClock,
-  FiArrowRight,
   FiUser,
-  FiBookmark,
-  FiHeart,
-  FiTrendingUp,
   FiGrid,
   FiList,
   FiX,
@@ -29,13 +22,11 @@ import {
   FiBookOpen,
   FiCoffee,
   FiStar,
-  FiMail,
   FiChevronDown,
   FiZap,
   FiFeather,
   FiAlertCircle,
   FiRefreshCw,
-  FiFilter,
 } from "react-icons/fi";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
