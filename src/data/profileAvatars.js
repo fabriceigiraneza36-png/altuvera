@@ -35,7 +35,7 @@ const makeAvatar = (category, index) => {
     label: `${category.label} ${String(index + 1).padStart(2, "0")}`,
     categoryId: category.id,
     categoryLabel: category.label,
-    url: `https://api.dicebear.com/9.x/${category.style}/svg?${params.toString()}`,
+    url: `https://api.dicebear.com/10.x/${category.style}/svg?${params.toString()}`,
   };
 };
 
