@@ -16,6 +16,7 @@ import {
   HiStar,
   HiClock,
   HiFingerPrint,
+  HiSearch,
 } from "react-icons/hi";
 import { FiSave, FiX, FiEdit3, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 import { PROFILE_AVATAR_CATEGORIES, PROFILE_AVATARS, PROFILE_AVATAR_COUNT } from "../../data/profileAvatars";
@@ -24,7 +25,7 @@ import { PROFILE_AVATAR_CATEGORIES, PROFILE_AVATARS, PROFILE_AVATAR_COUNT } from
 const AUTOSAVE_DELAY = 900;
 const SUCCESS_MESSAGE_DURATION = 5000;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
 
 const SYNC_STATE = {
   IDLE: "idle",
@@ -348,12 +349,13 @@ const css = `
     position: fixed; inset: 0; z-index: 10000;
     display: flex; align-items: center; justify-content: center;
     padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
-    background: rgba(7, 23, 18, .58);
+    background: rgba(5, 18, 13, .58);
+    backdrop-filter: none; -webkit-backdrop-filter: none;
     animation: upFadeIn .18s ease-out;
   }
   .up-photo-modal {
-    width: min(100%, 780px);
-    max-height: min(92dvh, 850px);
+    width: min(100%, 820px);
+    max-height: min(94dvh, 900px);
     display: flex; flex-direction: column;
     background: #fff; color: #10231d;
     border: 1px solid #e5eee9; border-radius: 24px;
@@ -430,6 +432,39 @@ const css = `
   }
   .up-avatar-category-list button:hover { border-color: #a6ddbf; color: #047857; }
   .up-avatar-category-list button.active { border-color: #07845f; background: #07845f; color: #fff; }
+  .up-avatar-search-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 2px 22px 10px; flex: 0 0 auto;
+  }
+  .up-avatar-search-field {
+    display: flex; align-items: center; gap: 10px; flex: 1 1 auto;
+    min-width: 0; height: 42px; padding: 0 12px;
+    border: 1px solid #dfe9e3; border-radius: 12px;
+    background: #f8fbf9; color: #718078;
+    transition: border-color .18s, box-shadow .18s, background .18s;
+  }
+  .up-avatar-search-field:focus-within {
+    border-color: #70c59b; background: #fff;
+    box-shadow: 0 0 0 3px rgba(5,150,105,.09);
+  }
+  .up-avatar-search-field svg { flex: 0 0 auto; color: #07835f; }
+  .up-avatar-search-field input {
+    width: 100%; min-width: 0; border: 0; outline: 0;
+    background: transparent; color: #183c2d; font: inherit; font-size: 12px;
+  }
+  .up-avatar-search-field input::placeholder { color: #97a59d; }
+  .up-avatar-search-count {
+    flex: 0 0 auto; color: #708178; font-size: 11px; font-weight: 700;
+    white-space: nowrap;
+  }
+  .up-avatar-empty {
+    grid-column: 1 / -1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 7px;
+    min-height: 190px; padding: 24px; color: #7b8c82; text-align: center;
+  }
+  .up-avatar-empty svg { color: #0b8a61; }
+  .up-avatar-empty strong { color: #254638; font-size: 13px; }
+  .up-avatar-empty span { font-size: 11px; }
   .up-avatar-grid {
     display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 11px; padding: 4px 22px 14px; min-height: 220px;
@@ -467,6 +502,7 @@ const css = `
     .up-photo-modal-header { padding: 17px 16px 14px; }
     .up-photo-current, .up-photo-actions { margin-left: 15px; margin-right: 15px; }
     .up-avatar-category-list { padding-left: 15px; padding-right: 15px; }
+    .up-avatar-search-row { padding-left: 15px; padding-right: 15px; }
     .up-avatar-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-left: 15px; padding-right: 15px; max-height: 35vh; }
     .up-photo-modal-footer { padding: 10px 15px; }
   }
@@ -511,6 +547,7 @@ export default function UserProfile() {
   const [uploading, setUploading] = useState(false);
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [avatarCategory, setAvatarCategory] = useState("all");
+  const [avatarSearch, setAvatarSearch] = useState("");
   const [visibleAvatarCount, setVisibleAvatarCount] = useState(50);
   const [avatarClock, setAvatarClock] = useState(Date.now());
   const [autoSave, setAutoSave] = useState(true);
@@ -618,7 +655,7 @@ export default function UserProfile() {
   const validateFile = useCallback((file) => {
     if (!file) return { valid: false, error: "No file selected." };
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type))
-      return { valid: false, error: "Please select a JPEG, PNG, WebP, or AVIF image." };
+      return { valid: false, error: "Please select a JPEG, PNG, WebP, AVIF, or GIF image." };
     if (file.size > MAX_FILE_SIZE)
       return { valid: false, error: "File size must be less than 5 MB." };
     return { valid: true };
@@ -647,7 +684,11 @@ export default function UserProfile() {
   }, [uploadAvatar, validateFile, showNotification]);
 
   const handleImageClick = useCallback(() => {
-    if (!uploading) setPhotoModalOpen(true);
+    if (uploading) return;
+    setAvatarSearch("");
+    setVisibleAvatarCount(50);
+    if (avatarGridRef.current) avatarGridRef.current.scrollTop = 0;
+    setPhotoModalOpen(true);
   }, [uploading]);
 
   const avatarUpdatedAt = user?.avatarUpdatedAt || user?.avatar_updated_at || null;
@@ -662,13 +703,22 @@ export default function UserProfile() {
     ? `${Math.floor(avatarRemainingSeconds / 3600)}h ${Math.floor((avatarRemainingSeconds % 3600) / 60)}m`
     : "";
 
-  const filteredAvatars = React.useMemo(
-    () => avatarCategory === "all"
-      ? PROFILE_AVATARS
-      : PROFILE_AVATARS.filter((avatar) => avatar.categoryId === avatarCategory),
-    [avatarCategory],
-  );
+  const filteredAvatars = React.useMemo(() => {
+    const query = avatarSearch.trim().toLocaleLowerCase();
+    return PROFILE_AVATARS.filter((avatar) => {
+      const matchesCategory = avatarCategory === "all" || avatar.categoryId === avatarCategory;
+      const matchesSearch = !query || `${avatar.label} ${avatar.categoryLabel} ${avatar.id}`
+        .toLocaleLowerCase().includes(query);
+      return matchesCategory && matchesSearch;
+    });
+  }, [avatarCategory, avatarSearch]);
   const visibleAvatars = filteredAvatars.slice(0, visibleAvatarCount);
+
+  const handleAvatarSearchChange = useCallback((event) => {
+    setAvatarSearch(event.target.value);
+    setVisibleAvatarCount(50);
+    if (avatarGridRef.current) avatarGridRef.current.scrollTop = 0;
+  }, []);
 
   const handleAvatarGridScroll = useCallback((event) => {
     const element = event.currentTarget;
@@ -776,7 +826,7 @@ export default function UserProfile() {
               )}
               <button
                 className="up-camera-btn"
-                onClick={() => setPhotoModalOpen(true)}
+                onClick={handleImageClick}
                 disabled={uploading}
                 type="button"
                 title="Change profile photo"
@@ -788,7 +838,8 @@ export default function UserProfile() {
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                accept="image/jpeg,image/png,image/webp,image/avif"
+                accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+                aria-label="Choose a profile image from your device"
                 style={{ display: "none" }}
               />
             </div>
@@ -1070,7 +1121,7 @@ export default function UserProfile() {
                 <span className="up-photo-modal-mark"><HiCamera size={23} /></span>
                 <div>
                   <h2 id="up-photo-modal-title">Choose your profile image</h2>
-                  <p>Pick an illustrated avatar or upload a photo from your device.</p>
+                  <p>Browse more than 500 illustrated options or choose a photo from your device.</p>
                 </div>
               </div>
               <button
@@ -1143,13 +1194,36 @@ export default function UserProfile() {
               ))}
             </div>
 
+            <div className="up-avatar-search-row">
+              <label className="up-avatar-search-field">
+                <HiSearch size={17} />
+                <input
+                  type="search"
+                  value={avatarSearch}
+                  onChange={handleAvatarSearchChange}
+                  placeholder="Search avatars or categories"
+                  aria-label="Search profile avatars"
+                  maxLength={48}
+                  autoComplete="off"
+                />
+              </label>
+              <span className="up-avatar-search-count">{filteredAvatars.length} found</span>
+            </div>
+
             <div
               className="up-avatar-grid"
               ref={avatarGridRef}
               onScroll={handleAvatarGridScroll}
               aria-label="Available profile avatars"
+              aria-live="polite"
             >
-              {visibleAvatars.map((avatar) => (
+              {visibleAvatars.length === 0 ? (
+                <div className="up-avatar-empty">
+                  <HiSearch size={24} />
+                  <strong>No matching avatars</strong>
+                  <span>Try another name or choose a different category.</span>
+                </div>
+              ) : visibleAvatars.map((avatar) => (
                 <button
                   key={avatar.id}
                   type="button"
