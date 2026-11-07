@@ -815,6 +815,23 @@ export default function UserProfile() {
     setPhotoModalOpen(false);
   }, [uploading, discardPendingImage]);
 
+  const openCurrentImageViewer = useCallback(() => {
+    if (user?.avatar) setImageViewerOpen(true);
+    else handleImageClick();
+  }, [user?.avatar, handleImageClick]);
+
+  const avatarUpdatedAt = user?.avatarUpdatedAt || user?.avatar_updated_at || null;
+  const avatarUnlockAt = avatarUpdatedAt
+    ? new Date(avatarUpdatedAt).getTime() + 24 * 60 * 60 * 1000
+    : 0;
+  const avatarChangeLocked = Boolean(avatarUnlockAt && avatarClock < avatarUnlockAt);
+  const avatarRemainingSeconds = avatarChangeLocked
+    ? Math.ceil((avatarUnlockAt - avatarClock) / 1000)
+    : 0;
+  const avatarRemainingLabel = avatarChangeLocked
+    ? `${Math.floor(avatarRemainingSeconds / 3600)}h ${Math.floor((avatarRemainingSeconds % 3600) / 60)}m`
+    : "";
+
   const handleConfirmPendingImage = useCallback(async () => {
     if (!pendingImage || uploading || avatarChangeLocked) return;
     try {
@@ -836,23 +853,6 @@ export default function UserProfile() {
     }
   }, [pendingImage, uploading, avatarChangeLocked, updateProfileAvatar, uploadAvatar, showNotification]);
 
-  const openCurrentImageViewer = useCallback(() => {
-    if (user?.avatar) setImageViewerOpen(true);
-    else handleImageClick();
-  }, [user?.avatar, handleImageClick]);
-
-  const avatarUpdatedAt = user?.avatarUpdatedAt || user?.avatar_updated_at || null;
-  const avatarUnlockAt = avatarUpdatedAt
-    ? new Date(avatarUpdatedAt).getTime() + 24 * 60 * 60 * 1000
-    : 0;
-  const avatarChangeLocked = Boolean(avatarUnlockAt && avatarClock < avatarUnlockAt);
-  const avatarRemainingSeconds = avatarChangeLocked
-    ? Math.ceil((avatarUnlockAt - avatarClock) / 1000)
-    : 0;
-  const avatarRemainingLabel = avatarChangeLocked
-    ? `${Math.floor(avatarRemainingSeconds / 3600)}h ${Math.floor((avatarRemainingSeconds % 3600) / 60)}m`
-    : "";
-
   const avatarLibrary = React.useMemo(
     () => [...openMojiAvatars, ...PROFILE_AVATARS],
     [openMojiAvatars],
@@ -862,7 +862,7 @@ export default function UserProfile() {
     return avatarLibrary.filter((avatar) => {
       const matchesCategory = avatarCategory === "all" || avatar.categoryId === avatarCategory;
       const searchable = `${avatar.label} ${avatar.categoryLabel} ${avatar.id} ${avatar.searchTags || ""}`
-        .normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase();
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase();
       const matchesSearch = !query || searchable.includes(query);
       return matchesCategory && matchesSearch;
     });
@@ -1341,7 +1341,7 @@ export default function UserProfile() {
                 <span className="up-photo-modal-mark"><HiCamera size={23} /></span>
                 <div>
                   <h2 id="up-photo-modal-title">Choose your profile image</h2>
-                  <p>Browse {PROFILE_AVATAR_COUNT} illustrated options or choose a photo from your device.</p>
+                  <p>Browse {openMojiAvatars.length ? (openMojiAvatars.length + PROFILE_AVATAR_COUNT).toLocaleString() : PROFILE_AVATAR_COUNT} illustrations or choose a photo from your device.</p>
                 </div>
               </div>
               <button
@@ -1380,7 +1380,7 @@ export default function UserProfile() {
                 </div>
                 {user?.avatar && <button type="button" className="up-current-view-label" onClick={openCurrentImageViewer}>View</button>}
               </div>
-            }
+            )}
 
             <div className="up-photo-actions">
               <div className="up-photo-action up-photo-action-active">
