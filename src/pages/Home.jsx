@@ -26,6 +26,7 @@ import Hero from "../components/home/Hero";
 import TestimonialShowcase from "../components/home/TestimonialShowcase";
 import Button from "../components/common/Button";
 import SEO from "../components/common/SEO";
+import AltuveraPostCard from "../components/common/AltuveraPostCard";
 
 import { useApp } from "../context/AppContext";
 import { useDestinations } from "../hooks/useDestinations";
@@ -1296,28 +1297,14 @@ export const HorizontalPackageCard = React.memo(function HorizontalPackageCard({
   );
 });
 
-export const HorizontalPostCard = React.memo(function HorizontalPostCard({ post, index }) {
-  const date = post.published_at || post.created_at;
-  const formatted = date ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+export const HorizontalPostCard = React.memo(function HorizontalPostCard({ post, index, fill = false }) {
   return (
-    <Link to={`/blog/${post.slug}`} className="hpost-card mixed-card-reveal" style={{ animationDelay: `${index * 70}ms` }}>
-      <div className="hpost-img-wrap">
-        {post.image_url ? <img src={post.image_url} alt={post.title} className="hpost-img" loading="lazy" /> : (
-          <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg,#e2e8f0,#f1f5f9)", display: "flex", alignItems: "center", justifyContent: "center" }}><MdOutlineArticle size={32} style={{ color: "#94a3b8" }} /></div>
-        )}
-        {post.category && <span className="hpost-category">{post.category}</span>}
-      </div>
-      <div className="hpost-body">
-        <div className="hpost-meta">
-          {formatted && <span style={{ display: "flex", alignItems: "center", gap: ".15rem" }}><MdOutlineDateRange size={10} /> {formatted}</span>}
-          {post.read_time > 0 && <span>· {post.read_time} min</span>}
-          {post.view_count > 0 && <span style={{ display: "flex", alignItems: "center", gap: ".15rem" }}><MdOutlineVisibility size={10} /> {post.view_count}</span>}
-        </div>
-        <h3 className="hpost-title">{post.title}</h3>
-        {post.excerpt && <p className="hpost-excerpt">{post.excerpt.length > 110 ? post.excerpt.substring(0, 110) + "…" : post.excerpt}</p>}
-        <span className="hpost-readmore">Read article <HiOutlineArrowRight size={12} /></span>
-      </div>
-    </Link>
+    <AltuveraPostCard
+      post={post}
+      index={index}
+      fill={fill}
+      to={post?.slug ? `/blog/${post.slug}` : "/blog"}
+    />
   );
 });
 
