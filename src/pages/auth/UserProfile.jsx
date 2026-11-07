@@ -536,6 +536,57 @@ const css = `
   }
   .up-avatar-catalog-status a { color: #087b58; font-weight: 750; text-decoration: underline; }
   .up-avatar-option.openmoji img { object-fit: contain; padding: 7px; background: #f8faf9; }
+
+  .up-media-preview-backdrop {
+    position: fixed !important; inset: 0 !important; z-index: 2147483200 !important;
+    display: flex; align-items: center; justify-content: center;
+    padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+    background: rgba(20, 39, 29, .18);
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    isolation: isolate; animation: upFadeIn .16s ease-out;
+  }
+  .up-media-preview-panel {
+    width: min(100%, 620px); max-height: 94dvh; display: flex; flex-direction: column;
+    gap: 15px; padding: 22px; overflow-y: auto;
+    border: 1px solid #e4eee7; border-radius: 24px;
+    background: #fff !important; color: #17392a;
+    box-shadow: 0 24px 70px rgba(17, 52, 34, .18);
+    animation: upPhotoModalIn .22s cubic-bezier(.2,.8,.2,1);
+  }
+  .up-media-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
+  .up-media-preview-heading-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .up-media-preview-heading-copy strong { color: #163d2b; font-size: 17px; font-weight: 850; }
+  .up-media-preview-heading-copy span { color: #819087; font-size: 11px; }
+  .up-media-preview-stage {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; min-height: 210px; max-height: 51dvh; aspect-ratio: 4 / 3;
+    padding: 12px; overflow: hidden;
+    border: 1px solid #e5eee8; border-radius: 18px;
+    background: linear-gradient(145deg, #f8fbf9, #eef5f0);
+  }
+  .up-media-preview-stage img {
+    display: block; width: 100%; height: 100%; max-height: 48dvh;
+    object-fit: contain; border-radius: 10px;
+  }
+  .up-media-preview-file {
+    display: flex; align-items: center; gap: 11px; min-width: 0;
+    padding: 11px 13px; border: 1px solid #e6eee8; border-radius: 13px; background: #fbfdfb;
+  }
+  .up-media-preview-file-icon {
+    width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 38px;
+    border-radius: 11px; background: #e8f7ef; color: #07845f;
+  }
+  .up-media-preview-file-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .up-media-preview-file-copy strong { color: #274638; font-size: 11px; overflow-wrap: anywhere; }
+  .up-media-preview-file-copy span { color: #8b9990; font-size: 10px; }
+  .up-media-preview-actions { display: grid; grid-template-columns: 1fr 1.25fr; gap: 10px; width: 100%; }
+  @media (max-width: 640px) {
+    .up-media-preview-panel { padding: 16px; gap: 12px; border-radius: 20px; }
+    .up-media-preview-stage { min-height: 190px; max-height: 48dvh; }
+    .up-media-preview-stage img { max-height: 45dvh; }
+    .up-media-preview-actions { grid-template-columns: 1fr 1.2fr; }
+  }
+
   .up-avatar-preview-backdrop, .up-image-viewer-backdrop {
     position: fixed !important; inset: 0 !important; z-index: 2147483100 !important;
     display: flex; align-items: center; justify-content: center;
@@ -780,15 +831,17 @@ export default function UserProfile() {
 
   const validateFile = useCallback((file) => {
     if (!file) return { valid: false, error: "No file selected." };
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type))
-      return { valid: false, error: "Please select a JPEG, PNG, WebP, AVIF, or GIF image." };
-    if (file.size > MAX_FILE_SIZE)
-      return { valid: false, error: "File size must be less than 5 MB." };
+    const isSupportedMime = ACCEPTED_IMAGE_TYPES.includes(file.type);
+    const hasSupportedExtension = /\\.(jpe?g|png|webp|avif|gif)$/i.test(file.name || "");
+    if (!(file.type.startsWith("image/") && isSupportedMime) && !hasSupportedExtension) {
+      return { valid: false, error: "Please choose a supported image file: JPEG, PNG, WebP, AVIF or GIF." };
+    }
+    if (file.size > MAX_FILE_SIZE) return { valid: false, error: "File size must be less than 5 MB." };
     return { valid: true };
   }, []);
 
-  const handleFileChange = useCallback((e) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = useCallback((event) => {
+    const file = event.target.files?.[0];
     if (!file) return;
     const validation = validateFile(file);
     if (!validation.valid) {
@@ -796,15 +849,33 @@ export default function UserProfile() {
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-    const previewUrl = URL.createObjectURL(file);
-    setPendingImage({
-      type: "upload",
-      url: previewUrl,
-      previewUrl,
-      file,
-      label: file.name || "Uploaded photograph",
-      categoryLabel: "Device image",
-    });
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const previewDataUrl = typeof reader.result === "string" ? reader.result : "";
+      if (!previewDataUrl.startsWith("data:image/")) {
+        showNotification("error", "This image could not be previewed. Please choose another image.");
+        return;
+      }
+      const image = new Image();
+      image.onload = () => {
+        setPendingImage({
+          type: "upload",
+          url: previewDataUrl,
+          file,
+          label: file.name || "Uploaded photograph",
+          categoryLabel: "Device image",
+          sizeLabel: file.size < 1024 * 1024
+            ? `${Math.max(1, Math.round(file.size / 1024))} KB`
+            : `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+          dimensions: `${image.naturalWidth} × ${image.naturalHeight}`,
+        });
+      };
+      image.onerror = () => showNotification("error", "Altuvera couldn't read this image. Please choose a different photo.");
+      image.src = previewDataUrl;
+    };
+    reader.onerror = () => showNotification("error", "Altuvera couldn't read that image. Please select it again.");
+    reader.readAsDataURL(file);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, [validateFile, showNotification]);
 
@@ -1075,7 +1146,7 @@ export default function UserProfile() {
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+                accept="image/*"
                 aria-label="Choose a profile image from your device"
                 style={{ display: "none" }}
               />
@@ -1525,26 +1596,61 @@ export default function UserProfile() {
       ), document.body)}
 
       {pendingImage && createPortal((
-        <div className="up-avatar-preview-backdrop" role="presentation" onClick={(event) => { if (event.target === event.currentTarget && !uploading) discardPendingImage(); }}>
-          <section className="up-avatar-preview-panel" role="dialog" aria-modal="true" aria-labelledby="up-avatar-preview-title">
-            <div className="up-avatar-preview-top">
-              <strong id="up-avatar-preview-title">Review your new profile image</strong>
-              <button type="button" className="up-photo-close" onClick={discardPendingImage} disabled={uploading} aria-label="Discard image preview"><FiX /></button>
-            </div>
-            <div className="up-avatar-preview-image">
-              <img src={pendingImage.url} alt={pendingImage.label} />
-            </div>
-            <div className="up-avatar-preview-name">
-              <strong>{pendingImage.label}</strong>
-              <span>{pendingImage.categoryLabel} · This will replace your current profile image.</span>
-            </div>
+        <div
+          className={pendingImage.type === "upload" ? "up-media-preview-backdrop" : "up-avatar-preview-backdrop"}
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !uploading) discardPendingImage();
+          }}
+        >
+          <section
+            className={pendingImage.type === "upload" ? "up-media-preview-panel" : "up-avatar-preview-panel"}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="up-avatar-preview-title"
+          >
+            {pendingImage.type === "upload" ? (
+              <>
+                <div className="up-media-preview-heading">
+                  <div className="up-media-preview-heading-copy">
+                    <strong id="up-avatar-preview-title">Preview your photo</strong>
+                    <span>Check your image before adding it to your profile.</span>
+                  </div>
+                  <button type="button" className="up-photo-close" onClick={discardPendingImage} disabled={uploading} aria-label="Discard image preview"><FiX /></button>
+                </div>
+                <div className="up-media-preview-stage">
+                  <img src={pendingImage.url} alt={pendingImage.label} />
+                </div>
+                <div className="up-media-preview-file">
+                  <span className="up-media-preview-file-icon"><HiOutlinePhotograph size={19} /></span>
+                  <span className="up-media-preview-file-copy">
+                    <strong>{pendingImage.label}</strong>
+                    <span>{pendingImage.sizeLabel} · {pendingImage.dimensions} · Device image</span>
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="up-avatar-preview-top">
+                  <strong id="up-avatar-preview-title">Review your new profile image</strong>
+                  <button type="button" className="up-photo-close" onClick={discardPendingImage} disabled={uploading} aria-label="Discard image preview"><FiX /></button>
+                </div>
+                <div className="up-avatar-preview-image">
+                  <img src={pendingImage.url} alt={pendingImage.label} />
+                </div>
+                <div className="up-avatar-preview-name">
+                  <strong>{pendingImage.label}</strong>
+                  <span>{pendingImage.categoryLabel} · This will replace your current profile image.</span>
+                </div>
+              </>
+            )}
             {avatarChangeLocked && (
               <div className="up-photo-lock" role="status">
                 <HiClock size={18} />
                 <span><strong>Profile image change is locked</strong><small>You can confirm another image in {avatarRemainingLabel}.</small></span>
               </div>
             )}
-            <div className="up-avatar-preview-actions">
+            <div className={pendingImage.type === "upload" ? "up-media-preview-actions" : "up-avatar-preview-actions"}>
               <button type="button" className="up-avatar-preview-btn" onClick={discardPendingImage} disabled={uploading}>Discard</button>
               <button type="button" className="up-avatar-preview-btn confirm" onClick={handleConfirmPendingImage} disabled={uploading || avatarChangeLocked}>
                 {uploading ? <><HiRefresh className="up-spin" /> Saving…</> : <><HiCheck /> Confirm selection</>}
