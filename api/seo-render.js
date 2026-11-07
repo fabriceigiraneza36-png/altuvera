@@ -2,6 +2,9 @@ import postsFallback from "../src/data/posts.js";
 import { ADVENTURE_CATALOG } from "../src/data/adventureCatalog.js";
 
 const SITE = "https://www.altuverasafaris.com";
+const BRAND_NAME = "Altuvera";
+const normalizeBrandText = (value) =>
+  String(value ?? "").replace(/\baltuvera\s+safaris\b/gi, BRAND_NAME);
 const RAW_API = process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com/api";
 const normalizeApiBase = (value) =>
   String(value || "")
@@ -17,7 +20,7 @@ const API = API_BASES[0] || "https://backend-jd8f.onrender.com/api";
 const LOGO = SITE + "/altuvera.png";
 
 const STATIC = {
-  "/": ["East Africa Safaris & Gorilla Trekking | Altuvera", "Explore gorilla trekking, wildlife safaris and cultural journeys across Rwanda and East Africa with Altuvera. Local insight, thoughtfully planned trips."],
+  "/": ["Altuvera | East Africa Safaris & Gorilla Trekking", "Plan gorilla trekking in Rwanda, wildlife safaris and cultural journeys across East Africa with Altuvera. Explore destinations and tailor-made trips."],
   "/destinations": ["East Africa Safari Destinations | Altuvera", "Explore safari destinations across Rwanda, Uganda, Tanzania and Kenya, with wildlife experiences, gorilla trekking, mountain journeys and cultural discovery."],
   "/packages": ["East Africa Safari Packages | Altuvera", "Explore Altuvera journeys and request a tailored itinerary for wildlife, gorilla trekking, mountain and cultural experiences across East Africa."],
   "/posts": ["Travel Journal & Safari Guides | Altuvera", "Read travel stories, destination guides and practical safari advice from Altuvera, featuring East Africa and the wider region."],
@@ -77,7 +80,7 @@ const textOf = (v, max = 10000) => {
     }
     return "";
   }
-  return String(v).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/\s+/g, " ").trim().slice(0, max);
+  return normalizeBrandText(String(v).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/\s+/g, " ").trim()).slice(0, max);
 };
 const first = (...values) => {
   for (const v of values) { const s = textOf(v); if (s) return s; }
@@ -399,7 +402,7 @@ const schema = (page, canonical, route) => {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": organizationId,
-    "name": "Altuvera",
+    "name": BRAND_NAME,
     "url": SITE + "/",
     "logo": { "@type": "ImageObject", "url": LOGO },
     "email": "info@altuverasafaris.com",
@@ -410,7 +413,7 @@ const schema = (page, canonical, route) => {
     "@type": "WebSite",
     "@id": websiteId,
     "url": SITE + "/",
-    "name": "Altuvera",
+    "name": BRAND_NAME,
     "publisher": { "@id": organizationId },
     "inLanguage": "en"
   };
