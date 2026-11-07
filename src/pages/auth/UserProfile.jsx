@@ -17,7 +17,8 @@ import {
   HiClock,
   HiFingerPrint,
 } from "react-icons/hi";
-import { FiSave, FiX, FiEdit3, FiAlertCircle, FiCheckCircle, FiLink } from "react-icons/fi";
+import { FiSave, FiX, FiEdit3, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
+import { PROFILE_AVATAR_CATEGORIES, PROFILE_AVATARS, PROFILE_AVATAR_COUNT } from "../../data/profileAvatars";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const AUTOSAVE_DELAY = 900;
@@ -342,6 +343,146 @@ const css = `
   @keyframes upPulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
   .up-spin { animation: upSpin 1s linear infinite; }
 
+  /* ── Profile image and avatar library modal ── */
+  .up-photo-backdrop {
+    position: fixed; inset: 0; z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+    background: rgba(7, 23, 18, .58);
+    animation: upFadeIn .18s ease-out;
+  }
+  .up-photo-modal {
+    width: min(100%, 780px);
+    max-height: min(92dvh, 850px);
+    display: flex; flex-direction: column;
+    background: #fff; color: #10231d;
+    border: 1px solid #e5eee9; border-radius: 24px;
+    box-shadow: 0 26px 80px rgba(2, 20, 13, .26);
+    overflow: hidden; animation: upPhotoModalIn .24s cubic-bezier(.2,.8,.2,1);
+  }
+  .up-photo-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; padding: 22px 24px 18px; flex: 0 0 auto;
+    border-bottom: 1px solid #edf2ef; background: #fff;
+  }
+  .up-photo-modal-heading { display: flex; align-items: center; gap: 13px; min-width: 0; }
+  .up-photo-modal-mark {
+    width: 48px; height: 48px; flex: 0 0 48px; border-radius: 15px;
+    display: grid; place-items: center; background: #e7f6ef; color: #047857;
+  }
+  .up-photo-modal-heading h2 { margin: 0; color: #102d22; font-size: clamp(18px,3vw,22px); line-height: 1.2; font-weight: 800; }
+  .up-photo-modal-heading p { margin: 5px 0 0; color: #718078; font-size: 13px; line-height: 1.45; }
+  .up-photo-close {
+    display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px;
+    border: 0; border-radius: 12px; background: #f2f6f3; color: #42564c;
+    cursor: pointer; font-size: 19px; transition: background .18s, transform .18s;
+  }
+  .up-photo-close:hover { background: #e6eee9; transform: rotate(4deg); }
+  .up-photo-current {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 22px 0; padding: 11px 13px;
+    border: 1px solid #e6efe9; border-radius: 15px; background: #fbfdfb;
+  }
+  .up-photo-current img, .up-photo-current > span:first-child {
+    width: 42px; height: 42px; flex: 0 0 42px; border-radius: 50%;
+    display: grid; place-items: center; object-fit: cover;
+    background: #d1fae5; color: #065f46; font-weight: 800;
+  }
+  .up-photo-current-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+  .up-photo-current-copy strong { color: #183c2d; font-size: 13px; }
+  .up-photo-current-copy span { color: #77877e; font-size: 11.5px; line-height: 1.4; }
+  .up-photo-library-count {
+    flex: 0 0 auto; padding: 6px 9px; border-radius: 999px;
+    color: #047857; background: #e9f8f0; font-size: 11px; font-weight: 800;
+  }
+  .up-photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 22px 0; }
+  .up-photo-action {
+    min-width: 0; display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; text-align: left; color: #315044;
+    border: 1px solid #e1ebe5; border-radius: 15px; background: #fff;
+    cursor: pointer; transition: border-color .18s, background .18s, transform .18s;
+  }
+  .up-photo-action > svg { flex: 0 0 auto; color: #07835f; }
+  .up-photo-action span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .up-photo-action strong { color: #1a392d; font-size: 12.5px; font-weight: 800; }
+  .up-photo-action small { color: #7a8981; font-size: 11px; line-height: 1.35; }
+  .up-photo-action-active { border-color: #9cdbc0; background: #f1fbf5; }
+  button.up-photo-action:hover:not(:disabled) { border-color: #71c79f; background: #f6fcf8; transform: translateY(-1px); }
+  .up-photo-action:disabled { opacity: .45; cursor: not-allowed; }
+  .up-photo-lock {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin: 12px 22px 0; padding: 11px 13px; border-radius: 13px;
+    background: #fff8eb; border: 1px solid #f2dfba; color: #91621c;
+  }
+  .up-photo-lock > svg { flex: 0 0 auto; margin-top: 2px; }
+  .up-photo-lock span { display: flex; flex-direction: column; gap: 3px; }
+  .up-photo-lock strong { color: #7a5014; font-size: 12px; }
+  .up-photo-lock small { color: #956b30; font-size: 11px; line-height: 1.4; }
+  .up-avatar-category-list {
+    display: flex; align-items: center; gap: 7px; overflow-x: auto;
+    padding: 16px 22px 10px; flex: 0 0 auto; scrollbar-width: thin;
+  }
+  .up-avatar-category-list button {
+    flex: 0 0 auto; padding: 7px 11px; border: 1px solid #e1eae4;
+    border-radius: 999px; background: #fff; color: #60746a;
+    font: 700 11px/1.2 inherit; white-space: nowrap; cursor: pointer;
+    transition: background .18s, border-color .18s, color .18s;
+  }
+  .up-avatar-category-list button:hover { border-color: #a6ddbf; color: #047857; }
+  .up-avatar-category-list button.active { border-color: #07845f; background: #07845f; color: #fff; }
+  .up-avatar-grid {
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 11px; padding: 4px 22px 14px; min-height: 220px;
+    max-height: min(39vh, 350px); overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: #a9d8bf #f2f7f4;
+  }
+  .up-avatar-option {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    min-width: 0; padding: 7px; border: 1px solid #e8efeb;
+    border-radius: 14px; background: #fff; color: #52665b;
+    cursor: pointer; transition: transform .18s, border-color .18s, box-shadow .18s;
+  }
+  .up-avatar-option img { display: block; width: 100%; aspect-ratio: 1; border-radius: 10px; object-fit: cover; background: #f1f6f3; }
+  .up-avatar-option > span { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; font-weight: 700; }
+  .up-avatar-option:hover:not(:disabled) { transform: translateY(-2px); border-color: #8fd0ac; box-shadow: 0 5px 14px rgba(4,120,87,.10); }
+  .up-avatar-option.selected { border: 2px solid #059669; padding: 6px; background: #f2fbf6; }
+  .up-avatar-option i {
+    position: absolute; top: 9px; right: 9px; width: 21px; height: 21px;
+    display: grid; place-items: center; border-radius: 50%; background: #059669; color: #fff;
+    font-style: normal; box-shadow: 0 2px 7px rgba(0,0,0,.15);
+  }
+  .up-avatar-option:disabled { opacity: .55; cursor: not-allowed; }
+  .up-avatar-loading {
+    grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; gap: 9px;
+    padding: 12px; color: #07835f; font-size: 12px; font-weight: 700;
+  }
+  .up-photo-modal-footer {
+    display: flex; justify-content: space-between; gap: 10px; flex: 0 0 auto;
+    padding: 11px 22px; border-top: 1px solid #edf2ef; background: #fbfdfb;
+    color: #849188; font-size: 10.5px; font-weight: 600;
+  }
+  @keyframes upPhotoModalIn { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @media (max-width: 640px) {
+    .up-photo-modal { max-height: 94dvh; border-radius: 20px; }
+    .up-photo-modal-header { padding: 17px 16px 14px; }
+    .up-photo-current, .up-photo-actions { margin-left: 15px; margin-right: 15px; }
+    .up-avatar-category-list { padding-left: 15px; padding-right: 15px; }
+    .up-avatar-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-left: 15px; padding-right: 15px; max-height: 35vh; }
+    .up-photo-modal-footer { padding: 10px 15px; }
+  }
+  @media (max-width: 390px) {
+    .up-photo-modal-heading p { font-size: 11.5px; }
+    .up-photo-current-copy span { font-size: 10px; }
+    .up-photo-library-count { display: none; }
+    .up-photo-actions { grid-template-columns: 1fr; gap: 7px; }
+    .up-photo-action { padding: 10px 12px; }
+    .up-avatar-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: 32vh; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .up-photo-modal, .up-photo-backdrop { animation: none !important; }
+    .up-photo-action, .up-avatar-option { transition: none !important; }
+  }
+
   /* ── Responsive ── */
   @media (max-width: 700px) {
     .up-fields { grid-template-columns: 1fr; }
@@ -363,14 +504,15 @@ const css = `
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function UserProfile() {
-  const { user, updateProfile, uploadAvatar } = useUserAuth();
+  const { user, updateProfile, updateProfileAvatar, uploadAvatar } = useUserAuth();
 
   const [editing, setEditing]   = useState(false);
   const [loading, setLoading]   = useState(false);
   const [uploading, setUploading] = useState(false);
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState("");
-  const [photoUrlError, setPhotoUrlError] = useState("");
+  const [avatarCategory, setAvatarCategory] = useState("all");
+  const [visibleAvatarCount, setVisibleAvatarCount] = useState(50);
+  const [avatarClock, setAvatarClock] = useState(Date.now());
   const [autoSave, setAutoSave] = useState(true);
   const [syncState, setSyncState] = useState(SYNC_STATE.IDLE);
   const [lastSavedAt, setLastSavedAt] = useState(null);
@@ -380,6 +522,7 @@ export default function UserProfile() {
   const fileInputRef        = useRef(null);
   const autosaveTimerRef    = useRef(null);
   const notificationTimerRef = useRef(null);
+  const avatarGridRef = useRef(null);
 
   const [form, setForm] = useState(() => ({
     fullName: user?.fullName || user?.name || "",
@@ -475,7 +618,7 @@ export default function UserProfile() {
   const validateFile = useCallback((file) => {
     if (!file) return { valid: false, error: "No file selected." };
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type))
-      return { valid: false, error: "Please select a JPEG, PNG, or WebP image." };
+      return { valid: false, error: "Please select a JPEG, PNG, WebP, or AVIF image." };
     if (file.size > MAX_FILE_SIZE)
       return { valid: false, error: "File size must be less than 5 MB." };
     return { valid: true };
@@ -494,6 +637,7 @@ export default function UserProfile() {
       setUploading(true);
       await uploadAvatar(file);
       showNotification("success", "Profile picture updated!");
+      setPhotoModalOpen(false);
     } catch (err) {
       showNotification("error", err.message || "Failed to upload image.");
     } finally {
@@ -502,45 +646,62 @@ export default function UserProfile() {
     }
   }, [uploadAvatar, validateFile, showNotification]);
 
-  const handleUrlImage = useCallback(async () => {
-    if (uploading) return;
-    const entered = photoUrl;
-    if (!entered.trim()) { setPhotoUrlError("Enter a direct link to an image."); return; }
-    let url;
-    try {
-      url = new URL(entered.trim());
-      if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Use a secure HTTPS image link.");
-      if (!url.hostname.includes(".") || /\s/.test(entered.trim())) throw new Error("Enter a valid image URL, such as https://example.com/photo.jpg");
-    } catch (err) {
-      setPhotoUrlError(err.message || "Enter a valid image URL.");
-      return;
+  const handleImageClick = useCallback(() => {
+    if (!uploading) setPhotoModalOpen(true);
+  }, [uploading]);
+
+  const avatarUpdatedAt = user?.avatarUpdatedAt || user?.avatar_updated_at || null;
+  const avatarUnlockAt = avatarUpdatedAt
+    ? new Date(avatarUpdatedAt).getTime() + 24 * 60 * 60 * 1000
+    : 0;
+  const avatarChangeLocked = Boolean(avatarUnlockAt && avatarClock < avatarUnlockAt);
+  const avatarRemainingSeconds = avatarChangeLocked
+    ? Math.ceil((avatarUnlockAt - avatarClock) / 1000)
+    : 0;
+  const avatarRemainingLabel = avatarChangeLocked
+    ? `${Math.floor(avatarRemainingSeconds / 3600)}h ${Math.floor((avatarRemainingSeconds % 3600) / 60)}m`
+    : "";
+
+  const filteredAvatars = React.useMemo(
+    () => avatarCategory === "all"
+      ? PROFILE_AVATARS
+      : PROFILE_AVATARS.filter((avatar) => avatar.categoryId === avatarCategory),
+    [avatarCategory],
+  );
+  const visibleAvatars = filteredAvatars.slice(0, visibleAvatarCount);
+
+  const handleAvatarGridScroll = useCallback((event) => {
+    const element = event.currentTarget;
+    if (element.scrollHeight - element.scrollTop - element.clientHeight < 110) {
+      setVisibleAvatarCount((count) => Math.min(count + 50, filteredAvatars.length));
     }
+  }, [filteredAvatars.length]);
+
+  const handleChooseAvatar = useCallback(async (avatar) => {
+    if (uploading || avatarChangeLocked) return;
     try {
       setUploading(true);
-      const response = await fetch(url.href, { mode: "cors" });
-      if (!response.ok) throw new Error("Could not retrieve that image. Try a direct image URL.");
-      const blob = await response.blob();
-      if (!blob.type || !blob.type.startsWith("image/")) throw new Error("That URL did not return an image.");
-      if (blob.size > MAX_FILE_SIZE) throw new Error("Image must be 5 MB or smaller.");
-      const extension = (blob.type.split("/")[1] || "png").replace("jpeg", "jpg");
-      const file = new File([blob], "profile-image." + extension, { type: blob.type });
-      const validation = validateFile(file);
-      if (!validation.valid) throw new Error(validation.error);
-      await uploadAvatar(file);
-      showNotification("success", "Profile picture updated and its URL saved to your account.");
+      await updateProfileAvatar({ avatar: avatar.url, source: "catalog" });
+      showNotification("success", "Your Altuvera avatar has been saved as your profile picture.");
       setPhotoModalOpen(false);
-      setPhotoUrl("");
-      setPhotoUrlError("");
-    } catch (err) {
-      showNotification("error", err.message || "Could not use that URL. The image host may block browser access (CORS); try another direct image URL or select a file from your device.");
+    } catch (error) {
+      showNotification("error", error.message || "Could not update your profile picture.");
     } finally {
       setUploading(false);
     }
-  }, [uploading, photoUrl, showNotification, validateFile, uploadAvatar]);
+  }, [uploading, avatarChangeLocked, updateProfileAvatar, showNotification]);
 
-  const handleImageClick = useCallback(() => {
-    if (!uploading) fileInputRef.current?.click();
-  }, [uploading]);
+  const selectAvatarCategory = useCallback((category) => {
+    setAvatarCategory(category);
+    setVisibleAvatarCount(50);
+    if (avatarGridRef.current) avatarGridRef.current.scrollTop = 0;
+  }, []);
+
+  useEffect(() => {
+    if (!avatarUnlockAt) return undefined;
+    const timer = setInterval(() => setAvatarClock(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, [avatarUnlockAt]);
 
   // Auto-save
   useEffect(() => {
@@ -627,7 +788,7 @@ export default function UserProfile() {
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/avif"
                 style={{ display: "none" }}
               />
             </div>
@@ -889,40 +1050,138 @@ export default function UserProfile() {
         </div>
       {photoModalOpen && (
         <div
+          className="up-photo-backdrop"
           role="presentation"
-          onClick={(e) => { if (e.target === e.currentTarget && !uploading) setPhotoModalOpen(false); }}
-          onKeyDown={(e) => { if (e.key === "Escape" && !uploading) setPhotoModalOpen(false); }}
-          style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(3, 24, 18, .68)", backdropFilter: "blur(7px)", WebkitBackdropFilter: "blur(7px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))" }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !uploading) setPhotoModalOpen(false);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && !uploading) setPhotoModalOpen(false);
+          }}
         >
-          <section role="dialog" aria-modal="true" aria-labelledby="up-photo-modal-title" style={{ width: "100%", maxWidth: 440, maxHeight: "min(90dvh, 680px)", overflowY: "auto", background: "#fff", color: "#10231d", borderRadius: 24, padding: "clamp(20px, 5vw, 28px)", boxShadow: "0 28px 90px rgba(0,0,0,.32)", boxSizing: "border-box" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-                <div style={{ width: 48, height: 48, flex: "0 0 48px", borderRadius: 16, display: "grid", placeItems: "center", background: "#e7f6ef", color: "#047857" }}><HiCamera size={25} /></div>
+          <section
+            className="up-photo-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="up-photo-modal-title"
+          >
+            <header className="up-photo-modal-header">
+              <div className="up-photo-modal-heading">
+                <span className="up-photo-modal-mark"><HiCamera size={23} /></span>
                 <div>
-                  <h2 id="up-photo-modal-title" style={{ margin: 0, fontSize: "clamp(1.2rem, 4vw, 1.45rem)", lineHeight: 1.25, fontWeight: 800 }}>Change profile photo</h2>
-                  <p style={{ margin: "5px 0 0", color: "#6b7c75", fontSize: 14, lineHeight: 1.45 }}>Choose a photo that represents you.</p>
+                  <h2 id="up-photo-modal-title">Choose your profile image</h2>
+                  <p>Pick an illustrated avatar or upload a photo from your device.</p>
                 </div>
               </div>
-              <button type="button" onClick={() => setPhotoModalOpen(false)} disabled={uploading} aria-label="Close photo options" style={{ flex: "0 0 38px", border: 0, background: "#f1f5f3", color: "#344b42", borderRadius: 12, width: 38, height: 38, fontSize: 22, cursor: "pointer" }}><FiX /></button>
-            </div>
-            <button type="button" onClick={() => { setPhotoModalOpen(false); handleImageClick(); }} disabled={uploading} style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, marginTop: 24, padding: 15, border: "1px solid #d7e8df", borderRadius: 16, background: "#f7fbf9", color: "#075e46", fontWeight: 750, cursor: "pointer", textAlign: "left", boxSizing: "border-box" }}>
-              <span style={{ width: 42, height: 42, borderRadius: 12, display: "grid", placeItems: "center", background: "#dff3e9", flex: "0 0 42px" }}><HiOutlinePhotograph size={22} /></span>
-              <span style={{ flex: 1, minWidth: 0 }}><span style={{ display: "block" }}>Choose from device</span><span style={{ display: "block", marginTop: 4, color: "#718078", fontSize: 12, fontWeight: 500 }}>Select an image saved on your phone or computer</span></span>
-            </button>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "22px 0 18px", color: "#8a9992", fontSize: 11, fontWeight: 800, letterSpacing: ".12em" }}><span style={{ height: 1, background: "#e4ece7", flex: 1 }} /><span>OR USE A LINK</span><span style={{ height: 1, background: "#e4ece7", flex: 1 }} /></div>
-            <form onSubmit={(e) => { e.preventDefault(); handleUrlImage(); }} noValidate>
-              <label htmlFor="up-profile-photo-url" style={{ display: "block", color: "#253d33", fontSize: 14, fontWeight: 750, marginBottom: 8 }}>Image URL</label>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 13px", border: "1px solid " + (photoUrlError ? "#dc4545" : "#cbdcd3"), borderRadius: 13, background: photoUrlError ? "#fffafa" : "#fbfdfc", boxShadow: photoUrlError ? "0 0 0 3px rgba(220,69,69,.08)" : "none" }}>
-                <FiLink aria-hidden="true" style={{ color: "#648176", flex: "0 0 auto" }} />
-                <input id="up-profile-photo-url" type="url" inputMode="url" value={photoUrl} onChange={(e) => { const value = e.target.value; setPhotoUrl(value); setPhotoUrlError(value.trim() && !/^https?:\/\//i.test(value.trim()) ? "Link must start with https:// or http://." : ""); }} placeholder="https://example.com/photo.jpg" autoComplete="url" aria-invalid={!!photoUrlError} aria-describedby="up-photo-url-help up-photo-url-error" style={{ flex: 1, width: "100%", minWidth: 0, padding: "15px 0", border: 0, outline: "none", background: "transparent", color: "#10231d", fontSize: 16, boxSizing: "border-box" }} />
-              </div>
-              {photoUrlError ? <p id="up-photo-url-error" role="alert" style={{ margin: "8px 0 0", color: "#c53030", fontSize: 12, lineHeight: 1.45 }}>{photoUrlError}</p> : null}
-              <p id="up-photo-url-help" style={{ margin: "8px 0 0", color: "#78877f", fontSize: 12, lineHeight: 1.5 }}>Use a direct, publicly accessible image link. The image must load successfully and be 5 MB or smaller.</p>
-              <button type="submit" disabled={uploading || !photoUrl.trim() || !!photoUrlError} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, marginTop: 18, padding: 14, border: 0, borderRadius: 13, background: "#047857", color: "#fff", fontWeight: 800, fontSize: 15, cursor: uploading ? "wait" : "pointer", opacity: uploading || !photoUrl.trim() || !!photoUrlError ? .55 : 1 }}>
-                {uploading ? <HiRefresh className="up-spin" /> : <HiOutlinePhotograph />} {uploading ? "Validating and updating…" : "Use this image"}
+              <button
+                type="button"
+                className="up-photo-close"
+                onClick={() => setPhotoModalOpen(false)}
+                disabled={uploading}
+                aria-label="Close profile image selector"
+              >
+                <FiX />
               </button>
-            </form>
-            <p style={{ margin: "15px 0 0", color: "#87958e", fontSize: 11, textAlign: "center", lineHeight: 1.5 }}>Supported images: JPEG, PNG, WebP · Max 5 MB</p>
+            </header>
+
+            <div className="up-photo-current">
+              {user?.avatar ? (
+                <img src={user.avatar} alt="Current profile" />
+              ) : (
+                <span>{initials}</span>
+              )}
+              <div className="up-photo-current-copy">
+                <strong>One profile image at a time</strong>
+                <span>Your next selection replaces the current photo or avatar.</span>
+              </div>
+              <span className="up-photo-library-count">{PROFILE_AVATAR_COUNT} avatars</span>
+            </div>
+
+            <div className="up-photo-actions">
+              <div className="up-photo-action up-photo-action-active">
+                <HiStar size={18} />
+                <span><strong>Avatar library</strong><small>Browse all categories</small></span>
+              </div>
+              <button
+                type="button"
+                className="up-photo-action"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || avatarChangeLocked}
+              >
+                <HiOutlinePhotograph size={19} />
+                <span><strong>Upload from device</strong><small>JPEG, PNG, WebP or AVIF</small></span>
+              </button>
+            </div>
+
+            {avatarChangeLocked && (
+              <div className="up-photo-lock" role="status">
+                <HiClock size={18} />
+                <span>
+                  <strong>Profile image change is temporarily locked</strong>
+                  <small>You can choose another image in {avatarRemainingLabel}. This 24-hour limit protects your account.</small>
+                </span>
+              </div>
+            )}
+
+            <div className="up-avatar-category-list" aria-label="Avatar categories">
+              <button
+                type="button"
+                className={avatarCategory === "all" ? "active" : ""}
+                onClick={() => selectAvatarCategory("all")}
+              >
+                All avatars
+              </button>
+              {PROFILE_AVATAR_CATEGORIES.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  className={avatarCategory === category.id ? "active" : ""}
+                  onClick={() => selectAvatarCategory(category.id)}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+
+            <div
+              className="up-avatar-grid"
+              ref={avatarGridRef}
+              onScroll={handleAvatarGridScroll}
+              aria-label="Available profile avatars"
+            >
+              {visibleAvatars.map((avatar) => (
+                <button
+                  key={avatar.id}
+                  type="button"
+                  className={"up-avatar-option" + (user?.avatar === avatar.url ? " selected" : "")}
+                  onClick={() => handleChooseAvatar(avatar)}
+                  disabled={uploading || avatarChangeLocked}
+                  aria-pressed={user?.avatar === avatar.url}
+                  title={avatar.label}
+                >
+                  <img
+                    src={avatar.url}
+                    alt={avatar.label}
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
+                  <span>{avatar.label}</span>
+                  {user?.avatar === avatar.url && <i><HiCheck size={13} /></i>}
+                </button>
+              ))}
+              {uploading && (
+                <div className="up-avatar-loading">
+                  <HiRefresh className="up-spin" />
+                  <span>Saving your selection…</span>
+                </div>
+              )}
+            </div>
+
+            <footer className="up-photo-modal-footer">
+              <span>Showing {visibleAvatars.length} of {filteredAvatars.length} avatars</span>
+              <span>{visibleAvatars.length < filteredAvatars.length ? "Scroll to load 50 more" : "You’ve reached the end"}</span>
+            </footer>
           </section>
         </div>
       )}
