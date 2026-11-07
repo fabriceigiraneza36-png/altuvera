@@ -904,7 +904,7 @@ export default function UserProfile() {
     openMojiRequestRef.current = true;
     setOpenMojiLoading(true);
     setOpenMojiError("");
-    fetch("https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@17.0.0/data/openmoji.json", {
+    fetch("https://cdn.jsdelivr.net/npm/openmoji@17.0.0/data/openmoji.json", {
       signal: controller.signal,
       cache: "force-cache",
     })
@@ -934,7 +934,7 @@ export default function UserProfile() {
             categoryId: item.group || "objects",
             categoryLabel: categoryNames[item.group] || "Illustrations",
             searchTags: [item.tags, item.openmoji_tags, item.subgroups, item.group].filter(Boolean).join(" "),
-            url: `https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@17.0.0/color/svg/${item.hexcode}.svg`,
+            url: `https://cdn.jsdelivr.net/npm/openmoji@17.0.0/color/svg/${item.hexcode}.svg`,
             artwork: "openmoji",
           }));
         parsed.sort((a, b) => {
