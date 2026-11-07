@@ -608,12 +608,17 @@ const ABOUT_STYLES = `
     transform: scaleX(1);
   }
 
+  .about-value-heading {
+    display: flex; align-items: center; gap: 16px;
+    width: 100%; min-width: 0; margin: 0 0 18px;
+  }
+
   .about-value-icon-wrap {
-    width: 52px; height: 52px;
+    width: 52px; height: 52px; flex: 0 0 52px;
     border-radius: 14px;
     background: linear-gradient(135deg, #ecfdf5, #d1fae5);
     display: flex; align-items: center; justify-content: center;
-    margin-bottom: 18px;
+    margin: 0;
     color: #059669;
     transition: all 0.3s ease;
   }
@@ -625,11 +630,21 @@ const ABOUT_STYLES = `
   }
 
   .about-value-title {
+    flex: 1 1 auto; min-width: 0;
     font-family: 'Playfair Display', serif;
-    font-size: 20px;
+    font-size: clamp(18px, 1.45vw, 20px);
     font-weight: 700;
     color: #064e3b;
-    margin: 0 0 8px;
+    line-height: 1.24;
+    margin: 0;
+    overflow-wrap: normal;
+    hyphens: none;
+  }
+
+  @media (max-width: 480px) {
+    .about-value-heading { gap: 12px; margin-bottom: 15px; }
+    .about-value-icon-wrap { width: 48px; height: 48px; flex-basis: 48px; }
+    .about-value-title { font-size: 18px; }
   }
 
   .about-value-desc {
@@ -1211,8 +1226,10 @@ const About = () => {
             <div className="about-values-grid">
               {VALUES.map((v, i) => (
                 <div key={i} className="about-value-card">
-                  <div className="about-value-icon-wrap">{v.icon}</div>
-                  <h3 className="about-value-title">{v.title}</h3>
+                  <div className="about-value-heading">
+                    <div className="about-value-icon-wrap">{v.icon}</div>
+                    <h3 className="about-value-title">{v.title}</h3>
+                  </div>
                   <p className="about-value-desc">{v.desc}</p>
                 </div>
               ))}
