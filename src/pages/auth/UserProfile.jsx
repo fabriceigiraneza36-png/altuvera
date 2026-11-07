@@ -24,7 +24,7 @@ import { PROFILE_AVATAR_CATEGORIES, PROFILE_AVATARS, PROFILE_AVATAR_COUNT } from
 const AUTOSAVE_DELAY = 900;
 const SUCCESS_MESSAGE_DURATION = 5000;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 const SYNC_STATE = {
   IDLE: "idle",
@@ -425,7 +425,7 @@ const css = `
   .up-avatar-category-list button {
     flex: 0 0 auto; padding: 7px 11px; border: 1px solid #e1eae4;
     border-radius: 999px; background: #fff; color: #60746a;
-    font: 700 11px/1.2 inherit; white-space: nowrap; cursor: pointer;
+    font-family: inherit; font-size: 11px; font-weight: 700; line-height: 1.2; white-space: nowrap; cursor: pointer;
     transition: background .18s, border-color .18s, color .18s;
   }
   .up-avatar-category-list button:hover { border-color: #a6ddbf; color: #047857; }
