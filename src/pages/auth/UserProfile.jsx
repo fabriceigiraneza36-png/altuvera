@@ -832,7 +832,7 @@ export default function UserProfile() {
   const validateFile = useCallback((file) => {
     if (!file) return { valid: false, error: "No file selected." };
     const isSupportedMime = ACCEPTED_IMAGE_TYPES.includes(file.type);
-    const hasSupportedExtension = /\\.(jpe?g|png|webp|avif|gif)$/i.test(file.name || "");
+    const hasSupportedExtension = /\.(jpe?g|png|webp|avif|gif)$/i.test(file.name || "");
     if (!(file.type.startsWith("image/") && isSupportedMime) && !hasSupportedExtension) {
       return { valid: false, error: "Please choose a supported image file: JPEG, PNG, WebP, AVIF or GIF." };
     }
