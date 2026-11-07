@@ -1,4 +1,6 @@
 const SITE_ORIGIN = "https://www.altuverasafaris.com";
+const normalizeBrandText = (value) =>
+  String(value ?? "").replace(/\baltuvera\s+safaris\b/gi, "Altuvera");
 const DEFAULT_IMAGE = `${SITE_ORIGIN}/altuvera.png`;
 
 const escapeHtml = (value) => String(value ?? "")
@@ -10,7 +12,7 @@ const escapeHtml = (value) => String(value ?? "")
 
 const getText = (...values) => {
   for (const value of values) {
-    if (typeof value === "string" && value.trim()) return value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+    if (typeof value === "string" && value.trim()) return normalizeBrandText(value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim());
   }
   return "";
 };
