@@ -100,6 +100,8 @@ const getLiveSeoData = async () => {
   return { countries, packages };
 };
 
+const HOMEPAGE_SEO_LASTMOD = "2026-11-07";
+
 const buildSitemap = async () => {
   const staticRoutes = [
     "/",
@@ -144,7 +146,10 @@ const buildSitemap = async () => {
     console.warn("[seo] No explicitly active countries returned; omitting country URLs from sitemap.");
   }
 
-  const entries = staticRoutes.map((loc) => ({ loc }));
+  const entries = staticRoutes.map((loc) => ({
+    loc,
+    ...(loc === "/" ? { lastmod: HOMEPAGE_SEO_LASTMOD } : {}),
+  }));
 
   // Every public adventure guide has its own crawlable landing page.
   for (const guide of ADVENTURE_CATALOG) {
