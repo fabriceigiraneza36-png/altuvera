@@ -297,6 +297,8 @@ const normalizeUser = (raw, {
     fullName,
     name:          fullName,
     avatar:        avatar || null,
+    avatarSource:  pick(raw.avatarSource, raw.avatar_source, cached?.avatarSource, null),
+    avatarUpdatedAt: pick(raw.avatarUpdatedAt, raw.avatar_updated_at, cached?.avatarUpdatedAt, null),
     phone:         pick(raw.phone, raw.phoneNumber, raw.phone_number),
     bio:           pick(raw.bio,   raw.biography,   raw.about),
     role:          pick(raw.role,  raw.userRole,    "user"),
@@ -2443,45 +2445,54 @@ export function UserAuthProvider({ children }) {
     return data;
   }, [authFetch, cacheProfile, getCache, user]);
 
+  const updateProfileAvatar = useCallback(async ({ avatar, source, publicId = null }) => {
+    const data = await authFetch("/users/profile/avatar", {
+      method: "PUT",
+      body: JSON.stringify({ avatar, source, publicId }),
+    });
+    const raw = data?.data?.user || data?.data || data?.user || data;
+    const norm = normalizeUser(
+      { ...(user || {}), ...(raw || {}) },
+      { cache: getCache() },
+    );
+    if (norm) { setUser(norm); cacheProfile(norm); }
+    return data;
+  }, [authFetch, cacheProfile, getCache, user]);
+
   const uploadAvatar = useCallback(async (file) => {
     if (!(file instanceof File))
       throw new Error("Please select a valid image file.");
-    if (file.size > 10 * 1024 * 1024)
-      throw new Error("Image must be 10MB or less.");
+    if (file.size > 5 * 1024 * 1024)
+      throw new Error("Image must be 5 MB or less.");
 
-    const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/avif"];
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif"];
     if (!allowed.includes(file.type))
-      throw new Error("Please upload a JPEG, PNG, GIF, WebP, or AVIF image.");
+      throw new Error("Please upload a JPEG, PNG, WebP, or AVIF image.");
 
     const form = new FormData();
     form.append("image", file);
-    form.append("type",  "avatar");
+    form.append("type", "avatar");
 
-    const data      = await authFetch("/uploads/image/avatar", { method: "POST", body: form });
-    const p         = data?.data || data || {};
-    const avatarUrl = p.url || p.imageUrl || p.avatar || p.avatarUrl;
-    if (!avatarUrl)
-      throw new Error("Upload succeeded but no image URL was returned.");
+    const data = await authFetch("/uploads/image/avatar", { method: "POST", body: form });
+    const asset = data?.data || data || {};
+    const avatarUrl = asset.secureUrl || asset.url || asset.imageUrl || asset.avatar || asset.avatarUrl;
+    const publicId = asset.publicId || asset.public_id;
+    if (!avatarUrl || !publicId)
+      throw new Error("The uploaded image could not be verified. Please try again.");
 
-    // Persist the new URL first. Never replace the visible/cached avatar until
-    // the database confirms the update; if persistence fails, remove the newly
-    // uploaded orphan so the old profile photo remains intact.
+    // Persist the replacement first. If the database rejects it (including
+    // the 24-hour limit), remove this newly uploaded, unreferenced asset.
     try {
-      await updateProfile({ avatar: avatarUrl });
+      await updateProfileAvatar({ avatar: avatarUrl, source: "upload", publicId });
     } catch (error) {
-      const publicId = p.publicId || p.public_id;
-      if (publicId) {
-        await authFetch("/uploads/asset/" + encodeURIComponent(publicId), { method: "DELETE" }).catch(() => {});
-      }
+      await authFetch("/uploads/asset/" + encodeURIComponent(publicId), {
+        method: "DELETE",
+      }).catch(() => {});
       throw error;
     }
 
     return avatarUrl;
-  }, [authFetch, updateProfile]);
-
-  // ============================================================================
-  // Logout & Account
-  // ============================================================================
+  }, [authFetch, updateProfileAvatar]);
 
   const logout = useCallback(async () => {
     try { await authFetch("/users/logout", { method: "POST" }); }
