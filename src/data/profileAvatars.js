@@ -17,6 +17,7 @@ const CATEGORY_DEFINITIONS = [
   { id: "travel", label: "Travel & Adventure", style: "adventurer-neutral", palette: ["bfdbfe", "bbf7d0", "fed7aa", "ddd6fe"] },
   { id: "space", label: "Space & Science", style: "bottts-neutral", palette: ["c7d2fe", "bae6fd", "a7f3d0", "e9d5ff"] },
   { id: "creative", label: "Creative Studio", style: "open-peeps", palette: ["fbcfe8", "ddd6fe", "bfdbfe", "bbf7d0"] },
+  { id: "professional", label: "Professional Portraits", style: "personas", palette: ["d1fae5", "dbeafe", "fce7f3", "fef3c7"] },
 ];
 
 const makeAvatar = (category, index) => {
