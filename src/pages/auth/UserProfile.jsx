@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Helmet } from "react-helmet-async";
 import { useUserAuth } from "../../context/UserAuthContext";
 import DashboardLayout from "../../components/auth/DashboardLayout";
@@ -346,12 +347,13 @@ const css = `
 
   /* ── Profile image and avatar library modal ── */
   .up-photo-backdrop {
-    position: fixed; inset: 0; z-index: 10000;
+    position: fixed !important; inset: 0 !important; z-index: 2147483000 !important;
     display: flex; align-items: center; justify-content: center;
     padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
-    background: rgba(5, 18, 13, .58);
-    backdrop-filter: none; -webkit-backdrop-filter: none;
-    animation: upFadeIn .18s ease-out;
+    background: rgba(12, 24, 18, .30);
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    isolation: isolate; animation: upFadeIn .18s ease-out;
+    overscroll-behavior: contain;
   }
   .up-photo-modal {
     width: min(100%, 820px);
@@ -1099,10 +1101,11 @@ export default function UserProfile() {
           </div>
 
         </div>
-      {photoModalOpen && (
+      {photoModalOpen && createPortal((
         <div
           className="up-photo-backdrop"
           role="presentation"
+          tabIndex={-1}
           onClick={(event) => {
             if (event.target === event.currentTarget && !uploading) setPhotoModalOpen(false);
           }}
@@ -1258,7 +1261,7 @@ export default function UserProfile() {
             </footer>
           </section>
         </div>
-      )}
+      ), document.body)}
       </DashboardLayout>
     </>
   );
